@@ -17,6 +17,11 @@ task:
   # Cue labels (used for indexing and display)
   cue_labels: ["cue_A", "cue_B", "cue_C"]
 
+  # Number of identical sets per session.
+  # Each set runs all phases + a transfer phase (total 140 trials per set).
+  # Full session: 3 sets x 140 = 420 trials.
+  n_sets: 3
+
   # ---------------------------------------------------------------------------
   # Phase structure
   # 4 phases: acquisition_1, reversal_1, acquisition_2, reversal_2
@@ -26,32 +31,40 @@ task:
   phases:
     - name: acquisition_1
       phase_type: stable
-      n_trials: 40
+      n_trials: 30
       # Reward probabilities for [cue_A, cue_B, cue_C]
       # cue_A is the dominant (best) cue in this phase
       cue_probs: [0.80, 0.20, 0.20]
 
     - name: reversal_1
       phase_type: volatile
-      n_trials: 40
+      n_trials: 30
       # Reward probabilities reverse — cue_B becomes dominant
       cue_probs: [0.20, 0.80, 0.20]
 
     - name: acquisition_2
       phase_type: stable
-      n_trials: 40
+      n_trials: 30
       # cue_A re-emerges as dominant
       cue_probs: [0.80, 0.20, 0.20]
 
     - name: reversal_2
       phase_type: volatile
-      n_trials: 40
+      n_trials: 30
       # cue_C becomes dominant
       cue_probs: [0.20, 0.20, 0.80]
 
-  # Total trials per session (sum of n_trials across all phases)
-  # Computed at load time; listed here for documentation
-  # n_trials_total: 160
+  # Transfer phase: follows main phases in each set.
+  # Equal probabilities — tests generalisation without feedback.
+  transfer:
+    phase_type: stable
+    n_trials: 20
+    cue_probs: [0.33, 0.33, 0.33]
+
+  # Total trials per set: 4 phases x 30 + 20 transfer = 140
+  # Total trials per session: 3 sets x 140 = 420
+  # Computed at load time; listed here for documentation.
+  # n_trials_total: 420
 
   # Partial feedback: only the chosen cue receives a reward signal.
   # Unchosen cues receive no update. This is the standard PRL protocol.

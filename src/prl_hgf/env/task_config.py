@@ -55,6 +55,17 @@ class PhaseConfig:
     n_trials: int
     cue_probs: list[float]
 
+    @property
+    def phase_label(self) -> str:
+        """Human-readable label identical to ``phase_type``.
+
+        Returns
+        -------
+        str
+            Either ``"stable"`` or ``"volatile"``.
+        """
+        return self.phase_type
+
     def __post_init__(self) -> None:
         valid_types = {"stable", "volatile"}
         if self.phase_type not in valid_types:
@@ -76,6 +87,57 @@ class PhaseConfig:
 
 
 @dataclass(frozen=True)
+class TransferConfig:
+    """Configuration for the transfer phase appended to each set.
+
+    The transfer phase uses equal cue probabilities to assess generalisation
+    without the reversal schedule.
+
+    Parameters
+    ----------
+    phase_type : str
+        Either ``"stable"`` or ``"volatile"``.
+    n_trials : int
+        Number of transfer trials per set (must be >= 1).
+    cue_probs : list[float]
+        Reward probability for each cue, each element in [0.0, 1.0].
+    """
+
+    phase_type: str
+    n_trials: int
+    cue_probs: list[float]
+
+    @property
+    def phase_label(self) -> str:
+        """Human-readable label identical to ``phase_type``.
+
+        Returns
+        -------
+        str
+            Either ``"stable"`` or ``"volatile"``.
+        """
+        return self.phase_type
+
+    def __post_init__(self) -> None:
+        valid_types = {"stable", "volatile"}
+        if self.phase_type not in valid_types:
+            raise ValueError(
+                f"TransferConfig: phase_type must be one of "
+                f"{valid_types}, got '{self.phase_type}'."
+            )
+        if self.n_trials < 1:
+            raise ValueError(
+                f"TransferConfig: n_trials must be >= 1, got {self.n_trials}."
+            )
+        for i, p in enumerate(self.cue_probs):
+            if not (0.0 <= p <= 1.0):
+                raise ValueError(
+                    f"TransferConfig: cue_probs[{i}] must be in "
+                    f"[0.0, 1.0], got {p}."
+                )
+
+
+@dataclass(frozen=True)
 class TaskConfig:
     """Complete task structure for one PRL pick_best_cue session.
 
@@ -89,8 +151,12 @@ class TaskConfig:
         Number of cues (must be >= 2).
     cue_labels : list[str]
         Label for each cue. Length must equal ``n_cues``.
+    n_sets : int
+        Number of times the phase sequence repeats per session (must be >= 1).
     phases : list[PhaseConfig]
         Ordered list of task phases (must be non-empty).
+    transfer : TransferConfig
+        Transfer phase appended after each set.
     partial_feedback : bool
         If True, only the chosen cue receives a reward signal.
     task_seed : int
@@ -101,7 +167,9 @@ class TaskConfig:
     description: str
     n_cues: int
     cue_labels: list[str]
+    n_sets: int
     phases: list[PhaseConfig]
+    transfer: TransferConfig
     partial_feedback: bool
     task_seed: int
 
@@ -115,6 +183,10 @@ class TaskConfig:
                 f"TaskConfig: cue_labels length must equal n_cues "
                 f"(expected {self.n_cues}, got {len(self.cue_labels)})."
             )
+        if self.n_sets < 1:
+            raise ValueError(
+                f"TaskConfig: n_sets must be >= 1, got {self.n_sets}."
+            )
         if not self.phases:
             raise ValueError("TaskConfig: phases must be non-empty.")
         for phase in self.phases:
@@ -124,11 +196,34 @@ class TaskConfig:
                     f"must equal n_cues "
                     f"(expected {self.n_cues}, got {len(phase.cue_probs)})."
                 )
+        if len(self.transfer.cue_probs) != self.n_cues:
+            raise ValueError(
+                f"TaskConfig: transfer cue_probs length must equal n_cues "
+                f"(expected {self.n_cues}, "
+                f"got {len(self.transfer.cue_probs)})."
+            )
+
+    @property
+    def n_trials_per_set(self) -> int:
+        """Number of trials in one set (phases + transfer).
+
+        Returns
+        -------
+        int
+            Sum of ``n_trials`` across all phases plus transfer phase trials.
+        """
+        return sum(p.n_trials for p in self.phases) + self.transfer.n_trials
 
     @property
     def n_trials_total(self) -> int:
-        """Total number of trials across all phases."""
-        return sum(p.n_trials for p in self.phases)
+        """Total number of trials for a full session (all sets).
+
+        Returns
+        -------
+        int
+            ``n_sets * n_trials_per_set``.
+        """
+        return self.n_sets * self.n_trials_per_set
 
 
 # ---------------------------------------------------------------------------
@@ -359,12 +454,20 @@ def _parse_task_config(raw: dict[str, Any]) -> TaskConfig:
             )
             for p in raw_phases
         ]
+        raw_transfer = raw["transfer"]
+        transfer = TransferConfig(
+            phase_type=str(raw_transfer["phase_type"]),
+            n_trials=int(raw_transfer["n_trials"]),
+            cue_probs=[float(v) for v in raw_transfer["cue_probs"]],
+        )
         return TaskConfig(
             name=str(raw["name"]),
             description=str(raw.get("description", "")),
             n_cues=int(raw["n_cues"]),
             cue_labels=[str(s) for s in raw["cue_labels"]],
+            n_sets=int(raw["n_sets"]),
             phases=phases,
+            transfer=transfer,
             partial_feedback=bool(raw["partial_feedback"]),
             task_seed=int(raw["task_seed"]),
         )
