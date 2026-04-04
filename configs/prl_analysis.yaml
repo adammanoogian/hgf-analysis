@@ -1,0 +1,232 @@
+# PRL pick_best_cue Task Configuration
+# Single source of truth for task structure and analysis parameters.
+# All phases and scripts read from this file via prl_hgf.env.task_config.load_config().
+
+# ---------------------------------------------------------------------------
+# Task structure — mirrors PRL pick_best_cue experiment
+# ---------------------------------------------------------------------------
+task:
+  name: pick_best_cue
+  description: >
+    Probabilistic reversal learning task with 3 cues. Participants select the
+    cue they believe is most rewarding. Reward probabilities reverse on a
+    criterion-based schedule. Only the chosen cue receives feedback (partial
+    feedback paradigm).
+
+  n_cues: 3
+  # Cue labels (used for indexing and display)
+  cue_labels: ["cue_A", "cue_B", "cue_C"]
+
+  # ---------------------------------------------------------------------------
+  # Phase structure
+  # 4 phases: acquisition_1, reversal_1, acquisition_2, reversal_2
+  # "stable" = participant learns the dominant cue before criterion triggers reversal
+  # "volatile" = after reversal, new dominant cue must be learned
+  # ---------------------------------------------------------------------------
+  phases:
+    - name: acquisition_1
+      phase_type: stable
+      n_trials: 40
+      # Reward probabilities for [cue_A, cue_B, cue_C]
+      # cue_A is the dominant (best) cue in this phase
+      cue_probs: [0.80, 0.20, 0.20]
+
+    - name: reversal_1
+      phase_type: volatile
+      n_trials: 40
+      # Reward probabilities reverse — cue_B becomes dominant
+      cue_probs: [0.20, 0.80, 0.20]
+
+    - name: acquisition_2
+      phase_type: stable
+      n_trials: 40
+      # cue_A re-emerges as dominant
+      cue_probs: [0.80, 0.20, 0.20]
+
+    - name: reversal_2
+      phase_type: volatile
+      n_trials: 40
+      # cue_C becomes dominant
+      cue_probs: [0.20, 0.20, 0.80]
+
+  # Total trials per session (sum of n_trials across all phases)
+  # Computed at load time; listed here for documentation
+  # n_trials_total: 160
+
+  # Partial feedback: only the chosen cue receives a reward signal.
+  # Unchosen cues receive no update. This is the standard PRL protocol.
+  partial_feedback: true
+
+  # RNG seed for reproducible trial sequence generation.
+  # Individual simulation seeds are set separately in simulation config.
+  task_seed: 42
+
+# ---------------------------------------------------------------------------
+# Study design
+# ---------------------------------------------------------------------------
+study:
+  n_sessions: 3
+  session_labels: ["baseline", "post_dose", "followup"]
+
+  n_groups: 2
+  group_labels: ["post_concussion", "healthy_control"]
+
+# ---------------------------------------------------------------------------
+# HGF model parameters — default priors and parameter bounds
+# Values informed by literature defaults (Mathys et al. 2011, 2014)
+# ---------------------------------------------------------------------------
+model:
+  # 2-level binary HGF free parameters
+  hgf_2level:
+    # omega_2: tonic volatility / log-space evolution rate at level 1
+    # Prior: Normal(-3, 2) on the log scale — standard in literature
+    omega_2:
+      prior_mean: -3.0
+      prior_sd: 2.0
+      lower_bound: -8.0
+      upper_bound: 2.0
+
+  # 3-level binary HGF additional parameters
+  hgf_3level:
+    # Inherits omega_2 from hgf_2level
+    # omega_3: meta-volatility (tonic volatility at level 2)
+    omega_3:
+      prior_mean: -6.0
+      prior_sd: 2.0
+      lower_bound: -12.0
+      upper_bound: 0.0
+
+    # kappa: coupling between volatility estimate and level-1 learning rate
+    kappa:
+      prior_mean: 1.0
+      prior_sd: 0.5
+      lower_bound: 0.01
+      upper_bound: 2.0
+
+    # mu3_0: initial volatility prior (mean of level-2 state at trial 0)
+    mu3_0:
+      prior_mean: 0.0
+      prior_sd: 1.0
+      lower_bound: -4.0
+      upper_bound: 4.0
+
+  # Shared initial belief parameters (both model variants)
+  # mu1_0: initial level-1 belief (log-odds of cue being rewarding at start)
+  # Set to 0 (= 0.5 probability) as a neutral uninformative prior
+  mu1_0: 0.0
+
+  # Response model parameters (both model variants)
+  response:
+    # beta: inverse temperature — exploitation vs. exploration
+    # Prior: HalfNormal(0, 5) — must be positive
+    beta:
+      prior_mean: 2.0
+      prior_sd: 2.0
+      lower_bound: 0.01
+      upper_bound: 20.0
+
+    # zeta: stickiness / choice perseveration (positive = persist, negative = switch)
+    # Prior: Normal(0, 1)
+    zeta:
+      prior_mean: 0.0
+      prior_sd: 1.0
+      lower_bound: -5.0
+      upper_bound: 5.0
+
+# ---------------------------------------------------------------------------
+# Simulation parameters — synthetic participant generation
+# ---------------------------------------------------------------------------
+simulation:
+  n_participants_per_group: 30
+  master_seed: 1234
+
+  # Group parameter distributions (mean, sd) for generating individual params
+  # These encode the hypothesized true differences between groups
+  groups:
+    post_concussion:
+      omega_2:
+        mean: -4.0
+        sd: 1.0
+      omega_3:
+        mean: -7.0
+        sd: 1.5
+      kappa:
+        mean: 0.8
+        sd: 0.3
+      beta:
+        mean: 2.0
+        sd: 0.8
+      zeta:
+        mean: 0.3
+        sd: 0.5
+
+    healthy_control:
+      omega_2:
+        mean: -3.0
+        sd: 1.0
+      omega_3:
+        mean: -6.0
+        sd: 1.5
+      kappa:
+        mean: 1.0
+        sd: 0.3
+      beta:
+        mean: 2.5
+        sd: 0.8
+      zeta:
+        mean: 0.2
+        sd: 0.5
+
+  # Session parameter deltas — how parameters shift from baseline
+  # additive on the natural (untransformed) scale for omega_2 and omega_3
+  # delta_session2 = change at post_dose, delta_session3 = change at followup
+  session_deltas:
+    # Psilocybin hypothetically increases learning rate (less negative omega_2)
+    # and increases kappa (more sensitive to volatility)
+    post_concussion:
+      session_labels: ["post_dose", "followup"]
+      omega_2_deltas: [1.5, 0.8]      # shift toward higher learning rate
+      kappa_deltas: [0.3, 0.2]
+      beta_deltas: [0.0, 0.0]
+      zeta_deltas: [0.0, 0.0]
+
+    healthy_control:
+      session_labels: ["post_dose", "followup"]
+      omega_2_deltas: [0.5, 0.2]      # smaller shift in healthy controls
+      kappa_deltas: [0.1, 0.05]
+      beta_deltas: [0.0, 0.0]
+      zeta_deltas: [0.0, 0.0]
+
+# ---------------------------------------------------------------------------
+# Fitting parameters — MCMC settings and diagnostics thresholds
+# ---------------------------------------------------------------------------
+fitting:
+  n_chains: 4
+  n_draws: 1000
+  n_tune: 1000
+  target_accept: 0.9
+  random_seed: 42
+
+  # MCMC diagnostic thresholds
+  diagnostics:
+    r_hat_threshold: 1.05
+    ess_threshold: 400
+
+# ---------------------------------------------------------------------------
+# Analysis parameters — model comparison and group-level stats
+# ---------------------------------------------------------------------------
+analysis:
+  # Models to fit and compare
+  models: ["hgf_2level", "hgf_3level"]
+
+  # Parameters of primary interest for group analysis
+  primary_parameters: ["omega_2", "kappa", "beta", "zeta"]
+
+  # Secondary parameters (lower expected recovery quality)
+  secondary_parameters: ["omega_3", "mu3_0"]
+
+  # Effect size method for group comparisons
+  effect_size_method: "cohens_d"
+
+  # Minimum recovery correlation to consider parameter interpretable
+  recovery_r_threshold: 0.7
