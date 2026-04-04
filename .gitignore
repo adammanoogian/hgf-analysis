@@ -1,0 +1,78 @@
+# Generated artifacts
+output/
+figures/
+
+# Data (not committed - too large / sensitive)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.installed.cfg
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+MANIFEST
+.Python
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+/venv/
+/ENV/
+/env/
+.env
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+*.py,cover
+coverage.xml
+nosetests.xml
+test-results/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# JAX compilation cache
+jax_cache/
+
+# Temporary
+*.tmp
+*.bak
+*.orig
+
+# OS
+Thumbs.db
