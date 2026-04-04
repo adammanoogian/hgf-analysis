@@ -98,11 +98,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENV-01 | 1 | — |
-| ENV-02 | 1 | — |
-| ENV-03 | 1 | — |
-| ENV-04 | 1 | — |
-| ENV-05 | 1 | — |
+| ENV-01 | 1 | Complete |
+| ENV-02 | 1 | Complete |
+| ENV-03 | 1 | Complete |
+| ENV-04 | 1 | Complete |
+| ENV-05 | 1 | Complete |
 | MOD-01 | 2 | — |
 | MOD-02 | 2 | — |
 | MOD-03 | 2 | — |
@@ -142,11 +142,11 @@
 | GUI-04 | 7 | — |
 | GUI-05 | 7 | — |
 | GUI-06 | 7 | — |
-| INF-01 | 1 | — |
-| INF-02 | 1 | — |
-| INF-03 | 1 | — |
+| INF-01 | 1 | Complete |
+| INF-02 | 1 | Complete |
+| INF-03 | 1 | Complete |
 | INF-04 | 4 | — |
-| INF-05 | 1 | — |
+| INF-05 | 1 | Complete |
 
 **Coverage:** 49 v1 requirements across 7 phases.
 

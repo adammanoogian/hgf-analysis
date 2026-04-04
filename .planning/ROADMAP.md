@@ -6,7 +6,7 @@ Build a validated HGF-based analysis pipeline for the PRL pick_best_cue task. Th
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** — Repo scaffold, dependencies, unified config, task environment simulator
+- [x] **Phase 1: Foundation** — Repo scaffold, dependencies, unified config, task environment simulator
 - [ ] **Phase 2: Models** — 2-level and 3-level binary HGF networks in pyhgf, custom softmax+stickiness response function
 - [ ] **Phase 3: Simulation** — Agent simulator, batch synthetic data generation with group/session structure
 - [ ] **Phase 4: Fitting** — Single-subject MCMC fitting via PyMC, batch fitting pipeline, diagnostics
@@ -22,8 +22,8 @@ Build a validated HGF-based analysis pipeline for the PRL pick_best_cue task. Th
 **Requirements**: ENV-01, ENV-02, ENV-03, ENV-04, ENV-05, INF-01, INF-02, INF-03, INF-05
 **Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold, pyproject.toml, unified YAML config, config loader with validation
-- [ ] 01-02-PLAN.md — Task environment simulator and comprehensive unit tests
+- [x] 01-01-PLAN.md — Project scaffold, pyproject.toml, unified YAML config, config loader with validation
+- [x] 01-02-PLAN.md — Task environment simulator and comprehensive unit tests
 **Success Criteria**:
   1. `pip install -e .` succeeds with all dependencies (pyhgf, jax, pymc, arviz, ipywidgets)
   2. The analysis config loads the PRL pick_best_cue task structure and extends it with analysis-specific fields (group definitions, simulation parameters)
@@ -149,7 +149,7 @@ prl-hgf-analysis/
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
-| 1. Foundation | Planning complete | -- |
+| 1. Foundation | Complete | 2026-04-04 |
 | 2. Models | Not started | -- |
 | 3. Simulation | Not started | -- |
 | 4. Fitting | Not started | -- |
