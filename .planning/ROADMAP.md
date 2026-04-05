@@ -34,6 +34,10 @@ Plans:
 **Goal**: Both HGF model variants are defined as pyhgf Network objects, forward-pass correctly on a synthetic input sequence, and the custom response function computes log-likelihood given beliefs and observed choices.
 **Depends on**: Phase 1 (environment simulator for test inputs)
 **Requirements**: MOD-01, MOD-02, MOD-03, MOD-04, MOD-05, RSP-01, RSP-02, RSP-03, RSP-04
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — 2-level and 3-level HGF model builders with forward pass and belief extraction
+- [ ] 02-02-PLAN.md — Softmax + stickiness response function with end-to-end integration tests
 **Success Criteria**:
   1. The 2-level model creates 3 parallel binary HGF branches (3 input nodes, 3 continuous-state nodes), accepts a trial sequence, and produces belief trajectories mu_1 for each cue
   2. The 3-level model adds a shared volatility parent node and produces both mu_1 (per cue) and mu_2 (volatility) trajectories; the volatility trajectory responds visibly to reversal points
@@ -150,7 +154,7 @@ prl-hgf-analysis/
 | Phase | Status | Completed |
 |-------|--------|-----------|
 | 1. Foundation | Complete | 2026-04-04 |
-| 2. Models | Not started | -- |
+| 2. Models | Planned | -- |
 | 3. Simulation | Not started | -- |
 | 4. Fitting | Not started | -- |
 | 5. Validation & Comparison | Not started | -- |
