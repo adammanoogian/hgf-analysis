@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 
 ## Current Position
 
-Phase: 2 of 7 (Models)
-Plan: 2 of 2 in phase (02-02 complete — phase complete)
-Status: Phase complete — ready for Phase 3 (Simulation)
-Last activity: 2026-04-05 — Completed 02-02-PLAN.md (response function)
+Phase: 3 of 7 (Simulation)
+Plan: 1 of 2 in phase (03-01 complete)
+Status: In progress — Phase 3 plan 1 complete; ready for 03-02 (batch simulation)
+Last activity: 2026-04-05 — Completed 03-01-PLAN.md (agent simulator)
 
-Progress: [████░░░░░░] ~28% (4 of ~14 plans complete)
+Progress: [████░░░░░░] ~36% (5 of ~14 plans complete)
 
 ## Accumulated Context
 
@@ -45,12 +45,17 @@ Progress: [████░░░░░░] ~28% (4 of ~14 plans complete)
 | First trial stickiness = 0 via sentinel prev_choice=-1 | jnp.concatenate([-1], choices[:-1]) ensures no stickiness on first trial | 02-02 |
 | jax.nn.log_softmax used (not manual formula) | Available in JAX 0.4+; cleaner and numerically stable | 02-02 |
 | Test fixtures for response tests use helper functions, not session-scoped fixtures | JAX network state is mutable after input_data(); fresh network prevents state leakage | 02-02 |
+| simulate_agent uses attribute carry (net.attributes = net.last_attributes) after each 1-trial input_data call | pyhgf 0.2.8 always restarts scan from self.attributes; carry pattern threads state forward correctly | 03-01 |
+| Prior beliefs read from net.attributes[INPUT_NODE]["expected_mean"] BEFORE input_data | Gives P(reward\|cue) as prior for choice generation at each trial; cleaner than reading node_trajectories | 03-01 |
+| Accuracy test threshold >= 0.80 (not strict >) | Single stochastic runs can hit exactly 80.0% at boundary; >= correctly represents ">80%" criterion | 03-01 |
+| Numpy (not JAX) for simulation softmax | No gradients needed in simulation path; avoids JAX overhead | 03-01 |
 
 ### Pending Todos
 
-- Phase 3: HGF simulation of synthetic participants with known parameters
+- Phase 3 plan 2: Batch simulation (simulate_batch calling simulate_agent per participant-session, tidy CSV output)
 - Phase 4: Single-subject MCMC fitting via PyMC (custom Op needed — HGFDistribution incompatible with multi-branch Network)
 - Consider creating project-specific .venv with Python 3.10 (deferred from Phase 1)
+- Add JIT pre-warm in batch.py before participant loop (not in simulate_agent — keeps agent.py clean)
 
 ### Blockers/Concerns
 
@@ -62,6 +67,6 @@ Progress: [████░░░░░░] ~28% (4 of ~14 plans complete)
 
 ## Session Continuity
 
-Last session: 2026-04-05T11:45:11Z
-Stopped at: Completed 02-02-PLAN.md — softmax + stickiness response function (Phase 2, plan 2)
-Resume file: None — Phase 2 complete; start Phase 3 (simulation)
+Last session: 2026-04-05T13:53:49Z
+Stopped at: Completed 03-01-PLAN.md — agent simulator (Phase 3, plan 1)
+Resume file: None — start 03-02 (batch simulation)
