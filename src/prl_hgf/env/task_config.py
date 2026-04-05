@@ -366,6 +366,61 @@ class SimulationConfig:
 
 
 # ---------------------------------------------------------------------------
+# Fitting dataclass
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class FittingConfig:
+    """MCMC fitting parameters and diagnostic thresholds.
+
+    Parameters
+    ----------
+    n_chains : int
+        Number of MCMC chains per participant (must be >= 1).
+    n_draws : int
+        Posterior draws per chain after tuning (must be >= 1).
+    n_tune : int
+        Tuning (warm-up) steps per chain (must be >= 1).
+    target_accept : float
+        NUTS step-size adaptation target acceptance rate (must be in (0, 1)).
+    random_seed : int
+        Base RNG seed for reproducibility.
+    r_hat_threshold : float
+        R-hat flag threshold (default 1.05).
+    ess_threshold : float
+        ESS bulk flag threshold (default 400).
+    """
+
+    n_chains: int
+    n_draws: int
+    n_tune: int
+    target_accept: float
+    random_seed: int
+    r_hat_threshold: float = 1.05
+    ess_threshold: float = 400.0
+
+    def __post_init__(self) -> None:
+        if self.n_chains < 1:
+            raise ValueError(
+                f"FittingConfig: n_chains must be >= 1, got {self.n_chains}."
+            )
+        if self.n_draws < 1:
+            raise ValueError(
+                f"FittingConfig: n_draws must be >= 1, got {self.n_draws}."
+            )
+        if self.n_tune < 1:
+            raise ValueError(
+                f"FittingConfig: n_tune must be >= 1, got {self.n_tune}."
+            )
+        if not (0.0 < self.target_accept < 1.0):
+            raise ValueError(
+                f"FittingConfig: target_accept must be in (0, 1), "
+                f"got {self.target_accept}."
+            )
+
+
+# ---------------------------------------------------------------------------
 # Top-level AnalysisConfig
 # ---------------------------------------------------------------------------
 
@@ -382,10 +437,13 @@ class AnalysisConfig:
         PRL task structure (phases, cue probs, trial counts).
     simulation : SimulationConfig
         Synthetic participant generation parameters.
+    fitting : FittingConfig
+        MCMC fitting parameters and diagnostic thresholds.
     """
 
     task: TaskConfig
     simulation: SimulationConfig
+    fitting: FittingConfig
 
 
 # ---------------------------------------------------------------------------
@@ -503,6 +561,26 @@ def _parse_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
         ) from exc
 
 
+def _parse_fitting_config(raw: dict[str, Any]) -> FittingConfig:
+    """Parse the ``fitting`` section of the YAML into :class:`FittingConfig`."""
+    ctx = "fitting"
+    try:
+        raw_diag = raw.get("diagnostics", {})
+        return FittingConfig(
+            n_chains=int(raw["n_chains"]),
+            n_draws=int(raw["n_draws"]),
+            n_tune=int(raw["n_tune"]),
+            target_accept=float(raw["target_accept"]),
+            random_seed=int(raw["random_seed"]),
+            r_hat_threshold=float(raw_diag.get("r_hat_threshold", 1.05)),
+            ess_threshold=float(raw_diag.get("ess_threshold", 400.0)),
+        )
+    except KeyError as exc:
+        raise ValueError(
+            f"{ctx}: missing required key {exc} in fitting config."
+        ) from exc
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -549,5 +627,6 @@ def load_config(path: Path | None = None) -> AnalysisConfig:
 
     task = _parse_task_config(raw["task"])
     simulation = _parse_simulation_config(raw["simulation"])
+    fitting = _parse_fitting_config(raw.get("fitting", {}))
 
-    return AnalysisConfig(task=task, simulation=simulation)
+    return AnalysisConfig(task=task, simulation=simulation, fitting=fitting)

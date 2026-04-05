@@ -1,7 +1,8 @@
 """Model fitting module for the PRL pick_best_cue HGF pipeline.
 
-Exports the public API for Phase 4 (single-participant MCMC fitting):
+Exports the public API for Phase 4 (single-participant and batch MCMC fitting):
 
+* :func:`fit_batch` — run NUTS MCMC for all participant-sessions in a DataFrame.
 * :func:`fit_participant` — run NUTS MCMC for one participant.
 * :func:`extract_summary_rows` — convert InferenceData to summary rows.
 * :func:`flag_fit` — check convergence diagnostics.
@@ -13,6 +14,7 @@ Exports the public API for Phase 4 (single-participant MCMC fitting):
 
 from __future__ import annotations
 
+from prl_hgf.fitting.batch import fit_batch
 from prl_hgf.fitting.models import (
     build_pymc_model_2level,
     build_pymc_model_3level,
@@ -28,6 +30,7 @@ from prl_hgf.fitting.single import (
 )
 
 __all__ = [
+    "fit_batch",
     "fit_participant",
     "extract_summary_rows",
     "flag_fit",

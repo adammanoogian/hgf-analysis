@@ -76,7 +76,7 @@ def _small_config(n_per_group: int = 2) -> AnalysisConfig:
         groups=real.simulation.groups,
         session_deltas=real.simulation.session_deltas,
     )
-    return AnalysisConfig(task=real.task, simulation=small_sim)
+    return AnalysisConfig(task=real.task, simulation=small_sim, fitting=real.fitting)
 
 
 # ---------------------------------------------------------------------------
