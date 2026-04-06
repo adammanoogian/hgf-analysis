@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 6 (Group Analysis) — all 5 plans complete; ready for Phase 7 (GUI).
+**Current focus:** Phase 7 (GUI) — all 1 plan complete. Project pipeline COMPLETE.
 
 ## Current Position
 
-Phase: 6 of 7 (Group Analysis) — Complete
-Plan: 5 of 5 in phase complete (06-01 group engine, 06-02 plots + pipeline, 06-03 manuscript, 06-04 HDI fix, 06-05 phase stratification)
-Status: Phase stratification implemented with win-stay/lose-shift proxies, 27 tests passing, GRP-03 gap closure done
-Last activity: 2026-04-06 — Completed 06-05-PLAN.md (phase-stratified analysis: win-stay/lose-shift metrics)
+Phase: 7 of 7 (GUI) — Complete
+Plan: 1 of 1 in phase complete (07-01 ParamExplorer GUI module)
+Status: ParamExplorer class with batch forward pass, belief caching, presets, model toggle — 12 tests passing
+Last activity: 2026-04-06 — Completed 07-01-PLAN.md (interactive HGF parameter explorer GUI)
 
-Progress: [██████████████] ~93% (14 of ~15 plans complete)
+Progress: [███████████████] 100% (15 of 15 plans complete)
 
 ## Accumulated Context
 
@@ -95,6 +95,10 @@ Progress: [██████████████] ~93% (14 of ~15 plans com
 | plot_all_rainclouds closes figures after saving | Prevents memory accumulation during batch parameter loops | 06-02 |
 | Pipeline prints phase-stratification note | omega_2 is session-level; trial-level stable vs volatile analysis deferred to real-data pipeline | 06-02 |
 | Module-scoped pytest fixtures for estimates_wide | Amortises pivot overhead across all 18 group analysis tests | 06-02 |
+| Batch forward pass (net.input_data) for GUI slider updates | simulate_agent trial-by-trial loop too slow (~4.2s) for interactive use; batch ~1.1-1.7s | 07-01 |
+| Belief caching in ParamExplorer (HGF vs response params) | HGF params (omega_2, omega_3, kappa, mu_1_0, mu_3_0) trigger forward pass; beta/zeta only recompute softmax | 07-01 |
+| GUI_SEED=0 fixed constant for warm-up simulation | Produces deterministic observation mask; documented as representative session not real participant | 07-01 |
+| Module-scoped pytest fixture for ParamExplorer | JAX JIT warm-up (~25s) amortised across 12 tests; full suite completes in ~60s | 07-01 |
 
 ### Pending Todos
 
@@ -117,6 +121,6 @@ Progress: [██████████████] ~93% (14 of ~15 plans com
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:51:30Z
-Stopped at: Completed 06-05-PLAN.md — phase stratification gap closure (win-stay/lose-shift metrics, phase_stratified.csv, 27 tests)
-Resume file: None — Phase 6 complete (all 5 plans done); ready for Phase 7 (GUI)
+Last session: 2026-04-06T20:05:49Z
+Stopped at: Completed 07-01-PLAN.md — ParamExplorer GUI module (batch forward pass, belief caching, 12 tests)
+Resume file: None — Project pipeline COMPLETE (all 7 phases, 15 plans done)
