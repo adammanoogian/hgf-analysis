@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 6 (Group Analysis) — 06-01, 06-02, 06-03, 06-04 complete; gap closure done.
+**Current focus:** Phase 6 (Group Analysis) — all 5 plans complete; ready for Phase 7 (GUI).
 
 ## Current Position
 
-Phase: 6 of 7 (Group Analysis) — In progress
-Plan: 4 of 5 in phase complete (06-01 group engine, 06-02 plots + pipeline, 06-03 manuscript, 06-04 gap closure done)
-Status: CSV schema unified, HDI columns fixed, canonical filenames saved, 22 tests passing
-Last activity: 2026-04-06 — Completed 06-04-PLAN.md (CSV schema + HDI fix gap closure)
+Phase: 6 of 7 (Group Analysis) — Complete
+Plan: 5 of 5 in phase complete (06-01 group engine, 06-02 plots + pipeline, 06-03 manuscript, 06-04 HDI fix, 06-05 phase stratification)
+Status: Phase stratification implemented with win-stay/lose-shift proxies, 27 tests passing, GRP-03 gap closure done
+Last activity: 2026-04-06 — Completed 06-05-PLAN.md (phase-stratified analysis: win-stay/lose-shift metrics)
 
-Progress: [█████████████░] ~88% (13 of ~15 plans complete)
+Progress: [██████████████] ~93% (14 of ~15 plans complete)
 
 ## Accumulated Context
 
@@ -87,6 +87,8 @@ Progress: [█████████████░] ~88% (13 of ~15 plans com
 | Canonical CSV filenames (estimates_wide.csv, effect_sizes.csv, group_contrasts.csv) | Manuscript expects fixed names; model-specific variants retained for backward compat | 06-04 |
 | combined group_contrasts.csv with parameter column | Manuscript filters by parameter column in a single read_csv call | 06-04 |
 | bambi 0.15.0 used (not 0.17.2) | Python 3.10 ds_env incompatible with bambi 0.17.2 (requires Python >=3.11); 0.15.0 has identical API | 06-01 |
+| Win-stay/lose-shift as phase-stratification proxy | sim_df stores choice/reward only (no HGF belief trajectories); behavioral proxies are standard PRL approach when HGF is session-level | 06-05 |
+| include_groups=False in groupby.apply | Suppresses pandas FutureWarning; ensures grouping columns excluded from _rates() input | 06-05 |
 | Dynamic posterior variable discovery in extract_posterior_contrasts | Bambi embeds category levels in variable names; regex parsing avoids fragility from hardcoded names | 06-01 |
 | Partial eta-squared from d^2/(d^2+4) formula | Two-group formula; does not require full ANOVA residual structure | 06-01 |
 | ptitprince RainCloud with orient=h, dodge=True, move=0.2 | Horizontal orientation reduces session-label overlap; dodge separates groups; move shifts rain below cloud | 06-02 |
@@ -115,6 +117,6 @@ Progress: [█████████████░] ~88% (13 of ~15 plans com
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:38:12Z
-Stopped at: Completed 06-04-PLAN.md — CSV schema + HDI fix gap closure (hdi_3%/hdi_97%, hdi_excludes_zero, canonical filenames, 22 tests)
-Resume file: None — Phase 6 plans 01, 02, 03, 04 complete; 06-05 pending or ready for Phase 7
+Last session: 2026-04-06T18:51:30Z
+Stopped at: Completed 06-05-PLAN.md — phase stratification gap closure (win-stay/lose-shift metrics, phase_stratified.csv, 27 tests)
+Resume file: None — Phase 6 complete (all 5 plans done); ready for Phase 7 (GUI)
