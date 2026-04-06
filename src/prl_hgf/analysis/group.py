@@ -168,7 +168,9 @@ def extract_posterior_contrasts(
     Returns
     -------
     pd.DataFrame
-        Columns: session, mean, sd, hdi_3, hdi_97.  One row per session.
+        Columns: session, mean, sd, hdi_3%, hdi_97%, hdi_excludes_zero.
+        One row per session.  ``hdi_excludes_zero`` is ``True`` when the
+        94% HDI lies entirely above or below zero.
 
     Notes
     -----
@@ -297,15 +299,23 @@ def _contrast_row(samples: np.ndarray, session: str) -> dict[str, Any]:
     Returns
     -------
     dict[str, Any]
-        Keys: session, mean, sd, hdi_3, hdi_97.
+        Keys: session, mean, sd, hdi_3%, hdi_97%, hdi_excludes_zero.
+        Column names use the percent-suffix convention so that downstream
+        CSV readers and manuscript code can query them without renaming.
+        ``hdi_excludes_zero`` is ``True`` when the entire 94% HDI lies
+        strictly above zero or strictly below zero (i.e. the null is
+        outside the credible interval).
     """
     hdi_bounds = az.hdi(samples, hdi_prob=0.94)
+    lo = float(hdi_bounds[0])
+    hi = float(hdi_bounds[1])
     return {
         "session": session,
         "mean": float(np.mean(samples)),
         "sd": float(np.std(samples)),
-        "hdi_3": float(hdi_bounds[0]),
-        "hdi_97": float(hdi_bounds[1]),
+        "hdi_3%": lo,
+        "hdi_97%": hi,
+        "hdi_excludes_zero": bool(lo > 0 or hi < 0),
     }
 
 

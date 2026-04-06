@@ -194,6 +194,11 @@ def main() -> None:
     estimates_wide.to_csv(estimates_path, index=False)
     print(f"  Saved: {estimates_path}")
 
+    # Canonical filename (manuscript reads estimates_wide.csv)
+    canonical_estimates_path = GROUP_ANALYSIS_DIR / "estimates_wide.csv"
+    estimates_wide.to_csv(canonical_estimates_path, index=False)
+    print(f"  Saved (canonical): {canonical_estimates_path}")
+
     # --- 3. Effect sizes ---
     print("\nComputing effect sizes...")
     available_sessions = sorted(estimates_wide["session"].dropna().unique().tolist())
@@ -210,6 +215,11 @@ def main() -> None:
         effect_path = GROUP_ANALYSIS_DIR / f"effect_sizes_{model}.csv"
         effect_df.to_csv(effect_path, index=False)
         print(f"  Saved: {effect_path}")
+
+        # Canonical filename (manuscript reads effect_sizes.csv)
+        canonical_effect_path = GROUP_ANALYSIS_DIR / "effect_sizes.csv"
+        effect_df.to_csv(canonical_effect_path, index=False)
+        print(f"  Saved (canonical): {canonical_effect_path}")
         print(effect_df.to_string(index=False))
 
     # --- 4. Bayesian mixed-effects models ---
@@ -232,12 +242,40 @@ def main() -> None:
             draws=args.draws,
         )
 
-        # Save posterior contrasts
+        # Save posterior contrasts — per-parameter files (backward compat) and
+        # combined group_contrasts.csv (canonical filename for manuscript)
+        all_contrasts: list[pd.DataFrame] = []
         for param, res in group_results.items():
             contrasts_path = GROUP_ANALYSIS_DIR / f"contrasts_{model}_{param}.csv"
             res["contrasts"].to_csv(contrasts_path, index=False)
             print(f"  Saved contrasts: {contrasts_path}")
             print(res["contrasts"].to_string(index=False))
+
+            # Tag with parameter for combined table
+            tagged = res["contrasts"].copy()
+            tagged.insert(0, "parameter", param)
+            all_contrasts.append(tagged)
+
+            # Power-validation: report whether omega_2 HDI excludes zero
+            if param == "omega_2" and "hdi_excludes_zero" in res["contrasts"].columns:
+                excludes_rows = res["contrasts"][
+                    res["contrasts"]["hdi_excludes_zero"]
+                ]
+                n_sessions = len(res["contrasts"])
+                n_excludes = len(excludes_rows)
+                print(
+                    f"\n  [Power validation] omega_2: HDI excludes zero in "
+                    f"{n_excludes}/{n_sessions} sessions "
+                    f"({'meets' if n_excludes >= 1 else 'does not meet'} "
+                    f"Bayesian significance criterion)"
+                )
+
+        if all_contrasts:
+            combined_contrasts = pd.concat(all_contrasts, ignore_index=True)
+            # Save canonical filename (manuscript reads group_contrasts.csv)
+            canonical_contrasts_path = GROUP_ANALYSIS_DIR / "group_contrasts.csv"
+            combined_contrasts.to_csv(canonical_contrasts_path, index=False)
+            print(f"\n  Saved combined contrasts (canonical): {canonical_contrasts_path}")
 
     # --- 5. Plots ---
     if args.skip_plots:
