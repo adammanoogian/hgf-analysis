@@ -161,7 +161,8 @@ def fit_batch(
     cores: int = 1,
     output_path: Path | None = None,
     log_every: int = 10,
-) -> pd.DataFrame:
+    return_idata: bool = False,
+) -> pd.DataFrame | tuple[pd.DataFrame, dict[tuple, object]]:
     """Fit all participant-sessions in a simulation DataFrame via NUTS MCMC.
 
     Groups the trial-level DataFrame by ``(participant_id, group, session)``
@@ -197,6 +198,11 @@ def fit_batch(
         If provided, the results DataFrame is saved as CSV at this path.
     log_every : int, optional
         Print progress every this many participant-sessions.  Default ``10``.
+    return_idata : bool, optional
+        If ``True``, also return a dict mapping
+        ``(participant_id, group, session)`` tuples to
+        :class:`arviz.InferenceData` objects (``None`` for failed fits).
+        Default ``False`` preserves backward-compatible single-return behaviour.
 
     Returns
     -------
@@ -205,6 +211,10 @@ def fit_batch(
         parameter).  Columns: ``participant_id``, ``group``, ``session``,
         ``model``, ``parameter``, ``mean``, ``sd``, ``hdi_3%``, ``hdi_97%``,
         ``r_hat``, ``ess``, ``flagged``.
+
+        When ``return_idata=True``, returns a ``(DataFrame, idata_dict)``
+        tuple where ``idata_dict`` is keyed by
+        ``(participant_id, group, session)``.
 
     Notes
     -----
@@ -249,6 +259,7 @@ def fit_batch(
     print(f"Fitting {n_total} participant-sessions with model={model_name!r}")
 
     all_rows: list[dict] = []
+    idata_dict: dict[tuple, object] = {}
     t_start = time.time()
 
     for flat_idx, ((participant_id, group, session), subset) in enumerate(groups):
@@ -262,7 +273,7 @@ def fit_batch(
         participant_seed = random_seed + flat_idx
 
         try:
-            _, summary_rows, flagged = fit_participant(
+            idata, summary_rows, flagged = fit_participant(
                 input_data_arr=input_data_arr,
                 observed_arr=observed_arr,
                 choices_arr=choices_arr,
@@ -282,6 +293,9 @@ def fit_batch(
                 row["flagged"] = flagged
             all_rows.extend(summary_rows)
 
+            if return_idata:
+                idata_dict[(participant_id, group, session)] = idata
+
         except Exception as exc:  # noqa: BLE001
             log.warning(
                 "Fit FAILED for %s (%s / %s): %s",
@@ -298,6 +312,9 @@ def fit_batch(
                 model_name=model_name,
             )
             all_rows.extend(nan_rows)
+
+            if return_idata:
+                idata_dict[(participant_id, group, session)] = None
 
         # Progress logging
         if (flat_idx + 1) % log_every == 0 or (flat_idx + 1) == n_total:
@@ -329,6 +346,8 @@ def fit_batch(
         f"{time.time() - t_start:.1f}s total"
     )
 
+    if return_idata:
+        return results_df, idata_dict
     return results_df
 
 

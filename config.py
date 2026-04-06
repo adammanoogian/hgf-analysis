@@ -17,6 +17,8 @@ CONFIGS_DIR = PROJECT_ROOT / "configs"
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 DOCS_DIR = PROJECT_ROOT / "docs"
 NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
+RESULTS_DIR = PROJECT_ROOT / "results"
+VALIDATION_DIR = RESULTS_DIR / "validation"
 
 for _directory in [OUTPUT_DIR, FIGURES_DIR, DOCS_DIR]:
     _directory.mkdir(parents=True, exist_ok=True)
