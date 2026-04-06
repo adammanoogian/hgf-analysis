@@ -22,6 +22,9 @@ dependencies = [
     "ipywidgets>=8.0",
     "pyyaml>=6.0",
     "groupBMC>=1.0",
+    "bambi>=0.13.0",
+    "pingouin>=0.5.5",
+    "ptitprince>=0.3.1",
 ]
 
 [tool.setuptools.packages.find]
@@ -70,7 +73,7 @@ check_untyped_defs = true
 module = [
     "numpy.*", "pandas.*", "scipy.*", "matplotlib.*", "seaborn.*",
     "jax.*", "jaxlib.*", "pymc.*", "arviz.*", "pyhgf.*",
-    "ipywidgets.*",
+    "ipywidgets.*", "bambi.*", "pingouin.*", "ptitprince.*",
 ]
 ignore_missing_imports = true
 
