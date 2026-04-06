@@ -91,16 +91,19 @@ Plans:
 **Goal**: The pipeline tests the primary hypotheses: group x session interactions on HGF parameters, phase-stratified learning rate effects, and produces publication-quality figures.
 **Depends on**: Phase 5 (validated parameter estimates + model selection)
 **Requirements**: GRP-01, GRP-02, GRP-03, GRP-04, GRP-05
-**Plans:** 3 plans
+**Plans:** 5 plans
 Plans:
-- [ ] 06-01-PLAN.md — Core analysis engine: estimates pivot, bambi mixed-effects models, effect sizes
-- [ ] 06-02-PLAN.md — Visualization (raincloud/interaction plots), pipeline script, tests
-- [ ] 06-03-PLAN.md — Quarto scientific manuscript scaffold with inline statistics
+- [x] 06-01-PLAN.md — Core analysis engine: estimates pivot, bambi mixed-effects models, effect sizes
+- [x] 06-02-PLAN.md — Visualization (raincloud/interaction plots), pipeline script, tests
+- [x] 06-03-PLAN.md — Quarto scientific manuscript scaffold with inline statistics
+- [ ] 06-04-PLAN.md — Fix CSV schema mismatch + add HDI-excludes-zero power validation
+- [ ] 06-05-PLAN.md — Phase-stratified analysis (win-stay/lose-shift by stable vs volatile)
 **Success Criteria**:
-  1. Mixed-effects model (or repeated-measures ANOVA) detects the simulated group x session interaction on omega_2 with p < 0.05 (since the effect was simulated, this validates power)
+  1. Mixed-effects model detects the simulated group x session interaction on omega_2: the 94% HDI on the group contrast excludes zero for at least one session (Bayesian power validation)
   2. Phase-stratified analysis (stable vs. volatile) shows different effective learning rates, and the group x phase interaction is testable
   3. Raincloud plots show parameter distributions by group x session for all parameters of interest
   4. Effect sizes are computed and reported for all primary comparisons
+  5. Pipeline CSV outputs match manuscript expectations (canonical filenames, consistent HDI column names)
 
 ### Phase 7: GUI
 **Goal**: An interactive Jupyter widget allows real-time exploration of how HGF parameters affect belief trajectories, learning rates, and choice probabilities on the PRL task environment.
@@ -176,7 +179,7 @@ prl-hgf-analysis/
 | 3. Simulation | Complete | 2026-04-05 |
 | 4. Fitting | Complete | 2026-04-05 |
 | 5. Validation & Comparison | Complete | 2026-04-06 |
-| 6. Group Analysis | Not started | -- |
+| 6. Group Analysis | In progress | -- |
 | 7. GUI | Not started | -- |
 
 ## Key Risks
