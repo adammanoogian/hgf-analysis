@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 6 (Group Analysis) — 06-01 group analysis engine complete; 06-02 GUI remaining.
+**Current focus:** Phase 6 (Group Analysis) — 06-01 and 06-02 complete; 06-03 manuscript also complete.
 
 ## Current Position
 
 Phase: 6 of 7 (Group Analysis) — In progress
-Plan: 1 of 3 in phase complete (06-01 group analysis engine done; 06-02 GUI pending)
-Status: Group analysis engine complete — bambi mixed-effects, posterior contrasts, Cohen's d, partial eta-sq
-Last activity: 2026-04-06 — Completed 06-01-PLAN.md (group analysis engine)
+Plan: 2 of 3 in phase complete (06-01 group engine, 06-02 plots + pipeline done; 06-03 manuscript also done)
+Status: Group plots, pipeline, and tests complete — raincloud/interaction plots, 06_group_analysis.py, 18 tests
+Last activity: 2026-04-06 — Completed 06-02-PLAN.md (group plots and pipeline)
 
-Progress: [███████████░░] ~79% (11 of ~14 plans complete)
+Progress: [████████████░] ~86% (12 of ~14 plans complete)
 
 ## Accumulated Context
 
@@ -85,6 +85,10 @@ Progress: [███████████░░] ~79% (11 of ~14 plans comple
 | bambi 0.15.0 used (not 0.17.2) | Python 3.10 ds_env incompatible with bambi 0.17.2 (requires Python >=3.11); 0.15.0 has identical API | 06-01 |
 | Dynamic posterior variable discovery in extract_posterior_contrasts | Bambi embeds category levels in variable names; regex parsing avoids fragility from hardcoded names | 06-01 |
 | Partial eta-squared from d^2/(d^2+4) formula | Two-group formula; does not require full ANOVA residual structure | 06-01 |
+| ptitprince RainCloud with orient=h, dodge=True, move=0.2 | Horizontal orientation reduces session-label overlap; dodge separates groups; move shifts rain below cloud | 06-02 |
+| plot_all_rainclouds closes figures after saving | Prevents memory accumulation during batch parameter loops | 06-02 |
+| Pipeline prints phase-stratification note | omega_2 is session-level; trial-level stable vs volatile analysis deferred to real-data pipeline | 06-02 |
+| Module-scoped pytest fixtures for estimates_wide | Amortises pivot overhead across all 18 group analysis tests | 06-02 |
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ Progress: [███████████░░] ~79% (11 of ~14 plans comple
 
 ## Session Continuity
 
-Last session: 2026-04-06T16:33:16Z
-Stopped at: Completed 06-01-PLAN.md — group analysis engine (bambi mixed-effects, posterior contrasts, effect sizes)
-Resume file: None — continue with Phase 6 plan 06-02 (GUI)
+Last session: 2026-04-06T16:43:21Z
+Stopped at: Completed 06-02-PLAN.md — group plots and pipeline (raincloud/interaction plots, 06_group_analysis.py, 18 tests)
+Resume file: None — Phase 6 plans 01, 02, 03 all complete; ready for real-data collection or Phase 7
