@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 6 (Group Analysis) — 06-01 and 06-02 complete; 06-03 manuscript also complete.
+**Current focus:** Phase 6 (Group Analysis) — 06-01, 06-02, 06-03, 06-04 complete; gap closure done.
 
 ## Current Position
 
 Phase: 6 of 7 (Group Analysis) — In progress
-Plan: 2 of 3 in phase complete (06-01 group engine, 06-02 plots + pipeline done; 06-03 manuscript also done)
-Status: Group plots, pipeline, and tests complete — raincloud/interaction plots, 06_group_analysis.py, 18 tests
-Last activity: 2026-04-06 — Completed 06-02-PLAN.md (group plots and pipeline)
+Plan: 4 of 5 in phase complete (06-01 group engine, 06-02 plots + pipeline, 06-03 manuscript, 06-04 gap closure done)
+Status: CSV schema unified, HDI columns fixed, canonical filenames saved, 22 tests passing
+Last activity: 2026-04-06 — Completed 06-04-PLAN.md (CSV schema + HDI fix gap closure)
 
-Progress: [████████████░] ~86% (12 of ~14 plans complete)
+Progress: [█████████████░] ~88% (13 of ~15 plans complete)
 
 ## Accumulated Context
 
@@ -82,6 +82,10 @@ Progress: [████████████░] ~86% (12 of ~14 plans comple
 | Manual raincloud (kde + scatter + box) instead of ptitprince import | Avoids hard runtime dependency at Quarto render time; renders without ptitprince installed | 06-03 |
 | 94% HDI for group-level credible intervals | McElreath 2020 convention; consistent with bambi model (06-01/06-02) | 06-03 |
 | mason2024 BibTeX entry marked TODO for page verification | Exact volume/page details to be confirmed before submission | 06-03 |
+| hdi_3%/hdi_97% column names (percent-suffix) | Manuscript already used this convention; unifying group.py to match avoids any mismatch | 06-04 |
+| hdi_excludes_zero boolean in _contrast_row | Enables Bayesian power validation without post-processing; lo>0 or hi<0 is the correct criterion | 06-04 |
+| Canonical CSV filenames (estimates_wide.csv, effect_sizes.csv, group_contrasts.csv) | Manuscript expects fixed names; model-specific variants retained for backward compat | 06-04 |
+| combined group_contrasts.csv with parameter column | Manuscript filters by parameter column in a single read_csv call | 06-04 |
 | bambi 0.15.0 used (not 0.17.2) | Python 3.10 ds_env incompatible with bambi 0.17.2 (requires Python >=3.11); 0.15.0 has identical API | 06-01 |
 | Dynamic posterior variable discovery in extract_posterior_contrasts | Bambi embeds category levels in variable names; regex parsing avoids fragility from hardcoded names | 06-01 |
 | Partial eta-squared from d^2/(d^2+4) formula | Two-group formula; does not require full ANOVA residual structure | 06-01 |
@@ -111,6 +115,6 @@ Progress: [████████████░] ~86% (12 of ~14 plans comple
 
 ## Session Continuity
 
-Last session: 2026-04-06T16:43:21Z
-Stopped at: Completed 06-02-PLAN.md — group plots and pipeline (raincloud/interaction plots, 06_group_analysis.py, 18 tests)
-Resume file: None — Phase 6 plans 01, 02, 03 all complete; ready for real-data collection or Phase 7
+Last session: 2026-04-06T18:38:12Z
+Stopped at: Completed 06-04-PLAN.md — CSV schema + HDI fix gap closure (hdi_3%/hdi_97%, hdi_excludes_zero, canonical filenames, 22 tests)
+Resume file: None — Phase 6 plans 01, 02, 03, 04 complete; 06-05 pending or ready for Phase 7
