@@ -30,16 +30,18 @@ Output
 * ``effect_sizes_{model}.csv``     — Cohen's d and partial η² per param × session
 * ``contrasts_{model}_{param}.csv`` — posterior contrasts per session (one file
   per parameter)
+* ``phase_stratified.csv``         — win-stay/lose-shift rates per participant ×
+  session × phase (stable/volatile)
 * ``raincloud_{param}.png``        — raincloud plots (unless ``--skip-plots``)
 * ``interaction_{param}.png``      — interaction plots (unless ``--skip-plots``)
 
 Phase-stratification note
 -------------------------
-ω₂ (tonic volatility) is a session-level parameter in the current pipeline —
-it captures mean learning rate across the full session.  Trial-level
-phase-stratified analysis (stable vs volatile learning rate per reversal phase)
-requires saving per-trial belief trajectories and is deferred to the real-data
-pipeline once participant data are collected.
+ω₂ (tonic volatility) is a session-level parameter.  Phase-stratified analysis
+uses behavioral proxies (win-stay and lose-shift rates) as trial-level measures
+of learning rate adaptation.  This is the standard approach when HGF parameters
+are estimated at the session level.  Phase stratification is exploratory; primary
+hypotheses focus on ω₂ and κ at the session level.
 """
 
 from __future__ import annotations
@@ -57,6 +59,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+import arviz as az  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
@@ -69,6 +72,9 @@ from prl_hgf.analysis.group import (  # noqa: E402
 from prl_hgf.analysis.group_plots import (  # noqa: E402
     plot_interaction,
     plot_raincloud,
+)
+from prl_hgf.analysis.phase_stratification import (  # noqa: E402
+    build_phase_stratified_df,
 )
 
 logging.basicConfig(
@@ -224,10 +230,8 @@ def main() -> None:
 
     # --- 4. Bayesian mixed-effects models ---
     print("\nFitting Bayesian mixed-effects models (bambi)...")
-    print("  NOTE: omega_2 is a session-level parameter (mean learning rate across")
-    print("  the full session). Trial-level phase-stratified analysis (stable vs")
-    print("  volatile phases) requires per-trial belief trajectories and is")
-    print("  deferred to the real-data pipeline.")
+    print("  NOTE: Phase stratification uses behavioral metrics (win-stay, lose-shift)")
+    print("  as trial-level proxies since omega_2 is a session-level parameter.")
 
     if n_participants < 6:
         print(
@@ -276,6 +280,77 @@ def main() -> None:
             canonical_contrasts_path = GROUP_ANALYSIS_DIR / "group_contrasts.csv"
             combined_contrasts.to_csv(canonical_contrasts_path, index=False)
             print(f"\n  Saved combined contrasts (canonical): {canonical_contrasts_path}")
+
+    # --- 4b. Phase-stratified analysis (exploratory) ---
+    print("\nPhase-stratified analysis (stable vs volatile)...")
+    phase_sim_path = _resolve_sim_path()
+    if phase_sim_path is not None and phase_sim_path.exists():
+        phase_sim_df = pd.read_csv(phase_sim_path)
+        try:
+            phase_df = build_phase_stratified_df(phase_sim_df)
+        except ValueError as exc:
+            print(f"  WARNING: {exc}")
+            print("  Skipping phase-stratified analysis.")
+            phase_df = None
+
+        if phase_df is not None:
+            phase_path = GROUP_ANALYSIS_DIR / "phase_stratified.csv"
+            phase_df.to_csv(phase_path, index=False)
+            print(f"  Saved: {phase_path}")
+
+            # Summarise by group x phase
+            summary = (
+                phase_df
+                .groupby(["group", "phase_label"])[["win_stay_rate", "lose_shift_rate"]]
+                .agg(["mean", "std"])
+            )
+            print("\n  Win-Stay and Lose-Shift by Group x Phase:")
+            print(summary.to_string())
+
+            # Fit group x phase model on win_stay_rate and lose_shift_rate
+            n_participants_phase = phase_df["participant_id"].nunique()
+            if n_participants_phase >= 6:
+                import bambi as bmb  # noqa: E402
+
+                phase_data = phase_df.copy()
+                phase_data["group"] = pd.Categorical(phase_data["group"].astype(str))
+                phase_data["phase_label"] = pd.Categorical(
+                    phase_data["phase_label"].astype(str)
+                )
+
+                for outcome in ["win_stay_rate", "lose_shift_rate"]:
+                    formula = (
+                        f"{outcome} ~ C(group) * C(phase_label) + (1 | participant_id)"
+                    )
+                    print(f"\n  Fitting bambi model: {formula}")
+                    try:
+                        phase_model = bmb.Model(formula, phase_data)
+                        phase_idata = phase_model.fit(
+                            draws=args.draws,
+                            tune=1000,
+                            chains=4,
+                            random_seed=42,
+                        )
+                        phase_summary = az.summary(
+                            phase_idata,
+                            var_names=[
+                                v
+                                for v in phase_idata.posterior.data_vars
+                                if "1|participant_id" not in v and v != "sigma"
+                            ],
+                        )
+                        print(f"\n  {outcome} model summary:")
+                        print(phase_summary.to_string())
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"  WARNING: bambi phase model failed — {exc}")
+            else:
+                print(
+                    f"  WARNING: Only {n_participants_phase} participants. "
+                    "Need >= 6 for group x phase model. Skipping."
+                )
+    else:
+        print("  Simulated data not found. Skipping phase-stratified analysis.")
+        print("  (Run scripts/03_simulate_participants.py first.)")
 
     # --- 5. Plots ---
     if args.skip_plots:

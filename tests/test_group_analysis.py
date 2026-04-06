@@ -24,6 +24,10 @@ import matplotlib.pyplot as plt  # noqa: E402
 from prl_hgf.analysis.effect_sizes import compute_cohens_d, compute_effect_sizes_table
 from prl_hgf.analysis.group import _contrast_row, build_estimates_wide
 from prl_hgf.analysis.group_plots import plot_interaction, plot_raincloud
+from prl_hgf.analysis.phase_stratification import (
+    build_phase_stratified_df,
+    compute_phase_learning_metrics,
+)
 
 # ---------------------------------------------------------------------------
 # Test fixture: 6 participants (3 per group) × 3 sessions × 2 parameters
@@ -355,3 +359,146 @@ class TestPlotInteraction:
         plt.close(fig)
         assert out.exists(), f"PNG not saved at {out}."
         assert out.stat().st_size > 0, "Saved PNG is empty."
+
+
+# ---------------------------------------------------------------------------
+# Tests: phase stratification
+# ---------------------------------------------------------------------------
+
+
+def _make_sim_df(seed: int = 42) -> pd.DataFrame:
+    """Build a minimal trial-level sim_df for phase stratification tests.
+
+    Produces 2 participants (one per group) × 2 sessions × 20 trials, with
+    phase_label "stable" for trials 0-9 and "volatile" for trials 10-19.
+
+    Parameters
+    ----------
+    seed : int, optional
+        Random seed. Default 42.
+
+    Returns
+    -------
+    pd.DataFrame
+        Trial-level DataFrame with columns: participant_id, group, session,
+        trial, cue_chosen, reward, phase_label.
+    """
+    rng = np.random.default_rng(seed)
+    rows = []
+    participants = [
+        ("P001_control", "control"),
+        ("P002_post_concussion", "post_concussion"),
+    ]
+    sessions = ["baseline", "session2"]
+    n_trials = 20
+
+    for pid, group in participants:
+        for session in sessions:
+            choices = rng.integers(0, 3, size=n_trials).tolist()
+            rewards = rng.integers(0, 2, size=n_trials).tolist()
+            phase_labels = ["stable"] * 10 + ["volatile"] * 10
+            for t in range(n_trials):
+                rows.append(
+                    {
+                        "participant_id": pid,
+                        "group": group,
+                        "session": session,
+                        "trial": t,
+                        "cue_chosen": choices[t],
+                        "reward": rewards[t],
+                        "phase_label": phase_labels[t],
+                    }
+                )
+
+    return pd.DataFrame(rows)
+
+
+@pytest.fixture(scope="module")
+def sim_df() -> pd.DataFrame:
+    """Module-scoped sim DataFrame fixture for phase stratification tests."""
+    return _make_sim_df()
+
+
+class TestPhaseStratification:
+    """Tests for compute_phase_learning_metrics and build_phase_stratified_df."""
+
+    def test_phase_metrics_output_columns(self, sim_df: pd.DataFrame) -> None:
+        """compute_phase_learning_metrics returns all required columns."""
+        result = compute_phase_learning_metrics(sim_df)
+        required = {
+            "participant_id",
+            "group",
+            "session",
+            "phase_label",
+            "win_stay_rate",
+            "lose_shift_rate",
+            "n_trials",
+        }
+        assert required.issubset(set(result.columns)), (
+            f"Missing columns. Expected {required}. Got: {list(result.columns)}"
+        )
+
+    def test_phase_metrics_one_row_per_participant_session_phase(
+        self, sim_df: pd.DataFrame
+    ) -> None:
+        """Output has one row per (participant_id, session, phase_label) combination.
+
+        With 2 participants × 2 sessions × 2 phases = 8 rows expected.
+        """
+        result = compute_phase_learning_metrics(sim_df)
+        expected_rows = 2 * 2 * 2  # participants × sessions × phases
+        assert len(result) == expected_rows, (
+            f"Expected {expected_rows} rows (2 participants × 2 sessions × 2 phases). "
+            f"Got {len(result)}."
+        )
+        # No duplicate (participant_id, session, phase_label) rows
+        duplicated = result.duplicated(
+            subset=["participant_id", "session", "phase_label"]
+        ).sum()
+        assert duplicated == 0, f"Found {duplicated} duplicate rows."
+
+    def test_win_stay_rate_bounded(self, sim_df: pd.DataFrame) -> None:
+        """win_stay_rate values are all in [0, 1] where not NaN."""
+        result = compute_phase_learning_metrics(sim_df)
+        computable = result["win_stay_rate"].dropna()
+        assert (computable >= 0.0).all(), (
+            f"win_stay_rate below 0 found:\n{result[result['win_stay_rate'] < 0]}"
+        )
+        assert (computable <= 1.0).all(), (
+            f"win_stay_rate above 1 found:\n{result[result['win_stay_rate'] > 1]}"
+        )
+
+    def test_lose_shift_rate_bounded(self, sim_df: pd.DataFrame) -> None:
+        """lose_shift_rate values are all in [0, 1] where not NaN."""
+        result = compute_phase_learning_metrics(sim_df)
+        computable = result["lose_shift_rate"].dropna()
+        assert (computable >= 0.0).all(), (
+            f"lose_shift_rate below 0 found:\n{result[result['lose_shift_rate'] < 0]}"
+        )
+        assert (computable <= 1.0).all(), (
+            f"lose_shift_rate above 1 found:\n{result[result['lose_shift_rate'] > 1]}"
+        )
+
+    def test_build_phase_stratified_df_validates_columns(
+        self, sim_df: pd.DataFrame
+    ) -> None:
+        """build_phase_stratified_df returns correct columns and raises on missing ones."""
+        result = build_phase_stratified_df(sim_df)
+        required = {
+            "participant_id",
+            "group",
+            "session",
+            "phase_label",
+            "win_stay_rate",
+            "lose_shift_rate",
+            "n_trials",
+        }
+        assert required.issubset(set(result.columns)), (
+            f"Missing columns in build_phase_stratified_df output. "
+            f"Expected {required}. Got: {list(result.columns)}"
+        )
+
+        # Missing required column should raise ValueError
+        broken_df = sim_df.drop(columns=["phase_label"])
+        with pytest.raises(ValueError, match="missing required columns"):
+            build_phase_stratified_df(broken_df)
