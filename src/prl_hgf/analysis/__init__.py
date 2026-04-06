@@ -29,6 +29,10 @@ from prl_hgf.analysis.group_plots import (
     plot_interaction,
     plot_raincloud,
 )
+from prl_hgf.analysis.phase_stratification import (
+    build_phase_stratified_df,
+    compute_phase_learning_metrics,
+)
 from prl_hgf.analysis.recovery import (
     build_recovery_df,
     compute_correlation_matrix,
@@ -58,4 +62,7 @@ __all__ = [
     "plot_raincloud",
     "plot_interaction",
     "plot_all_rainclouds",
+    # Phase stratification
+    "compute_phase_learning_metrics",
+    "build_phase_stratified_df",
 ]
