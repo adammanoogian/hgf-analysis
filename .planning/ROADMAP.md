@@ -91,6 +91,11 @@ Plans:
 **Goal**: The pipeline tests the primary hypotheses: group x session interactions on HGF parameters, phase-stratified learning rate effects, and produces publication-quality figures.
 **Depends on**: Phase 5 (validated parameter estimates + model selection)
 **Requirements**: GRP-01, GRP-02, GRP-03, GRP-04, GRP-05
+**Plans:** 3 plans
+Plans:
+- [ ] 06-01-PLAN.md — Core analysis engine: estimates pivot, bambi mixed-effects models, effect sizes
+- [ ] 06-02-PLAN.md — Visualization (raincloud/interaction plots), pipeline script, tests
+- [ ] 06-03-PLAN.md — Quarto scientific manuscript scaffold with inline statistics
 **Success Criteria**:
   1. Mixed-effects model (or repeated-measures ANOVA) detects the simulated group x session interaction on omega_2 with p < 0.05 (since the effect was simulated, this validates power)
   2. Phase-stratified analysis (stable vs. volatile) shows different effective learning rates, and the group x phase interaction is testable
