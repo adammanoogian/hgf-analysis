@@ -11,7 +11,7 @@ Build a validated HGF-based analysis pipeline for the PRL pick_best_cue task. Th
 - [x] **Phase 3: Simulation** — Agent simulator, batch synthetic data generation with group/session structure
 - [x] **Phase 4: Fitting** — Single-subject MCMC fitting via PyMC, batch fitting pipeline, diagnostics
 - [x] **Phase 5: Validation & Comparison** — Parameter recovery, model comparison (random-effects BMS)
-- [ ] **Phase 6: Group Analysis** — Second-level statistics, group x session x phase effects, visualizations
+- [x] **Phase 6: Group Analysis** — Second-level statistics, group x session x phase effects, visualizations
 - [ ] **Phase 7: GUI** — Interactive Jupyter widget for parameter exploration and belief trajectory visualization
 
 ## Phase Details
@@ -96,8 +96,8 @@ Plans:
 - [x] 06-01-PLAN.md — Core analysis engine: estimates pivot, bambi mixed-effects models, effect sizes
 - [x] 06-02-PLAN.md — Visualization (raincloud/interaction plots), pipeline script, tests
 - [x] 06-03-PLAN.md — Quarto scientific manuscript scaffold with inline statistics
-- [ ] 06-04-PLAN.md — Fix CSV schema mismatch + add HDI-excludes-zero power validation
-- [ ] 06-05-PLAN.md — Phase-stratified analysis (win-stay/lose-shift by stable vs volatile)
+- [x] 06-04-PLAN.md — Fix CSV schema mismatch + add HDI-excludes-zero power validation
+- [x] 06-05-PLAN.md — Phase-stratified analysis (win-stay/lose-shift by stable vs volatile)
 **Success Criteria**:
   1. Mixed-effects model detects the simulated group x session interaction on omega_2: the 94% HDI on the group contrast excludes zero for at least one session (Bayesian power validation)
   2. Phase-stratified analysis (stable vs. volatile) shows different effective learning rates, and the group x phase interaction is testable
@@ -179,7 +179,7 @@ prl-hgf-analysis/
 | 3. Simulation | Complete | 2026-04-05 |
 | 4. Fitting | Complete | 2026-04-05 |
 | 5. Validation & Comparison | Complete | 2026-04-06 |
-| 6. Group Analysis | In progress | -- |
+| 6. Group Analysis | Complete | 2026-04-06 |
 | 7. GUI | Not started | -- |
 
 ## Key Risks

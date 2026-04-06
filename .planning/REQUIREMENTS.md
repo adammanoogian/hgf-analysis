@@ -131,11 +131,11 @@
 | CMP-02 | 5 | Complete |
 | CMP-03 | 5 | Complete |
 | CMP-04 | 5 | Complete |
-| GRP-01 | 6 | — |
-| GRP-02 | 6 | — |
-| GRP-03 | 6 | — |
-| GRP-04 | 6 | — |
-| GRP-05 | 6 | — |
+| GRP-01 | 6 | Complete |
+| GRP-02 | 6 | Complete |
+| GRP-03 | 6 | Complete |
+| GRP-04 | 6 | Complete |
+| GRP-05 | 6 | Complete |
 | GUI-01 | 7 | — |
 | GUI-02 | 7 | — |
 | GUI-03 | 7 | — |
