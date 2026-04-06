@@ -1,7 +1,19 @@
 """Group-level analysis module.
 
-Placeholder for Phases 5-6: Bayesian model selection (random-effects BMS),
-second-level mixed-effects group analysis, and visualization.
+Provides parameter recovery analysis (true vs recovered metrics and plots)
+and Bayesian model selection utilities for Phases 5-6.
 """
 
 from __future__ import annotations
+
+from prl_hgf.analysis.recovery import (
+    build_recovery_df,
+    compute_correlation_matrix,
+    compute_recovery_metrics,
+)
+
+__all__ = [
+    "build_recovery_df",
+    "compute_recovery_metrics",
+    "compute_correlation_matrix",
+]
