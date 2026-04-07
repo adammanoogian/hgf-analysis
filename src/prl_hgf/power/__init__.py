@@ -34,6 +34,8 @@ __all__ = [
     "make_power_config",
     "PowerConfig",
     "load_power_config",
+    "decode_task_id",
+    "total_grid_size",
     "make_child_rng",
     "POWER_SCHEMA",
     "write_parquet_row",
