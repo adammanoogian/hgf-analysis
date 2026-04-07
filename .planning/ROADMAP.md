@@ -74,13 +74,12 @@ Plans:
   3. The full N x effect_size grid (n_per_group in [10,15,20,25,30,40,50], d in [0.3,0.5,0.7], K=200 iterations) produces parquet files for Power Analysis A with fewer than 5% of cells having exclusion rate > 5%
   4. Power Analysis B generates data from the 3-level model, fits both models, runs random-effects BMS, and records P(XP_true > 0.75) at each N level
   5. Group-stratified BMS (PWR-08) results are present in the output and clearly labeled as optional/exploratory
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: power/bayes_factor.py + power/contrasts.py — JZS BF via pingouin, primary and secondary contrasts (PWR-03, PWR-05)
-- [ ] 10-02: power/iteration.py + scripts/07_power_single_iteration.py — one (N, d, k) cycle; writes single parquet row (PWR-02, PWR-06)
-- [ ] 10-03: power/bms_power.py — BMS discriminability sweep, group-stratified BMS (PWR-07, PWR-08)
-- [ ] 10-04: scripts/07a_generate_job_params.py — N x d x k grid CSV; full cluster submission via scripts/08_power_slurm_array.sh (PWR-04)
+- [ ] 10-01-PLAN.md — power/contrasts.py: JZS BF via pingouin, DiD and linear trend contrasts, 9 unit tests (PWR-03, PWR-05)
+- [ ] 10-02-PLAN.md — YAML power grid update (d={0.3,0.5,0.7}, K=200), power/grid.py decode_task_id, SLURM update, reduced MCMC CLI flags (PWR-04, PWR-06)
+- [ ] 10-03-PLAN.md — power/iteration.py: run_power_iteration full pipeline, entry point wiring, BMS power path, 5 unit tests (PWR-02, PWR-07, PWR-08)
 
 ### Phase 11: Aggregation, Figures, and Recommendation
 
@@ -115,5 +114,5 @@ Plans:
 | 7 - GUI | v1.0 | 2/2 | Complete | 2026-04-07 |
 | 8 - Config + Infrastructure | v1.1 | 2/2 | Complete | 2026-04-07 |
 | 9 - Prechecks | v1.1 | 2/2 | Complete | 2026-04-07 |
-| 10 - Core Power Modules + Sweep | v1.1 | 0/4 | Not started | - |
+| 10 - Core Power Modules + Sweep | v1.1 | 0/3 | Not started | - |
 | 11 - Aggregation + Publication | v1.1 | 0/3 | Not started | - |
