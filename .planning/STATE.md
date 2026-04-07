@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.1 Power Analysis — Phase 11 aggregation and publication underway
+**Current focus:** Milestone v1.1 Power Analysis — Phase 11 complete (v1.1 code-complete)
 
 ## Current Position
 
-Phase: 11 - Aggregation and Publication (in progress)
-Plan: 2/3 complete
-Status: In progress
-Last activity: 2026-04-07 — Completed 11-02-PLAN.md (power analysis plotting script + 14 unit tests)
+Phase: 11 - Aggregation and Publication (complete)
+Plan: 3/3 complete
+Status: Phase complete — v1.1 code-complete
+Last activity: 2026-04-08 — Completed 11-03-PLAN.md (power recommendation script + 8 unit tests)
 
-[====================> ] v1.1 in progress (v1.0 shipped; Phases 8-10 done; Phase 11 plans 1-2/3 complete)
+[=====================] v1.1 complete (v1.0 shipped; Phases 8-11 done; all 3 Phase 11 plans complete)
 
 ## Performance Metrics
 
@@ -57,6 +57,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | plot_power_a recomputes from raw bf_value (not bf_exceeds) so --bf-threshold CLI arg is live | Enables users to replot at different thresholds without re-running the sweep | 11-02 |
 | plot_combined_figure saves both PDF and PNG from same stem | Grant submission needs PDF; PNG for quick inspection | 11-02 |
 | _draw_*_panel helpers separate subplot rendering from file I/O | Enables test isolation and reuse in combined figure without recursive file saves | 11-02 |
+| generate_recommendation re-applies bf_threshold to bf_value for N selection | Allows any --bf-threshold CLI arg to affect recommended N, not just pre-baked bf_exceeds bool | 11-03 |
+| power_a_df and power_b_df recomputed from master if summary CSVs missing | Makes recommendation script self-sufficient when only power_master.csv exists | 11-03 |
 
 ### Pending Todos
 
@@ -80,7 +82,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-07T22:08:02Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-08T00:07:00Z
+Stopped at: Completed 11-03-PLAN.md — Phase 11 complete, v1.1 code-complete
 Resume file: None
-Next action: Begin Phase 11 Plan 03 (N/group recommendation)
+Next action: Run power sweep on cluster; generate recommendation.md with real data
