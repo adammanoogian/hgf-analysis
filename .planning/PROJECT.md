@@ -10,10 +10,10 @@ A validated simulation-to-inference pipeline: simulate synthetic participants wi
 
 ## Study Design
 
-- **Groups**: (1) post-concussion + psilocybin, (2) healthy controls + psilocybin
+- **Groups**: (1) post-concussion + psilocybin, (2) post-concussion + placebo
 - **Sessions**: 3 timepoints — baseline (pre-dose), post-dose, follow-up
 - **Task**: pick_best_cue mode — 3 cues with different reward values, participant selects highest-value cue; criterion-based reversals create volatile phases within sets
-- **Hypothesis direction**: Two-tailed. Post-concussion group may show altered belief updating (e.g., reduced flexibility, different volatility priors); psilocybin may modulate these parameters differentially across groups
+- **Hypothesis direction**: Two-tailed. Both groups are post-concussion patients; psilocybin group may show greater improvement in belief updating flexibility (e.g., increased learning rate, stronger volatility coupling) compared to placebo
 
 ## Model Architecture
 
@@ -65,7 +65,16 @@ Softmax over three cue beliefs with beta (inverse temperature) and zeta (stickin
 
 ### Active
 
-(None — awaiting next milestone definition)
+#### Current Milestone: v1.1 Power Analysis
+
+**Goal:** Simulation-based Bayes Factor Design Analysis (BFDA) to determine required sample size and trial count for detecting psilocybin × session interactions on HGF parameters.
+
+**Target features:**
+- Prechecks: parameter recovery validation, trial count sweep, MCMC validation
+- Power Analysis A: N × effect size sweep for group × session interaction (JZS BF)
+- Power Analysis B: Model discriminability via BMS at varying N
+- 4-panel publication figure + N recommendation
+- SLURM-parallelized compute (embarrassingly parallel iterations)
 
 ### Out of Scope
 
