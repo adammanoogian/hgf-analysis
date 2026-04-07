@@ -1,11 +1,16 @@
 """Recovery precheck gate for the BFDA power analysis pipeline.
 
 Implements PRE-01 (50-participant recovery run), PRE-02 (confound matrix),
-PRE-03 (eligibility table with reasons), and PRE-06 (MCMC convergence gating).
+PRE-03 (eligibility table with reasons), PRE-04/PRE-05 (trial count sweep),
+and PRE-06 (MCMC convergence gating).
 
 Purpose: gate which HGF parameters advance to the expensive Phase 10 power
 sweep.  Running the precheck on 50 baseline-only participants (~1/3 the full
 study cost) establishes recoverability before committing cluster resources.
+
+The trial count sweep (:func:`run_trial_sweep`) identifies the minimum trial
+count where all power-eligible parameters achieve r >= 0.7, using reduced
+MCMC settings (2 chains, 500 draws, 500 tune) to manage compute cost.
 
 Notes
 -----
@@ -16,6 +21,8 @@ Notes
 - ``omega_3`` is always labelled ``"exploratory -- upper bound"`` in
   :func:`build_eligibility_table` regardless of its actual r value. This is a
   locked project decision (see STATE.md / ROADMAP.md).
+- :func:`find_minimum_trial_count` excludes ``omega_3`` from the "all must
+  pass" requirement by default (exploratory parameter).
 """
 
 from __future__ import annotations
@@ -25,7 +32,12 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+import matplotlib
 import pandas as pd
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt  # noqa: E402
 
 from prl_hgf.analysis.plots import plot_correlation_matrix, plot_recovery_scatter
 from prl_hgf.analysis.recovery import (
@@ -40,9 +52,13 @@ from prl_hgf.simulation.batch import simulate_batch
 
 __all__ = [
     "PrecheckResult",
+    "SweepPoint",
     "make_trial_config",
     "run_recovery_precheck",
     "build_eligibility_table",
+    "run_trial_sweep",
+    "plot_trial_sweep",
+    "find_minimum_trial_count",
 ]
 
 log = logging.getLogger(__name__)
@@ -387,3 +403,379 @@ def build_eligibility_table(metrics_df: pd.DataFrame) -> pd.DataFrame:
         )
 
     return pd.DataFrame(rows, columns=["parameter", "r", "status", "reason"])
+
+
+# ---------------------------------------------------------------------------
+# SweepPoint dataclass
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SweepPoint:
+    """Container for one trial-count grid point in a recovery sweep.
+
+    Parameters
+    ----------
+    trial_count : int
+        Actual total trial count achieved after integer rounding (may differ
+        slightly from the requested target).
+    metrics_df : pandas.DataFrame
+        Per-parameter recovery metrics from
+        :func:`~prl_hgf.analysis.recovery.compute_recovery_metrics`.
+        Columns: ``parameter``, ``r``, ``p``, ``bias``, ``rmse``, ``n``,
+        ``passes_threshold``.
+    n_flagged : int
+        Participants excluded due to R-hat > 1.05 or ESS < 400.
+    n_total : int
+        Total participants fitted at this grid point (before exclusion).
+    """
+
+    trial_count: int
+    metrics_df: pd.DataFrame
+    n_flagged: int
+    n_total: int
+
+
+# ---------------------------------------------------------------------------
+# run_trial_sweep
+# ---------------------------------------------------------------------------
+
+_DEFAULT_TRIAL_GRID = [150, 200, 250, 300, 420]
+
+
+def run_trial_sweep(
+    config: AnalysisConfig,
+    trial_grid: list[int] | None = None,
+    n_per_group: int = 30,
+    model_name: str = "hgf_3level",
+    seed: int = 42,
+    output_dir: Path | None = None,
+) -> list[SweepPoint]:
+    """Run a trial-count sweep (PRE-04/PRE-05) with reduced MCMC settings.
+
+    For each target trial count in ``trial_grid``, simulates ``n_per_group``
+    participants per group, fits only the baseline session, and computes
+    parameter recovery metrics.  Each grid point uses an independent RNG seed
+    (``seed + idx``) so participants are fresh at every point.
+
+    Reduced MCMC settings (2 chains, 500 draws, 500 tune) are used to keep
+    compute cost manageable.  These are adequate for recovery estimation but
+    not inference-grade.
+
+    Parameters
+    ----------
+    config : AnalysisConfig
+        Base analysis configuration loaded via
+        :func:`~prl_hgf.env.task_config.load_config`.
+    trial_grid : list[int] or None, optional
+        Total trial counts to evaluate. Default ``[150, 200, 250, 300, 420]``.
+    n_per_group : int, optional
+        Participants per group at each grid point. Default 30.
+    model_name : str, optional
+        HGF model variant to fit. Default ``"hgf_3level"``.
+    seed : int, optional
+        Base RNG seed. Grid point ``idx`` uses ``seed + idx`` to ensure
+        independent participants across grid points. Default 42.
+    output_dir : Path or None, optional
+        If provided, saves ``trial_sweep_results.csv`` (long-form) here.
+        Directory is created if it does not exist.
+
+    Returns
+    -------
+    list[SweepPoint]
+        One :class:`SweepPoint` per grid point, in ascending trial-count order.
+
+    Notes
+    -----
+    The stable/volatile ratio is preserved at each grid point because
+    :func:`make_trial_config` scales all phases proportionally.
+
+    ``min_n=0`` is passed to :func:`~prl_hgf.analysis.recovery.build_recovery_df`
+    because small trial counts may lose many participants to convergence
+    failures; downstream callers can apply their own minimum-n filter.
+    """
+    if trial_grid is None:
+        trial_grid = _DEFAULT_TRIAL_GRID
+
+    results: list[SweepPoint] = []
+
+    for idx, target_trials in enumerate(trial_grid):
+        point_seed = seed + idx
+
+        # Scale trial count
+        trial_cfg = make_trial_config(config, target_total_trials=target_trials)
+        actual_total = trial_cfg.task.n_trials_total
+
+        # Build power config — null effect, fresh participants per grid point
+        power_cfg = make_power_config(
+            trial_cfg,
+            n_per_group=n_per_group,
+            effect_size_delta=0.0,
+            master_seed=point_seed,
+        )
+
+        # Simulate
+        sim_df = simulate_batch(power_cfg)
+
+        # Baseline-only filter
+        sim_df_pre = sim_df[sim_df["session"] == "baseline"].copy()
+
+        # Fit with reduced MCMC settings (PRE-05)
+        print(
+            f"[{idx + 1}/{len(trial_grid)}] trials={actual_total}: "
+            f"fitting {len(sim_df_pre['participant_id'].unique())} participants..."
+        )
+        fit_df = fit_batch(
+            sim_df_pre,
+            model_name=model_name,
+            cores=1,
+            n_chains=2,
+            n_draws=500,
+            n_tune=500,
+        )
+
+        # Convergence exclusion count
+        n_total = int(fit_df["participant_id"].nunique())
+        n_flagged = int(
+            fit_df.groupby("participant_id")["flagged"].any().sum()
+        )
+        print(
+            f"[{idx + 1}/{len(trial_grid)}] trials={actual_total}: "
+            f"{n_flagged} flagged, computing recovery..."
+        )
+
+        # Build recovery DataFrame (min_n=0 for small trial counts)
+        recovery_df = build_recovery_df(
+            sim_df_pre, fit_df, exclude_flagged=True, min_n=0
+        )
+
+        # Compute metrics
+        metrics_df = compute_recovery_metrics(recovery_df)
+
+        results.append(
+            SweepPoint(
+                trial_count=actual_total,
+                metrics_df=metrics_df,
+                n_flagged=n_flagged,
+                n_total=n_total,
+            )
+        )
+
+    # Save long-form CSV if requested
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        rows: list[dict] = []
+        for pt in results:
+            for _, mrow in pt.metrics_df.iterrows():
+                rows.append(
+                    {
+                        "trial_count": pt.trial_count,
+                        "parameter": mrow["parameter"],
+                        "r": mrow["r"],
+                        "p": mrow["p"],
+                        "bias": mrow["bias"],
+                        "rmse": mrow["rmse"],
+                        "n": mrow["n"],
+                        "passes_threshold": mrow["passes_threshold"],
+                    }
+                )
+        sweep_csv = output_dir / "trial_sweep_results.csv"
+        pd.DataFrame(rows).to_csv(sweep_csv, index=False)
+        log.info("Saved: %s", sweep_csv)
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# plot_trial_sweep
+# ---------------------------------------------------------------------------
+
+# Parameter-specific styles for the sweep plot.
+_PARAM_COLORS = {
+    "omega_2": "#1f77b4",
+    "omega_3": "#ff7f0e",
+    "kappa": "#2ca02c",
+    "beta": "#9467bd",
+    "zeta": "#d62728",
+}
+_PARAM_MARKERS = {
+    "omega_2": "o",
+    "omega_3": "s",
+    "kappa": "^",
+    "beta": "D",
+    "zeta": "v",
+}
+
+
+def plot_trial_sweep(
+    sweep_results: list[SweepPoint],
+    r_threshold: float = 0.7,
+    save_path: Path | None = None,
+) -> plt.Figure:
+    """Plot parameter recovery r vs total trial count (VIZ-01).
+
+    Produces a single figure with one line per parameter.  ``omega_3`` is
+    rendered with a dashed/dotted line style and labelled "(exploratory)".
+    A horizontal dashed red reference line marks ``r_threshold``.
+
+    Parameters
+    ----------
+    sweep_results : list[SweepPoint]
+        Output of :func:`run_trial_sweep`, one point per trial-count grid
+        value.
+    r_threshold : float, optional
+        Reference line position on the Y axis. Default 0.7.
+    save_path : Path or None, optional
+        If provided, saves the figure as PNG at 150 dpi.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The completed figure object.
+    """
+    if not sweep_results:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.set_title("Parameter recovery vs trial count (no data)")
+        return fig
+
+    # Collect all parameter names across all grid points
+    all_params: list[str] = []
+    for pt in sweep_results:
+        for param in pt.metrics_df["parameter"].tolist():
+            if param not in all_params:
+                all_params.append(param)
+
+    trial_counts = [pt.trial_count for pt in sweep_results]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    for param in all_params:
+        r_vals = []
+        for pt in sweep_results:
+            row = pt.metrics_df[pt.metrics_df["parameter"] == param]
+            if len(row) > 0:
+                r_vals.append(float(row.iloc[0]["r"]))
+            else:
+                r_vals.append(float("nan"))
+
+        color = _PARAM_COLORS.get(param)
+        marker = _PARAM_MARKERS.get(param, "o")
+
+        if param == "omega_3":
+            linestyle = "--"
+            label = f"{param} (exploratory)"
+        else:
+            linestyle = "-"
+            label = param
+
+        ax.plot(
+            trial_counts,
+            r_vals,
+            linestyle=linestyle,
+            marker=marker,
+            color=color,
+            label=label,
+            linewidth=1.8,
+            markersize=6,
+        )
+
+    # Reference line at r_threshold
+    ax.axhline(
+        y=r_threshold,
+        color="red",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"r = {r_threshold} (threshold)",
+    )
+
+    ax.set_xlabel("Total trials per session")
+    ax.set_ylabel("Pearson r (true vs recovered)")
+    ax.set_title("Parameter recovery vs trial count")
+    ax.legend(loc="lower right", fontsize=9)
+    ax.set_ylim(bottom=min(0.0, ax.get_ylim()[0]))
+
+    fig.tight_layout()
+
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# find_minimum_trial_count
+# ---------------------------------------------------------------------------
+
+
+def find_minimum_trial_count(
+    sweep_results: list[SweepPoint],
+    r_threshold: float = 0.7,
+    eligible_params: list[str] | None = None,
+) -> int | None:
+    """Return the smallest trial count where all eligible parameters pass r >= threshold.
+
+    Examines ``sweep_results`` in ascending ``trial_count`` order.  ``omega_3``
+    is excluded from the "all must pass" requirement by default because it is
+    marked exploratory (locked project decision).
+
+    Parameters
+    ----------
+    sweep_results : list[SweepPoint]
+        Output of :func:`run_trial_sweep`.
+    r_threshold : float, optional
+        Minimum Pearson r required per parameter. Default 0.7.
+    eligible_params : list[str] or None, optional
+        Parameters to include in the "all must pass" check.  If ``None``,
+        all parameters except ``omega_3`` are included.
+
+    Returns
+    -------
+    int or None
+        Smallest ``trial_count`` where every parameter in ``eligible_params``
+        achieves ``r >= r_threshold``, or ``None`` if no grid point satisfies
+        the condition.
+
+    Examples
+    --------
+    >>> from prl_hgf.power.precheck import find_minimum_trial_count, SweepPoint
+    >>> import pandas as pd
+    >>> pts = [
+    ...     SweepPoint(150, pd.DataFrame({"parameter": ["omega_2"], "r": [0.60]}), 0, 10),
+    ...     SweepPoint(250, pd.DataFrame({"parameter": ["omega_2"], "r": [0.75]}), 0, 10),
+    ... ]
+    >>> find_minimum_trial_count(pts)
+    250
+    """
+    # Sort ascending by trial count so we return the *minimum*
+    sorted_points = sorted(sweep_results, key=lambda pt: pt.trial_count)
+
+    for pt in sorted_points:
+        params_in_point = pt.metrics_df["parameter"].tolist()
+
+        # Determine which params to check
+        if eligible_params is not None:
+            check_params = eligible_params
+        else:
+            check_params = [p for p in params_in_point if p != "omega_3"]
+
+        if not check_params:
+            # Nothing to check — treat as satisfied
+            return pt.trial_count
+
+        all_pass = True
+        for param in check_params:
+            row = pt.metrics_df[pt.metrics_df["parameter"] == param]
+            if len(row) == 0:
+                # Parameter not present at this grid point — treat as fail
+                all_pass = False
+                break
+            if float(row.iloc[0]["r"]) < r_threshold:
+                all_pass = False
+                break
+
+        if all_pass:
+            return pt.trial_count
+
+    return None
