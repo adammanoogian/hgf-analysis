@@ -71,7 +71,7 @@ def extract_summary_rows(
     participant_id : str
         Participant identifier string.
     group : str
-        Group label (e.g. ``"healthy_control"``).
+        Group label (e.g. ``"placebo"``).
     session : str
         Session label (e.g. ``"baseline"``).
     model : str
@@ -227,7 +227,7 @@ def fit_participant(
     >>> obs[:, 0] = 1
     >>> ch = np.zeros(50, dtype=int)
     >>> idata, rows, flagged = fit_participant(
-    ...     inp, obs, ch, "P001", "healthy_control", "baseline",
+    ...     inp, obs, ch, "P001", "placebo", "baseline",
     ...     model_name="hgf_2level", n_chains=1, n_draws=50, n_tune=50,
     ... )
     >>> len(rows)

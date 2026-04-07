@@ -33,7 +33,7 @@ from prl_hgf.analysis.phase_stratification import (
 # Test fixture: 6 participants (3 per group) × 3 sessions × 2 parameters
 # ---------------------------------------------------------------------------
 
-_GROUPS = ["control", "post_concussion"]
+_GROUPS = ["placebo", "psilocybin"]
 _SESSIONS = ["baseline", "session2", "session3"]
 _PARAMS = ["omega_2", "beta"]
 _N_PER_GROUP = 3
@@ -43,7 +43,7 @@ def _make_fit_df(seed: int = 42) -> pd.DataFrame:
     """Build a minimal long-form fit_df for testing.
 
     Produces 6 participants × 3 sessions × 2 parameters = 36 rows.
-    One participant (P006_post_concussion) is flagged=True to test exclusion.
+    One participant (P006_psilocybin) is flagged=True to test exclusion.
 
     Parameters
     ----------
@@ -62,8 +62,8 @@ def _make_fit_df(seed: int = 42) -> pd.DataFrame:
     for g_idx, group in enumerate(_GROUPS):
         for p_idx in range(_N_PER_GROUP):
             pid = f"P{g_idx * _N_PER_GROUP + p_idx + 1:03d}_{group}"
-            # Flag last participant in post_concussion group
-            flagged = group == "post_concussion" and p_idx == _N_PER_GROUP - 1
+            # Flag last participant in psilocybin group
+            flagged = group == "psilocybin" and p_idx == _N_PER_GROUP - 1
 
             for session in _SESSIONS:
                 for param in _PARAMS:
@@ -191,7 +191,7 @@ class TestExcludesFlagged:
     def test_excludes_flagged_default(self, fit_df: pd.DataFrame) -> None:
         """Default exclude_flagged=True removes flagged participants."""
         wide = build_estimates_wide(fit_df, model="hgf_2level")
-        # Flagged participant IDs start with 'P006_' (last post_concussion)
+        # Flagged participant IDs start with 'P006_' (last psilocybin)
         flagged_ids = fit_df.loc[fit_df["flagged"], "participant_id"].unique()
         for pid in flagged_ids:
             assert pid not in wide["participant_id"].values, (
@@ -222,8 +222,8 @@ class TestCohensD:
             estimates_wide,
             outcome="omega_2",
             session="baseline",
-            group_a="control",
-            group_b="post_concussion",
+            group_a="placebo",
+            group_b="psilocybin",
         )
         assert isinstance(d, float), f"Expected float, got {type(d)}."
 
@@ -245,7 +245,7 @@ class TestCohensD:
                 estimates_wide,
                 outcome="omega_2",
                 session="baseline",
-                group_a="control",
+                group_a="placebo",
                 group_b="nonexistent_group",
             )
 
@@ -386,8 +386,8 @@ def _make_sim_df(seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     rows = []
     participants = [
-        ("P001_control", "control"),
-        ("P002_post_concussion", "post_concussion"),
+        ("P001_control", "placebo"),
+        ("P002_psilocybin", "psilocybin"),
     ]
     sessions = ["baseline", "session2"]
     n_trials = 20

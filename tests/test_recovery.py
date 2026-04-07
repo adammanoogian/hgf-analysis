@@ -52,7 +52,7 @@ def _make_sim_df() -> pd.DataFrame:
             rows.append(
                 {
                     "participant_id": f"sub_{i:02d}",
-                    "group": "post_concussion" if i < 5 else "healthy_control",
+                    "group": "psilocybin" if i < 5 else "placebo",
                     "session": "baseline",
                     "session_idx": 0,
                     "trial": t,

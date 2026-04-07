@@ -112,7 +112,7 @@ def test_batch_column_values():
 
     # Group labels
     actual_groups = set(df["group"].unique())
-    expected_groups = {"post_concussion", "healthy_control"}
+    expected_groups = {"psilocybin", "placebo"}
     assert actual_groups == expected_groups, (
         f"Expected groups {expected_groups}, got {actual_groups}"
     )
@@ -154,38 +154,45 @@ def test_batch_column_values():
 
 @pytest.mark.slow
 def test_batch_group_param_differences():
-    """Healthy-control mean kappa exceeds post-concussion mean kappa at baseline.
+    """Psilocybin group shows larger omega_2 shift than placebo at post_dose.
 
-    From config: HC kappa mean=1.0, PC kappa mean=0.8.  Even with N=2 the
-    group means should be separated given the fixed master seed.
+    From config: psilocybin omega_2_delta=+1.5, placebo omega_2_delta=+0.3.
+    Even with N=2, the psilocybin group's post_dose shift should exceed placebo.
     """
     cfg = _small_config(n_per_group=2)
     df = simulate_batch(cfg)
 
-    baseline = df[df["session"] == "baseline"].drop_duplicates(
-        subset=["participant_id", "session"]
-    )
-    hc_kappa = baseline.loc[baseline["group"] == "healthy_control", "true_kappa"].mean()
-    pc_kappa = baseline.loc[baseline["group"] == "post_concussion", "true_kappa"].mean()
+    unique = df.drop_duplicates(subset=["participant_id", "session"])
 
-    assert hc_kappa > pc_kappa, (
-        f"Expected healthy_control mean kappa ({hc_kappa:.4f}) > "
-        f"post_concussion mean kappa ({pc_kappa:.4f}) at baseline."
+    def mean_omega2(group, session):
+        mask = (unique["group"] == group) & (unique["session"] == session)
+        return unique.loc[mask, "true_omega_2"].mean()
+
+    psi_shift = mean_omega2("psilocybin", "post_dose") - mean_omega2(
+        "psilocybin", "baseline"
+    )
+    plc_shift = mean_omega2("placebo", "post_dose") - mean_omega2(
+        "placebo", "baseline"
+    )
+
+    assert psi_shift > plc_shift, (
+        f"Expected psilocybin omega_2 shift ({psi_shift:.4f}) > "
+        f"placebo omega_2 shift ({plc_shift:.4f}) at post_dose."
     )
 
 
 @pytest.mark.slow
 def test_batch_session_deltas_visible():
-    """Post-concussion omega_2 is higher at post_dose than at baseline.
+    """Psilocybin group omega_2 is higher at post_dose than at baseline.
 
-    From config: post_concussion omega_2_deltas[0] = +1.5 at post_dose.
+    From config: psilocybin omega_2_deltas[0] = +1.5 at post_dose.
     With N=2 and fixed seed, each participant's post_dose omega_2 should
     exceed their baseline omega_2 by ~1.5.
     """
     cfg = _small_config(n_per_group=2)
     df = simulate_batch(cfg)
 
-    pc = df[df["group"] == "post_concussion"].drop_duplicates(
+    pc = df[df["group"] == "psilocybin"].drop_duplicates(
         subset=["participant_id", "session"]
     )
     baseline_vals = pc[pc["session"] == "baseline"].set_index("participant_id")[

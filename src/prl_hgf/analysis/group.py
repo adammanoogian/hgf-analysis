@@ -137,7 +137,7 @@ def fit_group_model(
 
 def extract_posterior_contrasts(
     idata: az.InferenceData,
-    group_label: str = "post_concussion",
+    group_label: str = "psilocybin",
     session_labels: list[str] | None = None,
 ) -> pd.DataFrame:
     """Extract group-difference contrasts from bambi posterior.
@@ -159,7 +159,7 @@ def extract_posterior_contrasts(
         Posterior samples from :func:`fit_group_model`.
     group_label : str, optional
         Level of *group* corresponding to the treatment arm. Default
-        ``"post_concussion"``.
+        ``"psilocybin"``.
     session_labels : list[str] | None, optional
         Ordered list of sessions (reference session first).  If ``None``,
         the reference session is inferred from the data and only the single
@@ -332,11 +332,11 @@ def _parse_session_from_interaction(var_name: str, group_label: str) -> str | No
 
     Interaction terms look like::
 
-        C(group)[T.post_concussion]:C(session)[T.session2]
+        C(group)[T.psilocybin]:C(session)[T.session2]
 
     or (order-reversed)::
 
-        C(session)[T.session2]:C(group)[T.post_concussion]
+        C(session)[T.session2]:C(group)[T.psilocybin]
 
     Parameters
     ----------

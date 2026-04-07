@@ -3,7 +3,7 @@
 ## Project Overview
 
 HGF-based analysis pipeline for the PRL pick_best_cue task studying psilocybin
-effects on belief updating in post-concussion syndrome (2 groups × 3 sessions).
+effects on belief updating in post-concussion syndrome (psilocybin vs placebo × 3 sessions).
 
 Two model variants (2-level and 3-level binary HGF) with three parallel cue
 branches and a shared softmax + stickiness response model. Validated via

@@ -82,7 +82,7 @@ study:
   session_labels: ["baseline", "post_dose", "followup"]
 
   n_groups: 2
-  group_labels: ["post_concussion", "healthy_control"]
+  group_labels: ["psilocybin", "placebo"]
 
 # ---------------------------------------------------------------------------
 # HGF model parameters — default priors and parameter bounds
@@ -154,9 +154,10 @@ simulation:
   master_seed: 1234
 
   # Group parameter distributions (mean, sd) for generating individual params
-  # These encode the hypothesized true differences between groups
+  # Both groups are post-concussion; the manipulation is psilocybin vs placebo.
+  # Baseline parameters are similar (slight differences reflect randomization noise).
   groups:
-    post_concussion:
+    psilocybin:
       omega_2:
         mean: -4.0
         sd: 1.0
@@ -173,21 +174,21 @@ simulation:
         mean: 0.3
         sd: 0.5
 
-    healthy_control:
+    placebo:
       omega_2:
-        mean: -3.0
+        mean: -3.8
         sd: 1.0
       omega_3:
-        mean: -6.0
+        mean: -6.8
         sd: 1.5
       kappa:
-        mean: 1.0
+        mean: 0.85
         sd: 0.3
       beta:
-        mean: 2.5
+        mean: 2.1
         sd: 0.8
       zeta:
-        mean: 0.2
+        mean: 0.25
         sd: 0.5
 
   # Session parameter deltas — how parameters shift from baseline
@@ -196,17 +197,18 @@ simulation:
   session_deltas:
     # Psilocybin hypothetically increases learning rate (less negative omega_2)
     # and increases kappa (more sensitive to volatility)
-    post_concussion:
+    psilocybin:
       session_labels: ["post_dose", "followup"]
-      omega_2_deltas: [1.5, 0.8]      # shift toward higher learning rate
+      omega_2_deltas: [1.5, 0.8]      # drug effect: shift toward higher learning rate
       kappa_deltas: [0.3, 0.2]
       beta_deltas: [0.0, 0.0]
       zeta_deltas: [0.0, 0.0]
 
-    healthy_control:
+    # Placebo: minimal deltas reflecting natural symptom regression / practice effects
+    placebo:
       session_labels: ["post_dose", "followup"]
-      omega_2_deltas: [0.5, 0.2]      # smaller shift in healthy controls
-      kappa_deltas: [0.1, 0.05]
+      omega_2_deltas: [0.3, 0.1]      # small practice/regression effect only
+      kappa_deltas: [0.05, 0.02]
       beta_deltas: [0.0, 0.0]
       zeta_deltas: [0.0, 0.0]
 

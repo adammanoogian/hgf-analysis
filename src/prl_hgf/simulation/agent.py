@@ -118,8 +118,8 @@ def sample_participant_params(
     >>> import numpy as np
     >>> from prl_hgf.env.task_config import load_config
     >>> config = load_config()
-    >>> group_cfg = config.simulation.groups["healthy_control"]
-    >>> session_cfg = config.simulation.session_deltas["healthy_control"]
+    >>> group_cfg = config.simulation.groups["placebo"]
+    >>> session_cfg = config.simulation.session_deltas["placebo"]
     >>> rng = np.random.default_rng(0)
     >>> params = sample_participant_params(group_cfg, session_cfg, 0, rng)
     >>> set(params.keys()) == {"omega_2", "omega_3", "kappa", "beta", "zeta"}

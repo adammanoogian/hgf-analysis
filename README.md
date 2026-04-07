@@ -11,7 +11,7 @@ validates itself via simulation-to-inference: simulate synthetic participants
 with known parameters, recover those parameters via Bayesian fitting, compare
 models formally.
 
-**Groups:** post-concussion + psilocybin, healthy controls + psilocybin
+**Groups:** post-concussion + psilocybin, post-concussion + placebo
 **Sessions:** baseline (pre-dose), post-dose, follow-up
 **Task:** pick_best_cue — 3 cues, criterion-based reversals
 

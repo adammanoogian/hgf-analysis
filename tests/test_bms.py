@@ -183,13 +183,13 @@ def test_plot_exceedance_probabilities_runs():
             "bor": 0.05,
             "group_label": "all",
         },
-        "healthy_control": {
+        "placebo": {
             "xp": np.array([0.8, 0.2]),
             "pxp": np.array([0.77, 0.23]),
             "model_names": ["hgf_2level", "hgf_3level"],
             "n_subjects": 10,
             "bor": 0.12,
-            "group_label": "healthy_control",
+            "group_label": "placebo",
         },
     }
 

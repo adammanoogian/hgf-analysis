@@ -66,8 +66,8 @@ class TestSampleParticipantParams:
     def test_sample_params_baseline_keys_and_types(self):
         """Returned dict has exactly 5 expected keys, all float values."""
         config = _load_test_config()
-        group_cfg = config.simulation.groups["healthy_control"]
-        session_cfg = config.simulation.session_deltas["healthy_control"]
+        group_cfg = config.simulation.groups["placebo"]
+        session_cfg = config.simulation.session_deltas["placebo"]
         rng = np.random.default_rng(0)
 
         params = sample_participant_params(group_cfg, session_cfg, 0, rng)
@@ -86,7 +86,7 @@ class TestSampleParticipantParams:
         config = _load_test_config()
         rng = np.random.default_rng(12345)
 
-        for group_name in ("post_concussion", "healthy_control"):
+        for group_name in ("psilocybin", "placebo"):
             group_cfg = config.simulation.groups[group_name]
             session_cfg = config.simulation.session_deltas[group_name]
 
@@ -107,8 +107,8 @@ class TestSampleParticipantParams:
         the result is not clipped.
         """
         config = _load_test_config()
-        group_cfg = config.simulation.groups["healthy_control"]
-        session_cfg = config.simulation.session_deltas["healthy_control"]
+        group_cfg = config.simulation.groups["placebo"]
+        session_cfg = config.simulation.session_deltas["placebo"]
 
         # Use the same seed for both draws so the random draw is identical
         rng_s0 = np.random.default_rng(999)
@@ -135,8 +135,8 @@ class TestSampleParticipantParams:
     def test_sample_params_reproducible(self):
         """Same seed produces identical parameter dict."""
         config = _load_test_config()
-        group_cfg = config.simulation.groups["post_concussion"]
-        session_cfg = config.simulation.session_deltas["post_concussion"]
+        group_cfg = config.simulation.groups["psilocybin"]
+        session_cfg = config.simulation.session_deltas["psilocybin"]
 
         params_a = sample_participant_params(
             group_cfg, session_cfg, 0, np.random.default_rng(42)
@@ -156,9 +156,9 @@ class TestSampleParticipantParams:
         close to a bound and the delta pushes it beyond the bound.
         """
         config = _load_test_config()
-        # Use healthy_control: omega_2 upper bound = 2.0, delta = +0.5 at post_dose.
-        group_cfg = config.simulation.groups["healthy_control"]
-        session_cfg = config.simulation.session_deltas["healthy_control"]
+        # Use placebo: omega_2 upper bound = 2.0, delta = +0.5 at post_dose.
+        group_cfg = config.simulation.groups["placebo"]
+        session_cfg = config.simulation.session_deltas["placebo"]
 
         # Find a seed that produces omega_2 close to the upper bound (>= 1.6)
         # so that adding +0.5 delta would exceed 2.0
@@ -249,7 +249,7 @@ class TestSimulateAgent:
     def test_simulate_agent_high_beta_accuracy(self):
         """High-beta agent (beta=5) achieves >=80% accuracy in late stable phases.
 
-        Tests the key success criterion from the roadmap: a healthy_control agent
+        Tests the key success criterion from the roadmap: a placebo agent
         with clear signal (beta=5) should track the best cue during the last
         half of acquisition (stable) phases.
 

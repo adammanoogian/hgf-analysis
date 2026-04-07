@@ -29,8 +29,8 @@ def compute_cohens_d(
     estimates_wide: pd.DataFrame,
     outcome: str,
     session: str,
-    group_a: str = "control",
-    group_b: str = "post_concussion",
+    group_a: str = "placebo",
+    group_b: str = "psilocybin",
 ) -> float:
     """Compute Cohen's d for a single parameter × session comparison.
 
@@ -43,9 +43,9 @@ def compute_cohens_d(
     session : str
         Session label (e.g. ``"baseline"``).
     group_a : str, optional
-        Reference group label. Default ``"control"``.
+        Reference group label. Default ``"placebo"``.
     group_b : str, optional
-        Treatment group label. Default ``"post_concussion"``.
+        Treatment group label. Default ``"psilocybin"``.
 
     Returns
     -------

@@ -14,7 +14,7 @@ abstract: |
   conditions, yet its effects on hierarchical belief updating remain poorly characterised in
   populations with acquired brain injury. Here we apply a Hierarchical Gaussian Filter (HGF)
   framework to a probabilistic reversal learning (PRL) task administered across three treatment
-  sessions in participants with post-concussion syndrome and healthy controls. Two model variants —
+  sessions in participants with post-concussion syndrome (psilocybin vs placebo). Two model variants —
   a 2-level and a 3-level binary HGF — are fit to individual-participant choice sequences using
   full Bayesian inference (MCMC). Group-level effects of psilocybin on tonic volatility (omega_2)
   and coupling (kappa) are estimated using a mixed-effects Bayesian model (bambi) with a
@@ -139,11 +139,11 @@ effect would be larger than in controls who begin with more adaptive priors [@le
 
 ## Participants and Design
 
-Participants were drawn from a 2 (group: post-concussion syndrome vs healthy control) × 3
-(session: baseline, psilocybin, follow-up) within-subject design. *[Sample size: N = TBD pending
+Participants with post-concussion syndrome were randomised to a 2 (drug: psilocybin vs placebo)
+× 3 (session: baseline, post-dose, follow-up) mixed design. *[Sample size: N = TBD pending
 data collection.]*
 
-All sessions used an identical task protocol. Psilocybin was administered at the second
+All sessions used an identical task protocol. Drug (psilocybin or placebo) was administered at the second
 (treatment) session. The baseline session served as a pre-drug reference, and the follow-up
 session assessed persistence of any psilocybin-induced changes.
 
