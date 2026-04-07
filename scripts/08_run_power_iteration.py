@@ -29,6 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config as _cfg
 from prl_hgf.env.task_config import load_config
 from prl_hgf.power.config import load_power_config
+from prl_hgf.power.grid import decode_task_id
+from prl_hgf.power.iteration import run_power_iteration
 from prl_hgf.power.schema import write_parquet_row
 from prl_hgf.power.seeds import make_child_rng
 
@@ -117,12 +119,17 @@ def main() -> None:
         job_index=args.task_id,
     )
 
-    # Output path: <output_dir>/job_<JOB_ID>_task_<TASK_ID>.parquet
-    output_dir = args.output_dir if args.output_dir is not None else _cfg.RESULTS_DIR / "power"
-    output_path = output_dir / f"job_{args.job_id}_task_{args.task_id:04d}.parquet"
+    output_dir = (
+        args.output_dir
+        if args.output_dir is not None
+        else _cfg.RESULTS_DIR / "power"
+    )
 
     if args.dry_run:
         # Write placeholder row to verify infrastructure end-to-end
+        output_path = (
+            output_dir / f"job_{args.job_id}_task_{args.task_id:04d}.parquet"
+        )
         placeholder = {
             "sweep_type":    "smoke_test",
             "effect_size":   0.0,
@@ -142,10 +149,36 @@ def main() -> None:
         print(f"Dry run: wrote placeholder to {output_path}")
         return
 
-    # Full pipeline will be implemented in Phase 10
-    print(f"Task {args.task_id}: full pipeline not yet implemented")
-    print(f"RNG state ready, output would go to {output_path}")
-    _ = rng  # suppress unused-variable warning
+    # Decode SLURM task ID to grid coordinates
+    n_per_group, effect_size_delta, iteration = decode_task_id(
+        args.task_id,
+        power_config.n_per_group_grid,
+        power_config.effect_size_grid,
+        power_config.n_iterations,
+    )
+
+    # Run full simulate -> fit -> BF -> BMS pipeline
+    results = run_power_iteration(
+        base_config=base_config,
+        n_per_group=n_per_group,
+        effect_size_delta=effect_size_delta,
+        iteration=iteration,
+        child_seed=int(rng.integers(0, 2**31)),
+        power_config=power_config,
+        n_chains=args.fit_chains,
+        n_draws=args.fit_draws,
+        n_tune=args.fit_tune,
+    )
+
+    # Write 3 parquet files (one per contrast type)
+    for row in results:
+        suffix = row["sweep_type"]
+        out_path = (
+            output_dir
+            / f"job_{args.job_id}_task_{args.task_id:04d}_{suffix}.parquet"
+        )
+        write_parquet_row(row, out_path)
+        print(f"Wrote: {out_path}")
 
 
 if __name__ == "__main__":
