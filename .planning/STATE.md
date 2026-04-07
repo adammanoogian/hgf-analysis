@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.1 Power Analysis — Phase 8 ready to plan
+**Current focus:** Milestone v1.1 Power Analysis — Phase 8 in progress
 
 ## Current Position
 
-Phase: 8 - Config + Infrastructure (not started)
-Plan: —
-Status: Roadmap complete, ready for phase planning
-Last activity: 2026-04-07 — v1.1 roadmap created (phases 8-11)
+Phase: 8 - Config + Infrastructure (in progress)
+Plan: 1 of 3
+Status: In progress
+Last activity: 2026-04-07 — Completed 08-01-PLAN.md (power config factory + PowerConfig)
 
-[=========>          ] Phases 7/11 complete (v1.0 shipped; v1.1 starting)
+[==========>         ] Phase 8 Plan 1/3 complete (v1.0 shipped; v1.1 in progress)
 
 ## Performance Metrics
 
@@ -41,12 +41,14 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | omega_3 BFDA labeled "exploratory — upper bound" | Recovery r ~ 0.67 with binary data; naive BFDA inflates power 20-40pp | v1.1 roadmap |
 | SeedSequence for parallel RNG | task-ID integer seeding gives correlated streams; SeedSequence guarantees independence | v1.1 roadmap |
 | power/ package wraps existing pipeline; no existing module modified | Eliminates regression risk; all existing functions called unchanged | v1.1 roadmap |
+| make_power_config shifts psilocybin omega_2_deltas only; placebo unchanged | Study hypothesis: psilocybin increases learning rate; placebo is inert control | 08-01 |
+| load_power_config reads only power: YAML key; does not re-parse task/simulation/fitting | Clean separation of concerns; existing load_config unaffected | 08-01 |
 
 ### Pending Todos
 
 - manuscript/references.bib: mason2024 volume/page details need verification before submission
 - quarto-arxiv extension must be installed before first arxiv-pdf render
-- Phase 9 kappa effect size parameterization: verify kappa entry point in GroupConfig vs SessionConfig during make_power_config unit tests (Phase 8) before cluster submission
+- Phase 9 kappa effect size parameterization: verify kappa entry point in GroupConfig vs SessionConfig during Plan 02 unit tests (kappa delta lives in SessionConfig.kappa_deltas — confirmed in 08-01 tests, but grid parameterization for kappa needs review)
 - Phase 10: run 100-iteration MAP vs NUTS pilot before committing to full NUTS budget
 
 ### Blockers/Concerns
@@ -64,7 +66,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-07
-Stopped at: v1.1 roadmap complete — ready to plan Phase 8
+Last session: 2026-04-07T15:22:47Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
-Next action: `/gsd:plan-phase 8`
+Next action: Execute 08-02-PLAN.md
