@@ -88,10 +88,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PWR-01 | Phase 8 | Pending |
-| PWR-09 | Phase 8 | Pending |
-| PWR-10 | Phase 8 | Pending |
-| SEED-01 | Phase 8 | Pending |
+| PWR-01 | Phase 8 | Complete |
+| PWR-09 | Phase 8 | Complete |
+| PWR-10 | Phase 8 | Complete |
+| SEED-01 | Phase 8 | Complete |
 | PRE-01 | Phase 9 | Pending |
 | PRE-02 | Phase 9 | Pending |
 | PRE-03 | Phase 9 | Pending |

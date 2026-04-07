@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.1 Power Analysis — Phase 8 in progress
+**Current focus:** Milestone v1.1 Power Analysis — Phase 8 complete, Phase 9 next
 
 ## Current Position
 
-Phase: 8 - Config + Infrastructure (in progress)
-Plan: 2 of 3
-Status: In progress
-Last activity: 2026-04-07 — Completed 08-02-PLAN.md (seeds, schema, SLURM template, entry point)
+Phase: 8 - Config + Infrastructure (complete, verified)
+Plan: 2/2 complete
+Status: Phase 8 verified (4/4 must-haves pass, 20/20 tests)
+Last activity: 2026-04-07 — Phase 8 complete and verified
 
-[============>       ] Phase 8 Plan 2/3 complete (v1.0 shipped; v1.1 in progress)
+[===========>        ] Phases 8/11 complete (v1.0 shipped; v1.1 Phase 8 done)
 
 ## Performance Metrics
 
