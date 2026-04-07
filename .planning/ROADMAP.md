@@ -40,11 +40,11 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full detail.
   2. A 10-job SLURM array smoke test runs with `--array=0-9%50`, each task writes its own parquet file with no naming collisions and no import-storm failures
   3. Each parquet output contains the full required schema: sweep_type, effect_size, n_per_group, trial_count, iteration, parameter, bf_value, bf_exceeds, bms_xp, bms_correct, recovery_r, n_divergences, mean_rhat
   4. Child seeds from `SeedSequence(seed_base).spawn(n_jobs)` produce uncorrelated RNG streams — verified by asserting no two child seeds share a state vector
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: power/config_override.py — make_power_config factory, frozen config, unit tests covering n_per_group and omega_2_deltas overrides
-- [ ] 08-02: power/results_schema.py + SeedSequence utilities + SLURM array template (scripts/08_power_slurm_array.sh) + 10-job smoke test
+- [ ] 08-01-PLAN.md — power/config.py: make_power_config factory, PowerConfig dataclass, YAML power section, unit tests
+- [ ] 08-02-PLAN.md — power/schema.py + power/seeds.py + SLURM array template + entry point script + infrastructure tests
 
 ### Phase 9: Prechecks
 
@@ -113,7 +113,7 @@ Plans:
 | 5 - Validation | v1.0 | 3/3 | Complete | 2026-04-06 |
 | 6 - Group Analysis | v1.0 | 5/5 | Complete | 2026-04-06 |
 | 7 - GUI | v1.0 | 2/2 | Complete | 2026-04-07 |
-| 8 - Config + Infrastructure | v1.1 | 0/2 | Not started | - |
+| 8 - Config + Infrastructure | v1.1 | 0/2 | Planned | - |
 | 9 - Prechecks | v1.1 | 0/2 | Not started | - |
 | 10 - Core Power Modules + Sweep | v1.1 | 0/4 | Not started | - |
 | 11 - Aggregation + Publication | v1.1 | 0/3 | Not started | - |
