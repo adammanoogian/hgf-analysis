@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.1 Power Analysis — Phase 8 complete, Phase 9 next
+**Current focus:** Milestone v1.1 Power Analysis — Phase 9 in progress (Plan 1/2 complete)
 
 ## Current Position
 
-Phase: 8 - Config + Infrastructure (complete, verified)
-Plan: 2/2 complete
-Status: Phase 8 verified (4/4 must-haves pass, 20/20 tests)
-Last activity: 2026-04-07 — Phase 8 complete and verified
+Phase: 9 - Prechecks (in progress)
+Plan: 1/2 complete
+Status: 09-01 complete (9/9 tests pass, ruff clean)
+Last activity: 2026-04-07 — Completed 09-01-PLAN.md
 
-[===========>        ] Phases 8/11 complete (v1.0 shipped; v1.1 Phase 8 done)
+[============>       ] Phase 9 Plan 1 done (v1.0 shipped; v1.1 Phase 8 done, Phase 9 in progress)
 
 ## Performance Metrics
 
@@ -45,6 +45,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | load_power_config reads only power: YAML key; does not re-parse task/simulation/fitting | Clean separation of concerns; existing load_config unaffected | 08-01 |
 | write_parquet_row rejects missing AND extra columns | Strict schema enforcement prevents silent drift as Phase 10 adds real pipeline results | 08-02 |
 | --output-dir flag on entry point for test isolation | Integration tests write to tmp_path, not results/; keeps test suite clean | 08-02 |
+| make_trial_config scales only PhaseConfig.n_trials; TransferConfig.n_trials untouched | Transfer trials are fixed study design; only acquisition/reversal phases vary for trial count studies | 09-01 |
+| run_recovery_precheck filters to baseline only before fit_batch | Avoids 3x compute cost; post_dose and followup sessions not needed for recovery gate | 09-01 |
+| omega_3 eligibility always "exploratory -- upper bound" regardless of r | Locked decision: binary PRL data r~0.67 in literature; BFDA inflation 20-40pp | 09-01 |
+| n_flagged uses groupby("participant_id")["flagged"].any().sum() | fit_df has per-parameter rows; participant is flagged if ANY parameter row is flagged | 09-01 |
 
 ### Pending Todos
 
@@ -68,7 +72,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-07T15:37:54Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-04-07T16:31:03Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
-Next action: Execute 08-03-PLAN.md
+Next action: Execute 09-02-PLAN.md
