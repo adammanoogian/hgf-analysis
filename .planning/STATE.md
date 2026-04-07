@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.1 Power Analysis — Phase 9 in progress (Plan 1/2 complete)
+**Current focus:** Milestone v1.1 Power Analysis — Phase 9 complete, Phase 10 next
 
 ## Current Position
 
-Phase: 9 - Prechecks (in progress)
-Plan: 1/2 complete
-Status: 09-01 complete (9/9 tests pass, ruff clean)
-Last activity: 2026-04-07 — Completed 09-01-PLAN.md
+Phase: 9 - Prechecks (complete)
+Plan: 2/2 complete
+Status: 09-02 complete (16/16 tests pass, ruff clean)
+Last activity: 2026-04-07 — Completed 09-02-PLAN.md
 
-[============>       ] Phase 9 Plan 1 done (v1.0 shipped; v1.1 Phase 8 done, Phase 9 in progress)
+[===============>    ] Phase 9 done (v1.0 shipped; v1.1 Phase 8 done, Phase 9 done, Phase 10 next)
 
 ## Performance Metrics
 
@@ -49,12 +49,15 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | run_recovery_precheck filters to baseline only before fit_batch | Avoids 3x compute cost; post_dose and followup sessions not needed for recovery gate | 09-01 |
 | omega_3 eligibility always "exploratory -- upper bound" regardless of r | Locked decision: binary PRL data r~0.67 in literature; BFDA inflation 20-40pp | 09-01 |
 | n_flagged uses groupby("participant_id")["flagged"].any().sum() | fit_df has per-parameter rows; participant is flagged if ANY parameter row is flagged | 09-01 |
+| run_trial_sweep passes min_n=0 to build_recovery_df | Small trial counts may lose many participants to convergence failures; downstream callers apply own filter | 09-02 |
+| find_minimum_trial_count excludes omega_3 from all-must-pass by default | Consistent with locked exploratory decision; omega_3 never gates the trial count requirement | 09-02 |
+| seed+idx seeding per grid point in run_trial_sweep | Fresh independent participants at each trial count; no between-condition correlation in recovery estimates | 09-02 |
 
 ### Pending Todos
 
 - manuscript/references.bib: mason2024 volume/page details need verification before submission
 - quarto-arxiv extension must be installed before first arxiv-pdf render
-- Phase 9 kappa effect size parameterization: verify kappa entry point in GroupConfig vs SessionConfig during Plan 02 unit tests (kappa delta lives in SessionConfig.kappa_deltas — confirmed in 08-01 tests, but grid parameterization for kappa needs review)
+- Phase 10 kappa effect size parameterization: verify kappa entry point in GroupConfig vs SessionConfig during Phase 10 planning (kappa delta lives in SessionConfig.kappa_deltas — confirmed in 08-01 tests, but grid parameterization for kappa needs review before Phase 10 sweep)
 - Phase 10: run 100-iteration MAP vs NUTS pilot before committing to full NUTS budget
 
 ### Blockers/Concerns
@@ -72,7 +75,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:31:03Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-04-07T16:47:30Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
-Next action: Execute 09-02-PLAN.md
+Next action: Begin Phase 10 (power sweep)
