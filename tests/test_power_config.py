@@ -167,7 +167,7 @@ def test_power_config_loads_from_yaml() -> None:
 
     assert pc.n_per_group_grid == [10, 15, 20, 25, 30, 40, 50]
     assert pc.master_seed == 20240101
-    assert pc.n_jobs == 100
+    assert pc.n_chunks == 3
     assert pc.bf_threshold == pytest.approx(10.0)
 
 
@@ -183,15 +183,15 @@ def test_power_config_validation() -> None:
         "effect_size_grid": [0.0, 0.5],
         "n_iterations": 10,
         "master_seed": 42,
-        "n_jobs": 4,
+        "n_chunks": 4,
         "bf_threshold": 10.0,
     }
 
     with pytest.raises(ValueError, match="n_iterations"):
         PowerConfig(**{**valid_kwargs, "n_iterations": 0})
 
-    with pytest.raises(ValueError, match="n_jobs"):
-        PowerConfig(**{**valid_kwargs, "n_jobs": 0})
+    with pytest.raises(ValueError, match="n_chunks"):
+        PowerConfig(**{**valid_kwargs, "n_chunks": 0})
 
     with pytest.raises(ValueError, match="bf_threshold"):
         PowerConfig(**{**valid_kwargs, "bf_threshold": -1.0})

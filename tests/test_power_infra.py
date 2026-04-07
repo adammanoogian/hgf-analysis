@@ -200,12 +200,12 @@ def test_write_parquet_row_creates_parent_dirs(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_dry_run_entry_point(tmp_path: Path) -> None:
-    """Dry-run entry point produces a valid 13-column parquet via subprocess."""
+    """Dry-run chunk entry point produces valid 13-column parquet rows."""
     result = subprocess.run(
         [
             sys.executable,
             str(_ENTRY_POINT),
-            "--task-id", "0",
+            "--chunk-id", "0",
             "--job-id", "test_int",
             "--dry-run",
             "--output-dir", str(tmp_path),
@@ -219,7 +219,7 @@ def test_dry_run_entry_point(tmp_path: Path) -> None:
         f"stderr: {result.stderr}"
     )
 
-    out_path = tmp_path / "job_test_int_task_0000.parquet"
+    out_path = tmp_path / "job_test_int_chunk_0000.parquet"
     assert out_path.exists(), (
         f"Expected parquet at {out_path} but file not found.\n"
         f"stdout: {result.stdout}"
@@ -232,3 +232,5 @@ def test_dry_run_entry_point(tmp_path: Path) -> None:
     assert len(df.columns) == 13, (
         f"Expected 13 columns, got {len(df.columns)}."
     )
+    # Chunk 0 with 3 chunks should have ~1400 task_ids × 1 row each
+    assert len(df) > 0, "Expected at least 1 row from dry-run chunk."

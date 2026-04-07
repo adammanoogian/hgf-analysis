@@ -61,3 +61,48 @@ def make_child_rng(
         )
     children = np.random.SeedSequence(master_seed).spawn(n_jobs)
     return np.random.default_rng(children[job_index])
+
+
+def make_chunk_rngs(
+    master_seed: int,
+    total_tasks: int,
+    task_ids: list[int],
+) -> list[np.random.Generator]:
+    """Return independent RNGs for a batch of task IDs.
+
+    Spawns ``total_tasks`` children from ``master_seed`` once, then returns
+    generators for only the requested ``task_ids``.  This is efficient for
+    chunk-based execution where a single SLURM job processes many iterations.
+
+    Parameters
+    ----------
+    master_seed : int
+        Master RNG seed passed to :class:`numpy.random.SeedSequence`.
+    total_tasks : int
+        Total number of tasks in the full grid (must be >= 1).
+    task_ids : list[int]
+        Zero-based task indices to generate RNGs for.
+
+    Returns
+    -------
+    list[numpy.random.Generator]
+        One generator per element of *task_ids*, in the same order.
+
+    Raises
+    ------
+    ValueError
+        If ``total_tasks < 1``.
+    IndexError
+        If any task ID is outside ``[0, total_tasks)``.
+    """
+    if total_tasks < 1:
+        raise ValueError(f"total_tasks must be >= 1, got {total_tasks}.")
+    children = np.random.SeedSequence(master_seed).spawn(total_tasks)
+    rngs: list[np.random.Generator] = []
+    for tid in task_ids:
+        if tid < 0 or tid >= total_tasks:
+            raise IndexError(
+                f"task_id {tid} is out of range for {total_tasks} tasks."
+            )
+        rngs.append(np.random.default_rng(children[tid]))
+    return rngs

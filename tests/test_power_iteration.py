@@ -222,7 +222,7 @@ def test_run_power_iteration_return_structure(monkeypatch: pytest.MonkeyPatch) -
         effect_size_grid=[0.5],
         n_iterations=1,
         master_seed=42,
-        n_jobs=1,
+        n_chunks=1,
         bf_threshold=10.0,
     )
 
@@ -339,7 +339,7 @@ def test_run_power_iteration_schema_conformance(
         effect_size_grid=[0.5],
         n_iterations=1,
         master_seed=42,
-        n_jobs=1,
+        n_chunks=1,
         bf_threshold=10.0,
     )
 

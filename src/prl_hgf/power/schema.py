@@ -88,3 +88,48 @@ def write_parquet_row(row: dict, output_path: Path) -> None:
 
     df = df[list(POWER_SCHEMA)]
     df.to_parquet(output_path, index=False, engine="pyarrow")
+
+
+def write_parquet_batch(rows: list[dict], output_path: Path) -> None:
+    """Write multiple result rows to a single parquet file.
+
+    Validates that every row contains exactly the columns defined in
+    :data:`POWER_SCHEMA`, casts to declared dtypes, and writes via pyarrow.
+
+    Parameters
+    ----------
+    rows : list[dict]
+        List of row dicts, each with exactly the 13 keys in POWER_SCHEMA.
+    output_path : Path
+        Destination ``.parquet`` file.
+
+    Raises
+    ------
+    ValueError
+        If any row has missing or extra columns, or if *rows* is empty.
+    """
+    if not rows:
+        raise ValueError("rows must be non-empty.")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    df = pd.DataFrame(rows)
+
+    missing = set(POWER_SCHEMA) - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Missing required columns: {sorted(missing)}. "
+            f"Expected: {list(POWER_SCHEMA)}"
+        )
+
+    extra = set(df.columns) - set(POWER_SCHEMA)
+    if extra:
+        raise ValueError(
+            f"Unexpected columns: {sorted(extra)}. "
+            f"Expected: {list(POWER_SCHEMA)}"
+        )
+
+    for col, dtype in POWER_SCHEMA.items():
+        df[col] = df[col].astype(dtype)
+
+    df = df[list(POWER_SCHEMA)]
+    df.to_parquet(output_path, index=False, engine="pyarrow")

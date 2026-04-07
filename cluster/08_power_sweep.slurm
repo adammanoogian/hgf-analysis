@@ -1,23 +1,23 @@
 #!/bin/bash
 # =============================================================================
-# SLURM Job: Power Analysis Sweep (HGF BFDA)
+# SLURM Job: Power Analysis Sweep (HGF BFDA) — Chunk-Based
 # =============================================================================
-# Runs one power sweep iteration per array task: simulate synthetic
-# participants, fit HGF models via MCMC, compute Bayes factors and BMS,
-# then write a 13-column parquet row to results/power/.
+# Each array task processes a contiguous chunk of the power sweep grid.
+# JAX compiles the HGF model once per chunk, then reuses the compiled
+# trace for all iterations — no redundant JIT overhead.
+#
+# Default: 3 chunks (one per effect size), ~1400 iterations each.
+# Override n_chunks in configs/prl_analysis.yaml to change.
 #
 # Usage:
-#   # Smoke test (10 jobs, default array directive below):
+#   # Full power sweep (3 chunks):
 #   sbatch cluster/08_power_sweep.slurm
-#
-#   # Full power sweep (override array at submission time):
-#   sbatch --array=0-4199%50 cluster/08_power_sweep.slurm
 #
 #   # Dry-run (writes placeholder parquet rows, no MCMC):
 #   sbatch --export=DRY_RUN=1 cluster/08_power_sweep.slurm
 #
-# Note: The sbatch CLI --array flag overrides the #SBATCH --array directive,
-# so the smoke-test default below is safe to leave in the file.
+#   # Override chunk count at submission (must match YAML n_chunks):
+#   sbatch --array=0-4 cluster/08_power_sweep.slurm
 # =============================================================================
 
 #SBATCH --job-name=prl_power
@@ -28,9 +28,8 @@
 #SBATCH --gres=gpu:A40:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
-# Default: 10-job smoke test. Override at submission for full runs:
-#   sbatch --array=0-4199%50 cluster/08_power_sweep.slurm
-#SBATCH --array=0-9%50
+# Default: 3 chunks (one per effect size). Match to YAML n_chunks.
+#SBATCH --array=0-2
 
 # =============================================================================
 # Environment Setup
@@ -110,7 +109,7 @@ fi
 echo ""
 
 python scripts/08_run_power_iteration.py \
-    --task-id "${SLURM_ARRAY_TASK_ID}" \
+    --chunk-id "${SLURM_ARRAY_TASK_ID}" \
     --job-id "${SLURM_ARRAY_JOB_ID}" \
     --fit-chains 2 \
     --fit-draws 500 \

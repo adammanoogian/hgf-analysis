@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from prl_hgf.power.grid import decode_task_id, total_grid_size
+from prl_hgf.power.grid import chunk_task_ids, decode_task_id, total_grid_size
 
 # Standard grids used across all tests
 N_GRID: list[int] = [10, 15, 20, 25, 30, 40, 50]
@@ -60,3 +60,37 @@ class TestDecodeTaskId:
             )
             seen.add(result)
         assert len(seen) == 4200
+
+
+class TestChunkTaskIds:
+    """Tests for :func:`chunk_task_ids`."""
+
+    def test_chunk_covers_all_tasks(self) -> None:
+        """All chunks together cover every task ID exactly once."""
+        n_chunks = 3
+        total = total_grid_size(N_GRID, D_GRID, N_ITER)
+        all_ids: list[int] = []
+        for cid in range(n_chunks):
+            all_ids.extend(chunk_task_ids(cid, n_chunks, total))
+        assert sorted(all_ids) == list(range(total))
+
+    def test_chunk_sizes_balanced(self) -> None:
+        """Chunks differ in size by at most 1 (remainder in last chunk)."""
+        n_chunks = 3
+        total = total_grid_size(N_GRID, D_GRID, N_ITER)
+        sizes = [
+            len(chunk_task_ids(cid, n_chunks, total))
+            for cid in range(n_chunks)
+        ]
+        assert max(sizes) - min(sizes) <= n_chunks - 1
+
+    def test_chunk_single_chunk(self) -> None:
+        """n_chunks=1 returns all task IDs."""
+        total = total_grid_size(N_GRID, D_GRID, N_ITER)
+        ids = chunk_task_ids(0, 1, total)
+        assert ids == list(range(total))
+
+    def test_chunk_out_of_range(self) -> None:
+        """chunk_id >= n_chunks raises IndexError."""
+        with pytest.raises(IndexError, match="out of range"):
+            chunk_task_ids(3, 3, 4200)

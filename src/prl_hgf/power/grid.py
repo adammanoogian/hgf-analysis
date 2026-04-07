@@ -80,3 +80,43 @@ def decode_task_id(
     iter_idx = task_id % n_iterations
 
     return (n_per_group_grid[n_idx], effect_size_grid[d_idx], iter_idx)
+
+
+def chunk_task_ids(
+    chunk_id: int,
+    n_chunks: int,
+    total_size: int,
+) -> list[int]:
+    """Return the task IDs assigned to a given chunk.
+
+    Divides ``total_size`` tasks into ``n_chunks`` contiguous blocks.
+    The last chunk absorbs any remainder.
+
+    Parameters
+    ----------
+    chunk_id : int
+        Zero-based chunk index (``SLURM_ARRAY_TASK_ID``).
+    n_chunks : int
+        Total number of chunks (must be >= 1).
+    total_size : int
+        Total number of tasks across all chunks.
+
+    Returns
+    -------
+    list[int]
+        Task IDs ``[start, start + 1, ..., end - 1]`` for this chunk.
+
+    Raises
+    ------
+    IndexError
+        If *chunk_id* is outside ``[0, n_chunks)``.
+    """
+    if chunk_id < 0 or chunk_id >= n_chunks:
+        raise IndexError(
+            f"chunk_id {chunk_id} is out of range for {n_chunks} chunks "
+            f"(valid range: 0..{n_chunks - 1})."
+        )
+    chunk_size = total_size // n_chunks
+    start = chunk_id * chunk_size
+    end = start + chunk_size if chunk_id < n_chunks - 1 else total_size
+    return list(range(start, end))

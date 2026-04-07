@@ -47,8 +47,10 @@ class PowerConfig:
         Number of simulated datasets per grid cell (must be >= 1).
     master_seed : int
         Master RNG seed for :class:`numpy.random.SeedSequence` spawning.
-    n_jobs : int
-        Maximum parallel jobs for the SLURM array throttle (must be >= 1).
+    n_chunks : int
+        Number of SLURM array chunks for the power sweep (must be >= 1).
+        Each chunk processes ``total_grid_size / n_chunks`` iterations,
+        reusing the JAX-compiled model within a single process.
     bf_threshold : float
         Bayes factor threshold for declaring evidence (must be > 0).
     """
@@ -57,7 +59,7 @@ class PowerConfig:
     effect_size_grid: list[float]
     n_iterations: int
     master_seed: int
-    n_jobs: int
+    n_chunks: int
     bf_threshold: float
 
     def __post_init__(self) -> None:
@@ -66,9 +68,9 @@ class PowerConfig:
                 "PowerConfig: n_iterations must be >= 1, "
                 f"got {self.n_iterations}."
             )
-        if self.n_jobs < 1:
+        if self.n_chunks < 1:
             raise ValueError(
-                f"PowerConfig: n_jobs must be >= 1, got {self.n_jobs}."
+                f"PowerConfig: n_chunks must be >= 1, got {self.n_chunks}."
             )
         if self.bf_threshold <= 0.0:
             raise ValueError(
@@ -132,7 +134,7 @@ def load_power_config(path: Path | None = None) -> PowerConfig:
         effect_size_grid=[float(v) for v in pw["effect_size_grid"]],
         n_iterations=int(pw["n_iterations"]),
         master_seed=int(pw["master_seed"]),
-        n_jobs=int(pw["n_jobs"]),
+        n_chunks=int(pw["n_chunks"]),
         bf_threshold=float(pw["bf_threshold"]),
     )
 

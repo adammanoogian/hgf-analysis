@@ -254,5 +254,5 @@ power:
   effect_size_grid: [0.3, 0.5, 0.7]
   n_iterations: 200
   master_seed: 20240101
-  n_jobs: 4200
+  n_chunks: 3
   bf_threshold: 10.0
