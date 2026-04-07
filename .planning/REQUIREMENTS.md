@@ -88,30 +88,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PWR-01 | TBD | Pending |
-| PWR-09 | TBD | Pending |
-| PWR-10 | TBD | Pending |
-| PRE-01 | TBD | Pending |
-| PRE-02 | TBD | Pending |
-| PRE-03 | TBD | Pending |
-| PRE-04 | TBD | Pending |
-| PRE-05 | TBD | Pending |
-| PRE-06 | TBD | Pending |
-| PWR-02 | TBD | Pending |
-| PWR-03 | TBD | Pending |
-| PWR-04 | TBD | Pending |
-| PWR-05 | TBD | Pending |
-| PWR-06 | TBD | Pending |
-| PWR-07 | TBD | Pending |
-| PWR-08 | TBD | Pending |
-| SEED-01 | TBD | Pending |
-| VIZ-01 | TBD | Pending |
-| VIZ-02 | TBD | Pending |
-| VIZ-03 | TBD | Pending |
-| VIZ-04 | TBD | Pending |
-| REC-01 | TBD | Pending |
+| PWR-01 | Phase 8 | Pending |
+| PWR-09 | Phase 8 | Pending |
+| PWR-10 | Phase 8 | Pending |
+| SEED-01 | Phase 8 | Pending |
+| PRE-01 | Phase 9 | Pending |
+| PRE-02 | Phase 9 | Pending |
+| PRE-03 | Phase 9 | Pending |
+| PRE-04 | Phase 9 | Pending |
+| PRE-05 | Phase 9 | Pending |
+| PRE-06 | Phase 9 | Pending |
+| PWR-02 | Phase 10 | Pending |
+| PWR-03 | Phase 10 | Pending |
+| PWR-04 | Phase 10 | Pending |
+| PWR-05 | Phase 10 | Pending |
+| PWR-06 | Phase 10 | Pending |
+| PWR-07 | Phase 10 | Pending |
+| PWR-08 | Phase 10 | Pending |
+| VIZ-01 | Phase 11 | Pending |
+| VIZ-02 | Phase 11 | Pending |
+| VIZ-03 | Phase 11 | Pending |
+| VIZ-04 | Phase 11 | Pending |
+| REC-01 | Phase 11 | Pending |
 
-**Coverage:** 22 v1.1 requirements across 7 categories.
+**Coverage:** 22/22 v1.1 requirements mapped across 4 phases (8-11).
 
 ---
 *Requirements defined: 2026-04-07*
+*Traceability updated: 2026-04-07 (roadmap created)*
