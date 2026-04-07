@@ -95,9 +95,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — power/curves.py + scripts/09_aggregate_power.py: aggregation, P(BF>threshold) & P(BMS correct) computation, 8+ unit tests
-- [ ] 11-02-PLAN.md — scripts/10_plot_power_curves.py: Power A, Power B, sensitivity heatmap, 4-panel publication figure (PDF+PNG), 6+ tests
-- [ ] 11-03-PLAN.md — scripts/11_write_recommendation.py: recommendation.md with N/group, trial count, evidence table, caveats, 7+ tests
+- [x] 11-01-PLAN.md — power/curves.py + scripts/09_aggregate_power.py: aggregation, P(BF>threshold) & P(BMS correct) computation, 8+ unit tests
+- [x] 11-02-PLAN.md — scripts/10_plot_power_curves.py: Power A, Power B, sensitivity heatmap, 4-panel publication figure (PDF+PNG), 6+ tests
+- [x] 11-03-PLAN.md — scripts/11_write_recommendation.py: recommendation.md with N/group, trial count, evidence table, caveats, 7+ tests
 
 ---
 
@@ -115,4 +115,4 @@ Plans:
 | 8 - Config + Infrastructure | v1.1 | 2/2 | Complete | 2026-04-07 |
 | 9 - Prechecks | v1.1 | 2/2 | Complete | 2026-04-07 |
 | 10 - Core Power Modules + Sweep | v1.1 | 3/3 | Complete | 2026-04-07 |
-| 11 - Aggregation + Publication | v1.1 | 0/3 | Not started | - |
+| 11 - Aggregation + Publication | v1.1 | 3/3 | Complete | 2026-04-07 |

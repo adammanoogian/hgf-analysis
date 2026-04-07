@@ -105,11 +105,11 @@
 | PWR-06 | Phase 10 | Complete |
 | PWR-07 | Phase 10 | Complete |
 | PWR-08 | Phase 10 | Complete |
-| VIZ-01 | Phase 11 | Pending |
-| VIZ-02 | Phase 11 | Pending |
-| VIZ-03 | Phase 11 | Pending |
-| VIZ-04 | Phase 11 | Pending |
-| REC-01 | Phase 11 | Pending |
+| VIZ-01 | Phase 11 | Complete |
+| VIZ-02 | Phase 11 | Complete |
+| VIZ-03 | Phase 11 | Complete |
+| VIZ-04 | Phase 11 | Complete |
+| REC-01 | Phase 11 | Complete |
 
 **Coverage:** 22/22 v1.1 requirements mapped across 4 phases (8-11).
 
