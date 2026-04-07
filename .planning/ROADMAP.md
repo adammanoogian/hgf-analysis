@@ -57,11 +57,11 @@ Plans:
   3. The trial count sweep figure (r vs trial count, one line per parameter, reference line at r = 0.7) identifies the minimum trial count where all power-eligible parameters exceed threshold
   4. A confound matrix flagging |r| > 0.8 pairwise correlations is produced alongside the eligibility table
   5. Fits with R-hat > 1.05 or ESS < 400 are excluded from recovery calculations with the exclusion count reported per condition
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: power/precheck.py — recovery gate, confound matrix, eligibility list with exclusion reasons, convergence gating
-- [ ] 09-02: Trial count sweep (PRE-04, PRE-05) — fix N=30/group, vary trials [50-250], stable/volatile ratio preserved, VIZ-01 precheck figure
+- [ ] 09-01-PLAN.md — power/precheck.py: make_trial_config, run_recovery_precheck, build_eligibility_table, convergence gating, pipeline script + 8 unit tests
+- [ ] 09-02-PLAN.md — Trial count sweep (run_trial_sweep, plot_trial_sweep, find_minimum_trial_count), VIZ-01 precheck figure, --sweep CLI flag + 7 unit tests
 
 ### Phase 10: Core Power Modules and Sweep
 
