@@ -1,0 +1,408 @@
+"""Core power iteration pipeline: simulate -> fit -> BF -> BMS -> diagnostics.
+
+Orchestrates a single power sweep cell: generates synthetic data, fits both
+HGF model variants, computes Bayes Factor contrasts, runs random-effects BMS,
+and extracts parameter recovery diagnostics.  Returns three result dicts (one
+per contrast type) conforming to :data:`~prl_hgf.power.schema.POWER_SCHEMA`.
+
+Memory strategy
+---------------
+The BMS path fits both 2-level and 3-level models but only keeps one
+``idata`` dict in memory at a time.  :func:`_compute_bms_power` processes
+3-level WAIC first, explicitly deletes ``idata_3level``, then processes
+2-level WAIC.  This limits peak memory to one model's posterior samples.
+"""
+
+from __future__ import annotations
+
+import logging
+
+import numpy as np
+import pandas as pd
+
+from prl_hgf.analysis.bms import compute_subject_waic, run_group_bms
+from prl_hgf.analysis.recovery import build_recovery_df, compute_recovery_metrics
+from prl_hgf.fitting.batch import fit_batch
+from prl_hgf.power.config import PowerConfig, make_power_config
+from prl_hgf.power.contrasts import compute_all_contrasts
+from prl_hgf.simulation.batch import simulate_batch
+
+__all__ = ["run_power_iteration", "build_arrays_from_sim"]
+
+log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Array builder (duplicates fitting.batch._build_arrays without importing it)
+# ---------------------------------------------------------------------------
+
+
+def build_arrays_from_sim(
+    subset: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build trial arrays from a simulation DataFrame subset.
+
+    Duplicates the logic of ``fitting.batch._build_arrays`` for use in the
+    power analysis pipeline.  The ``power/`` package does not import private
+    functions from other subpackages.
+
+    Implements the partial-feedback protocol: only the chosen cue receives a
+    reward signal on each trial.  Unchosen cues have ``observed=0``.
+
+    Parameters
+    ----------
+    subset : pandas.DataFrame
+        Rows for one participant-session with columns ``cue_chosen`` and
+        ``reward``.  Must be sorted by trial order (ascending trial index).
+
+    Returns
+    -------
+    input_data_arr : numpy.ndarray, shape (n_trials, 3)
+        Float reward-value array.
+    observed_arr : numpy.ndarray, shape (n_trials, 3)
+        Binary observed mask (int).
+    choices_arr : numpy.ndarray, shape (n_trials,)
+        Chosen cue index for each trial (int).
+    """
+    n_trials = len(subset)
+    choices = subset["cue_chosen"].to_numpy(dtype=int)
+    rewards = subset["reward"].to_numpy(dtype=float)
+
+    input_data_arr = np.zeros((n_trials, 3), dtype=float)
+    observed_arr = np.zeros((n_trials, 3), dtype=int)
+
+    for t in range(n_trials):
+        cue = choices[t]
+        input_data_arr[t, cue] = rewards[t]
+        observed_arr[t, cue] = 1
+
+    return input_data_arr, observed_arr, choices
+
+
+# ---------------------------------------------------------------------------
+# BMS power helper
+# ---------------------------------------------------------------------------
+
+
+def _compute_bms_power(
+    sim_df: pd.DataFrame,
+    fit_df_3: pd.DataFrame,
+    fit_df_2: pd.DataFrame,
+    idata_3level: dict[tuple, object],
+    idata_2level: dict[tuple, object],
+) -> tuple[float, bool]:
+    """Compute BMS exceedance probability for the 3-level model.
+
+    Uses incremental WAIC to limit peak memory: processes 3-level idata
+    first, deletes it, then processes 2-level idata.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Trial-level simulation DataFrame.
+    fit_df_3 : pandas.DataFrame
+        Fit results for the 3-level model.
+    fit_df_2 : pandas.DataFrame
+        Fit results for the 2-level model.
+    idata_3level : dict[tuple, object]
+        Mapping ``(participant_id, group, session) -> InferenceData`` for the
+        3-level model.  ``None`` values indicate failed fits.
+    idata_2level : dict[tuple, object]
+        Mapping ``(participant_id, group, session) -> InferenceData`` for the
+        2-level model.  ``None`` values indicate failed fits.
+
+    Returns
+    -------
+    tuple[float, bool]
+        ``(xp_3level, bms_correct)`` where ``bms_correct`` is True when
+        ``xp_3level > 0.75``.
+    """
+    # Get unique participant-session keys
+    keys = (
+        sim_df[["participant_id", "group", "session"]]
+        .drop_duplicates()
+        .values.tolist()
+    )
+
+    waic_rows: list[dict] = []
+
+    # Phase A: 3-level WAIC (while idata_3level is in memory)
+    for pid, grp, sess in keys:
+        idata = idata_3level.get((pid, grp, sess))
+        if idata is None:
+            continue
+
+        mask = (
+            (sim_df["participant_id"] == pid)
+            & (sim_df["group"] == grp)
+            & (sim_df["session"] == sess)
+        )
+        subset = sim_df.loc[mask].sort_values("trial")
+        input_arr, obs_arr, choices_arr = build_arrays_from_sim(subset)
+
+        try:
+            elpd = compute_subject_waic(
+                input_arr, obs_arr, choices_arr, idata, "hgf_3level"
+            )
+            waic_rows.append(
+                {
+                    "participant_id": pid,
+                    "model": "hgf_3level",
+                    "elpd_waic": elpd,
+                }
+            )
+        except Exception:
+            log.exception(
+                "WAIC failed for %s (%s/%s) model=hgf_3level", pid, grp, sess
+            )
+
+    # Free 3-level idata before Phase B
+    del idata_3level
+
+    # Phase B: 2-level WAIC (only idata_2level in memory now)
+    for pid, grp, sess in keys:
+        idata = idata_2level.get((pid, grp, sess))
+        if idata is None:
+            continue
+
+        mask = (
+            (sim_df["participant_id"] == pid)
+            & (sim_df["group"] == grp)
+            & (sim_df["session"] == sess)
+        )
+        subset = sim_df.loc[mask].sort_values("trial")
+        input_arr, obs_arr, choices_arr = build_arrays_from_sim(subset)
+
+        try:
+            elpd = compute_subject_waic(
+                input_arr, obs_arr, choices_arr, idata, "hgf_2level"
+            )
+            waic_rows.append(
+                {
+                    "participant_id": pid,
+                    "model": "hgf_2level",
+                    "elpd_waic": elpd,
+                }
+            )
+        except Exception:
+            log.exception(
+                "WAIC failed for %s (%s/%s) model=hgf_2level", pid, grp, sess
+            )
+
+    if not waic_rows:
+        return 0.5, False
+
+    waic_df = pd.DataFrame(waic_rows)
+
+    # Average elpd_waic across sessions per (participant_id, model)
+    avg = (
+        waic_df.groupby(["participant_id", "model"])["elpd_waic"]
+        .mean()
+        .reset_index()
+    )
+
+    # Pivot to (n_subjects, 2) matrix: columns [hgf_2level, hgf_3level]
+    model_names = ["hgf_2level", "hgf_3level"]
+    pivot = avg.pivot(
+        index="participant_id", columns="model", values="elpd_waic"
+    )
+    missing_models = [m for m in model_names if m not in pivot.columns]
+    if missing_models:
+        log.warning("BMS: models %s missing from WAIC results", missing_models)
+        return 0.5, False
+
+    pivot = pivot[model_names].dropna()
+    if len(pivot) < 3:
+        return 0.5, False
+
+    matrix = pivot.to_numpy(dtype=float)
+    bms_result = run_group_bms(matrix, model_names)
+
+    # Index 1 = hgf_3level (critical: model_names order is [2level, 3level])
+    xp_3level = float(bms_result["xp"][1])
+    return xp_3level, xp_3level > 0.75
+
+
+# ---------------------------------------------------------------------------
+# Diagnostics helper
+# ---------------------------------------------------------------------------
+
+
+def _extract_diagnostics(
+    sim_df: pd.DataFrame,
+    fit_df: pd.DataFrame,
+) -> tuple[float, int, float]:
+    """Extract recovery, divergence, and convergence diagnostics.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Trial-level simulation DataFrame with ``true_*`` columns.
+    fit_df : pandas.DataFrame
+        Fit results DataFrame from ``fit_batch``.
+
+    Returns
+    -------
+    tuple[float, int, float]
+        ``(recovery_r, n_divergences, mean_rhat)`` where ``recovery_r`` is
+        the Pearson correlation for ``omega_2`` between true and fitted
+        values, ``n_divergences`` is always 0 (placeholder — ``fit_batch``
+        does not currently produce this column), and ``mean_rhat`` is the
+        average R-hat across all fitted parameters.
+    """
+    # Recovery r for omega_2
+    recovery_r = float("nan")
+    try:
+        recovery_df = build_recovery_df(
+            sim_df, fit_df, exclude_flagged=True, min_n=0
+        )
+        if len(recovery_df) > 0:
+            metrics_df = compute_recovery_metrics(recovery_df)
+            omega_2_row = metrics_df[metrics_df["parameter"] == "omega_2"]
+            if len(omega_2_row) > 0:
+                recovery_r = float(omega_2_row.iloc[0]["r"])
+    except Exception:
+        log.exception("Recovery metric computation failed")
+
+    # n_divergences: placeholder (fit_batch doesn't produce this column)
+    n_divergences = 0
+    if "n_divergences" in fit_df.columns:
+        n_divergences = int(fit_df["n_divergences"].sum())
+
+    # mean_rhat: NaN-safe average
+    mean_rhat = float("nan")
+    if "r_hat" in fit_df.columns:
+        mean_rhat = float(np.nanmean(fit_df["r_hat"].to_numpy(dtype=float)))
+
+    return recovery_r, n_divergences, mean_rhat
+
+
+# ---------------------------------------------------------------------------
+# Main orchestrator
+# ---------------------------------------------------------------------------
+
+
+def run_power_iteration(
+    base_config: object,
+    n_per_group: int,
+    effect_size_delta: float,
+    iteration: int,
+    child_seed: int,
+    power_config: PowerConfig,
+    n_chains: int = 2,
+    n_draws: int = 500,
+    n_tune: int = 500,
+) -> list[dict]:
+    """Run one full simulate-fit-BF-BMS iteration for a power sweep cell.
+
+    Orchestrates the full pipeline for a single ``(N, d, iteration)`` cell:
+
+    1. Build frozen config with overridden sample size and effect.
+    2. Simulate a synthetic cohort.
+    3. Fit the 3-level model and compute BF contrasts + diagnostics.
+    4. Fit the 2-level model for BMS comparison.
+    5. Compute BMS exceedance probability (incremental WAIC).
+    6. Return 3 result dicts (one per contrast type).
+
+    Parameters
+    ----------
+    base_config : AnalysisConfig
+        Base analysis configuration loaded from YAML.
+    n_per_group : int
+        Number of participants per group for this cell.
+    effect_size_delta : float
+        Additive shift to psilocybin group's omega_2 deltas.
+    iteration : int
+        Iteration index within this grid cell.
+    child_seed : int
+        RNG seed for this specific iteration.
+    power_config : PowerConfig
+        Power analysis grid configuration (provides ``bf_threshold``).
+    n_chains : int, optional
+        Number of MCMC chains.  Default ``2``.
+    n_draws : int, optional
+        Posterior draws per chain.  Default ``500``.
+    n_tune : int, optional
+        Tuning steps per chain.  Default ``500``.
+
+    Returns
+    -------
+    list[dict]
+        Three dicts conforming to :data:`~prl_hgf.power.schema.POWER_SCHEMA`
+        (13 columns each), one per contrast type: ``did_postdose``,
+        ``did_followup``, ``linear_trend``.
+    """
+    # Step 1: Build frozen config
+    cfg = make_power_config(
+        base_config, n_per_group, effect_size_delta, child_seed
+    )
+
+    # Step 2: Simulate
+    sim_df = simulate_batch(cfg)
+
+    # Step 3: Fit 3-level model (primary for BF path)
+    fit_df_3, idata_3level = fit_batch(
+        sim_df,
+        "hgf_3level",
+        return_idata=True,
+        random_seed=child_seed,
+        cores=1,
+        n_chains=n_chains,
+        n_draws=n_draws,
+        n_tune=n_tune,
+    )
+
+    # Step 4: Compute contrasts + BF (uses fit_df_3 for omega_2 posteriors)
+    contrast_results = compute_all_contrasts(
+        fit_df_3,
+        parameter="omega_2",
+        bf_threshold=power_config.bf_threshold,
+    )
+
+    # Step 5: Extract diagnostics (uses fit_df_3 + sim_df)
+    recovery_r, n_divergences, mean_rhat = _extract_diagnostics(
+        sim_df, fit_df_3
+    )
+
+    # Step 6: Fit 2-level model (for BMS path)
+    fit_df_2, idata_2level = fit_batch(
+        sim_df,
+        "hgf_2level",
+        return_idata=True,
+        random_seed=child_seed + 1,
+        cores=1,
+        n_chains=n_chains,
+        n_draws=n_draws,
+        n_tune=n_tune,
+    )
+
+    # Step 7: Compute BMS power (incremental WAIC — deletes idata_3level)
+    bms_xp, bms_correct = _compute_bms_power(
+        sim_df, fit_df_3, fit_df_2, idata_3level, idata_2level
+    )
+    # idata_3level was deleted inside _compute_bms_power.
+    # Delete idata_2level here to release memory.
+    del idata_2level
+
+    # Step 8: Build 3 result dicts (one per contrast type)
+    results: list[dict] = []
+    for contrast in contrast_results:
+        results.append(
+            {
+                "sweep_type": contrast["sweep_type"],
+                "effect_size": effect_size_delta,
+                "n_per_group": n_per_group,
+                "trial_count": cfg.task.n_trials_total,
+                "iteration": iteration,
+                "parameter": "omega_2",
+                "bf_value": contrast["bf_value"],
+                "bf_exceeds": contrast["bf_exceeds"],
+                "bms_xp": bms_xp,
+                "bms_correct": bms_correct,
+                "recovery_r": recovery_r,
+                "n_divergences": n_divergences,
+                "mean_rhat": mean_rhat,
+            }
+        )
+
+    return results

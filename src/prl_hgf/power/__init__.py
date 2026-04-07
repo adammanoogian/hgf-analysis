@@ -21,6 +21,7 @@ from prl_hgf.power.contrasts import (
     compute_linear_trend_contrast,
 )
 from prl_hgf.power.grid import decode_task_id, total_grid_size
+from prl_hgf.power.iteration import build_arrays_from_sim, run_power_iteration
 from prl_hgf.power.precheck import (
     PrecheckResult,
     build_eligibility_table,
@@ -47,4 +48,6 @@ __all__ = [
     "compute_did_contrast",
     "compute_linear_trend_contrast",
     "compute_all_contrasts",
+    "build_arrays_from_sim",
+    "run_power_iteration",
 ]
