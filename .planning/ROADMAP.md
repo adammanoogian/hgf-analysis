@@ -77,9 +77,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — power/contrasts.py: JZS BF via pingouin, DiD and linear trend contrasts, 9 unit tests (PWR-03, PWR-05)
-- [ ] 10-02-PLAN.md — YAML power grid update (d={0.3,0.5,0.7}, K=200), power/grid.py decode_task_id, SLURM update, reduced MCMC CLI flags (PWR-04, PWR-06)
-- [ ] 10-03-PLAN.md — power/iteration.py: run_power_iteration full pipeline, entry point wiring, BMS power path, 5 unit tests (PWR-02, PWR-07, PWR-08)
+- [x] 10-01-PLAN.md — power/contrasts.py: JZS BF via pingouin, DiD and linear trend contrasts, 10 unit tests (PWR-03, PWR-05)
+- [x] 10-02-PLAN.md — YAML power grid update (d={0.3,0.5,0.7}, K=200), power/grid.py decode_task_id, SLURM update, reduced MCMC CLI flags (PWR-04, PWR-06)
+- [x] 10-03-PLAN.md — power/iteration.py: run_power_iteration full pipeline, entry point wiring, BMS power path, 5 unit tests (PWR-02, PWR-07, PWR-08)
 
 ### Phase 11: Aggregation, Figures, and Recommendation
 
@@ -114,5 +114,5 @@ Plans:
 | 7 - GUI | v1.0 | 2/2 | Complete | 2026-04-07 |
 | 8 - Config + Infrastructure | v1.1 | 2/2 | Complete | 2026-04-07 |
 | 9 - Prechecks | v1.1 | 2/2 | Complete | 2026-04-07 |
-| 10 - Core Power Modules + Sweep | v1.1 | 0/3 | Not started | - |
+| 10 - Core Power Modules + Sweep | v1.1 | 3/3 | Complete | 2026-04-07 |
 | 11 - Aggregation + Publication | v1.1 | 0/3 | Not started | - |
