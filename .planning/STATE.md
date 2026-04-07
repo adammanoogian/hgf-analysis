@@ -31,8 +31,14 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full decision log.
 - System Python 3.13 incompatible with pyhgf 0.2.8 — all work must use ds_env
 - omega_3 parameter recovery expected to be challenging (known issue in literature)
 
+## Quick Tasks
+
+| ID  | Name | Status | Summary |
+|-----|------|--------|---------|
+| 001 | Cluster GPU Setup & Smoke Test | Complete | M3 SLURM infrastructure + smoke test PASS |
+
 ## Session Continuity
 
 Last session: 2026-04-07
-Stopped at: v1.0 milestone archived
-Resume file: None — awaiting next milestone (`/gsd:new-milestone`)
+Stopped at: Completed quick/001-PLAN.md (cluster GPU setup and smoke test)
+Resume file: None
