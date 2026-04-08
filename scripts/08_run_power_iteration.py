@@ -93,6 +93,13 @@ def parse_args() -> argparse.Namespace:
         help="Tuning steps per chain.",
     )
     parser.add_argument(
+        "--sampler",
+        type=str,
+        choices=["pymc", "numpyro"],
+        default="pymc",
+        help="MCMC backend: pymc (PyTensor NUTS) or numpyro (JAX NUTS).",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=None,
@@ -196,6 +203,7 @@ def main() -> None:
             n_chains=args.fit_chains,
             n_draws=args.fit_draws,
             n_tune=args.fit_tune,
+            sampler=args.sampler,
         )
         all_results.extend(results)
 

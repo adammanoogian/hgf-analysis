@@ -81,6 +81,7 @@ N_DRAWS = 50
 N_TUNE = 50
 EFFECT_SIZE = 0.3
 SEED = 42
+SAMPLER = "numpyro"  # "pymc" or "numpyro" (JAX-native, no PyTensor)
 # Set True to skip MCMC (dry-run wiring test only)
 # On cluster with GPU: set False for real timing
 DRY_RUN = "--dry-run" in sys.argv
@@ -119,6 +120,7 @@ def stage_power_iteration(base_config, power_config):
         n_chains=N_CHAINS,
         n_draws=N_DRAWS,
         n_tune=N_TUNE,
+        sampler=SAMPLER,
     )
     return results
 
@@ -259,6 +261,7 @@ def main() -> None:
     print(f"  MCMC         = {N_CHAINS} chains x {N_DRAWS} draws x {N_TUNE} tune")
     print(f"  effect_size  = {EFFECT_SIZE}")
     print(f"  seed         = {SEED}")
+    print(f"  sampler      = {SAMPLER}")
     print("=" * 70)
 
     output_dir = Path(tempfile.mkdtemp(prefix="prl_smoke_"))

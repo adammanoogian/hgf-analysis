@@ -166,6 +166,7 @@ def fit_participant(
     target_accept: float = 0.9,
     random_seed: int = 42,
     cores: int = 1,
+    sampler: str = "pymc",
 ) -> tuple[az.InferenceData, list[dict], bool]:
     """Fit a single participant's data via NUTS MCMC.
 
@@ -204,6 +205,10 @@ def fit_participant(
     cores : int, optional
         Number of parallel chains.  Use ``1`` on Windows to avoid JAX
         process-isolation issues.  Default ``1``.
+    sampler : str, optional
+        MCMC backend.  ``"pymc"`` (default) uses the PyMC/PyTensor NUTS
+        sampler.  ``"numpyro"`` uses NumPyro's NUTS via JAX, which
+        bypasses PyTensor compilation entirely and runs on CPU or GPU.
 
     Returns
     -------
@@ -248,16 +253,28 @@ def fit_participant(
         )
 
     with model:
-        idata = pm.sample(
-            draws=n_draws,
-            tune=n_tune,
-            chains=n_chains,
-            cores=cores,
-            target_accept=target_accept,
-            random_seed=random_seed,
-            return_inferencedata=True,
-            progressbar=True,
-        )
+        if sampler == "numpyro":
+            import pymc.sampling.jax as pmjax
+
+            idata = pmjax.sample_numpyro_nuts(
+                draws=n_draws,
+                tune=n_tune,
+                chains=n_chains,
+                target_accept=target_accept,
+                random_seed=random_seed,
+                progressbar=True,
+            )
+        else:
+            idata = pm.sample(
+                draws=n_draws,
+                tune=n_tune,
+                chains=n_chains,
+                cores=cores,
+                target_accept=target_accept,
+                random_seed=random_seed,
+                return_inferencedata=True,
+                progressbar=True,
+            )
 
     summary_rows = extract_summary_rows(
         idata,

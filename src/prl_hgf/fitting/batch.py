@@ -162,6 +162,7 @@ def fit_batch(
     output_path: Path | None = None,
     log_every: int = 10,
     return_idata: bool = False,
+    sampler: str = "pymc",
 ) -> pd.DataFrame | tuple[pd.DataFrame, dict[tuple, object]]:
     """Fit all participant-sessions in a simulation DataFrame via NUTS MCMC.
 
@@ -194,6 +195,10 @@ def fit_batch(
     cores : int, optional
         Number of parallel chains.  Use ``1`` on Windows to avoid JAX
         process-isolation issues.  Default ``1``.
+    sampler : str, optional
+        MCMC backend.  ``"pymc"`` (default) or ``"numpyro"`` (JAX-native
+        NUTS, bypasses PyTensor compilation).  Passed to
+        :func:`~prl_hgf.fitting.single.fit_participant`.
     output_path : Path or None, optional
         If provided, the results DataFrame is saved as CSV at this path.
     log_every : int, optional
@@ -287,6 +292,7 @@ def fit_batch(
                 target_accept=target_accept,
                 random_seed=participant_seed,
                 cores=cores,
+                sampler=sampler,
             )
             # Add flagged column to each row
             for row in summary_rows:

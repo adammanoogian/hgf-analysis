@@ -292,6 +292,7 @@ def run_power_iteration(
     n_chains: int = 2,
     n_draws: int = 500,
     n_tune: int = 500,
+    sampler: str = "pymc",
 ) -> list[dict]:
     """Run one full simulate-fit-BF-BMS iteration for a power sweep cell.
 
@@ -324,6 +325,8 @@ def run_power_iteration(
         Posterior draws per chain.  Default ``500``.
     n_tune : int, optional
         Tuning steps per chain.  Default ``500``.
+    sampler : str, optional
+        MCMC backend: ``"pymc"`` (default) or ``"numpyro"``.
 
     Returns
     -------
@@ -350,6 +353,7 @@ def run_power_iteration(
         n_chains=n_chains,
         n_draws=n_draws,
         n_tune=n_tune,
+        sampler=sampler,
     )
 
     # Step 4: Compute contrasts + BF (uses fit_df_3 for omega_2 posteriors)
@@ -374,6 +378,7 @@ def run_power_iteration(
         n_chains=n_chains,
         n_draws=n_draws,
         n_tune=n_tune,
+        sampler=sampler,
     )
 
     # Step 7: Compute BMS power (incremental WAIC — deletes idata_3level)

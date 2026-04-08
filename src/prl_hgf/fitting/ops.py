@@ -32,14 +32,14 @@ performance-critical path calls directly into JIT-compiled JAX.
 
 from __future__ import annotations
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytensor
 import pytensor.tensor as pt
-from pytensor.graph import Apply, Op
-
-import jax
-import jax.numpy as jnp
 from jax import lax
+from pytensor.graph import Apply, Op
+from pytensor.link.jax.dispatch import jax_funcify
 
 # Suppress PyTensor g++ compilation warning — not needed when Op.perform
 # delegates entirely to JAX JIT.
@@ -167,6 +167,16 @@ def build_logp_ops_2level(
             grads = _grad_op(*inputs)
             og = output_gradients[0]
             return [og * g for g in grads]
+
+    # Register JAX dispatch so sample_numpyro_nuts can convert this Op
+    @jax_funcify.register(_LogpOp)
+    def _logp_op_jax(op, **kwargs):
+        fn = _jax_logp
+
+        def impl(*args):
+            return fn(*args)
+
+        return impl
 
     return _LogpOp(), n_trials
 
@@ -302,5 +312,15 @@ def build_logp_ops_3level(
             grads = _grad_op(*inputs)
             og = output_gradients[0]
             return [og * g for g in grads]
+
+    # Register JAX dispatch so sample_numpyro_nuts can convert this Op
+    @jax_funcify.register(_LogpOp)
+    def _logp_op_jax(op, **kwargs):
+        fn = _jax_logp
+
+        def impl(*args):
+            return fn(*args)
+
+        return impl
 
     return _LogpOp(), n_trials
