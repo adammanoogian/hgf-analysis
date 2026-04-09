@@ -1,0 +1,19 @@
+/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+2026-04-10 05:14:45.416637: W external/xla/xla/service/gpu/nvptx_compiler.cc:836] The NVIDIA driver's CUDA version is 12.8 which is older than the PTX compiler version (12.9.86). Because the driver is older than the PTX compiler version, XLA is disabling parallel compilation, which may slow down compilation. You should update your NVIDIA driver or use the NVIDIA-provided CUDA forward compatibility packages.
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/scripts/08_run_power_iteration.py", line 506, in <module>
+    main()
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/scripts/08_run_power_iteration.py", line 422, in main
+    _run_benchmark(base_config, power_config, output_dir, args)
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/scripts/08_run_power_iteration.py", line 212, in _run_benchmark
+    sim_df = simulate_batch(cfg)
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/simulation/batch.py", line 167, in simulate_batch
+    result = simulate_agent(
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/simulation/agent.py", line 252, in simulate_agent
+    choice = int(rng.choice(3, p=probs))
+  File "numpy/random/_generator.pyx", line 892, in numpy.random._generator.Generator.choice
+ValueError: Probabilities contain NaN
