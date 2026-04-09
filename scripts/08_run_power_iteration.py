@@ -163,6 +163,35 @@ def _run_benchmark(
     print("BENCHMARK MODE")
     print("=" * 60)
 
+    # --- Phase 0: GPU device info ---
+    import subprocess
+
+    import jax
+
+    devices = jax.devices()
+    gpu_devices = [d for d in devices if d.platform == "gpu"]
+    if gpu_devices:
+        dev = gpu_devices[0]
+        results["gpu_device"] = str(dev)
+        print(f"\nGPU: {dev}")
+    else:
+        results["gpu_device"] = "none (CPU only)"
+        print("\nWARNING: No GPU detected — timings will reflect CPU performance")
+
+    # Capture full nvidia-smi snapshot
+    try:
+        smi = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total,memory.free",
+             "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if smi.returncode == 0:
+            gpu_info = smi.stdout.strip()
+            results["gpu_nvidia_smi"] = gpu_info
+            print(f"  nvidia-smi: {gpu_info}")
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
     # --- Phase 1: JAX JIT compilation for both models ---
     for model_name in ("hgf_3level", "hgf_2level"):
         print(f"\nPhase 1: JIT compilation ({model_name})...")
@@ -213,9 +242,25 @@ def _run_benchmark(
         input_arr[t, choices[t]] = rewards[t]
         observed_arr[t, choices[t]] = 1
 
+    def _gpu_vram_mb() -> dict[str, float] | None:
+        """Query nvidia-smi for current VRAM usage in MB."""
+        try:
+            smi = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.used,memory.total",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if smi.returncode == 0:
+                used, total = smi.stdout.strip().split(", ")
+                return {"used_mb": float(used), "total_mb": float(total)}
+        except (FileNotFoundError, subprocess.TimeoutExpired, ValueError):
+            pass
+        return None
+
     for model_name in ("hgf_3level", "hgf_2level"):
         print(f"\nPhase 3: Fit 1 participant ({model_name}, "
               f"{args.fit_chains} chains × {args.fit_draws} draws)...")
+        vram_before = _gpu_vram_mb()
         t0 = time.perf_counter()
         fit_participant(
             input_data_arr=input_arr,
@@ -234,9 +279,21 @@ def _run_benchmark(
             sampler=args.sampler,
         )
         dt_fit = time.perf_counter() - t0
+        vram_after = _gpu_vram_mb()
+
         key = f"fit_single_{model_name}_s"
         results[key] = round(dt_fit, 2)
         print(f"  {model_name} single fit: {dt_fit:.2f}s")
+
+        if vram_after:
+            vram_key = f"vram_after_{model_name}_mb"
+            results[vram_key] = vram_after["used_mb"]
+            results["vram_total_mb"] = vram_after["total_mb"]
+            print(f"  VRAM: {vram_after['used_mb']:.0f} / {vram_after['total_mb']:.0f} MB")
+            if vram_before:
+                delta = vram_after["used_mb"] - vram_before["used_mb"]
+                results[f"vram_delta_{model_name}_mb"] = round(delta, 1)
+                print(f"  VRAM delta: +{delta:.0f} MB")
 
     # --- Projections ---
     fit_3 = results["fit_single_hgf_3level_s"]
@@ -284,6 +341,14 @@ def _run_benchmark(
     print("\n" + "=" * 60)
     print("BENCHMARK RESULTS")
     print("=" * 60)
+    print(f"  GPU:                   {results.get('gpu_device', 'unknown')}")
+    if "vram_total_mb" in results:
+        print(f"  VRAM total:            {results['vram_total_mb']:.0f} MB")
+    if "vram_after_hgf_3level_mb" in results:
+        print(f"  VRAM after 3-level:    {results['vram_after_hgf_3level_mb']:.0f} MB")
+    if "vram_after_hgf_2level_mb" in results:
+        print(f"  VRAM after 2-level:    {results['vram_after_hgf_2level_mb']:.0f} MB")
+    print()
     print(f"  JIT compile (3-level): {results['jit_compile_hgf_3level_s']:.2f}s")
     print(f"  JIT compile (2-level): {results['jit_compile_hgf_2level_s']:.2f}s")
     print(f"  Simulate (N=10):       {results['simulate_n10_s']:.2f}s")
@@ -300,6 +365,23 @@ def _run_benchmark(
     print(f"  Total MCMC fits:       {total_fits_cumul:,}")
     print(f"  Estimated GPU-hours:   {total_hours_cumul:.1f}h")
     print(f"  Per chunk ({power_config.n_chunks} chunks): {total_hours_cumul / power_config.n_chunks:.1f}h")
+    if "vram_total_mb" in results:
+        peak = max(
+            results.get("vram_after_hgf_3level_mb", 0),
+            results.get("vram_after_hgf_2level_mb", 0),
+        )
+        print()
+        print("GPU SIZING:")
+        print(f"  Peak VRAM (single fit): {peak:.0f} MB")
+        print(f"  GPU assigned:           {results['vram_total_mb']:.0f} MB")
+        headroom = results["vram_total_mb"] - peak
+        print(f"  Headroom:               {headroom:.0f} MB")
+        if peak < 8000:
+            print(f"  Recommendation:         T4 (16 GB) sufficient")
+        elif peak < 20000:
+            print(f"  Recommendation:         A40 (48 GB) or A100 (40 GB)")
+        else:
+            print(f"  Recommendation:         A100 (80 GB)")
     print("=" * 60)
 
     bench_path = output_dir / "benchmark.json"
