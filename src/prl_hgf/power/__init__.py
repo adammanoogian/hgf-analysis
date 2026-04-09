@@ -21,7 +21,13 @@ from prl_hgf.power.contrasts import (
     compute_linear_trend_contrast,
 )
 from prl_hgf.power.curves import aggregate_parquets, compute_power_a, compute_power_b
-from prl_hgf.power.grid import chunk_task_ids, decode_task_id, total_grid_size
+from prl_hgf.power.grid import (
+    chunk_task_ids,
+    decode_sbf_task_id,
+    decode_task_id,
+    sbf_grid_size,
+    total_grid_size,
+)
 from prl_hgf.power.iteration import build_arrays_from_sim, run_power_iteration
 from prl_hgf.power.precheck import (
     PrecheckResult,
@@ -37,7 +43,9 @@ __all__ = [
     "PowerConfig",
     "load_power_config",
     "chunk_task_ids",
+    "decode_sbf_task_id",
     "decode_task_id",
+    "sbf_grid_size",
     "total_grid_size",
     "make_child_rng",
     "make_chunk_rngs",

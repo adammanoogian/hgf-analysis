@@ -6,6 +6,10 @@ modulo on the three-dimensional grid.
 
 Grid layout (row-major order, slowest-to-fastest):
     n_per_group (outer) x effect_size (middle) x iteration (inner)
+
+The SBF (Sequential Bayes Factor) grid is 2-D: ``effect_size x iteration``.
+Sample size (N) is handled inside each iteration by simulating at max N and
+subsampling at each N level after fitting.
 """
 
 from __future__ import annotations
@@ -120,3 +124,73 @@ def chunk_task_ids(
     start = chunk_id * chunk_size
     end = start + chunk_size if chunk_id < n_chunks - 1 else total_size
     return list(range(start, end))
+
+
+# ---------------------------------------------------------------------------
+# SBF (Sequential Bayes Factor) grid — 2-D: effect_size x iteration
+# ---------------------------------------------------------------------------
+
+
+def sbf_grid_size(
+    effect_size_grid: list[float],
+    n_iterations: int,
+) -> int:
+    """Return the total number of tasks in the SBF power sweep grid.
+
+    The SBF grid is 2-D because sample size (N) is handled inside each
+    iteration via subsampling, not as a separate grid axis.
+
+    Parameters
+    ----------
+    effect_size_grid : list[float]
+        Effect size deltas to sweep over.
+    n_iterations : int
+        Number of simulated datasets per effect size level.
+
+    Returns
+    -------
+    int
+        ``len(effect_size_grid) * n_iterations``.
+    """
+    return len(effect_size_grid) * n_iterations
+
+
+def decode_sbf_task_id(
+    task_id: int,
+    effect_size_grid: list[float],
+    n_iterations: int,
+) -> tuple[float, int]:
+    """Decode a flat task index into SBF grid coordinates.
+
+    The grid is laid out in row-major order with *effect_size* varying
+    slowest and *iteration* varying fastest.
+
+    Parameters
+    ----------
+    task_id : int
+        Zero-based flat index (``SLURM_ARRAY_TASK_ID``).
+    effect_size_grid : list[float]
+        Effect size deltas to sweep over.
+    n_iterations : int
+        Number of simulated datasets per effect size level.
+
+    Returns
+    -------
+    tuple[float, int]
+        ``(effect_size, iteration)`` for the given task ID.
+
+    Raises
+    ------
+    IndexError
+        If *task_id* is outside ``[0, sbf_grid_size)``.
+    """
+    size = sbf_grid_size(effect_size_grid, n_iterations)
+    if task_id < 0 or task_id >= size:
+        raise IndexError(
+            f"task_id {task_id} is out of range for SBF grid of size "
+            f"{size} (valid range: 0..{size - 1})."
+        )
+
+    d_idx = task_id // n_iterations
+    iter_idx = task_id % n_iterations
+    return (effect_size_grid[d_idx], iter_idx)
