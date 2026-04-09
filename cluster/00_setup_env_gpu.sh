@@ -117,9 +117,12 @@ fi
 
 if [[ "$MODE" == "update" ]]; then
     if [[ "$ENV_EXISTS" == false ]]; then
-        echo "ERROR: Environment 'prl_gpu' does not exist. Use without --update for fresh install."
-        exit 1
+        echo "Environment 'prl_gpu' does not exist — creating fresh..."
+        MODE="fresh"
     fi
+fi
+
+if [[ "$MODE" == "update" ]]; then
 
     echo ""
     echo "Updating existing environment..."
