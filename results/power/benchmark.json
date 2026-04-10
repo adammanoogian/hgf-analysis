@@ -1,0 +1,39 @@
+{
+  "gpu_device": "none (CPU only)",
+  "jit_compile_hgf_3level_s": 1.77,
+  "jit_compile_hgf_2level_s": 0.68,
+  "simulate_n10_s": 132.39,
+  "fit_single_hgf_3level_s": 20.75,
+  "fit_single_hgf_2level_s": 9.02,
+  "projection_sbf_design": {
+    "total_fits": 360000,
+    "total_gpu_hours": 1488.5,
+    "per_chunk_hours": 496.2
+  },
+  "grid": {
+    "n_per_group": [
+      10,
+      15,
+      20,
+      25,
+      30,
+      40,
+      50
+    ],
+    "max_n": 50,
+    "effect_sizes": [
+      0.3,
+      0.5,
+      0.7
+    ],
+    "n_iterations": 200,
+    "n_chunks": 3,
+    "sbf_grid_tasks": 600
+  },
+  "mcmc_settings": {
+    "chains": 2,
+    "draws": 500,
+    "tune": 500,
+    "sampler": "numpyro"
+  }
+}
