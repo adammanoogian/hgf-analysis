@@ -34,7 +34,7 @@ DRY_RUN=0
 BENCHMARK=0
 SETUP=false
 SKIP_PUSH=false
-SAMPLER="pymc"
+SAMPLER="numpyro"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -66,7 +66,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --dry-run            Placeholder parquet (no MCMC)"
             echo "  --benchmark          JIT compile + single fit timing (1 GPU, ~15 min)"
             echo "  --skip-push          Skip auto-push results to git"
-            echo "  --sampler=BACKEND    pymc (default) or numpyro"
+            echo "  --sampler=BACKEND    numpyro (default) or pymc"
             echo "  --help, -h           Show this help"
             echo ""
             echo "Examples:"
