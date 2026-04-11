@@ -119,7 +119,13 @@ Plans:
   3. `fit_batch_hierarchical(sim_df, model_name, ...)` builds a hierarchical `pm.Model()` with `shape=(n_participants,)` priors, runs one `pmjax.sample_numpyro_nuts` call, returns a single `InferenceData` with a participant dim on every parameter
   4. VALID-01: batched logp with `P=1` returns float64-identical value to the existing per-participant logp for matched inputs (regression test)
   5. VALID-02: fit 5 participants sequentially (legacy) and 5 batched (new), both on CPU with matched seeds; per-parameter posterior means agree within 3× MCSE
-**Plans**: ~4 plans (ops refactor, model builder, orchestrator, validation tests)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 12-01-legacy-migration-PLAN.md — Move fitting/single.py + fitting/batch.py into legacy/, add backward-compat shims, leave ops.py + models.py in place
+- [ ] 12-02-batched-jax-logp-PLAN.md — Create hierarchical.py with build_logp_ops_batched (jax.vmap over participants, Layer 2 clamping, trial_mask, two-Op split, jax_funcify)
+- [ ] 12-03-hierarchical-pymc-orchestrator-PLAN.md — Add build_pymc_model_batched + fit_batch_hierarchical (one pmjax.sample_numpyro_nuts call), wire __init__.py exports
+- [ ] 12-04-validation-tests-PLAN.md — tests/test_hierarchical_logp.py: VALID-01 bit-exact P=1, P=2 doubling, Layer 2 clamping smoke, VALID-02 5-participant within-MCSE
 
 ### Phase 13: JAX-Native Cohort Simulation
 
