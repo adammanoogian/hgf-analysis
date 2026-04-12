@@ -33,8 +33,13 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 from prl_hgf.env.simulator import generate_session
-from prl_hgf.env.task_config import load_config
-from prl_hgf.simulation.jax_session import simulate_session_jax
+from prl_hgf.env.task_config import (
+    AnalysisConfig,
+    SimulationConfig,
+    load_config,
+)
+from prl_hgf.simulation.batch import simulate_batch
+from prl_hgf.simulation.jax_session import simulate_cohort_jax, simulate_session_jax
 
 # ---------------------------------------------------------------------------
 # Shared helper
@@ -259,4 +264,162 @@ def test_session_jax_beta_effect() -> None:
     assert float(best_freq_high) > float(best_freq_low), (
         f"Expected beta=10.0 to exploit best cue more than beta=0.1, "
         f"but got best_freq_high={best_freq_high:.3f} <= best_freq_low={best_freq_low:.3f}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Helpers for cohort tests
+# ---------------------------------------------------------------------------
+
+
+def _small_config(n_per_group: int = 1) -> AnalysisConfig:
+    """Minimal config for batch test (mirroring test_batch.py pattern).
+
+    Parameters
+    ----------
+    n_per_group : int
+        Participants per group.
+
+    Returns
+    -------
+    AnalysisConfig
+        Config identical to the real one except for a reduced cohort size.
+    """
+    real = load_config()
+    small_sim = SimulationConfig(
+        n_participants_per_group=n_per_group,
+        master_seed=real.simulation.master_seed,
+        groups=real.simulation.groups,
+        session_deltas=real.simulation.session_deltas,
+    )
+    return AnalysisConfig(task=real.task, simulation=small_sim, fitting=real.fitting)
+
+
+# ---------------------------------------------------------------------------
+# Test 6: Cohort output shapes
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_cohort_jax_output_shapes() -> None:
+    """simulate_cohort_jax returns correct shapes for P=3 participants.
+
+    Verifies:
+    - choices.shape == (3, n_trials)
+    - rewards.shape == (3, n_trials)
+    - diverged.shape == (3,)
+    """
+    cue_probs_arr, n_trials = _make_cue_probs()
+
+    params_batch = {
+        "omega_2": jnp.array([-3.0, -4.0, -2.0]),
+        "omega_3": jnp.array([-6.0, -5.0, -7.0]),
+        "kappa": jnp.array([1.0, 0.5, 1.5]),
+        "beta": jnp.array([2.0, 3.0, 1.0]),
+        "zeta": jnp.array([0.5, 0.0, -0.5]),
+    }
+    rng_keys = jax.random.split(jax.random.PRNGKey(0), 3)
+
+    choices, rewards, diverged = simulate_cohort_jax(
+        params_batch, cue_probs_arr, rng_keys
+    )
+
+    assert choices.shape == (3, n_trials), (
+        f"Expected choices.shape == (3, {n_trials}), got {choices.shape}"
+    )
+    assert rewards.shape == (3, n_trials), (
+        f"Expected rewards.shape == (3, {n_trials}), got {rewards.shape}"
+    )
+    assert diverged.shape == (3,), (
+        f"Expected diverged.shape == (3,), got {diverged.shape}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 7: Cohort determinism
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_cohort_jax_deterministic() -> None:
+    """Two calls with the same master seed produce bit-identical cohort output."""
+    cue_probs_arr, _ = _make_cue_probs()
+    params_batch = {
+        "omega_2": jnp.array([-3.0, -4.0]),
+        "omega_3": jnp.array([-6.0, -5.0]),
+        "kappa": jnp.array([1.0, 0.5]),
+        "beta": jnp.array([2.0, 3.0]),
+        "zeta": jnp.array([0.5, 0.0]),
+    }
+    rng_keys = jax.random.split(jax.random.PRNGKey(42), 2)
+
+    choices1, rewards1, diverged1 = simulate_cohort_jax(
+        params_batch, cue_probs_arr, rng_keys
+    )
+    choices2, rewards2, diverged2 = simulate_cohort_jax(
+        params_batch, cue_probs_arr, rng_keys
+    )
+
+    assert jnp.array_equal(choices1, choices2), (
+        "Cohort choices differ across identical seeds"
+    )
+    assert jnp.array_equal(rewards1, rewards2), (
+        "Cohort rewards differ across identical seeds"
+    )
+    assert jnp.array_equal(diverged1, diverged2), (
+        "Cohort diverged flags differ across identical seeds"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 8: Distinct participants get distinct outputs with different keys
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_cohort_jax_distinct_participants() -> None:
+    """Participants with different keys produce different choice sequences.
+
+    Uses identical params for two participants but different PRNG keys.
+    Different keys drive different RNG streams, so the choice sequences
+    should differ.
+    """
+    cue_probs_arr, _ = _make_cue_probs()
+    params_batch = {
+        "omega_2": jnp.array([-3.0, -3.0]),
+        "omega_3": jnp.array([-6.0, -6.0]),
+        "kappa": jnp.array([1.0, 1.0]),
+        "beta": jnp.array([2.0, 2.0]),
+        "zeta": jnp.array([0.5, 0.5]),
+    }
+    # Two different keys — same params, different RNG streams
+    rng_keys = jax.random.split(jax.random.PRNGKey(0), 2)
+
+    choices, _, _ = simulate_cohort_jax(params_batch, cue_probs_arr, rng_keys)
+
+    assert not jnp.array_equal(choices[0], choices[1]), (
+        "Expected distinct choice sequences for participants with different PRNG keys, "
+        "but got identical sequences"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 9: simulate_batch output includes diverged column
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_batch_diverged_column_present() -> None:
+    """simulate_batch output DataFrame contains a boolean 'diverged' column."""
+    cfg = _small_config(n_per_group=1)
+    df = simulate_batch(cfg)
+
+    assert "diverged" in df.columns, (
+        f"'diverged' column missing from simulate_batch output. "
+        f"Columns present: {sorted(df.columns)}"
+    )
+    assert df["diverged"].dtype == bool or np.issubdtype(
+        df["diverged"].dtype, np.bool_
+    ), (
+        f"Expected 'diverged' column to have bool dtype, got {df['diverged'].dtype}"
     )
