@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ## Current Position
 
-Phase: 12 - Batched Hierarchical JAX Logp (not started)
-Plan: —
-Status: Defining requirements and roadmap for v1.2
-Last activity: 2026-04-11 — v1.2 milestone initialized after L40S benchmark showed v1.1 per-participant sequential fitting is infeasible (~1.5s/sample → projected 18,000 GPU-hours)
+Phase: 12 of 15 (Batched Hierarchical JAX Logp)
+Plan: 01 of 04
+Status: In progress
+Last activity: 2026-04-12 — Completed 12-01-PLAN.md (legacy migration)
 
-[==========]          v1.1 code-complete (Phases 1-11); v1.2 in progress (Phases 12-15 pending)
+[==========█===]     v1.1 code-complete (Phases 1-11); v1.2 plan 12-01 complete, 12-02 next
 
 ## Performance Metrics
 
@@ -60,6 +60,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | generate_recommendation re-applies bf_threshold to bf_value for N selection | Allows any --bf-threshold CLI arg to affect recommended N, not just pre-baked bf_exceeds bool | 11-03 |
 | power_a_df and power_b_df recomputed from master if summary CSVs missing | Makes recommendation script self-sufficient when only power_master.csv exists | 11-03 |
 | Chunk-based SLURM: 3 jobs instead of 4200 | JAX compiles once per chunk; reuses compiled model for ~1400 iterations; one combined parquet per chunk | 11 |
+| legacy/batch.py imports from legacy/single.py (not shim) | Ensures frozen code calls frozen code; no circular dependency through shims | 12-01 |
+| Shims use noqa: F401 for re-exports | Ruff would flag unused imports in shim modules; F401 suppression is standard for re-export patterns | 12-01 |
 
 ### Pending Todos
 
@@ -85,7 +87,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-11
-Stopped at: v1.2 milestone initialized — REQUIREMENTS.md and ROADMAP.md drafted for Phases 12-15
+Last session: 2026-04-12
+Stopped at: Completed 12-01-PLAN.md (legacy migration)
 Resume file: None
-Next action: /gsd:discuss-phase 12 or /gsd:plan-phase 12 (Batched Hierarchical JAX Logp)
+Next action: Execute 12-02-PLAN.md (batched JAX logp Op factory)
