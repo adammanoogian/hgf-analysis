@@ -44,7 +44,12 @@ from prl_hgf.power.config import PowerConfig, make_power_config
 from prl_hgf.power.contrasts import compute_all_contrasts
 from prl_hgf.simulation.batch import simulate_batch
 
-__all__ = ["run_power_iteration", "run_sbf_iteration", "build_arrays_from_sim"]
+__all__ = [
+    "run_power_iteration",
+    "run_sbf_iteration",
+    "build_arrays_from_sim",
+    "apply_decision_gate",
+]
 
 log = logging.getLogger(__name__)
 
@@ -629,23 +634,16 @@ def _idata_to_fit_df(
             mean_val = float(np.mean(flat))
             sd_val = float(np.std(flat, ddof=1))
 
-            # az.rhat / az.ess expect DataArrays with (chain, draw) dims
-            rhat_val = float(az.rhat(da).item())
-            ess_val = float(az.ess(da).item())
+            # az.rhat / az.ess return a Dataset with the param variable as a
+            # scalar DataArray.  Extract via [param].values (0-d array).
+            rhat_val = float(az.rhat(da)[param].values)
+            ess_val = float(az.ess(da)[param].values)
 
-            # HDI via az.hdi — returns Dataset with hdi_prob-specific keys
+            # az.hdi returns a Dataset; the variable is named param and has
+            # shape (2,) with [lower, upper] bounds.
             hdi_result = az.hdi(da, hdi_prob=0.94)
-            # hdi returns Dataset; variable name is param
-            hdi_lower = float(
-                hdi_result[param].values[0]
-                if hasattr(hdi_result, "data_vars")
-                else hdi_result.values[0]
-            )
-            hdi_upper = float(
-                hdi_result[param].values[1]
-                if hasattr(hdi_result, "data_vars")
-                else hdi_result.values[1]
-            )
+            hdi_lower = float(hdi_result[param].values[0])
+            hdi_upper = float(hdi_result[param].values[1])
 
             flagged = rhat_val > 1.05 or ess_val < 400
 
@@ -738,6 +736,42 @@ def _build_idata_dict(
     ):
         result[(pid, grp, sess)] = _split_idata(joint_idata, i)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Decision gate (BENCH-02)
+# ---------------------------------------------------------------------------
+
+
+def apply_decision_gate(per_iter_seconds: float) -> dict:
+    """Apply BENCH-02 GPU-hour decision gate.
+
+    Parameters
+    ----------
+    per_iter_seconds : float
+        Wall-clock seconds for one ``run_sbf_iteration`` call.
+
+    Returns
+    -------
+    dict
+        Decision gate result with fields: per_iter_seconds,
+        gpu_hours_per_chunk, decision, decision_threshold_gpu_hours,
+        decision_formula.
+
+    Notes
+    -----
+    Formula: per_iter_seconds x 600 / 3600 > 50 -> recommend CPU comp.
+    600 = total iterations across 3 chunks (3 effect sizes x 200 iter).
+    """
+    gpu_hours_per_chunk = per_iter_seconds * 600 / 3600
+    recommend_gpu = gpu_hours_per_chunk <= 50
+    return {
+        "per_iter_seconds": round(per_iter_seconds, 2),
+        "gpu_hours_per_chunk": round(gpu_hours_per_chunk, 1),
+        "decision": "gpu" if recommend_gpu else "cpu_comp",
+        "decision_threshold_gpu_hours": 50,
+        "decision_formula": "per_iter_seconds * 600 / 3600 > 50",
+    }
 
 
 # ---------------------------------------------------------------------------

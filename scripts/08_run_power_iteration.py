@@ -27,7 +27,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -138,6 +140,70 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     return parser.parse_args()
+
+
+class _GpuMonitor:
+    """Background-threaded nvidia-smi poller for GPU utilization metrics."""
+
+    def __init__(self, interval_s: float = 2.0):
+        self.interval_s = interval_s
+        self._stop = threading.Event()
+        self.samples: list[dict] = []
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def start(self) -> None:
+        """Start the background polling thread."""
+        self._thread.start()
+
+    def stop(self) -> None:
+        """Signal the thread to stop and wait for it to finish."""
+        self._stop.set()
+        self._thread.join(timeout=10)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.interval_s):
+            try:
+                out = subprocess.run(
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=utilization.gpu,memory.used,memory.total",
+                        "--format=csv,noheader,nounits",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if out.returncode == 0:
+                    parts = out.stdout.strip().split(", ")
+                    if len(parts) == 3:
+                        self.samples.append(
+                            {
+                                "gpu_util_pct": float(parts[0]),
+                                "vram_used_mb": float(parts[1]),
+                                "vram_total_mb": float(parts[2]),
+                            }
+                        )
+            except Exception:  # noqa: BLE001
+                pass
+
+    @property
+    def peak_vram_mb(self) -> float:
+        """Peak VRAM usage observed across all samples (MB)."""
+        return max((s["vram_used_mb"] for s in self.samples), default=0.0)
+
+    @property
+    def mean_gpu_util_pct(self) -> float:
+        """Mean GPU utilisation percentage across all samples."""
+        if not self.samples:
+            return 0.0
+        return float(
+            sum(s["gpu_util_pct"] for s in self.samples) / len(self.samples)
+        )
+
+    @property
+    def vram_total_mb(self) -> float:
+        """Total VRAM capacity reported by nvidia-smi (MB)."""
+        return max((s["vram_total_mb"] for s in self.samples), default=0.0)
 
 
 def _run_benchmark(
