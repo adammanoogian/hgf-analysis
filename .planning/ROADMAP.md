@@ -156,7 +156,12 @@ Plans:
   3. Decision rule applied: if `per_iter_seconds × 600 / 3600 > 50`, recommendation = CPU `comp` partition; else = GPU. Decision recorded in benchmark JSON and STATE.md
   4. JAX compilation cache verified: a second chunk started after a first chunk completes shows < 5 s of JIT time (vs ~60 s cold), confirming `JAX_COMPILATION_CACHE_DIR` persistence
   5. VALID-03: same small fit run on CPU and GPU — posterior means agree within 1 % relative error
-**Plans**: ~3 plans (iteration wiring + legacy flag, benchmark harness, decision-gate recording + validation)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Wire run_sbf_iteration to use fit_batch_hierarchical by default, _idata_to_fit_df + _split_idata helpers, --legacy flag (BENCH-03, VALID-05)
+- [ ] 14-02-PLAN.md — Rewrite _run_benchmark for full batched iteration, _GpuMonitor, decision gate, JAX cache test (BENCH-01, BENCH-02, BENCH-04, BENCH-05)
+- [ ] 14-03-PLAN.md — VALID-03 cross-platform consistency validation script + comparison tests
 
 ### Phase 15: Production Run + Results
 
