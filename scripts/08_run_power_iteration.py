@@ -127,6 +127,16 @@ def parse_args() -> argparse.Namespace:
             "Use this in tests to redirect output to a tmp directory."
         ),
     )
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        default=False,
+        help=(
+            "Use the v1.1 legacy per-participant sequential fitting path "
+            "instead of the v1.2 batched hierarchical path. Preserved for "
+            "reproducibility and debugging (VALID-05)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -375,11 +385,11 @@ def _run_benchmark(
         headroom = results["vram_total_mb"] - peak
         print(f"  Headroom:               {headroom:.0f} MB")
         if peak < 8000:
-            print(f"  Recommendation:         T4 (16 GB) sufficient")
+            print("  Recommendation:         T4 (16 GB) sufficient")
         elif peak < 20000:
-            print(f"  Recommendation:         A40 (48 GB) or A100 (40 GB)")
+            print("  Recommendation:         A40 (48 GB) or A100 (40 GB)")
         else:
-            print(f"  Recommendation:         A100 (80 GB)")
+            print("  Recommendation:         A100 (80 GB)")
     print("=" * 60)
 
     bench_path = output_dir / "benchmark.json"
@@ -483,6 +493,7 @@ def main() -> None:
             n_draws=args.fit_draws,
             n_tune=args.fit_tune,
             sampler=args.sampler,
+            use_legacy=args.legacy,
         )
         all_results.extend(results)
 
