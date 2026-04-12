@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.2 Hierarchical GPU Fitting — Phase 12
+**Current focus:** Milestone v1.2 Hierarchical GPU Fitting — Phase 12 complete, Phase 13 next
 
 ## Current Position
 
 Phase: 12 of 15 (Batched Hierarchical JAX Logp)
-Plan: 03 of 04
-Status: In progress
-Last activity: 2026-04-12 — Completed 12-03-PLAN.md (hierarchical PyMC orchestrator)
+Plan: 04 of 04
+Status: Phase complete
+Last activity: 2026-04-12 — Completed 12-04-PLAN.md (validation tests)
 
-[==========███=]     v1.1 code-complete (Phases 1-11); v1.2 plans 12-01, 12-02, 12-03 complete, 12-04 next
+[==========████]     v1.1 code-complete (Phases 1-11); Phase 12 complete (all 4 plans); Phase 13 next
 
 ## Performance Metrics
 
@@ -67,6 +67,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Level-2 mean key is attrs[i]["mean"] | Confirmed via runtime inspection of pyhgf attribute pytree structure | 12-02 |
 | Post-hoc dim rename for participant coords (not pm.Model coords=) | dims= parameter interacts unpredictably with pm.Potential in some PyMC versions; post-hoc rename is robust | 12-03 |
 | TYPE_CHECKING guard for pd/az imports | Avoids heavy runtime imports; satisfies ruff F821 + UP037 for forward-ref type annotations | 12-03 |
+| Both VALID-02 paths use numpyro sampler | PyMC sampler hits _init_jitter read-only array bug with JAX-backed Ops; numpyro bypasses PyTensor entirely | 12-04 |
+| Simulated agent data for VALID-02 (not random) | Random choice/reward data produces poorly constrained posteriors, making MCSE-based comparison unreliable | 12-04 |
+| Positional dim indexing for batched posterior | PyMC assigns per-variable dim names when shape= used without dims=; positional indexing is robust | 12-04 |
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-12
-Stopped at: Completed 12-03-PLAN.md (hierarchical PyMC orchestrator)
+Stopped at: Completed 12-04-PLAN.md (validation tests) — Phase 12 complete
 Resume file: None
-Next action: Execute 12-04-PLAN.md (validation tests)
+Next action: Plan Phase 13 (GPU benchmarking) or Phase 14 (decision gate)
