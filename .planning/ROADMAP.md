@@ -170,11 +170,15 @@ Plans:
 **Requirements**: PROD-01, PROD-02, PROD-03, PROD-04, PROD-05
 **Success Criteria** (what must be TRUE):
   1. Full sweep (3 chunks × 200 iterations) completes on the chosen platform; SLURM logs show no divergent-chain warnings above ~5 % exclusion rate per cell
-  2. `scripts/09_aggregate_power.py` produces `power_master.csv` with 360,000 rows (600 iterations × 300 fits × ... confirm schema) and no missing-cell warnings
+  2. `scripts/09_aggregate_power.py` produces `power_master.csv` with 12,600 rows (600 iterations × 3 sweep_types × 7 N-levels) and no missing-cell warnings
   3. `scripts/10_plot_power_curves.py` regenerates the 4-panel figure as PDF + PNG with real data, no placeholders
   4. `scripts/11_write_recommendation.py` writes `recommendation.md` containing a concrete recommended N per group, chosen trial count, 80 %-power crossing for d = 0.5, exclusion rate summary, and the omega_3 upper-bound caveat
   5. Wave 3 push (`99_push_results.slurm`) triggered via `afterany:${POSTPROC_JOBID}` and commits `results/power/` to git on completion
-**Plans**: ~2-3 plans (cluster run orchestration, aggregation + figure regeneration, recommendation)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 15-01-PLAN.md -- Pre-flight fixes: dynamic date, push script staging, platform selection
+- [ ] 15-02-PLAN.md -- Production sweep submission, monitoring, and success criteria verification
 
 ---
 
@@ -196,4 +200,4 @@ Plans:
 | 12 - Batched Hierarchical JAX Logp | v1.2 | 4/4 | Complete | 2026-04-12 |
 | 13 - JAX-Native Cohort Simulation | v1.2 | 3/3 | Complete | 2026-04-12 |
 | 14 - Integration + GPU Benchmark | v1.2 | 0/3 | Pending | — |
-| 15 - Production Run + Results | v1.2 | 0/3 | Pending | — |
+| 15 - Production Run + Results | v1.2 | 0/2 | Pending | — |
