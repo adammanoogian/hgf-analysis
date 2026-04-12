@@ -19,15 +19,17 @@ Run with::
 
 from __future__ import annotations
 
+import importlib
 import sys
+import time
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from prl_hgf.power.iteration import build_arrays_from_sim
+from prl_hgf.power.iteration import apply_decision_gate, build_arrays_from_sim
 from prl_hgf.power.schema import POWER_SCHEMA, write_parquet_row
 
 # ---------------------------------------------------------------------------
@@ -761,3 +763,114 @@ def test_run_sbf_iteration_default_calls_hierarchical(
         "fit_batch_hierarchical was not called with use_legacy=False"
     )
     assert isinstance(results, list)
+
+
+# ---------------------------------------------------------------------------
+# Test 10: apply_decision_gate — GPU recommended (low per_iter_s)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_decision_gate_gpu_recommended() -> None:
+    """100s iteration -> 16.7 GPU-hrs/chunk -> decision = gpu."""
+    result = apply_decision_gate(per_iter_seconds=100.0)
+
+    # 100 * 600 / 3600 = 16.666... rounds to 16.7
+    assert result["decision"] == "gpu", (
+        f"Expected 'gpu', got '{result['decision']}'"
+    )
+    assert result["gpu_hours_per_chunk"] == 16.7, (
+        f"Expected 16.7, got {result['gpu_hours_per_chunk']}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 11: apply_decision_gate — CPU recommended (high per_iter_s)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_decision_gate_cpu_recommended() -> None:
+    """500s iteration -> 83.3 GPU-hrs/chunk -> decision = cpu_comp."""
+    result = apply_decision_gate(per_iter_seconds=500.0)
+
+    # 500 * 600 / 3600 = 83.333... rounds to 83.3
+    assert result["decision"] == "cpu_comp", (
+        f"Expected 'cpu_comp', got '{result['decision']}'"
+    )
+    assert result["gpu_hours_per_chunk"] > 50
+
+
+# ---------------------------------------------------------------------------
+# Test 12: apply_decision_gate — exact boundary (50.0 GPU-hrs -> gpu)
+# ---------------------------------------------------------------------------
+
+
+def test_apply_decision_gate_boundary() -> None:
+    """300s -> exactly 50.0 GPU-hrs/chunk -> decision = gpu (uses <=, not <)."""
+    result = apply_decision_gate(per_iter_seconds=300.0)
+
+    # 300 * 600 / 3600 = 50.0 exactly; gate uses > 50, so 50 == gpu
+    assert result["decision"] == "gpu", (
+        f"Boundary case: expected 'gpu' (<=50), got '{result['decision']}'"
+    )
+    assert result["gpu_hours_per_chunk"] == 50.0
+
+
+# ---------------------------------------------------------------------------
+# Test 13: apply_decision_gate — schema completeness
+# ---------------------------------------------------------------------------
+
+
+def test_apply_decision_gate_schema() -> None:
+    """apply_decision_gate returns all required fields for benchmark JSON."""
+    result = apply_decision_gate(per_iter_seconds=100.0)
+
+    required_fields = {
+        "per_iter_seconds",
+        "gpu_hours_per_chunk",
+        "decision",
+        "decision_threshold_gpu_hours",
+        "decision_formula",
+    }
+    assert required_fields <= set(result.keys()), (
+        f"Missing fields: {required_fields - set(result.keys())}"
+    )
+    assert result["decision_threshold_gpu_hours"] == 50
+    assert result["decision_formula"] == "per_iter_seconds * 600 / 3600 > 50"
+    assert result["per_iter_seconds"] == 100.0
+
+
+# ---------------------------------------------------------------------------
+# Test 14: _GpuMonitor — graceful degradation when nvidia-smi is absent
+# ---------------------------------------------------------------------------
+
+
+def test_gpu_monitor_no_nvidia_smi() -> None:
+    """_GpuMonitor records no samples and returns 0.0 when nvidia-smi absent."""
+    # Import _GpuMonitor from the script module
+    script_path = Path(__file__).resolve().parent.parent / "scripts"
+    sys.path.insert(0, str(script_path))
+
+    mod_name = "08_run_power_iteration"
+    if mod_name in sys.modules:
+        del sys.modules[mod_name]
+
+    script_mod = importlib.import_module(mod_name)
+    _GpuMonitor = script_mod._GpuMonitor  # type: ignore[attr-defined]
+
+    monitor = _GpuMonitor(interval_s=0.05)  # short interval for test speed
+
+    # Patch subprocess.run in the script module's namespace
+    with patch(f"{mod_name}.subprocess.run", side_effect=FileNotFoundError("nvidia-smi not found")):
+        monitor.start()
+        time.sleep(0.15)  # allow a couple of polling cycles
+        monitor.stop()
+
+    assert monitor.samples == [], (
+        f"Expected empty samples when nvidia-smi absent, got {monitor.samples}"
+    )
+    assert monitor.peak_vram_mb == 0.0, (
+        f"Expected peak_vram_mb=0.0, got {monitor.peak_vram_mb}"
+    )
+    assert monitor.mean_gpu_util_pct == 0.0, (
+        f"Expected mean_gpu_util_pct=0.0, got {monitor.mean_gpu_util_pct}"
+    )
