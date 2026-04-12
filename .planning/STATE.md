@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ## Current Position
 
 Phase: 13 of 15 (JAX-Native Cohort Simulation) — In progress
-Plan: 1/3 complete
+Plan: 2/3 complete
 Status: In progress
-Last activity: 2026-04-12 — Completed 13-01-PLAN.md (simulate_session_jax with lax.scan)
+Last activity: 2026-04-12 — Completed 13-02-PLAN.md (simulate_cohort_jax vmap + JAX batch path)
 
-[==========████░░]   v1.1 code-complete (Phases 1-11); Phase 12 verified; Phase 13 Plan 01 done
+[==========████░░]   v1.1 code-complete (Phases 1-11); Phase 12 verified; Phase 13 Plans 01-02 done
 
 ## Performance Metrics
 
@@ -73,6 +73,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Factory pattern for jax_session vmappability | _build_session_scanner builds pyhgf Network once outside JAX trace; _run_session is pure-JAX and vmappable for Plan 02 cohort path | 13-01 |
 | jnp.int32(-1) sentinel for trial-0 stickiness | (prev_choice == jnp.arange(3)) evaluates all-False for -1 giving zero stickiness; verified in test_session_jax_stickiness_sentinel | 13-01 |
 | values_t elements use .reshape(1) in sim path | Matches pyhgf scan_fn shape contract: logp path uses input_data[:, 0:1] sliced to (1,) per step; simulation must match exactly | 13-01 |
+| simulate_cohort_jax captures shared cue_probs_arr in lambda closure | Shared trial sequence across participants; closure keeps vmap axes to 6 scalar params + 1 key; cleaner than in_axes=None | 13-02 |
+| simulate_batch stacks per-participant cue_probs as axis=0 | Each session has distinct env_seed → different trial sequence; (P, n_trials, 3) stack with in_axes=0 handles variation across participants | 13-02 |
+| Two-phase batch: Python collection then single vmap dispatch | Preserves deterministic seed derivation; eliminates _prewarm_jit; DataFrame assembly stays in Python after compiled kernel runs | 13-02 |
 
 ### Pending Todos
 
@@ -98,7 +101,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-12T13:25:52Z
-Stopped at: Completed 13-01-PLAN.md — simulate_session_jax with lax.scan + 5 unit tests
+Last session: 2026-04-12T13:42:48Z
+Stopped at: Completed 13-02-PLAN.md — simulate_cohort_jax vmap + JAX batch path + 4 cohort tests
 Resume file: None
-Next action: /gsd:execute-phase 13-02 (simulate_cohort_jax vmap path)
+Next action: /gsd:execute-phase 13-03 (JAX benchmarks)
