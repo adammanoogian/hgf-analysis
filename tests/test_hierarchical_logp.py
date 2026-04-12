@@ -301,3 +301,223 @@ def test_layer_2_clamping_returns_finite_under_unstable_params(
         f"Layer 2 clamping smoke test: unexpected value {val}. "
         f"Expected finite or -inf."
     )
+
+
+# ---------------------------------------------------------------------------
+# Fixture: 5-participant synthetic DataFrame
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def _five_participant_sim_df():
+    """Generate a 5-participant tidy DataFrame from agent simulations.
+
+    Uses the full simulation pipeline (generate_session + simulate_agent)
+    to produce realistic trial-level data that will constrain the model
+    posteriors.  Fixed seed per participant ensures reproducibility.
+    """
+    import pandas as pd
+
+    from prl_hgf.env.simulator import generate_session
+    from prl_hgf.env.task_config import load_config
+    from prl_hgf.models.hgf_2level import build_2level_network
+    from prl_hgf.simulation.agent import simulate_agent
+
+    cfg = load_config()
+    n_participants = 5
+    n_trials_max = 100  # Slice to 100 trials per participant for speed
+    base_seed = 77700
+    rows = []
+
+    for p_idx in range(n_participants):
+        pid = f"P{p_idx + 1:03d}"
+        seed = base_seed + p_idx
+        rng = np.random.default_rng(seed)
+        net = build_2level_network(omega_2=-3.0)
+        trials = generate_session(cfg, seed=seed)
+        result = simulate_agent(
+            net, trials, beta=3.0, zeta=0.5, rng=rng
+        )
+
+        # Slice to first n_trials_max trials for speed
+        for t_idx in range(min(n_trials_max, len(trials))):
+            rows.append(
+                {
+                    "participant_id": pid,
+                    "group": "placebo",
+                    "session": "baseline",
+                    "trial": t_idx,
+                    "cue_chosen": result.choices[t_idx],
+                    "reward": result.rewards[t_idx],
+                }
+            )
+
+    return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# VALID-02 — statistical equivalence (legacy vs batched, within-MCSE)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_valid_02_batched_vs_legacy_within_mcse(_five_participant_sim_df):
+    """VALID-02: batched fit and sequential legacy fit agree within 3x MCSE.
+
+    Fits 5 synthetic participants sequentially via the legacy
+    ``fit_batch`` path and the same 5 participants batched via
+    ``fit_batch_hierarchical``, both using the ``numpyro`` sampler
+    (required because the ``pymc`` sampler hits the ``_init_jitter``
+    read-only array bug with JAX-backed Ops).
+
+    Per-parameter posterior means must agree within
+    ``3 x max(mcse_legacy, mcse_batched)``.
+
+    Uses ``model_name="hgf_2level"`` for speed (3 params: omega_2,
+    beta, zeta) with reduced draws: ``n_chains=2, n_draws=500,
+    n_tune=500, target_accept=0.9``.
+    """
+    import arviz as az
+
+    from prl_hgf.fitting.hierarchical import fit_batch_hierarchical
+    from prl_hgf.fitting.legacy import fit_batch
+
+    sim_df = _five_participant_sim_df
+    model_name = "hgf_2level"
+    n_chains = 2
+    n_draws = 500
+    n_tune = 500
+    target_accept = 0.9
+    random_seed = 42
+    var_names = ["omega_2", "beta", "zeta"]
+
+    # ------------------------------------------------------------------
+    # Legacy path: sequential per-participant fits (numpyro sampler)
+    # ------------------------------------------------------------------
+    legacy_df, legacy_idata_dict = fit_batch(
+        sim_df,
+        model_name=model_name,
+        n_chains=n_chains,
+        n_draws=n_draws,
+        n_tune=n_tune,
+        target_accept=target_accept,
+        random_seed=random_seed,
+        cores=1,
+        return_idata=True,
+        sampler="numpyro",
+    )
+
+    # ------------------------------------------------------------------
+    # Batched path: single-call cohort fit (numpyro sampler)
+    # ------------------------------------------------------------------
+    batched_idata = fit_batch_hierarchical(
+        sim_df,
+        model_name=model_name,
+        n_chains=n_chains,
+        n_draws=n_draws,
+        n_tune=n_tune,
+        target_accept=target_accept,
+        random_seed=random_seed,
+        sampler="numpyro",
+        progressbar=False,
+    )
+
+    # ------------------------------------------------------------------
+    # Compare per-participant, per-parameter posterior means
+    # ------------------------------------------------------------------
+    # The legacy path uses groupby(..., sort=False) so iteration order
+    # matches insertion order.  Sorted participant_ids lets us find the
+    # correct positional index in the batched posterior.
+    participant_ids = sorted(sim_df["participant_id"].unique())
+
+    # Build a positional index for the batched posterior.  The batched
+    # path groups by (participant_id, group, session) in insertion order
+    # of the DataFrame.  Since our fixture creates participants in
+    # sorted order (P001..P005) the positional index equals the sorted
+    # index.
+    failures = []
+    drift_table = []
+
+    for p_idx, pid in enumerate(participant_ids):
+        # Legacy idata: keyed by (participant_id, group, session)
+        legacy_key = (pid, "placebo", "baseline")
+        legacy_idata = legacy_idata_dict[legacy_key]
+        assert legacy_idata is not None, (
+            f"Legacy fit for {pid} returned None (fit failed)"
+        )
+
+        for var in var_names:
+            # Legacy posterior: scalar per chain/draw
+            legacy_samples = legacy_idata.posterior[var].values.flatten()
+            legacy_mean = float(np.mean(legacy_samples))
+            legacy_mcse = float(
+                az.stats.diagnostics._mc_error(legacy_samples)
+            )
+
+            # Batched posterior: index into participant dimension
+            # The dim name varies (e.g. "participant" if rename
+            # succeeded, or "{var}_dim_0" otherwise).  Use positional
+            # indexing on the first non-chain/draw dimension.
+            batched_var = batched_idata.posterior[var]
+            ppt_dims = [
+                d for d in batched_var.dims
+                if d not in ("chain", "draw")
+            ]
+            if ppt_dims:
+                batched_samples = (
+                    batched_var
+                    .isel({ppt_dims[0]: p_idx})
+                    .values.flatten()
+                )
+            else:
+                # Scalar variable (should not happen for P=5)
+                batched_samples = batched_var.values.flatten()
+
+            batched_mean = float(np.mean(batched_samples))
+            batched_mcse = float(
+                az.stats.diagnostics._mc_error(batched_samples)
+            )
+
+            max_mcse = max(legacy_mcse, batched_mcse)
+            diff = abs(legacy_mean - batched_mean)
+            threshold = 3.0 * max_mcse
+
+            drift_table.append(
+                {
+                    "participant": pid,
+                    "parameter": var,
+                    "legacy_mean": legacy_mean,
+                    "batched_mean": batched_mean,
+                    "diff": diff,
+                    "legacy_mcse": legacy_mcse,
+                    "batched_mcse": batched_mcse,
+                    "max_mcse": max_mcse,
+                    "threshold": threshold,
+                    "pass": diff <= threshold,
+                }
+            )
+
+            if diff > threshold:
+                failures.append(
+                    f"  {pid}/{var}: legacy={legacy_mean:.6f}, "
+                    f"batched={batched_mean:.6f}, diff={diff:.6f}, "
+                    f"3*max_mcse={threshold:.6f}"
+                )
+
+    # Print drift table for SUMMARY.md documentation
+    print("\n--- VALID-02 Drift Table ---")
+    for row in drift_table:
+        status = "PASS" if row["pass"] else "FAIL"
+        print(
+            f"  {row['participant']}/{row['parameter']}: "
+            f"legacy={row['legacy_mean']:.6f}, "
+            f"batched={row['batched_mean']:.6f}, "
+            f"diff={row['diff']:.6f}, "
+            f"3*max_mcse={row['threshold']:.6f} [{status}]"
+        )
+
+    assert not failures, (
+        f"VALID-02 FAILED: {len(failures)} parameter(s) exceeded "
+        f"3x max(mcse_legacy, mcse_batched):\n"
+        + "\n".join(failures)
+    )
