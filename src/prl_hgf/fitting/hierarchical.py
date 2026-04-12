@@ -36,6 +36,8 @@ reimplemented here.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -44,6 +46,10 @@ import pytensor.tensor as pt
 from jax import lax
 from pytensor.graph import Apply, Op
 from pytensor.link.jax.dispatch import jax_funcify
+
+if TYPE_CHECKING:
+    import arviz as az
+    import pandas as pd
 
 # Suppress PyTensor g++ compilation warning — not needed when Op.perform
 # delegates entirely to JAX JIT.
@@ -719,4 +725,271 @@ def build_pymc_model_batched(
     return model, var_names, n_participants
 
 
-__all__ = ["build_logp_ops_batched", "build_pymc_model_batched"]
+
+# ---------------------------------------------------------------------------
+# Cohort orchestrator
+# ---------------------------------------------------------------------------
+
+
+def _build_arrays_single(
+    subset: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build (input_data, observed, choices) arrays for one participant.
+
+    Mirrors the partial-feedback logic from
+    ``legacy/batch.py::_build_arrays`` — only the chosen cue receives a
+    reward signal on each trial; unchosen cues have ``observed=0``.
+
+    Parameters
+    ----------
+    subset : pandas.DataFrame
+        Rows for one participant-session with columns ``cue_chosen`` and
+        ``reward``.  Must be sorted by trial order.
+
+    Returns
+    -------
+    input_data_arr : numpy.ndarray, shape (n_trials, 3)
+        Float reward-value array.
+    observed_arr : numpy.ndarray, shape (n_trials, 3) int
+        Binary observed mask.
+    choices_arr : numpy.ndarray, shape (n_trials,) int
+        Chosen cue index for each trial.
+    """
+    n_trials = len(subset)
+    choices = subset["cue_chosen"].to_numpy(dtype=int)
+    rewards = subset["reward"].to_numpy(dtype=float)
+
+    input_data_arr = np.zeros((n_trials, 3), dtype=float)
+    observed_arr = np.zeros((n_trials, 3), dtype=int)
+
+    for t in range(n_trials):
+        cue = choices[t]
+        input_data_arr[t, cue] = rewards[t]
+        observed_arr[t, cue] = 1
+
+    return input_data_arr, observed_arr, choices
+
+
+def fit_batch_hierarchical(
+    sim_df: pd.DataFrame,
+    model_name: str = "hgf_3level",
+    n_chains: int = 4,
+    n_draws: int = 1000,
+    n_tune: int = 1000,
+    target_accept: float = 0.95,
+    random_seed: int = 42,
+    sampler: str = "numpyro",
+    progressbar: bool = True,
+) -> az.InferenceData:
+    """Fit an entire cohort in one ``pmjax.sample_numpyro_nuts`` call.
+
+    Groups ``sim_df`` by ``(participant_id, group, session)``, builds the
+    stacked ``(P, n_trials, 3)`` arrays, constructs a PyMC model via
+    :func:`build_pymc_model_batched`, and runs a **single** NUTS call for
+    the full cohort.  Returns an ``InferenceData`` with a ``participant``
+    dimension on every parameter so downstream analysis can map posterior
+    slices back to individual participants.
+
+    This replaces v1.1's sequential ``fit_batch`` loop.  By packing all
+    participants into one PyMC model with ``shape=(n_participants,)`` IID
+    priors, NUTS launch overhead amortises across the cohort.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Trial-level DataFrame with columns ``participant_id``, ``group``,
+        ``session``, ``cue_chosen``, ``reward``.
+    model_name : str, optional
+        ``"hgf_2level"`` or ``"hgf_3level"`` (default).
+    n_chains : int, optional
+        Number of MCMC chains.  Default ``4``.
+    n_draws : int, optional
+        Posterior draws per chain after tuning.  Default ``1000``.
+    n_tune : int, optional
+        Tuning steps per chain.  Default ``1000``.
+    target_accept : float, optional
+        NUTS target acceptance rate.  Default ``0.95``.
+    random_seed : int, optional
+        RNG seed for reproducibility.  Default ``42``.
+    sampler : str, optional
+        ``"numpyro"`` (default) for ``pmjax.sample_numpyro_nuts`` or
+        ``"pymc"`` for ``pm.sample``.
+    progressbar : bool, optional
+        Show MCMC progress bar.  Default ``True``.
+
+    Returns
+    -------
+    arviz.InferenceData
+        Posterior samples with a ``participant`` coordinate on every
+        parameter.  Additional coordinates ``participant_group`` and
+        ``participant_session`` enable downstream metadata lookup.
+
+    Raises
+    ------
+    ValueError
+        If ``sim_df`` is missing required columns or participants have
+        different trial counts.
+    """
+    import pymc as pm
+
+    # ------------------------------------------------------------------
+    # Validate input DataFrame
+    # ------------------------------------------------------------------
+    required_cols = {
+        "participant_id", "group", "session", "cue_chosen", "reward",
+    }
+    missing_cols = required_cols - set(sim_df.columns)
+    if missing_cols:
+        msg = (
+            f"sim_df is missing required columns: {sorted(missing_cols)}. "
+            f"Got columns: {sorted(sim_df.columns)}"
+        )
+        raise ValueError(msg)
+
+    # ------------------------------------------------------------------
+    # Group by (participant_id, group, session)
+    # ------------------------------------------------------------------
+    group_keys = ["participant_id", "group", "session"]
+    groups = list(sim_df.groupby(group_keys, sort=False))
+
+    # ------------------------------------------------------------------
+    # Build per-participant arrays and stack into (P, n_trials, 3)
+    # ------------------------------------------------------------------
+    input_data_list: list[np.ndarray] = []
+    observed_list: list[np.ndarray] = []
+    choices_list: list[np.ndarray] = []
+    participant_ids: list[str] = []
+    participant_groups: list[str] = []
+    participant_sessions: list[str] = []
+
+    for (pid, grp, sess), subset in groups:
+        # Sort by trial index if column exists
+        if "trial" in subset.columns:
+            subset = subset.sort_values("trial")
+
+        inp, obs, ch = _build_arrays_single(subset)
+        input_data_list.append(inp)
+        observed_list.append(obs)
+        choices_list.append(ch)
+        participant_ids.append(str(pid))
+        participant_groups.append(str(grp))
+        participant_sessions.append(str(sess))
+
+    # Trial-count guard: all participants must have the same n_trials
+    trial_counts = [arr.shape[0] for arr in input_data_list]
+    if len(set(trial_counts)) != 1:
+        msg = (
+            f"All participants must have the same number of trials. "
+            f"Got trial counts: {trial_counts}"
+        )
+        raise ValueError(msg)
+
+    input_data_arr = np.stack(input_data_list, axis=0)
+    observed_arr = np.stack(observed_list, axis=0)
+    choices_arr = np.stack(choices_list, axis=0)
+
+    # ------------------------------------------------------------------
+    # Build the model with participant coords
+    # ------------------------------------------------------------------
+    model, var_names, n_participants = build_pymc_model_batched(
+        input_data_arr, observed_arr, choices_arr, model_name=model_name,
+    )
+
+    # ------------------------------------------------------------------
+    # Run MCMC
+    # ------------------------------------------------------------------
+    with model:
+        if sampler == "numpyro":
+            import pymc.sampling.jax as pmjax
+
+            idata = pmjax.sample_numpyro_nuts(
+                draws=n_draws,
+                tune=n_tune,
+                chains=n_chains,
+                target_accept=target_accept,
+                random_seed=random_seed,
+                progressbar=progressbar,
+            )
+        else:
+            idata = pm.sample(
+                draws=n_draws,
+                tune=n_tune,
+                chains=n_chains,
+                cores=1,
+                target_accept=target_accept,
+                random_seed=random_seed,
+                return_inferencedata=True,
+                progressbar=progressbar,
+            )
+
+    # ------------------------------------------------------------------
+    # Attach participant metadata as InferenceData coords
+    # ------------------------------------------------------------------
+    # The posterior arrays have a dimension corresponding to the P
+    # participants.  Rename it to "participant" and attach metadata.
+    #
+    # PyMC names the dimension "{var_name}_dim_0" by default when
+    # shape is used without dims.  We post-hoc assign coords so the
+    # InferenceData is self-describing.
+
+    # Determine the dimension name PyMC assigned.  The first free RV's
+    # first non-chain/draw dimension tells us the convention.
+    posterior = idata.posterior
+    param_dims = {}
+    for vn in var_names:
+        if vn in posterior:
+            dims = list(posterior[vn].dims)
+            # Remove "chain" and "draw" to get the participant dim
+            ppt_dims = [d for d in dims if d not in ("chain", "draw")]
+            if ppt_dims:
+                param_dims[vn] = ppt_dims[0]
+
+    # All participant dims should be the same name
+    unique_ppt_dims = set(param_dims.values())
+
+    if len(unique_ppt_dims) == 1:
+        ppt_dim = unique_ppt_dims.pop()
+        # Rename dim to "participant" and assign coords
+        idata.posterior = posterior.rename({ppt_dim: "participant"})
+        idata.posterior = idata.posterior.assign_coords(
+            participant=participant_ids,
+        )
+    elif len(unique_ppt_dims) == 0:
+        # Scalar parameters (P=1) — no dim rename needed
+        pass
+    else:
+        # Multiple different dim names — assign coords to each
+        for _vn, dim_name in param_dims.items():
+            if dim_name not in idata.posterior.coords:
+                idata.posterior = idata.posterior.assign_coords(
+                    {dim_name: participant_ids},
+                )
+
+    # Attach group and session metadata as additional coords
+    idata.posterior = idata.posterior.assign_coords(
+        participant_group=(
+            "participant"
+            if "participant" in idata.posterior.dims
+            else list(unique_ppt_dims)[0]
+            if unique_ppt_dims
+            else "participant",
+            participant_groups,
+        ),
+        participant_session=(
+            "participant"
+            if "participant" in idata.posterior.dims
+            else list(unique_ppt_dims)[0]
+            if unique_ppt_dims
+            else "participant",
+            participant_sessions,
+        ),
+    )
+
+    return idata
+
+
+__all__ = [
+    "build_logp_ops_batched",
+    "build_pymc_model_batched",
+    "fit_batch_hierarchical",
+]
