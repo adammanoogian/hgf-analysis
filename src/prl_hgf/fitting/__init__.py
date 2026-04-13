@@ -11,11 +11,12 @@ Public API surface:
   - :func:`build_pymc_model_2level`, :func:`build_pymc_model_3level`
   - :func:`build_logp_ops_2level`, :func:`build_logp_ops_3level`
 
-* v1.2 batched hierarchical path (added by Plans 12-02 / 12-03):
+* v1.2 batched hierarchical path:
 
-  - :func:`build_logp_ops_batched` -- batched JAX logp Op factory
-  - :func:`build_pymc_model_batched` -- hierarchical PyMC model factory
-  - :func:`fit_batch_hierarchical` -- single-call cohort orchestrator
+  - :func:`build_logp_fn_batched` -- pure JAX logp factory (numpyro path)
+  - :func:`fit_batch_hierarchical` -- single-call cohort MCMC via numpyro
+  - :func:`build_logp_ops_batched` -- (deprecated) PyTensor Op wrapper
+  - :func:`build_pymc_model_batched` -- (deprecated) PyMC model factory
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from __future__ import annotations
 # resolving without code changes.
 from prl_hgf.fitting.batch import fit_batch
 from prl_hgf.fitting.hierarchical import (  # noqa: F401
+    build_logp_fn_batched,
     build_logp_ops_batched,
     build_pymc_model_batched,
     fit_batch_hierarchical,
@@ -54,6 +56,7 @@ __all__ = [
     "build_logp_ops_2level",
     "build_logp_ops_3level",
     # v1.2 batched hierarchical path
+    "build_logp_fn_batched",
     "build_logp_ops_batched",
     "build_pymc_model_batched",
     "fit_batch_hierarchical",
