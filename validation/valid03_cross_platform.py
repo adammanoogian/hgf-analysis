@@ -162,12 +162,19 @@ def run_fit_and_save(
         param_mean = arr.mean(dim=["chain", "draw"])
         param_posterior: dict[str, float] = {}
         # Handle both shaped (participant dim) and scalar parameters.
-        if "participant" in param_mean.dims:
+        # PyMC may name the participant dim "participant" or use
+        # positional names like "omega_2_dim_0".  Detect any
+        # remaining dim after chain/draw averaging.
+        remaining_dims = [
+            d for d in param_mean.dims if d not in ("chain", "draw")
+        ]
+        if remaining_dims:
+            ppt_dim = remaining_dims[0]
             for i, pid in enumerate(participant_ids):
-                val = float(param_mean.isel(participant=i).values)
+                val = float(param_mean.isel({ppt_dim: i}).values)
                 param_posterior[pid] = val
         else:
-            # Scalar parameter: same value for all participants.
+            # Truly scalar parameter: same value for all participants.
             val = float(param_mean.values)
             for pid in participant_ids:
                 param_posterior[pid] = val

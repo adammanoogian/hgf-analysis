@@ -12,7 +12,7 @@
 #SBATCH --job-name=prl_v03gpu
 #SBATCH --output=cluster/logs/valid03_gpu_%j.out
 #SBATCH --error=cluster/logs/valid03_gpu_%j.err
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:2
 #SBATCH --partition=gpu
