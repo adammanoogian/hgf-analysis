@@ -24,8 +24,8 @@
 #SBATCH --output=cluster/logs/power_%A_%a.out
 #SBATCH --error=cluster/logs/power_%A_%a.err
 #SBATCH --time=08:00:00
-#SBATCH --mem=64G
-#SBATCH --gres=gpu:1
+#SBATCH --mem=128G
+#SBATCH --gres=gpu:4
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
 # Default: 3 chunks (one per effect size). Match to YAML n_chunks.
@@ -112,7 +112,7 @@ echo ""
 python scripts/08_run_power_iteration.py \
     --chunk-id "${SLURM_ARRAY_TASK_ID}" \
     --job-id "${SLURM_ARRAY_JOB_ID}" \
-    --fit-chains 2 \
+    --fit-chains 4 \
     --fit-draws 500 \
     --fit-tune 500 \
     --sampler "${SAMPLER:-numpyro}" \

@@ -18,7 +18,7 @@
 #SBATCH --error=cluster/logs/bench14_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=128G
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:4
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
 
@@ -85,7 +85,7 @@ python scripts/08_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_JOB_ID:-bench14}" \
-    --fit-chains 2 \
+    --fit-chains 4 \
     --fit-draws 500 \
     --fit-tune 500 \
     --sampler numpyro
