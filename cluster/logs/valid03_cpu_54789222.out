@@ -1,0 +1,12 @@
+============================================================
+VALID-03: CPU Baseline Fit
+============================================================
+Job ID:   54789222
+Node:     m3e103
+Platform: CPU (forced via JAX_PLATFORM_NAME=cpu)
+Start:    Mon Apr 13 03:48:49 AM AEST 2026
+============================================================
+
+
+CPU fit FAILED (exit code: 1)
+End: Mon Apr 13 03:48:59 AM AEST 2026
