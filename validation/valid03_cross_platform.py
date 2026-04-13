@@ -44,8 +44,11 @@ import sys
 import time
 from pathlib import Path
 
-# Make the project root importable when running this file directly.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+# Make the project root and src/ importable when running this file directly.
+# Project root is needed for ``from config import CONFIGS_DIR`` in task_config.
+_project_root = str(Path(__file__).resolve().parent.parent)
+sys.path.insert(0, _project_root)
+sys.path.insert(0, str(Path(_project_root) / "src"))
 
 
 # ---------------------------------------------------------------------------

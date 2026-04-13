@@ -229,7 +229,7 @@ def _run_session(
         # prev_choice == -1 (sentinel) → stick is all-False → zero stickiness
         stick = (prev_choice == jnp.arange(3)).astype(jnp.float32)
         logits = beta * p_reward + zeta * stick
-        choice = jax.random.categorical(choice_key, logits)
+        choice = jax.random.categorical(choice_key, logits).astype(jnp.int32)
 
         # Step 4: Bernoulli reward sampling for the chosen cue
         reward = jax.random.bernoulli(reward_key, cue_probs[choice])
