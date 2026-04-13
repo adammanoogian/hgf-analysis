@@ -458,8 +458,14 @@ def test_valid_02_batched_numpyro_convergence(_five_participant_sim_df):
             batched_var = posterior[var]
             samples = batched_var.isel({ppt_dim: p_idx})
 
-            # Rhat across chains
-            rhat_val = float(az.rhat(samples).values)
+            # Rhat across chains.  az.rhat on a DataArray returns a
+            # Dataset; extract the single variable to get a scalar.
+            rhat_ds = az.rhat(samples)
+            if hasattr(rhat_ds, "data_vars"):
+                # Dataset with a single variable
+                rhat_val = float(list(rhat_ds.data_vars.values())[0])
+            else:
+                rhat_val = float(rhat_ds)
 
             # Posterior mean
             mean_val = float(samples.mean(dim=["chain", "draw"]).values)
