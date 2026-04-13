@@ -136,7 +136,6 @@ def run_fit_and_save(
         n_tune=n_tune,
         target_accept=0.9,
         random_seed=seed,
-        sampler="numpyro",
         progressbar=False,
     )
     fit_time = time.perf_counter() - t1

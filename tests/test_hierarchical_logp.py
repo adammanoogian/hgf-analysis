@@ -418,7 +418,6 @@ def test_valid_02_batched_vs_legacy_within_mcse(_five_participant_sim_df):
         n_tune=n_tune,
         target_accept=target_accept,
         random_seed=random_seed,
-        sampler="numpyro",
         progressbar=False,
     )
 
@@ -520,4 +519,73 @@ def test_valid_02_batched_vs_legacy_within_mcse(_five_participant_sim_df):
         f"VALID-02 FAILED: {len(failures)} parameter(s) exceeded "
         f"3x max(mcse_legacy, mcse_batched):\n"
         + "\n".join(failures)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Smoke tests for numpyro-direct path (Phase 16)
+# ---------------------------------------------------------------------------
+
+
+def test_build_logp_fn_batched_smoke():
+    """Smoke test: build_logp_fn_batched returns finite logp for dummy data.
+
+    Calls ``build_logp_fn_batched("hgf_3level", n_trials)`` and evaluates
+    the returned function with dummy parameter and data arrays at P=2.
+    Asserts the result is a finite scalar.
+    """
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical import build_logp_fn_batched
+
+    n_trials = 50
+    n_participants = 2
+
+    batched_logp_fn, n_params = build_logp_fn_batched(
+        model_name="hgf_3level", n_trials=n_trials
+    )
+
+    assert n_params == 5, f"Expected 5 params for 3-level, got {n_params}"
+
+    # Dummy parameter arrays (P,)
+    omega_2 = jnp.full((n_participants,), -3.0)
+    omega_3 = jnp.full((n_participants,), -6.0)
+    kappa = jnp.full((n_participants,), 1.0)
+    beta = jnp.full((n_participants,), 3.0)
+    zeta = jnp.full((n_participants,), 0.5)
+
+    # Dummy data arrays
+    input_data = jnp.zeros((n_participants, n_trials, 3))
+    observed = jnp.zeros((n_participants, n_trials, 3), dtype=jnp.int32)
+    choices = jnp.zeros((n_participants, n_trials), dtype=jnp.int32)
+    trial_mask = jnp.ones((n_participants, n_trials))
+
+    result = batched_logp_fn(
+        omega_2, omega_3, kappa, beta, zeta,
+        input_data, observed, choices, trial_mask,
+    )
+
+    val = float(result)
+    assert math.isfinite(val), (
+        f"build_logp_fn_batched smoke test FAILED: expected finite, "
+        f"got {val}"
+    )
+
+
+def test_numpyro_model_importable():
+    """Smoke test: numpyro model functions are importable and callable.
+
+    Imports ``_numpyro_model_3level`` and ``_numpyro_model_2level`` from
+    ``prl_hgf.fitting.hierarchical`` and asserts they are callable.
+    """
+    from prl_hgf.fitting.hierarchical import (
+        _numpyro_model_2level,
+        _numpyro_model_3level,
+    )
+
+    assert callable(_numpyro_model_3level), (
+        "_numpyro_model_3level is not callable"
+    )
+    assert callable(_numpyro_model_2level), (
+        "_numpyro_model_2level is not callable"
     )
