@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Milestone v1.2 Hierarchical GPU Fitting — Phase 16 NumPyro Refactor in progress (Plan 01 of 02 complete)
+**Current focus:** Milestone v1.2 Hierarchical GPU Fitting — Phase 16 NumPyro Refactor COMPLETE
 
 ## Current Position
 
 Phase: 16 of 16 (NumPyro Direct Sampling + CUDA Fix)
-Plan: 1/2 complete (numpyro-direct model functions + fit rewrite done)
-Status: In progress — Plan 16-01 complete, Plan 16-02 (CUDA fix + diagnostics) pending
-Last activity: 2026-04-13 — Completed 16-01-PLAN.md: build_logp_fn_batched, numpyro model functions, rewritten fit_batch_hierarchical
+Plan: 2/2 complete (Phase 16 complete)
+Status: Phase complete — numpyro-direct path wired into all callers, CUDA diagnostics added, validation passing
+Last activity: 2026-04-13 — Completed 16-02-PLAN.md: caller integration, CUDA PTX check, VALID-01/02/03 updated
 
-[===========████████=]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 Plan 01 complete
+[===========██████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete
 
 ## Performance Metrics
 
@@ -92,6 +92,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | numpyro.sample() + numpyro.factor() pattern over raw potential_fn | Preserves named parameters for az.from_numpyro(); avoids manual Param:0 renaming | 16-01 |
 | Data passed as kwargs to mcmc.run(), not captured in closures | XLA trace is shape-dependent but value-independent; enables JIT cache reuse across power-sweep iterations | 16-01 |
 | sampler="pymc" raises DeprecationWarning; numpyro path always used | API backward compat preserved; old callers get warning but still work | 16-01 |
+| sampler= kwarg removed from batched fit_batch_hierarchical calls; kept in signatures for backward compat | Batched path always uses numpyro-direct; no need to forward sampler to fit function | 16-02 |
+| check_cuda_compat is non-fatal in SLURM scripts | MCMC still works without XLA parallel compilation, just slower; no reason to abort the job | 16-02 |
+| GPU pip deps tracked in cluster/requirements-gpu.txt (separate from main requirements) | Cluster-specific CUDA pins should not pollute the main dev environment | 16-02 |
 
 ### Pending Todos
 
@@ -122,6 +125,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-13
-Stopped at: Completed 16-01-PLAN.md — build_logp_fn_batched, numpyro model functions, rewritten fit_batch_hierarchical
+Stopped at: Completed 16-02-PLAN.md — caller integration, CUDA PTX check, VALID-01/02/03 updated
 Resume file: None
-Next action: Phase 16 Plan 02 (CUDA fix + environment diagnostics)
+Next action: Phase 16 complete; ready for Phase 15 production runs on cluster
