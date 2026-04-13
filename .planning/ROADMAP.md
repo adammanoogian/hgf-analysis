@@ -195,8 +195,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- Core numpyro refactor: build_logp_fn_batched, numpyro model functions, rewrite fit_batch_hierarchical (NPRO-01, NPRO-02)
-- [ ] 16-02-PLAN.md -- Caller updates, CUDA environment check in SLURM scripts, validation tests (NPRO-03, NPRO-04, NPRO-05, NPRO-06)
+- [x] 16-01-PLAN.md -- Core numpyro refactor: build_logp_fn_batched, numpyro model functions, rewrite fit_batch_hierarchical (NPRO-01, NPRO-02)
+- [x] 16-02-PLAN.md -- Caller updates, CUDA environment check in SLURM scripts, validation tests (NPRO-03, NPRO-04, NPRO-05, NPRO-06)
 
 ---
 
@@ -219,4 +219,4 @@ Plans:
 | 13 - JAX-Native Cohort Simulation | v1.2 | 3/3 | Complete | 2026-04-12 |
 | 14 - Integration + GPU Benchmark | v1.2 | 0/3 | Pending | — |
 | 15 - Production Run + Results | v1.2 | 0/2 | Pending | — |
-| 16 - NumPyro Direct + CUDA Fix | v1.2 | 0/2 | Planned | — |
+| 16 - NumPyro Direct + CUDA Fix | v1.2 | 2/2 | Complete | 2026-04-13 |
