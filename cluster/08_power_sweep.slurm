@@ -50,6 +50,50 @@ conda activate /scratch/${_PROJECT}/${USER}/conda/envs/ds_env 2>/dev/null || {
     exit 1
 }
 
+# GPU deps: pip install -r cluster/requirements-gpu.txt
+
+# =============================================================================
+# CUDA / PTX Version Compatibility Check (NPRO-03)
+# =============================================================================
+check_cuda_compat() {
+    DRIVER_CUDA_VER=$(nvidia-smi 2>/dev/null | grep "CUDA Version" | awk '{print $9}')
+    if [[ -z "$DRIVER_CUDA_VER" ]]; then
+        echo "WARNING: nvidia-smi not available or no GPU detected"
+        return 1
+    fi
+
+    PTXAS_VER=$(ptxas --version 2>/dev/null | grep "release" | awk '{print $5}' | tr -d ',')
+    if [[ -z "$PTXAS_VER" ]]; then
+        echo "WARNING: ptxas not found in PATH"
+        return 1
+    fi
+
+    echo "Driver CUDA version: $DRIVER_CUDA_VER"
+    echo "ptxas CUDA version:  $PTXAS_VER"
+
+    DRIVER_MAJOR=$(echo "$DRIVER_CUDA_VER" | cut -d. -f1)
+    DRIVER_MINOR=$(echo "$DRIVER_CUDA_VER" | cut -d. -f2)
+    PTXAS_MAJOR=$(echo "$PTXAS_VER" | cut -d. -f1)
+    PTXAS_MINOR=$(echo "$PTXAS_VER" | cut -d. -f2)
+
+    if (( PTXAS_MAJOR > DRIVER_MAJOR )) || \
+       (( PTXAS_MAJOR == DRIVER_MAJOR && PTXAS_MINOR > DRIVER_MINOR )); then
+        echo ""
+        echo "ERROR: ptxas CUDA version ($PTXAS_VER) > driver CUDA version ($DRIVER_CUDA_VER)"
+        echo "  XLA will disable parallel compilation, causing 2-5x slower JIT."
+        echo "  FIX: pip install -r cluster/requirements-gpu.txt"
+        return 1
+    fi
+
+    echo "OK: ptxas version <= driver version (XLA parallel compilation enabled)"
+    return 0
+}
+
+echo ""
+echo "=== CUDA Environment Check ==="
+check_cuda_compat || echo "WARNING: CUDA compatibility issue detected (non-fatal, continuing)"
+echo ""
+
 # =============================================================================
 # JAX Compilation Cache
 # =============================================================================
