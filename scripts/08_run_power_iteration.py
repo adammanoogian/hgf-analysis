@@ -287,6 +287,122 @@ def _update_state_md(
     print(f"  Appended decision gate row to {state_md_path}")
 
 
+# ---------------------------------------------------------------------------
+# Diagnostic helpers
+# ---------------------------------------------------------------------------
+
+
+def _get_cache_stats(cache_dir: str | None) -> dict:
+    """Inspect JAX compilation cache directory and return stats."""
+    info: dict = {
+        "cache_dir": cache_dir,
+        "cache_exists": False,
+        "n_files": 0,
+        "total_size_mb": 0.0,
+    }
+    if not cache_dir:
+        return info
+    cache_path = Path(cache_dir)
+    if not cache_path.exists():
+        return info
+    info["cache_exists"] = True
+    files = list(cache_path.rglob("*"))
+    real_files = [f for f in files if f.is_file()]
+    info["n_files"] = len(real_files)
+    info["total_size_mb"] = round(
+        sum(f.stat().st_size for f in real_files) / (1024 * 1024), 2,
+    )
+    return info
+
+
+def _query_gpu_table() -> list[dict]:
+    """Query per-GPU info via nvidia-smi as structured list."""
+    try:
+        smi = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=index,name,memory.total,memory.used,memory.free,"
+                "utilization.gpu,temperature.gpu,pci.bus_id",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if smi.returncode != 0:
+            return []
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return []
+
+    rows = []
+    for line in smi.stdout.strip().splitlines():
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) >= 8:
+            rows.append({
+                "index": int(parts[0]),
+                "name": parts[1],
+                "vram_total_mb": int(parts[2]),
+                "vram_used_mb": int(parts[3]),
+                "vram_free_mb": int(parts[4]),
+                "gpu_util_pct": int(parts[5]),
+                "temp_c": int(parts[6]),
+                "pci_bus": parts[7],
+            })
+    return rows
+
+
+def _get_ptxas_release() -> str | None:
+    """Return just the ptxas release string, e.g. '12.8, V12.8.93'."""
+    try:
+        result = subprocess.run(
+            ["ptxas", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            return None
+        for line in result.stdout.splitlines():
+            if "release" in line:
+                return line.strip()
+        return result.stdout.strip().splitlines()[0]
+    except FileNotFoundError:
+        return None
+
+
+def _get_xla_env() -> dict:
+    """Capture XLA/JAX-related environment variables."""
+    import os
+    keys = [
+        "JAX_COMPILATION_CACHE_DIR",
+        "JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES",
+        "JAX_LOG_COMPILES",
+        "JAX_PLATFORMS",
+        "XLA_FLAGS",
+        "XLA_PYTHON_CLIENT_PREALLOCATE",
+        "XLA_PYTHON_CLIENT_MEM_FRACTION",
+        "CUDA_VISIBLE_DEVICES",
+        "JAX_ENABLE_X64",
+    ]
+    return {k: os.environ.get(k, "(unset)") for k in keys}
+
+
+def _print_gpu_table(gpus: list[dict]) -> None:
+    """Pretty-print per-GPU info."""
+    if not gpus:
+        print("  nvidia-smi: unavailable")
+        return
+    print(f"\n  {'GPU':<5} {'Name':<20} {'VRAM Used/Total':>18} {'Util':>6} {'Temp':>6}")
+    print(f"  {'-'*5} {'-'*20} {'-'*18} {'-'*6} {'-'*6}")
+    for g in gpus:
+        print(
+            f"  {g['index']:<5} {g['name']:<20} "
+            f"{g['vram_used_mb']:>6}/{g['vram_total_mb']:<6} MB "
+            f"{g['gpu_util_pct']:>4}% "
+            f"{g['temp_c']:>4}C"
+        )
+
+
 def _run_smoke_test(
     base_config: object,
     power_config: object,
@@ -315,12 +431,14 @@ def _run_smoke_test(
     args : argparse.Namespace
         Parsed CLI arguments.
     """
-    import jax
-    import subprocess
+    import os
 
     from prl_hgf.fitting.hierarchical import fit_batch_hierarchical
     from prl_hgf.power.config import make_power_config
     from prl_hgf.simulation.batch import simulate_batch
+
+    # Enable cache miss diagnostics (logs why tracing cache misses)
+    jax.config.update("jax_explain_cache_misses", True)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     results: dict = {}
@@ -334,55 +452,62 @@ def _run_smoke_test(
     print("SMOKE TEST MODE (JIT compilation diagnostics)")
     print("=" * 60)
 
-    # --- GPU info ---
+    # --- 1. GPU device table ---
     devices = jax.devices()
     gpu_devices = [d for d in devices if d.platform == "gpu"]
+    n_gpus = len(gpu_devices)
+
+    print(f"\nJAX devices ({len(devices)} total, {n_gpus} GPU):")
+    for d in devices:
+        print(f"  {d}")
+
     if gpu_devices:
         results["gpu_device"] = str(gpu_devices[0])
-        print(f"\nGPU: {gpu_devices[0]}")
     else:
         results["gpu_device"] = "none (CPU only)"
-        print("\nWARNING: No GPU detected — running on CPU.")
+        print("  WARNING: No GPU detected — running on CPU.")
 
-    try:
-        smi = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-gpu=name,memory.total,memory.free",
-                "--format=csv,noheader",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if smi.returncode == 0:
-            gpu_info = smi.stdout.strip()
-            results["gpu_nvidia_smi"] = gpu_info
-            print(f"  nvidia-smi: {gpu_info}")
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+    gpus = _query_gpu_table()
+    _print_gpu_table(gpus)
+    results["gpu_table"] = gpus
 
-    # --- CUDA/PTX version check ---
-    try:
-        ptxas = subprocess.run(
-            ["ptxas", "--version"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        results["ptxas_available"] = ptxas.returncode == 0
-        if ptxas.returncode == 0:
-            results["ptxas_version"] = ptxas.stdout.strip()
-            print(f"  ptxas: {ptxas.stdout.strip()}")
-        else:
-            print("  WARNING: ptxas not functional")
-    except FileNotFoundError:
-        results["ptxas_available"] = False
-        print("  WARNING: ptxas not found — XLA parallel compilation disabled")
+    # --- 2. ptxas (release line only) ---
+    ptxas_release = _get_ptxas_release()
+    results["ptxas_available"] = ptxas_release is not None
+    results["ptxas_version"] = ptxas_release or "not found"
+    if ptxas_release:
+        print(f"\n  ptxas: {ptxas_release}")
+    else:
+        print("\n  WARNING: ptxas not found — XLA parallel compilation disabled")
 
-    n_participant_sessions = 2 * n_smoke * 3  # 2 groups x N x 3 sessions
-    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
-    chain_method = "parallel" if n_gpus >= n_chains_smoke else "vectorized"
+    # --- 3. XLA / JAX environment ---
+    xla_env = _get_xla_env()
+    results["xla_env"] = xla_env
+    print("\n  XLA/JAX environment:")
+    for k, v in xla_env.items():
+        print(f"    {k} = {v}")
+
+    # --- 4. JAX compilation cache (before) ---
+    cache_dir = os.environ.get("JAX_COMPILATION_CACHE_DIR")
+    cache_before = _get_cache_stats(cache_dir)
+    results["cache_before"] = cache_before
+    print(f"\n  JAX cache (before):")
+    print(f"    dir:    {cache_before['cache_dir']}")
+    print(f"    exists: {cache_before['cache_exists']}")
+    print(f"    files:  {cache_before['n_files']}")
+    print(f"    size:   {cache_before['total_size_mb']} MB")
+
+    # --- 5. JAX/jaxlib version ---
+    import jaxlib
+    results["jax_version"] = jax.__version__
+    results["jaxlib_version"] = jaxlib.__version__
+    print(f"\n  JAX {jax.__version__}, jaxlib {jaxlib.__version__}")
+
+    # --- Config summary ---
+    n_participant_sessions = 2 * n_smoke * 3
+    # Always vectorized: enables jit_model_args for trace cache reuse
+    # and avoids confirmed L40S pmap bug (JAX #31626)
+    chain_method = "vectorized"
 
     print(f"\nSmoke test config:")
     print(f"  N per group:            {n_smoke}")
@@ -391,7 +516,7 @@ def _run_smoke_test(
     print(f"  Draws/tune:             {n_draws_smoke}/{n_tune_smoke}")
     print(f"  Model:                  hgf_3level")
     print(f"  GPUs available:         {n_gpus}")
-    print(f"  Chain method:           {chain_method}")
+    print(f"  Chain method:           {chain_method} (jit_model_args=True)")
 
     # --- Step 1: Simulation vmap ---
     print(f"\nStep 1: Simulate cohort (N={n_smoke}/group)...")
@@ -404,6 +529,15 @@ def _run_smoke_test(
 
     # --- Step 2: Cold JIT ---
     print("\nStep 2: Cold JIT (first MCMC call — includes XLA compilation)...")
+    gpus_pre_cold = _query_gpu_table()
+    results["gpu_pre_cold_jit"] = gpus_pre_cold
+    if gpus_pre_cold:
+        for g in gpus_pre_cold:
+            print(
+                f"  GPU {g['index']} VRAM before: "
+                f"{g['vram_used_mb']}/{g['vram_total_mb']} MB"
+            )
+
     t0 = time.perf_counter()
     fit_batch_hierarchical(
         sim_smoke,
@@ -419,10 +553,30 @@ def _run_smoke_test(
     results["jit_cold_s"] = round(jit_cold_s, 2)
     print(f"  Cold JIT: {jit_cold_s:.2f}s")
 
+    gpus_post_cold = _query_gpu_table()
+    results["gpu_post_cold_jit"] = gpus_post_cold
+    if gpus_post_cold:
+        for g in gpus_post_cold:
+            print(
+                f"  GPU {g['index']} VRAM after:  "
+                f"{g['vram_used_mb']}/{g['vram_total_mb']} MB"
+            )
+
+    # --- Cache after cold JIT ---
+    cache_after_cold = _get_cache_stats(cache_dir)
+    results["cache_after_cold"] = cache_after_cold
+    new_files = cache_after_cold["n_files"] - cache_before["n_files"]
+    new_mb = cache_after_cold["total_size_mb"] - cache_before["total_size_mb"]
+    print(f"  Cache delta: +{new_files} files, +{new_mb:.1f} MB")
+
     # --- Step 3: Warm JIT (same shape, different data) ---
     print("\nStep 3: Warm JIT (same shape, different seed — tests cache reuse)...")
     cfg_smoke_2 = make_power_config(base_config, n_smoke, d_smoke, 88888)
     sim_smoke_2 = simulate_batch(cfg_smoke_2)
+
+    gpus_pre_warm = _query_gpu_table()
+    results["gpu_pre_warm_jit"] = gpus_pre_warm
+
     t0 = time.perf_counter()
     fit_batch_hierarchical(
         sim_smoke_2,
@@ -438,6 +592,30 @@ def _run_smoke_test(
     results["jit_warm_s"] = round(jit_warm_s, 2)
     print(f"  Warm JIT: {jit_warm_s:.2f}s")
 
+    gpus_post_warm = _query_gpu_table()
+    results["gpu_post_warm_jit"] = gpus_post_warm
+    if gpus_post_warm:
+        for g in gpus_post_warm:
+            print(
+                f"  GPU {g['index']} VRAM after:  "
+                f"{g['vram_used_mb']}/{g['vram_total_mb']} MB"
+            )
+
+    # --- Cache after warm JIT ---
+    cache_after_warm = _get_cache_stats(cache_dir)
+    results["cache_after_warm"] = cache_after_warm
+    warm_new_files = (
+        cache_after_warm["n_files"] - cache_after_cold["n_files"]
+    )
+    warm_new_mb = (
+        cache_after_warm["total_size_mb"] - cache_after_cold["total_size_mb"]
+    )
+    print(f"  Cache delta: +{warm_new_files} files, +{warm_new_mb:.1f} MB")
+    if warm_new_files > 0:
+        print("  WARNING: warm JIT wrote NEW cache entries — cache miss detected")
+    else:
+        print("  OK: no new cache entries (cache hit)")
+
     cache_speedup = jit_cold_s / max(jit_warm_s, 0.001)
     results["cache_speedup"] = round(cache_speedup, 2)
 
@@ -446,11 +624,14 @@ def _run_smoke_test(
     print("SMOKE TEST RESULTS")
     print("=" * 60)
     print(f"  GPU:                {results.get('gpu_device', 'unknown')}")
-    print(f"  ptxas available:    {results.get('ptxas_available', 'unknown')}")
+    print(f"  ptxas:              {results['ptxas_version']}")
+    print(f"  Chain method:       {chain_method}")
     print(f"  Sim vmap:           {results['sim_vmap_s']:.2f}s")
     print(f"  Cold JIT:           {results['jit_cold_s']:.2f}s")
     print(f"  Warm JIT:           {results['jit_warm_s']:.2f}s")
     print(f"  Cache speedup:      {cache_speedup:.1f}x")
+    print(f"  Cache files before: {cache_before['n_files']}")
+    print(f"  Cache files after:  {cache_after_warm['n_files']}")
     print()
 
     # Pass/fail gates
@@ -479,9 +660,24 @@ def _run_smoke_test(
             print("  FIX: XLA cache not reusing compiled kernels.")
             print("       Verify JAX_COMPILATION_CACHE_DIR is set and writable.")
             print("       Verify data is passed as dynamic args (not closure).")
+            if warm_new_files > 0:
+                print("       DIAGNOSTIC: warm JIT wrote new cache entries,")
+                print("       confirming cache miss (different trace shape?).")
+            else:
+                print("       DIAGNOSTIC: no new cache entries from warm JIT —")
+                print("       cache hit occurred but compilation still slow.")
+                print("       This suggests the model itself is slow, not the cache.")
         if not warm_ok:
             print("  FIX: Even cached JIT is slow. Check GPU memory pressure")
             print("       and CUDA driver version.")
+            if gpus_post_warm:
+                max_vram_pct = max(
+                    g["vram_used_mb"] / g["vram_total_mb"] * 100
+                    for g in gpus_post_warm
+                )
+                if max_vram_pct > 90:
+                    print(f"       WARNING: VRAM at {max_vram_pct:.0f}% — "
+                          "memory pressure likely causing slowdown.")
 
     print("=" * 60)
 
@@ -536,8 +732,6 @@ def _run_benchmark(
     args : argparse.Namespace
         Parsed CLI arguments (provides fit-chains, fit-draws, etc.).
     """
-    import jax
-
     from prl_hgf.fitting.hierarchical import fit_batch_hierarchical
     from prl_hgf.power.config import make_power_config
     from prl_hgf.power.iteration import apply_decision_gate, run_sbf_iteration
@@ -551,12 +745,18 @@ def _run_benchmark(
     print("=" * 60)
 
     # --- Phase 0: GPU device info ---
+    import os
+
     devices = jax.devices()
     gpu_devices = [d for d in devices if d.platform == "gpu"]
+    n_gpus = len(gpu_devices)
+
+    print(f"\nJAX devices ({len(devices)} total, {n_gpus} GPU):")
+    for d in devices:
+        print(f"  {d}")
+
     if gpu_devices:
-        dev = gpu_devices[0]
-        results["gpu_device"] = str(dev)
-        print(f"\nGPU: {dev}")
+        results["gpu_device"] = str(gpu_devices[0])
     else:
         results["gpu_device"] = "none (CPU only)"
         print(
@@ -564,29 +764,33 @@ def _run_benchmark(
             "only. Decision gate results may not be meaningful."
         )
 
-    try:
-        smi = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-gpu=name,memory.total,memory.free",
-                "--format=csv,noheader",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if smi.returncode == 0:
-            gpu_info = smi.stdout.strip()
-            results["gpu_nvidia_smi"] = gpu_info
-            print(f"  nvidia-smi: {gpu_info}")
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+    gpus = _query_gpu_table()
+    _print_gpu_table(gpus)
+    results["gpu_table"] = gpus
 
-    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
-    chain_method_bench = "parallel" if n_gpus >= args.fit_chains else "vectorized"
-    print(f"  GPUs available:  {n_gpus}")
+    ptxas_release = _get_ptxas_release()
+    results["ptxas_available"] = ptxas_release is not None
+    results["ptxas_version"] = ptxas_release or "not found"
+    if ptxas_release:
+        print(f"\n  ptxas: {ptxas_release}")
+
+    xla_env = _get_xla_env()
+    results["xla_env"] = xla_env
+    print("\n  XLA/JAX environment:")
+    for k, v in xla_env.items():
+        print(f"    {k} = {v}")
+
+    cache_dir = os.environ.get("JAX_COMPILATION_CACHE_DIR")
+    cache_before = _get_cache_stats(cache_dir)
+    results["cache_before"] = cache_before
+    print(f"\n  JAX cache: {cache_before['n_files']} files, "
+          f"{cache_before['total_size_mb']} MB in {cache_dir}")
+
+    # Always vectorized: enables jit_model_args for trace cache reuse
+    chain_method_bench = "vectorized"
+    print(f"\n  GPUs available:  {n_gpus}")
     print(f"  Fit chains:      {args.fit_chains}")
-    print(f"  Chain method:    {chain_method_bench}")
+    print(f"  Chain method:    {chain_method_bench} (jit_model_args=True)")
 
     # --- Phase 1: JAX compilation cache test (BENCH-05) ---
     print("\nPhase 1: JAX compilation cache test (BENCH-05)...")

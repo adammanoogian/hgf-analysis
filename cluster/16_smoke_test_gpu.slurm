@@ -24,7 +24,7 @@
 #SBATCH --error=cluster/logs/smoke16_%j.err
 #SBATCH --time=02:00:00
 #SBATCH --mem=64G
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
 
@@ -110,13 +110,26 @@ if ! check_cuda_compat; then
     echo ""
 fi
 
-# JAX compilation cache (persistent across jobs)
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu"
+# JAX compilation cache (persistent across jobs, node-specific to avoid
+# cross-architecture cache poisoning)
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
+export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
     echo "WARNING: Could not create JAX cache dir, disabling cache"
     unset JAX_COMPILATION_CACHE_DIR
 }
+
+# XLA autotuning cache (persist autotuning results across jobs)
+_XLA_AUTOTUNE_DIR="/scratch/${_PROJECT}/${USER}/.xla_autotune_cache"
+mkdir -p "$_XLA_AUTOTUNE_DIR" 2>/dev/null
+export XLA_FLAGS="--xla_gpu_dump_autotune_results_to=${_XLA_AUTOTUNE_DIR}/results.pb --xla_gpu_load_autotune_results_from=${_XLA_AUTOTUNE_DIR}/results.pb"
+
+# Diagnostics: log compilations + cache miss reasons
+export JAX_LOG_COMPILES=1
+
+# Show actual VRAM usage, not preallocated pool
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
 
 # =============================================================================
 # Verify GPU

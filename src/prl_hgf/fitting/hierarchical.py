@@ -1257,21 +1257,17 @@ def fit_batch_hierarchical(
     rng_key = jax.random.PRNGKey(random_seed)
     kernel = NUTS(model_fn, target_accept_prob=target_accept)
 
-    # Use pmap ("parallel") when we have >= n_chains GPUs so each chain
-    # runs on its own device; fall back to "vectorized" (vmap on 1 device)
-    # for single-GPU or CPU.
-    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
-    if n_gpus >= n_chains:
-        chain_method = "parallel"
-    else:
-        chain_method = "vectorized"
-
+    # Always use "vectorized" (vmap): compiles a single fused kernel for
+    # all chains, enables jit_model_args for trace-cache reuse across
+    # calls with the same shapes, and avoids a confirmed L40S pmap bug
+    # (JAX #31626).  A single modern GPU has enough VRAM for 4 chains.
     mcmc = MCMC(
         kernel,
         num_warmup=n_tune,
         num_samples=n_draws,
         num_chains=n_chains,
-        chain_method=chain_method,
+        chain_method="vectorized",
+        jit_model_args=True,
         progress_bar=progressbar,
     )
     mcmc.run(

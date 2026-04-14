@@ -18,7 +18,7 @@
 #SBATCH --error=cluster/logs/bench14_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=128G
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
 
@@ -94,13 +94,22 @@ echo "=== CUDA Environment Check ==="
 check_cuda_compat || echo "WARNING: CUDA compatibility issue detected (non-fatal, continuing)"
 echo ""
 
-# JAX compilation cache (persistent across jobs for BENCH-05)
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu"
+# JAX compilation cache (node-specific, persistent across jobs for BENCH-05)
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
+export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
     echo "WARNING: Could not create JAX cache dir, disabling cache"
     unset JAX_COMPILATION_CACHE_DIR
 }
+
+# XLA autotuning cache (persist autotuning results across jobs)
+_XLA_AUTOTUNE_DIR="/scratch/${_PROJECT}/${USER}/.xla_autotune_cache"
+mkdir -p "$_XLA_AUTOTUNE_DIR" 2>/dev/null
+export XLA_FLAGS="--xla_gpu_dump_autotune_results_to=${_XLA_AUTOTUNE_DIR}/results.pb --xla_gpu_load_autotune_results_from=${_XLA_AUTOTUNE_DIR}/results.pb"
+
+# Show actual VRAM usage, not preallocated pool
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
 
 # =============================================================================
 # Verify GPU
