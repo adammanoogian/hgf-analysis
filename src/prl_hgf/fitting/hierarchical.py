@@ -1256,12 +1256,22 @@ def fit_batch_hierarchical(
     # ------------------------------------------------------------------
     rng_key = jax.random.PRNGKey(random_seed)
     kernel = NUTS(model_fn, target_accept_prob=target_accept)
+
+    # Use pmap ("parallel") when we have >= n_chains GPUs so each chain
+    # runs on its own device; fall back to "vectorized" (vmap on 1 device)
+    # for single-GPU or CPU.
+    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
+    if n_gpus >= n_chains:
+        chain_method = "parallel"
+    else:
+        chain_method = "vectorized"
+
     mcmc = MCMC(
         kernel,
         num_warmup=n_tune,
         num_samples=n_draws,
         num_chains=n_chains,
-        chain_method="vectorized",
+        chain_method=chain_method,
         progress_bar=progressbar,
     )
     mcmc.run(

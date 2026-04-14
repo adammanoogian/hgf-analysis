@@ -37,6 +37,8 @@ from pathlib import Path
 # without an editable install.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import jax
+
 import config as _cfg
 from prl_hgf.env.task_config import load_config
 from prl_hgf.power.config import load_power_config
@@ -379,12 +381,17 @@ def _run_smoke_test(
         print("  WARNING: ptxas not found — XLA parallel compilation disabled")
 
     n_participant_sessions = 2 * n_smoke * 3  # 2 groups x N x 3 sessions
+    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
+    chain_method = "parallel" if n_gpus >= n_chains_smoke else "vectorized"
+
     print(f"\nSmoke test config:")
     print(f"  N per group:            {n_smoke}")
     print(f"  Participant-sessions:   {n_participant_sessions}")
     print(f"  Chains:                 {n_chains_smoke}")
     print(f"  Draws/tune:             {n_draws_smoke}/{n_tune_smoke}")
     print(f"  Model:                  hgf_3level")
+    print(f"  GPUs available:         {n_gpus}")
+    print(f"  Chain method:           {chain_method}")
 
     # --- Step 1: Simulation vmap ---
     print(f"\nStep 1: Simulate cohort (N={n_smoke}/group)...")
@@ -485,6 +492,8 @@ def _run_smoke_test(
         "chains": n_chains_smoke,
         "draws": n_draws_smoke,
         "tune": n_tune_smoke,
+        "n_gpus": n_gpus,
+        "chain_method": chain_method,
     }
     smoke_path = output_dir / "smoke_test.json"
     with open(smoke_path, "w") as f:
@@ -572,6 +581,12 @@ def _run_benchmark(
             print(f"  nvidia-smi: {gpu_info}")
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
+
+    n_gpus = len([d for d in jax.devices() if d.platform == "gpu"])
+    chain_method_bench = "parallel" if n_gpus >= args.fit_chains else "vectorized"
+    print(f"  GPUs available:  {n_gpus}")
+    print(f"  Fit chains:      {args.fit_chains}")
+    print(f"  Chain method:    {chain_method_bench}")
 
     # --- Phase 1: JAX compilation cache test (BENCH-05) ---
     print("\nPhase 1: JAX compilation cache test (BENCH-05)...")

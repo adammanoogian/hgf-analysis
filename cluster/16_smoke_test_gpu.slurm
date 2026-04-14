@@ -24,7 +24,7 @@
 #SBATCH --error=cluster/logs/smoke16_%j.err
 #SBATCH --time=02:00:00
 #SBATCH --mem=64G
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
 
