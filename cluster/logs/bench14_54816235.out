@@ -1,0 +1,43 @@
+
+=== CUDA Environment Check ===
+WARNING: ptxas not found in PATH
+WARNING: CUDA compatibility issue detected (non-fatal, continuing)
+
+============================================================
+Phase 14 GPU Benchmark
+============================================================
+Job ID:  54816235
+Node:    m3t100
+GPU(s):  0,1,2,3
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu
+Start:   Tue Apr 14 05:03:00 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0), CudaDevice(id=1), CudaDevice(id=2), CudaDevice(id=3)]
+GPU: cuda:0
+
+Running batched hierarchical benchmark...
+
+============================================================
+BENCHMARK MODE (batched hierarchical path)
+============================================================
+
+GPU: cuda:0
+  nvidia-smi: Tesla T4, 15360 MiB, 3617 MiB
+Tesla T4, 15360 MiB, 14809 MiB
+Tesla T4, 15360 MiB, 14809 MiB
+Tesla T4, 15360 MiB, 14809 MiB
+
+Phase 1: JAX compilation cache test (BENCH-05)...
+  Building tiny cohort for JIT warm-up (N=2/group, 2 chains, 10 draws)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.1s. Running JAX vmap…
+JAX vmap completed in 18.1s.
+  Cold JIT: 2780.74s
+  Warm JIT: 1606.00s
+  Cache speedup: 1.7x
+
+Phase 2: Full batched iteration (BENCH-01) at max N=50 (300 participant-sessions × 2 models)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.9s. Running JAX vmap…
+JAX vmap completed in 3.2s.
