@@ -1,11 +1,12 @@
 {
   "gpu_device": "cuda:0",
-  "gpu_nvidia_smi": "NVIDIA L40S, 46068 MiB, 10928 MiB",
-  "ptxas_available": false,
-  "sim_vmap_s": 5.92,
-  "jit_cold_s": 1811.14,
-  "jit_warm_s": 1146.37,
-  "cache_speedup": 1.58,
+  "gpu_nvidia_smi": "NVIDIA L40S, 46068 MiB, 10928 MiB\nNVIDIA L40S, 46068 MiB, 45034 MiB",
+  "ptxas_available": true,
+  "ptxas_version": "ptxas: NVIDIA (R) Ptx optimizing assembler\nCopyright (c) 2005-2025 NVIDIA Corporation\nBuilt on Fri_Feb_21_20:21:21_PST_2025\nCuda compilation tools, release 12.8, V12.8.93\nBuild cuda_12.8.r12.8/compiler.35583870_0",
+  "sim_vmap_s": 5.29,
+  "jit_cold_s": 1698.87,
+  "jit_warm_s": 1005.18,
+  "cache_speedup": 1.69,
   "gate_cold_jit_under_600s": false,
   "gate_cache_speedup_over_3x": false,
   "gate_warm_jit_under_120s": false,
@@ -15,6 +16,8 @@
     "participant_sessions": 30,
     "chains": 2,
     "draws": 10,
-    "tune": 10
+    "tune": 10,
+    "n_gpus": 2,
+    "chain_method": "parallel"
   }
 }

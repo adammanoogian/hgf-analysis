@@ -1,0 +1,91 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 12.8
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 16 GPU Smoke Test
+============================================================
+Job ID:  54824426
+Node:    m3g101
+GPU(s):  0,1
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu
+Start:   Wed Apr 15 04:40:27 AM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0), CudaDevice(id=1)]
+GPU: cuda:0
+
+============================================================
+SMOKE TEST MODE (JIT compilation diagnostics)
+============================================================
+
+GPU: cuda:0
+  nvidia-smi: NVIDIA L40S, 46068 MiB, 10928 MiB
+NVIDIA L40S, 46068 MiB, 45034 MiB
+  ptxas: ptxas: NVIDIA (R) Ptx optimizing assembler
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:21:21_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+
+Smoke test config:
+  N per group:            5
+  Participant-sessions:   30
+  Chains:                 2
+  Draws/tune:             10/10
+  Model:                  hgf_3level
+  GPUs available:         2
+  Chain method:           parallel
+
+Step 1: Simulate cohort (N=5/group)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.1s. Running JAX vmap…
+JAX vmap completed in 2.4s.
+  Simulation: 5.29s
+
+Step 2: Cold JIT (first MCMC call — includes XLA compilation)...
+  Cold JIT: 1698.87s
+
+Step 3: Warm JIT (same shape, different seed — tests cache reuse)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.0s. Running JAX vmap…
+JAX vmap completed in 0.8s.
+  Warm JIT: 1005.18s
+
+============================================================
+SMOKE TEST RESULTS
+============================================================
+  GPU:                cuda:0
+  ptxas available:    True
+  Sim vmap:           5.29s
+  Cold JIT:           1698.87s
+  Warm JIT:           1005.18s
+  Cache speedup:      1.7x
+
+GATES:
+  Cold JIT < 600s:    FAIL (1699s)
+  Cache speedup > 3x: FAIL (1.7x)
+  Warm JIT < 120s:    FAIL (1005s)
+  Overall:            FAIL
+
+  FIX: Cold JIT too slow. Check CUDA/PTX version match:
+       pip install -r cluster/requirements-gpu.txt
+  FIX: XLA cache not reusing compiled kernels.
+       Verify JAX_COMPILATION_CACHE_DIR is set and writable.
+       Verify data is passed as dynamic args (not closure).
+  FIX: Even cached JIT is slow. Check GPU memory pressure
+       and CUDA driver version.
+============================================================
+
+Results saved to: /fs04/fc37/adam/projects/psilocybin-prl-analyses/results/power/smoke_test.json
+
+============================================================
+SMOKE TEST FAILED (exit code: 1)
+  Check: cluster/logs/smoke16_54824426.err
+  Most likely fix: pip install -r cluster/requirements-gpu.txt
+
+End: Wed Apr 15 05:26:39 AM AEST 2026
+============================================================
