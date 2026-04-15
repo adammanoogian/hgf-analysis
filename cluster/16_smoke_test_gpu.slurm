@@ -202,4 +202,25 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
+# =============================================================================
+# Auto-push logs and results to git
+# =============================================================================
+echo ""
+echo "Pushing smoke test results to git..."
+_SMOKE_LOG_OUT="cluster/logs/smoke16_${SLURM_JOB_ID}.out"
+_SMOKE_LOG_ERR="cluster/logs/smoke16_${SLURM_JOB_ID}.err"
+_SMOKE_JSON="results/power/smoke_test.json"
+
+git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_SMOKE_JSON}" 2>/dev/null
+if ! git diff --cached --quiet 2>/dev/null; then
+    git commit -m "smoke test blackjax run (job ${SLURM_JOB_ID})"
+    if git push origin main 2>/dev/null; then
+        echo "Pushed smoke test results to origin/main"
+    else
+        echo "WARNING: git push failed — results committed locally only"
+    fi
+else
+    echo "No new files to push"
+fi
+
 exit $EXIT_CODE
