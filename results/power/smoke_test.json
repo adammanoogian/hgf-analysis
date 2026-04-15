@@ -1,12 +1,102 @@
 {
   "gpu_device": "cuda:0",
-  "gpu_nvidia_smi": "NVIDIA L40S, 46068 MiB, 10928 MiB\nNVIDIA L40S, 46068 MiB, 45034 MiB",
+  "gpu_table": [
+    {
+      "index": 0,
+      "name": "NVIDIA L40S",
+      "vram_total_mb": 46068,
+      "vram_used_mb": 441,
+      "vram_free_mb": 45028,
+      "gpu_util_pct": 0,
+      "temp_c": 28,
+      "pci_bus": "00000000:E3:00.0"
+    }
+  ],
   "ptxas_available": true,
-  "ptxas_version": "ptxas: NVIDIA (R) Ptx optimizing assembler\nCopyright (c) 2005-2025 NVIDIA Corporation\nBuilt on Fri_Feb_21_20:21:21_PST_2025\nCuda compilation tools, release 12.8, V12.8.93\nBuild cuda_12.8.r12.8/compiler.35583870_0",
-  "sim_vmap_s": 5.29,
-  "jit_cold_s": 1698.87,
-  "jit_warm_s": 1005.18,
-  "cache_speedup": 1.69,
+  "ptxas_version": "Cuda compilation tools, release 12.8, V12.8.93",
+  "xla_env": {
+    "JAX_COMPILATION_CACHE_DIR": "/scratch/fc37/aman0087/.jax_cache_gpu/m3g109",
+    "JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES": "0",
+    "JAX_LOG_COMPILES": "1",
+    "JAX_PLATFORMS": "(unset)",
+    "XLA_FLAGS": "--xla_gpu_dump_autotune_results_to=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb --xla_gpu_load_autotune_results_from=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb",
+    "XLA_PYTHON_CLIENT_PREALLOCATE": "false",
+    "XLA_PYTHON_CLIENT_MEM_FRACTION": "(unset)",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "JAX_ENABLE_X64": "(unset)"
+  },
+  "cache_before": {
+    "cache_dir": "/scratch/fc37/aman0087/.jax_cache_gpu/m3g109",
+    "cache_exists": true,
+    "n_files": 4,
+    "total_size_mb": 0.0
+  },
+  "jax_version": "0.4.31",
+  "jaxlib_version": "0.4.31",
+  "sim_vmap_s": 5.63,
+  "gpu_pre_cold_jit": [
+    {
+      "index": 0,
+      "name": "NVIDIA L40S",
+      "vram_total_mb": 46068,
+      "vram_used_mb": 445,
+      "vram_free_mb": 45024,
+      "gpu_util_pct": 10,
+      "temp_c": 29,
+      "pci_bus": "00000000:E3:00.0"
+    }
+  ],
+  "jit_cold_s": 1834.72,
+  "gpu_post_cold_jit": [
+    {
+      "index": 0,
+      "name": "NVIDIA L40S",
+      "vram_total_mb": 46068,
+      "vram_used_mb": 561,
+      "vram_free_mb": 44908,
+      "gpu_util_pct": 32,
+      "temp_c": 36,
+      "pci_bus": "00000000:E3:00.0"
+    }
+  ],
+  "cache_after_cold": {
+    "cache_dir": "/scratch/fc37/aman0087/.jax_cache_gpu/m3g109",
+    "cache_exists": true,
+    "n_files": 484,
+    "total_size_mb": 2.22
+  },
+  "gpu_pre_warm_jit": [
+    {
+      "index": 0,
+      "name": "NVIDIA L40S",
+      "vram_total_mb": 46068,
+      "vram_used_mb": 561,
+      "vram_free_mb": 44908,
+      "gpu_util_pct": 10,
+      "temp_c": 36,
+      "pci_bus": "00000000:E3:00.0"
+    }
+  ],
+  "jit_warm_s": 1162.07,
+  "gpu_post_warm_jit": [
+    {
+      "index": 0,
+      "name": "NVIDIA L40S",
+      "vram_total_mb": 46068,
+      "vram_used_mb": 563,
+      "vram_free_mb": 44906,
+      "gpu_util_pct": 0,
+      "temp_c": 36,
+      "pci_bus": "00000000:E3:00.0"
+    }
+  ],
+  "cache_after_warm": {
+    "cache_dir": "/scratch/fc37/aman0087/.jax_cache_gpu/m3g109",
+    "cache_exists": true,
+    "n_files": 486,
+    "total_size_mb": 2.87
+  },
+  "cache_speedup": 1.58,
   "gate_cold_jit_under_600s": false,
   "gate_cache_speedup_over_3x": false,
   "gate_warm_jit_under_120s": false,
@@ -17,7 +107,7 @@
     "chains": 2,
     "draws": 10,
     "tune": 10,
-    "n_gpus": 2,
-    "chain_method": "parallel"
+    "n_gpus": 1,
+    "chain_method": "vectorized"
   }
 }
