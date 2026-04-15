@@ -874,7 +874,8 @@ def _run_blackjax_nuts(
     choices: jnp.ndarray | None = None,
     trial_mask: jnp.ndarray | None = None,
     model_name: str = "hgf_3level",
-) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int]:
+    warmup_params: dict | None = None,
+) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int, dict]:
     """Run BlackJAX NUTS with window_adaptation warmup and lax.scan sampling.
 
     The warmup phase uses the closure-based ``logdensity_fn`` from
@@ -883,23 +884,33 @@ def _run_blackjax_nuts(
     arrays as traced JIT arguments, enabling persistent XLA compilation
     cache hits across power-sweep iterations with same-shape data.
 
+    When ``warmup_params`` is provided, the warmup phase is skipped
+    entirely and the pre-adapted step size and mass matrix are used
+    directly.  This enables reusing adapted parameters across
+    power-sweep iterations at the same sample size, avoiding the
+    ~1100s warmup compilation cost on iterations 2+.
+
     Parameters
     ----------
     logdensity_fn : callable
         ``dict -> scalar`` log-posterior from :func:`_build_log_posterior`.
-        Used for warmup only.
+        Used for warmup only (ignored when ``warmup_params`` is provided).
     initial_position : dict[str, jnp.ndarray]
         Starting values for each parameter.  Each value has shape ``(P,)``.
+        Used as warmup starting point and as the base state for sampling
+        when ``warmup_params`` is provided.
     rng_key : jnp.ndarray
         JAX PRNGKey.
     n_tune : int, optional
-        Number of warmup steps.  Default ``1000``.
+        Number of warmup steps.  Default ``1000``.  Ignored when
+        ``warmup_params`` is provided.
     n_draws : int, optional
         Number of posterior draws per chain.  Default ``1000``.
     n_chains : int, optional
         Number of MCMC chains.  Default ``4``.
     target_accept : float, optional
-        Target acceptance rate for NUTS.  Default ``0.95``.
+        Target acceptance rate for NUTS.  Default ``0.95``.  Ignored
+        when ``warmup_params`` is provided.
     batched_logp_fn : callable or None, optional
         Pure JAX batched logp from :func:`build_logp_fn_batched`.  Required
         for the traced-arg sampling loop.  If ``None``, falls back to the
@@ -915,6 +926,12 @@ def _run_blackjax_nuts(
     model_name : str, optional
         ``"hgf_2level"`` or ``"hgf_3level"`` (default).  Controls prior
         structure inside the traced-arg sampling loop.
+    warmup_params : dict or None, optional
+        Pre-adapted NUTS parameters (``step_size`` and
+        ``inverse_mass_matrix``) from a previous call.  When provided,
+        warmup is skipped entirely — saves ~1100s per call in the
+        power sweep.  Obtain from the 4th element of this function's
+        return tuple.
 
     Returns
     -------
@@ -926,23 +943,33 @@ def _run_blackjax_nuts(
     n_chains_actual : int
         Actual number of chains used (may differ from ``n_chains`` if
         pmap path adjusts it).
+    adapted_params : dict
+        Adapted NUTS parameters (``step_size`` and
+        ``inverse_mass_matrix``).  Pass back as ``warmup_params`` on
+        subsequent calls to skip warmup.
     """
     import blackjax
 
     rng_key, warmup_key, sample_key = jax.random.split(rng_key, 3)
 
-    # Phase 1: Window adaptation (single warmup, closure-based)
-    warmup = blackjax.window_adaptation(
-        blackjax.nuts,
-        logdensity_fn,
-        target_acceptance_rate=target_accept,
-        is_mass_matrix_diagonal=True,
-    )
-    (warmup_state, warmup_params), _warmup_info = warmup.run(
-        warmup_key,
-        initial_position,
-        num_steps=n_tune,
-    )
+    # Phase 1: Window adaptation (skip if pre-adapted params provided)
+    if warmup_params is not None:
+        # Reuse adapted parameters — build initial state from position
+        warmup_state = blackjax.nuts(
+            logdensity_fn, **warmup_params,
+        ).init(initial_position)
+    else:
+        warmup = blackjax.window_adaptation(
+            blackjax.nuts,
+            logdensity_fn,
+            target_acceptance_rate=target_accept,
+            is_mass_matrix_diagonal=True,
+        )
+        (warmup_state, warmup_params), _warmup_info = warmup.run(
+            warmup_key,
+            initial_position,
+            num_steps=n_tune,
+        )
 
     # Phase 2: Determine chain strategy
     n_devices = jax.device_count()
@@ -1000,7 +1027,7 @@ def _run_blackjax_nuts(
                 ),
             }
 
-        return positions_dict, stats_dict, n_chains
+        return positions_dict, stats_dict, n_chains, warmup_params
 
     # Legacy fallback: closure-based chain runners
     nuts = blackjax.nuts(logdensity_fn, **warmup_params)
@@ -1022,7 +1049,7 @@ def _run_blackjax_nuts(
             n_chains,
         )
 
-    return positions, stats, n_actual
+    return positions, stats, n_actual, warmup_params
 
 
 def _run_vmap_chains(
@@ -1862,7 +1889,8 @@ def fit_batch_hierarchical(
     random_seed: int = 42,
     sampler: str = "blackjax",
     progressbar: bool = True,
-) -> az.InferenceData:
+    warmup_params: dict | None = None,
+) -> az.InferenceData | tuple[az.InferenceData, dict]:
     """Fit an entire cohort via BlackJAX NUTS (default) or NumPyro MCMC.
 
     Groups ``sim_df`` by ``(participant_id, group, session)``, builds the
@@ -1907,13 +1935,19 @@ def fit_batch_hierarchical(
         to the numpyro path.
     progressbar : bool, optional
         Show MCMC progress bar (numpyro path only).  Default ``True``.
+    warmup_params : dict or None, optional
+        Pre-adapted NUTS parameters from a previous call.  When
+        provided, warmup is skipped (~1100s savings per call).  Pass
+        the second element of the return tuple from a prior call.
+        Only used with the BlackJAX path.
 
     Returns
     -------
-    arviz.InferenceData
-        Posterior samples with a ``participant`` coordinate on every
-        parameter.  Additional coordinates ``participant_group`` and
-        ``participant_session`` enable downstream metadata lookup.
+    arviz.InferenceData or tuple[arviz.InferenceData, dict]
+        If ``warmup_params`` is ``None`` (first call): returns
+        ``(idata, adapted_params)`` tuple so caller can cache the
+        adapted parameters.  If ``warmup_params`` is provided
+        (subsequent calls): returns just ``idata``.
 
     Raises
     ------
@@ -2057,20 +2091,23 @@ def fit_batch_hierarchical(
             var_names = ["omega_2", "log_beta", "beta", "zeta"]
 
         # Run MCMC (data as traced args for JIT cache reuse)
-        positions, sample_stats, n_chains_actual = _run_blackjax_nuts(
-            logdensity_fn,
-            initial_position,
-            rng_key,
-            n_tune=n_tune,
-            n_draws=n_draws,
-            n_chains=n_chains,
-            target_accept=target_accept,
-            batched_logp_fn=logp_fn,
-            input_data=jax_input_data,
-            observed=jax_observed,
-            choices=jax_choices,
-            trial_mask=jax_trial_mask,
-            model_name=model_name,
+        positions, sample_stats, n_chains_actual, adapted_params = (
+            _run_blackjax_nuts(
+                logdensity_fn,
+                initial_position,
+                rng_key,
+                n_tune=n_tune,
+                n_draws=n_draws,
+                n_chains=n_chains,
+                target_accept=target_accept,
+                batched_logp_fn=logp_fn,
+                input_data=jax_input_data,
+                observed=jax_observed,
+                choices=jax_choices,
+                trial_mask=jax_trial_mask,
+                model_name=model_name,
+                warmup_params=warmup_params,
+            )
         )
 
         # Convert to ArviZ InferenceData
@@ -2083,6 +2120,12 @@ def fit_batch_hierarchical(
             participant_sessions,
             model_name,
         )
+
+        # Return adapted params so caller can skip warmup next time
+        if warmup_params is None:
+            # First call: caller should cache adapted_params
+            return idata, adapted_params
+        return idata
 
     else:
         # ==============================================================
