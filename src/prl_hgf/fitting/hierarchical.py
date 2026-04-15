@@ -868,18 +868,26 @@ def _run_blackjax_nuts(
     n_draws: int = 1000,
     n_chains: int = 4,
     target_accept: float = 0.95,
+    batched_logp_fn=None,  # noqa: ANN001
+    input_data: jnp.ndarray | None = None,
+    observed: jnp.ndarray | None = None,
+    choices: jnp.ndarray | None = None,
+    trial_mask: jnp.ndarray | None = None,
+    model_name: str = "hgf_3level",
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int]:
     """Run BlackJAX NUTS with window_adaptation warmup and lax.scan sampling.
 
-    Performs a single warmup phase to adapt step size and mass matrix,
-    then replicates the adapted state across chains.  Uses ``jax.pmap``
-    for multi-GPU (one chain per device) or ``jax.vmap`` on a single
-    device.
+    The warmup phase uses the closure-based ``logdensity_fn`` from
+    :func:`_build_log_posterior` (runs once, no cache benefit needed).
+    The sampling phase uses :func:`_build_sample_loop` to pass data
+    arrays as traced JIT arguments, enabling persistent XLA compilation
+    cache hits across power-sweep iterations with same-shape data.
 
     Parameters
     ----------
     logdensity_fn : callable
         ``dict -> scalar`` log-posterior from :func:`_build_log_posterior`.
+        Used for warmup only.
     initial_position : dict[str, jnp.ndarray]
         Starting values for each parameter.  Each value has shape ``(P,)``.
     rng_key : jnp.ndarray
@@ -892,6 +900,21 @@ def _run_blackjax_nuts(
         Number of MCMC chains.  Default ``4``.
     target_accept : float, optional
         Target acceptance rate for NUTS.  Default ``0.95``.
+    batched_logp_fn : callable or None, optional
+        Pure JAX batched logp from :func:`build_logp_fn_batched`.  Required
+        for the traced-arg sampling loop.  If ``None``, falls back to the
+        closure-based chain runners.
+    input_data : jnp.ndarray or None, optional
+        Float reward-value arrays, shape ``(P, n_trials, 3)``.
+    observed : jnp.ndarray or None, optional
+        Binary observed masks, shape ``(P, n_trials, 3)``.
+    choices : jnp.ndarray or None, optional
+        Chosen cue indices, shape ``(P, n_trials)``.
+    trial_mask : jnp.ndarray or None, optional
+        Binary trial mask, shape ``(P, n_trials)``.
+    model_name : str, optional
+        ``"hgf_2level"`` or ``"hgf_3level"`` (default).  Controls prior
+        structure inside the traced-arg sampling loop.
 
     Returns
     -------
@@ -908,7 +931,7 @@ def _run_blackjax_nuts(
 
     rng_key, warmup_key, sample_key = jax.random.split(rng_key, 3)
 
-    # Phase 1: Window adaptation (single warmup)
+    # Phase 1: Window adaptation (single warmup, closure-based)
     warmup = blackjax.window_adaptation(
         blackjax.nuts,
         logdensity_fn,
@@ -921,15 +944,68 @@ def _run_blackjax_nuts(
         num_steps=n_tune,
     )
 
-    # Phase 2: Build NUTS kernel with adapted parameters
-    nuts = blackjax.nuts(logdensity_fn, **warmup_params)
-
-    # Phase 3: Determine chain strategy
+    # Phase 2: Determine chain strategy
     n_devices = jax.device_count()
     use_pmap = n_devices >= n_chains
 
+    # Phase 3: Sampling with traced-arg sample loop (or legacy fallback)
+    _has_traced_args = (
+        batched_logp_fn is not None
+        and input_data is not None
+        and observed is not None
+        and choices is not None
+        and trial_mask is not None
+    )
+
+    if _has_traced_args:
+        # Traced-arg path: data flows as JIT arguments for cache reuse
+        sample_loop = _build_sample_loop(
+            batched_logp_fn,
+            model_name,
+            n_chains,
+            n_draws,
+            use_pmap,
+        )
+
+        all_states, all_infos = sample_loop(
+            warmup_state,
+            warmup_params,
+            sample_key,
+            input_data,
+            observed,
+            choices,
+            trial_mask,
+        )
+
+        # Post-process: convert JAX arrays to numpy
+        if use_pmap:
+            # pmap: (n_chains, n_draws, P) -- already correct layout
+            positions_dict = {k: np.asarray(v) for k, v in all_states.position.items()}
+            stats_dict = {
+                "diverging": np.asarray(all_infos.is_divergent),
+                "acceptance_rate": np.asarray(all_infos.acceptance_rate),
+            }
+        else:
+            # vmap: (n_draws, n_chains, P) -> (n_chains, n_draws, P)
+            positions_dict = {
+                k: np.asarray(jnp.transpose(v, (1, 0, 2)))
+                for k, v in all_states.position.items()
+            }
+            stats_dict = {
+                "diverging": np.asarray(
+                    jnp.transpose(all_infos.is_divergent, (1, 0)),
+                ),
+                "acceptance_rate": np.asarray(
+                    jnp.transpose(all_infos.acceptance_rate, (1, 0)),
+                ),
+            }
+
+        return positions_dict, stats_dict, n_chains
+
+    # Legacy fallback: closure-based chain runners
+    nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+
     if use_pmap:
-        # Multi-GPU: one chain per device via pmap
         positions, stats, n_actual = _run_pmap_chains(
             nuts,
             warmup_state,
@@ -938,7 +1014,6 @@ def _run_blackjax_nuts(
             n_chains,
         )
     else:
-        # Single GPU: vectorize chains via vmap
         positions, stats, n_actual = _run_vmap_chains(
             nuts,
             warmup_state,
@@ -1095,6 +1170,239 @@ def _run_pmap_chains(
     }
 
     return positions_dict, stats_dict, n_chains
+
+
+def _build_sample_loop(
+    batched_logp_fn,  # noqa: ANN001
+    model_name: str,
+    n_chains: int,
+    n_draws: int,
+    use_pmap: bool,
+):  # noqa: ANN205
+    """Build a JIT'd sampling function where data flows as traced arguments.
+
+    This factory solves the XLA persistent compilation cache problem: when
+    data arrays are captured in a closure, they become HLO constants.
+    Different data values produce different HLO hashes, causing full
+    recompilation (~1600s) on every power-sweep iteration even when shapes
+    are identical.
+
+    By making data arrays explicit function arguments, XLA traces them as
+    shape-dependent placeholders.  Same shapes produce the same HLO hash,
+    enabling persistent cache hits across iterations.
+
+    The warmup phase (which runs once per call) still uses closure-based
+    ``logdensity_fn`` from :func:`_build_log_posterior` -- no cache benefit
+    is needed there.  Only the sampling phase (which we want to cache
+    across power-sweep calls) uses the traced-arg pattern.
+
+    Parameters
+    ----------
+    batched_logp_fn : callable
+        Pure JAX batched logp from :func:`build_logp_fn_batched`.  Closes
+        over ``base_attrs``, ``scan_fn``, ``n_trials`` (static per model
+        shape -- safe to capture).
+    model_name : str
+        ``"hgf_2level"`` or ``"hgf_3level"``.  Controls prior structure.
+    n_chains : int
+        Number of MCMC chains.
+    n_draws : int
+        Number of posterior draws per chain.
+    use_pmap : bool
+        If ``True``, use ``jax.pmap`` for multi-GPU chain parallelism.
+        If ``False``, use ``jax.vmap`` on a single device with
+        ``@jax.jit``.
+
+    Returns
+    -------
+    sample_loop : callable
+        ``(warmup_state, warmup_params, sample_key, input_data, observed,
+        choices, trial_mask) -> (all_states, all_infos)`` where data
+        arrays are traced JIT arguments (not closure constants).
+    """
+    import blackjax
+    import numpyro.distributions as dist
+
+    is_3level = model_name == "hgf_3level"
+
+    # Prior distributions -- parameterless JAX objects, safe to capture
+    prior_omega_2 = dist.TruncatedNormal(loc=-3.0, scale=2.0, high=0.0)
+    prior_log_beta = dist.Normal(0.0, 1.5)
+    prior_zeta = dist.Normal(0.0, 2.0)
+    if is_3level:
+        prior_omega_3 = dist.TruncatedNormal(
+            loc=-6.0,
+            scale=2.0,
+            high=0.0,
+        )
+        prior_kappa = dist.TruncatedNormal(
+            loc=1.0,
+            scale=0.5,
+            low=0.01,
+            high=2.0,
+        )
+
+    if use_pmap:
+        # pmap path: pmap handles its own JIT compilation
+        def sample_loop_pmap(
+            warmup_state,  # noqa: ANN001
+            warmup_params: dict,
+            sample_key: jnp.ndarray,
+            input_data: jnp.ndarray,
+            observed: jnp.ndarray,
+            choices: jnp.ndarray,
+            trial_mask: jnp.ndarray,
+        ) -> tuple:
+            # Reconstruct logdensity_fn with traced data args
+            def logdensity_fn(params: dict[str, jnp.ndarray]) -> jnp.ndarray:
+                omega_2 = params["omega_2"]
+                log_beta = params["log_beta"]
+                beta = jnp.exp(log_beta)
+                zeta = params["zeta"]
+                prior_lp = jnp.sum(prior_omega_2.log_prob(omega_2))
+                prior_lp = prior_lp + jnp.sum(
+                    prior_log_beta.log_prob(log_beta),
+                )
+                prior_lp = prior_lp + jnp.sum(
+                    prior_zeta.log_prob(zeta),
+                )
+                if is_3level:
+                    omega_3 = params["omega_3"]
+                    kappa = params["kappa"]
+                    prior_lp = prior_lp + jnp.sum(
+                        prior_omega_3.log_prob(omega_3),
+                    )
+                    prior_lp = prior_lp + jnp.sum(
+                        prior_kappa.log_prob(kappa),
+                    )
+                    likelihood_lp = batched_logp_fn(
+                        omega_2,
+                        omega_3,
+                        kappa,
+                        beta,
+                        zeta,
+                        input_data,
+                        observed,
+                        choices,
+                        trial_mask,
+                    )
+                else:
+                    likelihood_lp = batched_logp_fn(
+                        omega_2,
+                        beta,
+                        zeta,
+                        input_data,
+                        observed,
+                        choices,
+                        trial_mask,
+                    )
+                return prior_lp + likelihood_lp
+
+            nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+            chain_keys = jax.random.split(sample_key, n_chains)
+
+            replicated_state = jax.tree_util.tree_map(
+                lambda x: jnp.broadcast_to(x, (n_chains, *x.shape)),
+                warmup_state,
+            )
+
+            def _sample_one_chain(
+                rng_key: jnp.ndarray,
+                state,  # noqa: ANN001
+            ) -> tuple:
+                @jax.jit
+                def _one_step(s, k):  # noqa: ANN001
+                    new_s, info = nuts.step(k, s)
+                    return new_s, (new_s, info)
+
+                keys = jax.random.split(rng_key, n_draws)
+                _, (states, infos) = lax.scan(_one_step, state, keys)
+                return states, infos
+
+            all_states, all_infos = jax.pmap(_sample_one_chain)(
+                chain_keys,
+                replicated_state,
+            )
+            return all_states, all_infos
+
+        return sample_loop_pmap
+
+    # vmap path: wrap with @jax.jit for persistent cache
+    @jax.jit
+    def sample_loop_vmap(
+        warmup_state,  # noqa: ANN001
+        warmup_params: dict,
+        sample_key: jnp.ndarray,
+        input_data: jnp.ndarray,
+        observed: jnp.ndarray,
+        choices: jnp.ndarray,
+        trial_mask: jnp.ndarray,
+    ) -> tuple:
+        # Reconstruct logdensity_fn with traced data args
+        def logdensity_fn(params: dict[str, jnp.ndarray]) -> jnp.ndarray:
+            omega_2 = params["omega_2"]
+            log_beta = params["log_beta"]
+            beta = jnp.exp(log_beta)
+            zeta = params["zeta"]
+            prior_lp = jnp.sum(prior_omega_2.log_prob(omega_2))
+            prior_lp = prior_lp + jnp.sum(
+                prior_log_beta.log_prob(log_beta),
+            )
+            prior_lp = prior_lp + jnp.sum(prior_zeta.log_prob(zeta))
+            if is_3level:
+                omega_3 = params["omega_3"]
+                kappa = params["kappa"]
+                prior_lp = prior_lp + jnp.sum(
+                    prior_omega_3.log_prob(omega_3),
+                )
+                prior_lp = prior_lp + jnp.sum(
+                    prior_kappa.log_prob(kappa),
+                )
+                likelihood_lp = batched_logp_fn(
+                    omega_2,
+                    omega_3,
+                    kappa,
+                    beta,
+                    zeta,
+                    input_data,
+                    observed,
+                    choices,
+                    trial_mask,
+                )
+            else:
+                likelihood_lp = batched_logp_fn(
+                    omega_2,
+                    beta,
+                    zeta,
+                    input_data,
+                    observed,
+                    choices,
+                    trial_mask,
+                )
+            return prior_lp + likelihood_lp
+
+        nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+        chain_keys = jax.random.split(sample_key, n_chains)
+
+        replicated_state = jax.tree_util.tree_map(
+            lambda x: jnp.broadcast_to(x, (n_chains, *x.shape)),
+            warmup_state,
+        )
+
+        def _one_step(states, rng_key):  # noqa: ANN001
+            keys = jax.random.split(rng_key, n_chains)
+            new_states, infos = jax.vmap(nuts.step)(keys, states)
+            return new_states, (new_states, infos)
+
+        draw_keys = jax.random.split(chain_keys[0], n_draws)
+        _, (all_states, all_infos) = lax.scan(
+            _one_step,
+            replicated_state,
+            draw_keys,
+        )
+        return all_states, all_infos
+
+    return sample_loop_vmap
 
 
 def _samples_to_idata(
@@ -1748,7 +2056,7 @@ def fit_batch_hierarchical(
             }
             var_names = ["omega_2", "log_beta", "beta", "zeta"]
 
-        # Run MCMC
+        # Run MCMC (data as traced args for JIT cache reuse)
         positions, sample_stats, n_chains_actual = _run_blackjax_nuts(
             logdensity_fn,
             initial_position,
@@ -1757,6 +2065,12 @@ def fit_batch_hierarchical(
             n_draws=n_draws,
             n_chains=n_chains,
             target_accept=target_accept,
+            batched_logp_fn=logp_fn,
+            input_data=jax_input_data,
+            observed=jax_observed,
+            choices=jax_choices,
+            trial_mask=jax_trial_mask,
+            model_name=model_name,
         )
 
         # Convert to ArviZ InferenceData
@@ -1841,6 +2155,7 @@ def fit_batch_hierarchical(
 
 
 __all__ = [
+    "_build_sample_loop",
     "build_logp_fn_batched",
     "build_logp_ops_batched",
     "build_pymc_model_batched",
