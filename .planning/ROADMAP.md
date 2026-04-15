@@ -214,8 +214,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md -- Core BlackJAX implementation: _build_log_posterior, _run_blackjax_nuts, _samples_to_idata, rewrite fit_batch_hierarchical (BJAX-01, BJAX-02, BJAX-03, BJAX-04, BJAX-05)
-- [ ] 17-02-PLAN.md -- Validation tests for BlackJAX path, SLURM script updates for multi-GPU pmap (BJAX-06, BJAX-07)
+- [x] 17-01-PLAN.md -- Core BlackJAX implementation: _build_log_posterior, _run_blackjax_nuts, _samples_to_idata, rewrite fit_batch_hierarchical (BJAX-01, BJAX-02, BJAX-03, BJAX-04, BJAX-05)
+- [x] 17-02-PLAN.md -- Validation tests for BlackJAX path, SLURM script updates for multi-GPU pmap (BJAX-06, BJAX-07)
 
 ---
 
@@ -239,4 +239,4 @@ Plans:
 | 14 - Integration + GPU Benchmark | v1.2 | 0/3 | Pending | -- |
 | 15 - Production Run + Results | v1.2 | 0/2 | Pending | -- |
 | 16 - NumPyro Direct + CUDA Fix | v1.2 | 2/2 | Complete | 2026-04-13 |
-| 17 - BlackJAX NUTS Sampler | v1.2 | 0/2 | Planned | -- |
+| 17 - BlackJAX NUTS Sampler | v1.2 | 2/2 | Complete | 2026-04-15 |
