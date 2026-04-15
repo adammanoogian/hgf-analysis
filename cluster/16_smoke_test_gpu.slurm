@@ -1,12 +1,17 @@
 #!/bin/bash
 # =============================================================================
-# SLURM Job: Phase 16 — GPU Smoke Test (JIT compilation diagnostics)
+# SLURM Job: Phase 16/17 — GPU Smoke Test (BlackJAX NUTS + JIT diagnostics)
 # =============================================================================
 # Lightweight test that verifies:
 #   1. CUDA/PTX version match (XLA parallel compilation enabled)
 #   2. Simulation vmap compiles on GPU
-#   3. Cold JIT timing for numpyro-direct MCMC
+#   3. Cold JIT timing for BlackJAX NUTS MCMC (default sampler since Phase 17)
 #   4. Warm JIT cache reuse (same shape, different data)
+#
+# BlackJAX compiles the NUTS step function once via jax.jit and reuses it
+# across all MCMC steps — no per-call JIT recompilation (unlike NumPyro).
+# This smoke test exercises the BlackJAX path by calling
+# fit_batch_hierarchical (which defaults to sampler="blackjax").
 #
 # Runs at N=5/group (30 participant-sessions) with minimal MCMC
 # (2 chains, 10 draws, 10 tune).  Should complete in <1 hour if
@@ -141,9 +146,12 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 # =============================================================================
 # Verify GPU
 # =============================================================================
+# Note: BlackJAX supports pmap for multi-GPU chain parallelism, but this
+# smoke test uses 1 GPU (--gres=gpu:1) to validate compilation and cache
+# reuse.  For multi-GPU pmap, see 08_power_sweep.slurm comments.
 echo ""
 echo "============================================================"
-echo "Phase 16 GPU Smoke Test"
+echo "Phase 16/17 GPU Smoke Test (BlackJAX NUTS)"
 echo "============================================================"
 echo "Job ID:  ${SLURM_JOB_ID:-local}"
 echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
@@ -175,10 +183,14 @@ python scripts/08_run_power_iteration.py \
 
 EXIT_CODE=$?
 
+# Note: Smoke test gate thresholds (cold JIT < 600s, cache speedup > 3x,
+# warm JIT < 120s) were originally set for the NumPyro sampler.  BlackJAX
+# should be equal or faster — these thresholds may be tightened after
+# BlackJAX-specific benchmarking confirms typical timings on L40S.
 echo ""
 echo "============================================================"
 if [[ $EXIT_CODE -eq 0 ]]; then
-    echo "SMOKE TEST PASSED"
+    echo "SMOKE TEST PASSED (BlackJAX NUTS)"
     echo "  JIT compilation and cache reuse are working."
     echo "  Safe to proceed to full benchmark (14_benchmark_gpu.slurm)."
 else

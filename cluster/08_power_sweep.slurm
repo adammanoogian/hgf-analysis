@@ -6,6 +6,16 @@
 # JAX compiles the HGF model once per chunk, then reuses the compiled
 # trace for all iterations — no redundant JIT overhead.
 #
+# Sampler: BlackJAX NUTS (default since Phase 17).  fit_batch_hierarchical
+# defaults to sampler="blackjax" which compiles the NUTS step function once
+# via jax.jit and reuses it for all MCMC steps.  Set SAMPLER=numpyro to
+# use the NumPyro fallback path.
+#
+# GPU strategy: Currently uses gpu:1 (BlackJAX vmap chains on single GPU).
+# For pmap chain parallelism (one chain per GPU), change to --gres=gpu:4
+# and set --fit-chains 4.  BlackJAX pmap is safe on L40S (no psum
+# operations).  Requires sufficient GPU quota per array task.
+#
 # Default: 3 chunks (one per effect size), ~1400 iterations each.
 # Override n_chunks in configs/prl_analysis.yaml to change.
 #
@@ -18,6 +28,9 @@
 #
 #   # Override chunk count at submission (must match YAML n_chunks):
 #   sbatch --array=0-4 cluster/08_power_sweep.slurm
+#
+#   # Multi-GPU pmap (4 chains across 4 GPUs):
+#   sbatch --gres=gpu:4 cluster/08_power_sweep.slurm
 # =============================================================================
 
 #SBATCH --job-name=prl_power
@@ -25,6 +38,8 @@
 #SBATCH --error=cluster/logs/power_%A_%a.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=128G
+# BlackJAX vmap fallback on single GPU (default).  For pmap chain
+# parallelism, change to gpu:4 if GPU quota allows.
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
@@ -182,7 +197,7 @@ python scripts/08_run_power_iteration.py \
     --fit-chains 4 \
     --fit-draws 500 \
     --fit-tune 500 \
-    --sampler "${SAMPLER:-numpyro}" \
+    --sampler "${SAMPLER:-blackjax}" \
     ${MODE_FLAG}
 
 EXIT_CODE=$?
