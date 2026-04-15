@@ -117,7 +117,11 @@ mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
 # XLA autotuning cache (persist autotuning results across jobs)
 _XLA_AUTOTUNE_DIR="/scratch/${_PROJECT}/${USER}/.xla_autotune_cache"
 mkdir -p "$_XLA_AUTOTUNE_DIR" 2>/dev/null
-export XLA_FLAGS="--xla_gpu_dump_autotune_results_to=${_XLA_AUTOTUNE_DIR}/results.pb --xla_gpu_load_autotune_results_from=${_XLA_AUTOTUNE_DIR}/results.pb"
+_XLA_AUTOTUNE_FILE="${_XLA_AUTOTUNE_DIR}/results.pb"
+export XLA_FLAGS="--xla_gpu_dump_autotune_results_to=${_XLA_AUTOTUNE_FILE}"
+if [[ -f "$_XLA_AUTOTUNE_FILE" ]]; then
+    export XLA_FLAGS="${XLA_FLAGS} --xla_gpu_load_autotune_results_from=${_XLA_AUTOTUNE_FILE}"
+fi
 
 # Show actual VRAM usage, not preallocated pool
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
