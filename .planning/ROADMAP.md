@@ -198,6 +198,25 @@ Plans:
 - [x] 16-01-PLAN.md -- Core numpyro refactor: build_logp_fn_batched, numpyro model functions, rewrite fit_batch_hierarchical (NPRO-01, NPRO-02)
 - [x] 16-02-PLAN.md -- Caller updates, CUDA environment check in SLURM scripts, validation tests (NPRO-03, NPRO-04, NPRO-05, NPRO-06)
 
+### Phase 17: BlackJAX NUTS Sampler
+
+**Goal**: Replace NumPyro MCMC with BlackJAX NUTS for the fitting pipeline, eliminating the ~1800s per-call JIT recompilation caused by NumPyro's internal function-object recreation. BlackJAX compiles the NUTS kernel once via `jax.jit`, then reuses it across all MCMC steps and power-sweep iterations. Pure JAX log-posterior (priors + batched HGF logp) replaces the numpyro.sample/factor pattern. pyhgf `scan_fn` usage unchanged. Multi-GPU chain parallelism via `jax.pmap` restored (safe with BlackJAX since it avoids the NumPyro pmap/psum codepath that triggers the L40S bug JAX #31626).
+**Depends on**: Phase 16 (numpyro-direct path established; batched logp function exists)
+**Requirements**: BJAX-01, BJAX-02, BJAX-03, BJAX-04, BJAX-05, BJAX-06, BJAX-07
+**Success Criteria** (what must be TRUE):
+  1. `fit_batch_hierarchical` uses `blackjax.nuts` with `blackjax.window_adaptation` for warmup; compiles the NUTS step function exactly once per shape via `jax.jit`
+  2. Cold JIT < 120s on L40S GPU (vs ~1800s with NumPyro); warm JIT < 5s (compiled kernel reuse across power-sweep iterations with same shapes)
+  3. Pure JAX log-posterior function combines truncated-normal/normal priors with `batched_logp_fn`; no NumPyro dependency in the fitting path
+  4. Multi-GPU support: `jax.pmap` across available GPUs for chain parallelism (1 chain per device); falls back to `jax.vmap` on single GPU
+  5. ArviZ `InferenceData` output with participant coords preserved; downstream analysis scripts unchanged
+  6. VALID-01/02/03 tests pass with BlackJAX path (posterior equivalence within MCSE vs numpyro-direct baseline)
+  7. SLURM scripts updated; smoke test passes all 3 gates (cold JIT < 600s, cache speedup > 3x, warm JIT < 120s)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md -- Core BlackJAX implementation: _build_log_posterior, _run_blackjax_nuts, _samples_to_idata, rewrite fit_batch_hierarchical (BJAX-01, BJAX-02, BJAX-03, BJAX-04, BJAX-05)
+- [ ] 17-02-PLAN.md -- Validation tests for BlackJAX path, SLURM script updates for multi-GPU pmap (BJAX-06, BJAX-07)
+
 ---
 
 ## Progress
@@ -217,6 +236,7 @@ Plans:
 | 11 - Aggregation + Publication | v1.1 | 3/3 | Complete | 2026-04-07 |
 | 12 - Batched Hierarchical JAX Logp | v1.2 | 4/4 | Complete | 2026-04-12 |
 | 13 - JAX-Native Cohort Simulation | v1.2 | 3/3 | Complete | 2026-04-12 |
-| 14 - Integration + GPU Benchmark | v1.2 | 0/3 | Pending | — |
-| 15 - Production Run + Results | v1.2 | 0/2 | Pending | — |
+| 14 - Integration + GPU Benchmark | v1.2 | 0/3 | Pending | -- |
+| 15 - Production Run + Results | v1.2 | 0/2 | Pending | -- |
 | 16 - NumPyro Direct + CUDA Fix | v1.2 | 2/2 | Complete | 2026-04-13 |
+| 17 - BlackJAX NUTS Sampler | v1.2 | 0/2 | Planned | -- |
