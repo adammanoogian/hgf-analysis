@@ -1,0 +1,28 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 12.8
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 16 GPU Smoke Test
+============================================================
+Job ID:  54832127
+Node:    m3a118
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/m3a118
+Start:   Wed Apr 15 03:09:49 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+
+============================================================
+SMOKE TEST FAILED (exit code: 1)
+  Check: cluster/logs/smoke16_54832127.err
+  Most likely fix: pip install -r cluster/requirements-gpu.txt
+
+End: Wed Apr 15 03:10:46 PM AEST 2026
+============================================================

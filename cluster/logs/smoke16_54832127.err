@@ -1,0 +1,51 @@
+Finished tracing + transforming convert_element_type for pjit in 0.000384808 sec
+Compiling convert_element_type with global shapes and types [ShapedArray(int64[])]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.135685682 sec
+jax.errors.SimplifiedTraceback: For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/scripts/08_run_power_iteration.py", line 44, in <module>
+    from prl_hgf.power.config import load_power_config
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/power/__init__.py", line 31, in <module>
+    from prl_hgf.power.iteration import (
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/power/iteration.py", line 45, in <module>
+    from prl_hgf.simulation.batch import simulate_batch
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/simulation/__init__.py", line 23, in <module>
+    from prl_hgf.simulation.agent import (
+  File "/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/simulation/agent.py", line 25, in <module>
+    from pyhgf.model import Network
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/pyhgf/model/__init__.py", line 1, in <module>
+    from .add_nodes import (
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/pyhgf/model/add_nodes.py", line 12, in <module>
+    from pyhgf.utils import fill_categorical_state_node
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/pyhgf/utils/__init__.py", line 6, in <module>
+    from .get_update_sequence import get_update_sequence
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/pyhgf/utils/get_update_sequence.py", line 24, in <module>
+    from pyhgf.updates.prediction_error.dirichlet import dirichlet_node_prediction_error
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/pyhgf/updates/prediction_error/dirichlet.py", line 290, in <module>
+    key: KeyArray = random.key(42),
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/random.py", line 213, in key
+    return _key('key', seed, impl)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/random.py", line 194, in _key
+    return prng.random_seed(seed, impl=impl)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/prng.py", line 533, in random_seed
+    seeds_arr = jnp.asarray(np.int64(seeds))
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/numpy/lax_numpy.py", line 3568, in asarray
+    return array(a, dtype=dtype, copy=bool(copy), order=order, device=device)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/numpy/lax_numpy.py", line 3459, in array
+    out_array: Array = lax_internal._convert_element_type(
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/lax/lax.py", line 566, in _convert_element_type
+    return convert_element_type_p.bind(
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/lax/lax.py", line 2559, in _convert_element_type_bind
+    operand = core.Primitive.bind(convert_element_type_p, operand,
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/core.py", line 429, in bind
+    return self.bind_with_trace(find_top_trace(args), args, params)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/core.py", line 433, in bind_with_trace
+    out = trace.process_primitive(self, map(trace.full_raise, args), params)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/core.py", line 939, in process_primitive
+    return primitive.impl(*tracers, **params)
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py", line 87, in apply_primitive
+    outs = fun(*args)
+jaxlib.xla_extension.XlaRuntimeError: FAILED_PRECONDITION: Autotune results file does not exist: /scratch/fc37/aman0087/.xla_autotune_cache/results.pb
