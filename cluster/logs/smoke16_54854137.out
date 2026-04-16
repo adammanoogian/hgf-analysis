@@ -123,3 +123,8 @@ End: Thu Apr 16 04:32:48 PM AEST 2026
 ============================================================
 
 Pushing smoke test results to git...
+[main 543a920] smoke test blackjax run (job 54854137)
+ 3 files changed, 5634 insertions(+), 32 deletions(-)
+ create mode 100644 cluster/logs/smoke16_54854137.err
+ create mode 100644 cluster/logs/smoke16_54854137.out
+Pushed smoke test results to origin/main
