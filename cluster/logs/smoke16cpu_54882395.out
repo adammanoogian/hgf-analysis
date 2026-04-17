@@ -2,12 +2,13 @@
 ============================================================
 Phase 16/17 CPU Smoke Test (BlackJAX NUTS)
 ============================================================
-Job ID:    54877140
-Node:      m3v115
+Job ID:    54882395
+Node:      m3e106
 Partition: comp (CPU only)
-Precision: fp64  (PRL_ENABLE_X64=1)
-JAX cache: /scratch/fc37/aman0087/.jax_cache_cpu/m3v115
-Start:     Fri Apr 17 05:46:39 PM AEST 2026
+Precision: fp32  (PRL_ENABLE_X64=0)
+MCMC:      tune=500 draws=500 chains=2 N/group=5
+JAX cache: /scratch/fc37/aman0087/.jax_cache_cpu/m3e106
+Start:     Fri Apr 17 08:40:16 PM AEST 2026
 ============================================================
 
 JAX devices: [CpuDevice(id=0)]
@@ -25,7 +26,7 @@ JAX devices (1 total, 0 GPU):
   WARNING: ptxas not found — XLA parallel compilation disabled
 
   XLA/JAX environment:
-    JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_cpu/m3v115
+    JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_cpu/m3e106
     JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES = 0
     JAX_LOG_COMPILES = 1
     JAX_PLATFORMS = cpu
@@ -33,10 +34,10 @@ JAX devices (1 total, 0 GPU):
     XLA_PYTHON_CLIENT_PREALLOCATE = (unset)
     XLA_PYTHON_CLIENT_MEM_FRACTION = (unset)
     CUDA_VISIBLE_DEVICES = (unset)
-    JAX_ENABLE_X64 = 1
+    JAX_ENABLE_X64 = (unset)
 
   JAX cache (before):
-    dir:    /scratch/fc37/aman0087/.jax_cache_cpu/m3v115
+    dir:    /scratch/fc37/aman0087/.jax_cache_cpu/m3e106
     exists: True
     files:  4
     size:   0.0 MB
@@ -47,7 +48,7 @@ Smoke test config:
   N per group:            5
   Participant-sessions:   30
   Chains:                 2
-  Draws/tune:             10/10
+  Draws/tune:             500/500
   Model:                  hgf_3level
   GPUs available:         0
   Chain method:           vectorized (jit_model_args=True)
@@ -55,34 +56,34 @@ Smoke test config:
 Step 1: Simulate cohort (N=5/group)...
 Collecting participant-session parameters and trial sequences…
 Collection done in 0.1s. Running JAX vmap…
-JAX vmap completed in 7.3s.
-  Simulation: 9.15s
+JAX vmap completed in 7.8s.
+  Simulation: 9.76s
 
 Step 2: Cold JIT (first MCMC call — includes XLA compilation)...
-  Cold JIT: 198.63s
+  Cold JIT: 11687.95s
   NUTS stats (cold):
-    integration_steps: mean=320 p50=244 p95=1023 max=1023
-    trajectory_expansions: mean=7.7 max=10 (10 = hit max_tree_depth cap)
-    acceptance_rate: mean=0.214  divergence_rate: 0.800
-  Cache delta: +378 files, +3.0 MB
+    integration_steps: mean=1023 p50=1023 p95=1023 max=1023
+    trajectory_expansions: mean=10.0 max=10 (10 = hit max_tree_depth cap)
+    acceptance_rate: mean=0.921  divergence_rate: 0.000
+  Cache delta: +362 files, +2.9 MB
 
 Step 3: Warm JIT (same shape, different seed — tests cache reuse)...
 Collecting participant-session parameters and trial sequences…
-Collection done in 0.1s. Running JAX vmap…
-JAX vmap completed in 0.5s.
-  Warm JIT: 196.76s (warmup skipped via warmup_params)
+Collection done in 0.3s. Running JAX vmap…
+JAX vmap completed in 3.9s.
+  Warm JIT: 7974.84s (warmup skipped via warmup_params)
   NUTS stats (warm1):
     integration_steps: mean=1023 p50=1023 p95=1023 max=1023
     trajectory_expansions: mean=10.0 max=10 (10 = hit max_tree_depth cap)
     acceptance_rate: mean=1.000  divergence_rate: 0.000
 
 Step 3b: Warm JIT #2 (pure execute — trace cache reuse)...
-  Warm JIT #2: 203.07s
+  Warm JIT #2: 8049.49s
   NUTS stats (warm2):
-    integration_steps: mean=997 p50=1023 p95=1023 max=1023
-    trajectory_expansions: mean=9.9 max=10 (10 = hit max_tree_depth cap)
+    integration_steps: mean=1023 p50=1023 p95=1023 max=1023
+    trajectory_expansions: mean=10.0 max=10 (10 = hit max_tree_depth cap)
     acceptance_rate: mean=1.000  divergence_rate: 0.000
-  warm1 - warm2 = -6.31s (estimate of Python retrace + XLA compile cost per call)
+  warm1 - warm2 = -74.65s (estimate of Python retrace + XLA compile cost per call)
   warm2 ≈ pure sampling execute time
   Cache delta: +0 files, +0.0 MB
   OK: no new cache entries (cache hit)
@@ -93,19 +94,21 @@ SMOKE TEST RESULTS
   GPU:                none (CPU only)
   ptxas:              not found
   Chain method:       vectorized
-  Sim vmap:           9.15s
-  Cold JIT:           198.63s
-  Warm JIT:           196.76s
-  Cache speedup:      1.0x
+  Sim vmap:           9.76s
+  Cold JIT:           11687.95s
+  Warm JIT:           7974.84s
+  Cache speedup:      1.5x
   Cache files before: 4
-  Cache files after:  382
+  Cache files after:  366
 
 GATES:
-  Cold JIT < 600s:    PASS (199s)
-  Cache speedup > 3x: FAIL (1.0x)
-  Warm JIT < 120s:    FAIL (197s)
+  Cold JIT < 600s:    FAIL (11688s)
+  Cache speedup > 3x: FAIL (1.5x)
+  Warm JIT < 120s:    FAIL (7975s)
   Overall:            FAIL
 
+  FIX: Cold JIT too slow. Check CUDA/PTX version match:
+       pip install -r cluster/requirements-gpu.txt
   FIX: XLA cache not reusing compiled kernels.
        Verify JAX_COMPILATION_CACHE_DIR is set and writable.
        Verify data is passed as dynamic args (not closure).
@@ -117,18 +120,12 @@ GATES:
 ============================================================
 
 Results saved to: /fs04/fc37/adam/projects/psilocybin-prl-analyses/results/power/smoke_test.json
-Renamed results → results/power/smoke_test_cpu_fp64.json
+Renamed results → results/power/smoke_test_cpu_fp32_tune500_draws500.json
 
 ============================================================
-CPU SMOKE TEST FAILED (exit code: 1, fp64)
-  Check: cluster/logs/smoke16cpu_54877140.err
-End:       Fri Apr 17 05:57:56 PM AEST 2026
+CPU SMOKE TEST FAILED (exit code: 1, fp32)
+  Check: cluster/logs/smoke16cpu_54882395.err
+End:       Sat Apr 18 04:24:10 AM AEST 2026
 ============================================================
 
 Pushing CPU smoke test results to git...
-[main ade7c79] smoke test cpu blackjax run fp64 (job 54877140)
- 3 files changed, 5732 insertions(+)
- create mode 100644 cluster/logs/smoke16cpu_54877140.err
- create mode 100644 cluster/logs/smoke16cpu_54877140.out
- create mode 100644 results/power/smoke_test_cpu_fp64.json
-Pushed CPU smoke test results to origin/main
