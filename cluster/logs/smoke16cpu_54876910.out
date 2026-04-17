@@ -1,0 +1,128 @@
+
+============================================================
+Phase 16/17 CPU Smoke Test (BlackJAX NUTS)
+============================================================
+Job ID:    54876910
+Node:      m3s114
+Partition: comp (CPU only)
+Precision: fp32  (PRL_ENABLE_X64=0)
+JAX cache: /scratch/fc37/aman0087/.jax_cache_cpu/m3s114
+Start:     Fri Apr 17 05:41:45 PM AEST 2026
+============================================================
+
+JAX devices: [CpuDevice(id=0)]
+jax_enable_x64 (pre-run): False
+
+============================================================
+SMOKE TEST MODE (JIT compilation diagnostics)
+============================================================
+
+JAX devices (1 total, 0 GPU):
+  TFRT_CPU_0
+  WARNING: No GPU detected — running on CPU.
+  nvidia-smi: unavailable
+
+  WARNING: ptxas not found — XLA parallel compilation disabled
+
+  XLA/JAX environment:
+    JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_cpu/m3s114
+    JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES = 0
+    JAX_LOG_COMPILES = 1
+    JAX_PLATFORMS = cpu
+    XLA_FLAGS = (unset)
+    XLA_PYTHON_CLIENT_PREALLOCATE = (unset)
+    XLA_PYTHON_CLIENT_MEM_FRACTION = (unset)
+    CUDA_VISIBLE_DEVICES = (unset)
+    JAX_ENABLE_X64 = (unset)
+
+  JAX cache (before):
+    dir:    /scratch/fc37/aman0087/.jax_cache_cpu/m3s114
+    exists: True
+    files:  4
+    size:   0.0 MB
+
+  JAX 0.4.31, jaxlib 0.4.31
+
+Smoke test config:
+  N per group:            5
+  Participant-sessions:   30
+  Chains:                 2
+  Draws/tune:             10/10
+  Model:                  hgf_3level
+  GPUs available:         0
+  Chain method:           vectorized (jit_model_args=True)
+
+Step 1: Simulate cohort (N=5/group)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.2s. Running JAX vmap…
+JAX vmap completed in 11.8s.
+  Simulation: 14.59s
+
+Step 2: Cold JIT (first MCMC call — includes XLA compilation)...
+  Cold JIT: 361.17s
+  NUTS stats (cold):
+    integration_steps: mean=554 p50=476 p95=1023 max=1023
+    trajectory_expansions: mean=8.2 max=10 (10 = hit max_tree_depth cap)
+    acceptance_rate: mean=0.008  divergence_rate: 0.550
+  Cache delta: +362 files, +2.8 MB
+
+Step 3: Warm JIT (same shape, different seed — tests cache reuse)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.3s. Running JAX vmap…
+JAX vmap completed in 1.0s.
+  Warm JIT: 257.49s (warmup skipped via warmup_params)
+  NUTS stats (warm1):
+    integration_steps: mean=943 p50=1023 p95=1023 max=1023
+    trajectory_expansions: mean=9.8 max=10 (10 = hit max_tree_depth cap)
+    acceptance_rate: mean=0.700  divergence_rate: 0.050
+
+Step 3b: Warm JIT #2 (pure execute — trace cache reuse)...
+  Warm JIT #2: 246.11s
+  NUTS stats (warm2):
+    integration_steps: mean=933 p50=1023 p95=1023 max=1023
+    trajectory_expansions: mean=9.8 max=10 (10 = hit max_tree_depth cap)
+    acceptance_rate: mean=1.000  divergence_rate: 0.000
+  warm1 - warm2 = 11.38s (estimate of Python retrace + XLA compile cost per call)
+  warm2 ≈ pure sampling execute time
+  Cache delta: +0 files, +0.0 MB
+  OK: no new cache entries (cache hit)
+
+============================================================
+SMOKE TEST RESULTS
+============================================================
+  GPU:                none (CPU only)
+  ptxas:              not found
+  Chain method:       vectorized
+  Sim vmap:           14.59s
+  Cold JIT:           361.17s
+  Warm JIT:           257.49s
+  Cache speedup:      1.4x
+  Cache files before: 4
+  Cache files after:  366
+
+GATES:
+  Cold JIT < 600s:    PASS (361s)
+  Cache speedup > 3x: FAIL (1.4x)
+  Warm JIT < 120s:    FAIL (257s)
+  Overall:            FAIL
+
+  FIX: XLA cache not reusing compiled kernels.
+       Verify JAX_COMPILATION_CACHE_DIR is set and writable.
+       Verify data is passed as dynamic args (not closure).
+       DIAGNOSTIC: no new cache entries from warm JIT —
+       cache hit occurred but compilation still slow.
+       This suggests the model itself is slow, not the cache.
+  FIX: Even cached JIT is slow. Check GPU memory pressure
+       and CUDA driver version.
+============================================================
+
+Results saved to: /fs04/fc37/adam/projects/psilocybin-prl-analyses/results/power/smoke_test.json
+Renamed results → results/power/smoke_test_cpu_fp32.json
+
+============================================================
+CPU SMOKE TEST FAILED (exit code: 1, fp32)
+  Check: cluster/logs/smoke16cpu_54876910.err
+End:       Fri Apr 17 05:58:22 PM AEST 2026
+============================================================
+
+Pushing CPU smoke test results to git...
