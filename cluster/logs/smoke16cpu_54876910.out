@@ -126,3 +126,9 @@ End:       Fri Apr 17 05:58:22 PM AEST 2026
 ============================================================
 
 Pushing CPU smoke test results to git...
+[main 8c0c6f0] smoke test cpu blackjax run fp32 (job 54876910)
+ 3 files changed, 4475 insertions(+)
+ create mode 100644 cluster/logs/smoke16cpu_54876910.err
+ create mode 100644 cluster/logs/smoke16cpu_54876910.out
+ create mode 100644 results/power/smoke_test_cpu_fp32.json
+Pushed CPU smoke test results to origin/main
