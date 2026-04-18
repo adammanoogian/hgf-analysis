@@ -21,7 +21,7 @@ provides:
 
 affects:
   - "18-06 validation (uses exported CSVs for scientific validation)"
-  - "dcm_pytorch HEART2ADAPT integration (v0.4+): consumes _trajectories.csv as stimulus input"
+  - "dcm_pytorch the consumer study integration (v0.4+): consumes _trajectories.csv as stimulus input"
   - "future PEB-lite export (deferred): will extend export_trajectories.py with WAIC/ΔWAIC columns"
 
 tech-stack:
@@ -167,7 +167,7 @@ No code deviations — plan executed as specified after Task 1 schema correction
 ## Next Phase Readiness
 
 - Phase 18-06 (validation): trajectory CSVs producible for any fitted subject; parameter summary CSVs ready for BFDA input.
-- dcm_pytorch HEART2ADAPT integration: `outcome_time_s` → `stimulus["times"]`; select any subset of HGF belief columns for `stimulus["values"][:, j]`. Bilinear B-matrix path confirmed live in v0.3.0.
+- dcm_pytorch the consumer study integration: `outcome_time_s` → `stimulus["times"]`; select any subset of HGF belief columns for `stimulus["values"][:, j]`. Bilinear B-matrix path confirmed live in v0.3.0.
 - Deferred: PEB covariate export (ΔWAIC/ΔF), stratified BMS, actual feeding into dcm_pytorch (deferred per plan scope).
 - Blocker: none — all upstream PAT-RL tests green; pick_best_cue regressions clean.
 

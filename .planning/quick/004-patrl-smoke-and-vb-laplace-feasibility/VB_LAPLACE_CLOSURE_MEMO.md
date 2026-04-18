@@ -22,7 +22,7 @@ during Phase 18:
   each other on a shared cohort (preferred)
 
 The user accepted Option C and shipped Phase 19 in full. This memo evaluates
-whether Option C should **stay** as the v1 HEART2ADAPT fitting posture, or
+whether Option C should **stay** as the v1 the consumer study fitting posture, or
 whether we should consolidate onto one path before the `dcm_hgf_mixed_models`
 integration work begins.
 
@@ -111,7 +111,7 @@ Neither trigger met. Dual-path posture holds.
 ## Why not Option A (NUTS only)
 
 - Cluster NUTS wall time of 13.9 s for a 5-agent 2-level smoke is excellent,
-  but the scaling profile to the full HEART2ADAPT cohort (32 agents x 4
+  but the scaling profile to the full the consumer study cohort (32 agents x 4
   phenotype cells, 192 trials, 3-level with kappa and mu3_0) is unknown.
   BlackJAX JIT cold-start on the L40S GPU was ~120 s in the v1.1 benchmark
   (STATE.md §17) — warm-start should be fast, but a cold per-phenotype-cell
@@ -150,7 +150,7 @@ Neither trigger met. Dual-path posture holds.
   `InferenceData` shape and `participant_id` dim — both fit paths already
   produce shape-identical output (19-02 + 19-03 infrastructure). Switching
   between them in the bridge is a one-line change.
-- If the full HEART2ADAPT cohort ends up being NUTS-bottlenecked at design
+- If the full the consumer study cohort ends up being NUTS-bottlenecked at design
   time, we can pivot to Laplace-primary for the initial sweep WITHOUT any
   code rework — the path is already there.
 
@@ -197,7 +197,7 @@ parity is already enforced by Phase 19's shared `_samples_to_idata_patrl` /
   - Would fire if NUTS walltime > 6h on the full cohort or divergences > 20%
   - Current: 22.4s on 5 agents → ~2 minutes projected for 32 agents; divergences 0%.
 
-No triggers fire at current scale. **Recheck after the first HEART2ADAPT
+No triggers fire at current scale. **Recheck after the first the consumer study
 32-agent × 4-phenotype × 3-level cluster run.** If 3-level posteriors are
 dramatically more non-Gaussian (as ω₃ × κ geometry famously is in binary
 HGF — Powers et al. 2017), Laplace SD error may worsen and trigger A.
@@ -215,7 +215,7 @@ are above. OQ7 is closed with the verdict:
 > Document the asymmetric SD bias (Laplace under-wide on ω₂, over-wide on
 > natural-scale β) in the `docs/PAT_RL_API_HANDOFF.md` consumer guide.
 
-### Actions still open (tracked for HEART2ADAPT v3+, not Phase 19)
+### Actions still open (tracked for the consumer study v3+, not Phase 19)
 
 1. **3-level dual-fit comparison**: current gate numbers are from 2-level
    only. 3-level (adds ω₃, κ, μ₃⁰) has known-bad posterior geometry.
@@ -225,7 +225,7 @@ are above. OQ7 is closed with the verdict:
    behavior under phenotype diversity (anxiety + reward sensitivity may
    broaden or narrow posterior geometry).
 3. **Trigger reassessment after v3 scientific validation**: if any
-   HEART2ADAPT analyses materially depend on posterior uncertainty (PEB
+   the consumer study analyses materially depend on posterior uncertainty (PEB
    credible intervals, model comparison), revisit the "Laplace overall vs
    NUTS overall" tradeoff with the real scientific payload in hand.
 

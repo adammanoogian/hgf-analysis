@@ -12,7 +12,7 @@ deferred_to_phase_19:
   - VB-Laplace fit path
 ---
 
-# Phase 18: PAT-RL Task Adaptation (HEART2ADAPT) Verification Report
+# Phase 18: PAT-RL Task Adaptation (the consumer study) Verification Report
 
 **Phase Goal (Option A scope):** Ship config + trial generator + binary-state
 HGF builders (2-level & 3-level) + Model A response + BlackJAX fit + trajectory

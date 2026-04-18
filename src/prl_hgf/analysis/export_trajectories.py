@@ -11,7 +11,7 @@ These CSVs constitute the **producer side** of the PRL.4 integration surface
 with dcm_pytorch's bilinear-DCM modulator channel.  The ``outcome_time_s``
 column feeds directly into ``stimulus["times"]`` (absolute seconds from
 session start); the HGF belief columns feed into ``stimulus["values"][:, j]``
-for whichever modulator channels the HEART2ADAPT caller selects.
+for whichever modulator channels the the consumer study caller selects.
 
 Schema finalized in ``.planning/phases/18-pat-rl-task-adaptation/
 18-05-dcm-interface-notes.md`` after reading

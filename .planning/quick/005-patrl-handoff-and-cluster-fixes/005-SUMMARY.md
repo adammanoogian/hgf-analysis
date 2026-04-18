@@ -99,7 +99,7 @@ Single-source-of-truth public API document for the PAT-RL surface that
    onboarding.
 
 This document **supersedes** `dcm_hgf_mixed_models/.planning/research/
-SISTER_API_PRL_HGF.md` for any PAT-RL / HEART2ADAPT work. The consumer
+SISTER_API_PRL_HGF.md` for any PAT-RL / the consumer study work. The consumer
 repo should either port the relevant sections in-tree or link to this doc
 from its own `docs/03_methods_reference/`.
 
@@ -118,7 +118,7 @@ The producer side is done. For `dcm_hgf_mixed_models` v2 to pick it up:
    in <60 seconds.
 3. In `dcm_hgf_mixed_models/.planning/research/SISTER_API_PRL_HGF.md`,
    add a banner: *"SUPERSEDED BY: `../psilocybin_prl_analyses/docs/
-   PAT_RL_API_HANDOFF.md` for all PAT-RL / HEART2ADAPT work. This document
+   PAT_RL_API_HANDOFF.md` for all PAT-RL / the consumer study work. This document
    covers the older pick_best_cue surface only."* (Cross-repo edit; not
    done in this quick task.)
 4. Wire the stubs per §3 of the handoff doc: `task/trial_sequence.py` →

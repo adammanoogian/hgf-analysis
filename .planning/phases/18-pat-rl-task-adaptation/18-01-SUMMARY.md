@@ -2,7 +2,7 @@
 phase: 18-pat-rl-task-adaptation
 plan: 01
 subsystem: env
-tags: [yaml, dataclass, config, pat_rl, heart2adapt, parallel-stack, phenotype]
+tags: [yaml, dataclass, config, pat_rl, consumer-study, parallel-stack, phenotype]
 
 # Dependency graph
 requires:

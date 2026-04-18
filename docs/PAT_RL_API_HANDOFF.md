@@ -1,7 +1,7 @@
-# PAT-RL Public API Handoff for dcm_hgf_mixed_models (heart2adapt-sim) v2
+# PAT-RL Public API Handoff for dcm_hgf_mixed_models (downstream sister-toolbox) v2
 
 **Source repo:** `psilocybin_prl_analyses` (this repo)
-**Consumer repo:** `dcm_hgf_mixed_models` (heart2adapt-sim) — v2 Sister-Toolbox Integration
+**Consumer repo:** `dcm_hgf_mixed_models` (downstream sister-toolbox) — v2 Sister-Toolbox Integration
 **Supersedes:** `dcm_hgf_mixed_models/.planning/research/SISTER_API_PRL_HGF.md` (written before Phases 18-19; documents the older pick_best_cue surface)
 **As of:** 2026-04-18 (Phase 18 cluster-smoke-validated; Phase 19 code-complete)
 
@@ -13,13 +13,13 @@ That document (in the consumer repo) describes the **pick_best_cue** pipeline:
 3-cue partial-feedback PRL, `generate_session`, `build_3level_network`,
 `softmax_stickiness_surprise`, `fit_batch_hierarchical`. That surface is
 correct and still available, but it is the **WRONG surface for PAT-RL /
-HEART2ADAPT**.
+the consumer study**.
 
 Phases 18-19 added a **parallel `*_patrl` stack** for the binary-state
-approach/avoid task (HEART2ADAPT's actual paradigm). Every pick_best_cue
+approach/avoid task (the consumer study's actual paradigm). Every pick_best_cue
 module has a PAT-RL sibling:
 
-| pick_best_cue (old) | PAT-RL (use this for HEART2ADAPT) |
+| pick_best_cue (old) | PAT-RL (use this for the consumer study) |
 |---------------------|-----------------------------------|
 | `configs/prl_analysis.yaml` | `configs/pat_rl.yaml` |
 | `env/task_config.py::load_config()` | `env/pat_rl_config.py::load_pat_rl_config()` |
@@ -32,7 +32,7 @@ module has a PAT-RL sibling:
 | [N/A — MCMC only] | `fitting/fit_vb_laplace_patrl.py::fit_vb_laplace_patrl()` |
 | [N/A — no trajectory export] | `analysis/export_trajectories.py::export_subject_trajectories()` |
 
-**Rule for HEART2ADAPT:** never import a non-`_patrl` module from prl_hgf
+**Rule for the consumer study:** never import a non-`_patrl` module from prl_hgf
 unless you're deliberately using the pick_best_cue task. The two stacks share
 zero runtime code to preserve pick_best_cue test stability.
 
@@ -296,7 +296,7 @@ should call prl_hgf PAT-RL modules:
   behind a thin facade that accepts a `dcm_hgf_mixed_models` YAML (different
   schema from `pat_rl.yaml`). Do NOT re-implement trial generation.
 - **`task/environment.py`** — wrap `env.pat_rl_simulator.simulate_patrl_cohort`
-  for cohort-level synthesis. Provide adapters for HEART2ADAPT phenotype
+  for cohort-level synthesis. Provide adapters for the consumer study phenotype
   specifications (anxiety x reward sensitivity 2x2) if the consumer's
   phenotype schema diverges from `PATRLConfig.simulation.phenotypes`.
 
@@ -324,7 +324,7 @@ should call prl_hgf PAT-RL modules:
   bilinear path (confirmed live in `neural_state.py:4-15`, §18-05 audit), the
   preferred modulator channels are:
   - `epsilon2` — level-2 precision-weighted prediction error (the primary
-    HGF-derived "surprise" signal; see HEART2ADAPT proposal §2.3)
+    HGF-derived "surprise" signal; see the consumer study proposal §2.3)
   - `epsilon3` — level-3 volatility PE (3-level only; exploratory)
   - `psi2` — effective precision / trial-by-trial learning rate
   - `delta_hr` — trial-level bradycardia, pass-through from input
@@ -478,7 +478,7 @@ sample_stats (Laplace): converged, n_iterations, logp_at_mode,
 
 ---
 
-## 6. Known gaps / TODOs for HEART2ADAPT integration
+## 6. Known gaps / TODOs for the consumer study integration
 
 - **Models B / C / D are not implemented yet.** `fit_vb_laplace_patrl` and
   `fit_batch_hierarchical_patrl` both raise `NotImplementedError` for
@@ -489,7 +489,7 @@ sample_stats (Laplace): converged, n_iterations, logp_at_mode,
   regression is **not shipped**. v2 consumer should roll its own using
   `bms.py` primitives (see §3.4).
 - **kappa is fixed at 1.0** in the 2x2 phenotype grid (`configs/pat_rl.yaml`).
-  If HEART2ADAPT hypotheses need kappa variation across phenotypes, adjust
+  If the consumer study hypotheses need kappa variation across phenotypes, adjust
   the consumer-side phenotype spec and override via kwarg on the generative
   side.
 - **Laplace-vs-NUTS hard gate still pending first cluster dual-fit run.**

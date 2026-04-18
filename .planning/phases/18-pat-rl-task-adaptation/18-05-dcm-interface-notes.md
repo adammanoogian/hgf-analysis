@@ -106,7 +106,7 @@ binary mask, returns masked modulatory matrices.
 
 **Summary:** Bilinear modulation is **live in v0.3.0**, not deferred. The
 dcm_pytorch PROJECT.md note about v0.4+ (cited in the plan sketch) likely
-referred to the HEART2ADAPT 4-node circuit and PEB-lite, not the bilinear
+referred to the the consumer study 4-node circuit and PEB-lite, not the bilinear
 mechanism itself.
 
 ---
@@ -128,7 +128,7 @@ mechanism itself.
 modulator channel values. The consumer accepts raw float64 values. For PAT-RL,
 the modulator channel(s) will carry HGF belief trajectories (`mu2`, `psi2`,
 `epsilon2` etc.) **as raw float64** — these should not be sigmoid-squeezed or
-otherwise normalized before export. The caller (dcm_pytorch v0.4+ HEART2ADAPT
+otherwise normalized before export. The caller (dcm_pytorch v0.4+ the consumer study
 integration) decides whether to apply a transform when constructing `B_free`.
 
 ---

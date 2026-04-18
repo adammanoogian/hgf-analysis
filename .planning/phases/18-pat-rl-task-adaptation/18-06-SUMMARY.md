@@ -25,7 +25,7 @@ provides:
 affects:
   - "Phase 19 VB-Laplace: shares simulate_patrl_cohort helper (extracted into pat_rl_simulator module); same CSV exporters; comparison smoke reuses this script as NUTS reference"
   - "Phase 19+ PRL-V1 recovery gate (deferred): will reuse this harness with r>=0.7 Pearson correlation on omega_2"
-  - "dcm_pytorch HEART2ADAPT integration: consumes the exported trajectory CSVs as stimulus input"
+  - "dcm_pytorch the consumer study integration: consumes the exported trajectory CSVs as stimulus input"
 
 tech-stack:
   added: []

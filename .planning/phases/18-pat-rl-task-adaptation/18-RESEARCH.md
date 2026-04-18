@@ -1,4 +1,4 @@
-# Phase 18: PAT-RL Task Adaptation (HEART2ADAPT) — Research
+# Phase 18: PAT-RL Task Adaptation (the consumer study) — Research
 
 **Researched:** 2026-04-17
 **Domain:** Parallel task configuration + binary-state HGF + custom response models + trajectory export
@@ -13,7 +13,7 @@ Phase 18 grafts the PAT-RL (approach/avoid, binary safe/dangerous state, 192 tri
 
 The cleanest integration strategy — which the user's directive explicitly asks for — is to add PAT-RL **as a fully parallel vertical slice** rather than refactor the pick_best_cue stack. That means (a) a new YAML `configs/pat_rl.yaml` with its own dataclass tree parsed by a dedicated `env/pat_rl_config.py` loader; (b) a new trial-sequence module `env/pat_rl_sequence.py`; (c) new HGF builders `models/hgf_2level_patrl.py` and `models/hgf_3level_patrl.py` with single-input-node topology; (d) new response module `models/response_patrl.py` housing Models A/B/C/D; (e) a new batched JAX logp factory `fitting/hierarchical_patrl.py` that **does not** perturb the existing 3-cue logp; (f) a new trajectory-export module `analysis/export_trajectories.py`; and (g) a new BMS covariate helper on top of existing `analysis/bms.py`. The pick_best_cue modules are **untouched** — every existing callsite, test, and validation script keeps running byte-for-byte.
 
-**Primary recommendation:** Build a parallel PAT-RL stack rooted at `configs/pat_rl.yaml` and `src/prl_hgf/env/pat_rl_config.py`; leave the existing pick_best_cue pipeline (and all its tests, VALID-01/02/03) completely untouched. Defer this work out of v1.2 into a new **v1.3 HEART2ADAPT milestone** spanning 4–5 integer phases; Phase 18 as currently scoped is too large for a single phase under the repo's observed granularity.
+**Primary recommendation:** Build a parallel PAT-RL stack rooted at `configs/pat_rl.yaml` and `src/prl_hgf/env/pat_rl_config.py`; leave the existing pick_best_cue pipeline (and all its tests, VALID-01/02/03) completely untouched. Defer this work out of v1.2 into a new **v1.3 the consumer study milestone** spanning 4–5 integer phases; Phase 18 as currently scoped is too large for a single phase under the repo's observed granularity.
 
 ---
 
@@ -46,7 +46,7 @@ The cleanest integration strategy — which the user's directive explicitly asks
 
 **Concrete API:** `PATRLTrial` dataclass + `generate_state_sequence(n_trials, hazard_rate, seed) -> np.ndarray`, `generate_magnitudes(...) -> (np.ndarray, np.ndarray)`, `generate_outcome(state, choice, contingencies, rng) -> tuple[float, float, float]` (reward_mag_received, shock_mag_received, nothing_flag), `generate_full_run(config, run_idx, seed) -> list[PATRLTrial]`, `generate_session_patrl(config, seed) -> list[PATRLTrial]`.
 
-**Note on Delta-HR:** The YAML describes Delta-HR as a per-trial covariate but does NOT specify a generative model for it in the simulation path. The planner must either (a) treat Delta-HR as an exogenous input passed in from heart2adapt-sim, (b) add a simple generative model (e.g., Delta-HR correlated with anticipation of shock), or (c) punt — accept a Delta-HR array from the caller. **Recommendation: (c).** `generate_session_patrl` returns Trial objects WITHOUT Delta-HR; a separate helper `attach_delta_hr(trials, delta_hr_arr)` (or just a caller-passed covariate array) supplies it. This matches how real data will flow: the task provides structure, the physiology comes from the subject.
+**Note on Delta-HR:** The YAML describes Delta-HR as a per-trial covariate but does NOT specify a generative model for it in the simulation path. The planner must either (a) treat Delta-HR as an exogenous input passed in from downstream sister-toolbox, (b) add a simple generative model (e.g., Delta-HR correlated with anticipation of shock), or (c) punt — accept a Delta-HR array from the caller. **Recommendation: (c).** `generate_session_patrl` returns Trial objects WITHOUT Delta-HR; a separate helper `attach_delta_hr(trials, delta_hr_arr)` (or just a caller-passed covariate array) supplies it. This matches how real data will flow: the task provides structure, the physiology comes from the subject.
 
 ---
 
@@ -231,7 +231,7 @@ simulation:
 **Evidence:**
 - `analysis/bms.py::compute_subject_waic` (`bms.py:64-167`) already computes per-subject `elpd_waic` for a given model. `compute_batch_waic` (`bms.py:170-277`) emits a DataFrame with columns `participant_id, group, session, model, elpd_waic` — **exactly the structure needed to pivot into per-subject ΔWAIC**.
 - `run_stratified_bms` (`bms.py:367-447`) already averages across sessions and pivots into (n_subjects, n_models). Extracting Delta-elpd as (n_subjects,) is trivial: `delta = pivoted["hgf_2level_patrl"] - pivoted["hgf_3level_patrl"]`.
-- The only new piece: write a helper that takes the `waic_df` + model-name pair and writes `{participant_id, delta_elpd_waic, delta_f_approx}` to CSV for heart2adapt-sim DCM / PEB.
+- The only new piece: write a helper that takes the `waic_df` + model-name pair and writes `{participant_id, delta_elpd_waic, delta_f_approx}` to CSV for downstream sister-toolbox DCM / PEB.
 - WAIC-based Delta-F (for BMS free energy) is approximated via Akaike-form correction; alternatively just export Delta-elpd-WAIC and let downstream PEB scripts decide the transformation. **Planner should confirm with user which quantity the DCM/PEB bridge expects.**
 
 **Concrete API:**
@@ -278,10 +278,10 @@ That's 2 × 4 = 8 valid combinations; the response_model controls the logp form 
 
 ### Q11 — Milestone placement
 
-**Recommendation: MOVE Phase 18 out of v1.2 and into a new v1.3 HEART2ADAPT milestone. Phase 18 as currently scoped is too large for one integer phase (would be 5–7 plans); the repo's observed phase granularity (Phases 12–17 average 2–3 plans each, each with a single cohesive goal) suggests splitting PAT-RL into ~4 integer phases under v1.3.**
+**Recommendation: MOVE Phase 18 out of v1.2 and into a new v1.3 the consumer study milestone. Phase 18 as currently scoped is too large for one integer phase (would be 5–7 plans); the repo's observed phase granularity (Phases 12–17 average 2–3 plans each, each with a single cohesive goal) suggests splitting PAT-RL into ~4 integer phases under v1.3.**
 
 **Evidence:**
-- v1.2's `REQUIREMENTS.md:1-78` is strictly "Hierarchical GPU Fitting" — BATCH-*, JSIM-*, VALID-*, BENCH-*, PROD-*, NPRO-*, BJAX-*. PAT-RL is an entirely different project (HEART2ADAPT, per the YAML) and introduces a new task, new config, new HGF topology, new response model family, new trajectory export. Zero requirements overlap.
+- v1.2's `REQUIREMENTS.md:1-78` is strictly "Hierarchical GPU Fitting" — BATCH-*, JSIM-*, VALID-*, BENCH-*, PROD-*, NPRO-*, BJAX-*. PAT-RL is an entirely different project (the consumer study, per the YAML) and introduces a new task, new config, new HGF topology, new response model family, new trajectory export. Zero requirements overlap.
 - v1.2 has **two phases still pending** (Phase 14 Integration + GPU Benchmark, Phase 15 Production Run) that must close the original power-analysis mission. Phase 18 does not block those; those do not block Phase 18.
 - Phase 17 (BlackJAX NUTS sampler) shipped 2026-04-15. Phase 18 depends on Phase 17's `fit_batch_hierarchical` BlackJAX path. But a new milestone v1.3 can still declare "depends on v1.2 Phase 17 complete" and sequence cleanly.
 - Repo phase granularity evidence: Phases 12–17 each have a single cohesive deliverable and 2–3 plans (from ROADMAP.md:113-218). Phase 18's current success criteria (ROADMAP.md:225-232) list **7 distinct deliverables**: new YAML loader, trial-sequence module, four response models + trial-varying omega scan change, trajectory export, stratified BMS + PEB, parameter recovery validation at 192 trials, phenotype 2x2 validation. Collapsing those into one phase violates the observed cadence and creates a massive single-PR diff risk.
@@ -304,8 +304,8 @@ That's 2 × 4 = 8 valid combinations; the response_model controls the logp form 
 
 The v1.2 REQUIREMENTS.md is about GPU batched hierarchical fitting to ship the v1.1 power-analysis deliverables. Phase 18 as described ships an entirely different feature area — it adds a whole new task type to the toolbox. It does not advance v1.1's production deliverables; it does not close any v1.2 requirement (BATCH-*, JSIM-*, VALID-*, BENCH-*, PROD-*, NPRO-*, BJAX-*). It is a thematic non-sequitur inside v1.2.
 
-### Option A: Move to v1.3 HEART2ADAPT (recommended)
-- Create new milestone `v1.3 HEART2ADAPT` with its own REQUIREMENTS.md carrying PRL.1–PRL.5 and PRL.V1–V2 as numbered requirements.
+### Option A: Move to v1.3 the consumer study (recommended)
+- Create new milestone `v1.3 the consumer study` with its own REQUIREMENTS.md carrying PRL.1–PRL.5 and PRL.V1–V2 as numbered requirements.
 - v1.3 depends on v1.2 Phase 17 complete (BlackJAX path).
 - v1.2 stays focused on finishing Phase 14/15 (the pending production run).
 - v1.3 splits into ~4 integer phases (19–22) with 2 plans each. Typical phase size. Clear acceptance per phase.
@@ -369,7 +369,7 @@ PAT-RL **reuses** (imports from) the BlackJAX generic runners but does not modif
 
 1. **Delta-HR generative model unspecified.** The YAML describes Delta-HR as a per-trial covariate used in Models B/C/D but does NOT specify how simulated Delta-HR is produced during parameter recovery. Options: (a) sample from a simple Gaussian, (b) correlate with anticipated shock magnitude, (c) accept caller-supplied arrays. The planner must surface this to the user — recommended choice (c) above but this is a user decision.
 
-2. **PEB covariate format.** PRL.5 says "ΔWAIC or ΔF". These are different quantities. The planner should ask the user whether the heart2adapt-sim DCM bridge expects Delta-elpd-WAIC (continuous, per-subject), log Bayes factor (requires free-energy computation), or both. Default to Delta-elpd-WAIC unless user specifies.
+2. **PEB covariate format.** PRL.5 says "ΔWAIC or ΔF". These are different quantities. The planner should ask the user whether the downstream sister-toolbox DCM bridge expects Delta-elpd-WAIC (continuous, per-subject), log Bayes factor (requires free-energy computation), or both. Default to Delta-elpd-WAIC unless user specifies.
 
 3. **2x2 phenotype numeric parameters.** The YAML lists the design axes (anxiety, reward sensitivity) but does NOT give mean/sd for phenotype parameter distributions. The planner must decide whether (a) the user supplies these, or (b) Phase 22 iterates on values until PRL-V2 identifiability (d >= 0.5, r < 0.5) is achieved. This may require a plan-within-a-plan tuning loop.
 
@@ -457,9 +457,9 @@ Interpretation: the HGF side lives in THIS repo (psilocybin_prl_analyses); the D
 ### dcm_pytorch context (cross-referenced)
 
 - Current milestone v0.3.0 = bilinear DCM: `dx/dt = Ax + Σ_j u_j·B_j·x + Cu`
-- HEART2ADAPT-specific work (PEB-lite group GLM / DCM.5, 4-node AMY↔dACC↔vmPFC↔Insula circuit / DCM.V3) is **explicitly deferred** from dcm_pytorch v0.3.0 to v0.4+
+- the consumer study-specific work (PEB-lite group GLM / DCM.5, 4-node AMY↔dACC↔vmPFC↔Insula circuit / DCM.V3) is **explicitly deferred** from dcm_pytorch v0.3.0 to v0.4+
 - `src/pyro_dcm/simulators/task_simulator.py` and `src/pyro_dcm/forward_models/neural_state.py` are the consumer interfaces our trajectory CSV must align with
-- dcm_pytorch PROJECT.md line 67: "Group-level PEB-lite GLM (HEART2ADAPT-specific; not scoped to this single-subject toolbox)"
+- dcm_pytorch PROJECT.md line 67: "Group-level PEB-lite GLM (the consumer study-specific; not scoped to this single-subject toolbox)"
 
 **Integration contract for Phase 18 producer side**: one CSV per subject containing per-trial columns suitable for use as `u_j(t)` modulatory-input traces in dcm_pytorch's bilinear DCM. Specifically: at minimum `trial_idx`, `run_idx`, `outcome_time_s`, and the HGF-derived precision-weighted prediction errors (ε₂, ε₃), expected value, and posterior means (μ₂, μ₃). The ΔHR covariate is passed through as a column (caller-supplied input). Choice and outcome are included for downstream reference.
 
@@ -522,4 +522,4 @@ Foundation + integration surface:
 - PRL.V2 phenotype 2×2 identifiability validation
 - PRL.5 stratified BMS with ΔWAIC PEB covariate export
 
-**Milestone placement:** Phase 18 stays appended to v1.2 per user instruction; the follow-up integer phases will naturally open v1.3 HEART2ADAPT if the user later elects to split.
+**Milestone placement:** Phase 18 stays appended to v1.2 per user instruction; the follow-up integer phases will naturally open v1.3 the consumer study if the user later elects to split.

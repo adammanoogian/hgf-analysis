@@ -4,7 +4,7 @@
 
 - **v1.0 Simulation-to-Inference Pipeline** — Phases 1-7 (shipped 2026-04-07)
 - **v1.1 BFDA Power Analysis** — Phases 8-11 (code-complete 2026-04-07)
-- **v1.2 Hierarchical GPU Fitting** — Phases 12-20 (in progress; Phase 18 HEART2ADAPT adaptation + Phase 19 VB-Laplace parity fit path + Phase 20 HEART2ADAPT scientific completion appended — see notes)
+- **v1.2 Hierarchical GPU Fitting** — Phases 12-20 (in progress; Phase 18 PAT-RL task adaptation + Phase 19 VB-Laplace parity fit path + Phase 20 PAT-RL scientific completion appended — see notes)
 
 ---
 
@@ -225,9 +225,9 @@ Plans:
 - [x] 17-01-PLAN.md -- Core BlackJAX implementation: _build_log_posterior, _run_blackjax_nuts, _samples_to_idata, rewrite fit_batch_hierarchical (BJAX-01, BJAX-02, BJAX-03, BJAX-04, BJAX-05)
 - [x] 17-02-PLAN.md -- Validation tests for BlackJAX path, SLURM script updates for multi-GPU pmap (BJAX-06, BJAX-07)
 
-### Phase 18: PAT-RL Task Adaptation (HEART2ADAPT)
+### Phase 18: PAT-RL Task Adaptation (the consumer study)
 
-**Goal**: The PRL HGF toolbox supports the PAT-RL task (binary safe/dangerous state, approach/avoid decisions, 2x2 reward/shock magnitude design, trial-level Delta-HR autonomic covariate, hazard-based reversals, 192 trials across 4 runs) as a **parallel** task configuration alongside the existing pick_best_cue pipeline. Delivers: (a) new YAML + config loader path, (b) binary-state trial sequence generator, (c) extended response models A/B/C/D (including trial-varying omega for Model D), (d) trial-by-trial posterior trajectory export for the heart2adapt-sim DCM bridge, (e) 2-level vs 3-level BMS stratified by phenotype with Delta-evidence as a PEB covariate.
+**Goal**: The PRL HGF toolbox supports the PAT-RL task (binary safe/dangerous state, approach/avoid decisions, 2x2 reward/shock magnitude design, trial-level Delta-HR autonomic covariate, hazard-based reversals, 192 trials across 4 runs) as a **parallel** task configuration alongside the existing pick_best_cue pipeline. Delivers: (a) new YAML + config loader path, (b) binary-state trial sequence generator, (c) extended response models A/B/C/D (including trial-varying omega for Model D), (d) trial-by-trial posterior trajectory export for the downstream sister-toolbox DCM bridge, (e) 2-level vs 3-level BMS stratified by phenotype with Delta-evidence as a PEB covariate.
 **Depends on**: Phase 17 (BlackJAX fitting pipeline is the target fit path for new response models)
 **Requirements**: PRL-01 (new config), PRL-02 (trial generator), PRL-03 (response models A-D), PRL-04 (trajectory export), PRL-05 (stratified BMS), PRL-V1 (recovery at 192 trials), PRL-V2 (phenotype separability)
 **Success Criteria** (what must be TRUE):
@@ -259,7 +259,7 @@ Plans:
 - **Trajectory export (PRL.4) is wholly new.** No existing module evaluates the HGF forward pass at posterior means to produce per-trial `mu2, sigma2, mu3, sigma3, epsilon2, epsilon3, psi2`. The existing pipeline stores `InferenceData` from MCMC but does not re-run the perceptual model on each posterior draw. This is a substantive implementation task, not a data-dump.
 - **Phenotype 2x2 design (PRL-V2) has no current home.** `configs/prl_analysis.yaml::simulation.groups` is psilocybin vs placebo (post-concussion). The YAML's anxiety x reward sensitivity 2x2 phenotype grid is an entirely new generative-parameter specification that requires either a new YAML key (`simulation.phenotypes`) or a separate `configs/pat_rl.yaml::simulation` block.
 - **PEB covariate export (in PRL.5) has no current pipeline.** `analysis/bms.py` computes exceedance probabilities but does not emit a per-subject `Delta-WAIC` / `Delta-F` CSV for downstream PEB. New analysis step.
-- **Milestone fit is ambiguous.** This phase introduces a **new task** for a **separate project (HEART2ADAPT)**, not a continuation of v1.2's "Hierarchical GPU Fitting" goal. Recommend considering whether Phase 18 should instead open a new milestone **v1.3 HEART2ADAPT** — particularly given the scope (config loader refactor + new env + new response models + trial-varying omega + trajectory export + phenotype framework) is comparable to several v1.1 phases combined. Added to v1.2 as instructed; flag for user review before planning.
+- **Milestone fit is ambiguous.** This phase introduces a **new task** for a **separate project (the consumer study)**, not a continuation of v1.2's "Hierarchical GPU Fitting" goal. Recommend considering whether Phase 18 should instead open a new milestone **v1.3 the consumer study** — particularly given the scope (config loader refactor + new env + new response models + trial-varying omega + trajectory export + phenotype framework) is comparable to several v1.1 phases combined. Added to v1.2 as instructed; flag for user review before planning.
 
 ### Phase 19: VB-Laplace Fit Path for PAT-RL (Tapas-Parity Validation)
 
@@ -289,13 +289,13 @@ Plans:
 - Downgrade triggers live in STATE.md blockers; this phase executes under Option C unless the cluster smoke (Phase 18 validation) returns numbers that force a downgrade. If downgrade happens, the planner revisits but the parallel-stack module boundaries stay valid.
 - A decision memo at phase close reports Laplace-vs-NUTS agreement on real cluster data and recommends whether to keep both paths or consolidate on one.
 
-### Phase 20: HEART2ADAPT Scientific Completion — Models B/C/D + Cohort Scale + Config-Correctness
+### Phase 20: PAT-RL Scientific Completion — Models B/C/D + Cohort Scale + Config-Correctness
 
-**Goal**: Close every remaining gap between `prl_hgf`'s current PAT-RL surface and the HEART2ADAPT study hypotheses documented in `dcm_hgf_mixed_models/docs/files/GSD_heart2adapt_sim.yaml`. Specifically: (a) correct `configs/pat_rl.yaml` to match the HEART2ADAPT spec (contingencies safe 70/10/20, dangerous 10/70/20, avoid 10/10/80; run order SVVS; magnitudes [1, 3]; phenotype priors ω=-3/-2, β=2/3.5, b=0/±0.3, ϑ=0.005/0.01); (b) add response-bias parameter `b` to Model A and implement Models B (ΔHR bias γ), C (ΔHR × value sensitivity α + γ), D (trial-varying ω_eff = ω + λ·ΔHR); (c) implement phenotype-specific, ε₂-coupled ΔHR generative model (healthy N(-2, 0.5), high-anxiety N(-0.5, 0.8), ε₂-modulated freezing); (d) scale cohort simulation to 40 agents × 4 phenotypes = 160 with deterministic per-phenotype RNG; (e) phenotype-stratified random-effects BMS in `analysis/bms.py` with per-subject Δ-evidence PEB covariate export; (f) formal PRL-V1 (ω/κ/β recovery r ≥ 0.7 at 192 trials) and PRL-V2 (phenotype 2x2 Cohen's d ≥ 0.5, cor(ω, β) < 0.5) gates. Unblocks `dcm_hgf_mixed_models` v2 bridge wiring (H2A.1.4, H2A.1.5, H2A.1.6 + H2A.2.4 PEB).
+**Goal**: Close every remaining gap between `prl_hgf`'s current PAT-RL surface and the downstream sister-repo study hypotheses (consumer study spec lives outside this repo; see `docs/PAT_RL_API_HANDOFF.md`). Specifically: (a) correct `configs/pat_rl.yaml` to match the consumer-side task specification (contingencies safe 70/10/20, dangerous 10/70/20, avoid 10/10/80; run order SVVS; magnitudes [1, 3]; phenotype priors per consumer spec); (b) add response-bias parameter `b` to Model A and implement Models B (ΔHR bias γ), C (ΔHR × value sensitivity α + γ), D (trial-varying ω_eff = ω + λ·ΔHR); (c) implement phenotype-specific, ε₂-coupled ΔHR generative model; (d) scale cohort simulation to 40 agents × 4 phenotypes = 160 with deterministic per-phenotype RNG; (e) phenotype-stratified random-effects BMS in `analysis/bms.py` with per-subject Δ-evidence PEB covariate export; (f) formal PRL-V1 (ω/κ/β recovery r ≥ 0.7 at 192 trials) and PRL-V2 (phenotype 2x2 Cohen's d ≥ 0.5, cor(ω, β) < 0.5) gates. Unblocks the downstream sister-repo bridge wiring without embedding project-specific codenames in this general-purpose HGF toolbox.
 **Depends on**: Phase 19 (consumes `fit_vb_laplace_patrl`, `fit_batch_hierarchical_patrl`, trajectory export, Laplace InferenceData factory)
 **Requirements**: PRL-02.1 (config correctness), PRL-03.1 (Model A + `b`), PRL-03.2 (Models B, C, D including trial-varying ω scan body for D), PRL-V1 (formal r ≥ 0.7 recovery at 192 trials), PRL-V2 (phenotype 2x2 identifiability), PRL-05 (phenotype-stratified BMS + PEB Δ-evidence export), PRL-06 (phenotype-specific ε₂-coupled ΔHR generative model), PRL-07 (cohort scale 40×4=160), PRL-08 (config-driven adaptation of existing scripts)
 **Success Criteria** (what must be TRUE):
-  1. `configs/pat_rl.yaml` contingencies match HEART2ADAPT spec **exactly**: `safe.p_reward_approach=0.70, p_shock_approach=0.10, p_nothing_approach=0.20`; `dangerous.10/0.70/0.20`; `avoid.0.10/0.10/0.80` (non-zero baseline avoid outcomes). Run order = `[stable, volatile, volatile, stable]` (SVVS counterbalance). Magnitudes `reward_levels=[1, 3], shock_levels=[1, 3]`. Phenotype priors: HEALTHY ω=-3.0, β=2.0, b=0.0, ϑ=0.005, μ₃⁰=1.0; REWARD-SUSCEPTIBLE ω=-3.0, β=3.5, b=+0.3, ϑ=0.005, μ₃⁰=1.0; HIGH-ANXIETY ω=-2.0, β=2.0, b=-0.3, ϑ=0.01, μ₃⁰=2.0; ANXIOUS+REWARD ω=-2.0, β=3.5, b=0.0, ϑ=0.01, μ₃⁰=2.0
+  1. `configs/pat_rl.yaml` contingencies match the consumer study spec **exactly**: `safe.p_reward_approach=0.70, p_shock_approach=0.10, p_nothing_approach=0.20`; `dangerous.10/0.70/0.20`; `avoid.0.10/0.10/0.80` (non-zero baseline avoid outcomes). Run order = `[stable, volatile, volatile, stable]` (SVVS counterbalance). Magnitudes `reward_levels=[1, 3], shock_levels=[1, 3]`. Phenotype priors: HEALTHY ω=-3.0, β=2.0, b=0.0, ϑ=0.005, μ₃⁰=1.0; REWARD-SUSCEPTIBLE ω=-3.0, β=3.5, b=+0.3, ϑ=0.005, μ₃⁰=1.0; HIGH-ANXIETY ω=-2.0, β=2.0, b=-0.3, ϑ=0.01, μ₃⁰=2.0; ANXIOUS+REWARD ω=-2.0, β=3.5, b=0.0, ϑ=0.01, μ₃⁰=2.0
   2. Response model A extended with bias `b`: `p(approach) = σ(β·EV + b)`. Model B adds ΔHR bias: `σ(β·EV + b + γ·ΔHR)`. Model C adds ΔHR-modulated value sensitivity: `σ((β + α·ΔHR)·EV + b + γ·ΔHR)`. Model D leaves response form as A but swaps perceptual ω for `ω_eff(t) = ω + λ·ΔHR(t)`. All four fit cleanly through BOTH `fit_batch_hierarchical_patrl` and `fit_vb_laplace_patrl` on the 5-agent CPU smoke
   3. Model D's trial-varying ω is implemented by injecting per-trial `ω_eff(t)` into the scan body of the batched logp (mirror the Phase 18-04 kappa-via-attrs pattern: `attrs[1]["tonic_volatility"] = ω + λ·ΔHR[t]` inside `_clamped_step`). Layer-2 clamp (`|μ₂| < 14`) and fp64 dtype invariants preserved. Recovery smoke of λ at 5 agents shows posterior-mean within 0.3 of truth when data simulated under Model D
   4. Phenotype-specific ΔHR generative model lives in `env/pat_rl_simulator.py`: `simulate_patrl_cohort` generates trial-level ΔHR as `base ~ N(phenotype.dhr_mean, phenotype.dhr_sd) + ε₂_coupling_coef · ε₂(t)` where `base` comes from the phenotype (healthy N(-2, 0.5); high-anxiety N(-0.5, 0.8); literature-calibrated — see citation gate in SC10). ε₂ computed inline from the forward HGF pass at true parameters
@@ -304,7 +304,7 @@ Plans:
   7. Formal PRL-V1 recovery gate: `scripts/05_run_validation.py` extended (NOT a new script) with a `--task=patrl` config toggle that runs the PAT-RL recovery loop. Gate criterion: r(ω_2) ≥ 0.7, r(κ) ≥ 0.7, r(β) ≥ 0.7 across the 160-agent cohort; μ₃⁰ and ω₃ labeled "exploratory — upper bound" per 09-01 precedent
   8. Formal PRL-V2 phenotype-separability gate: `scripts/06_group_analysis.py` extended (NOT a new script) with `--task=patrl --analysis=phenotype_separability` that computes Cohen's d(ω | anxiety_high vs anxiety_low) ≥ 0.5, Cohen's d(β | reward_high vs reward_low) ≥ 0.5, and |cor(ω, β)| < 0.5 across the 160-agent cohort. Output: publication-quality figure + summary CSV
   9. **No new scripts created**: every analysis lives in an existing numbered script (`03_simulate_participants.py`, `04_fit_participants.py`, `05_run_validation.py`, `06_group_analysis.py`, `scripts/12_smoke_patrl_foundation.py`) or in the corresponding `src/prl_hgf/` module, made config-driven via `configs/pat_rl.yaml` flags. Verify via `git diff --stat scripts/` showing ONLY modifications (zero additions) to scripts/
-  10. **Citation hygiene enforced**: every literature citation in config files, docstrings, and planning docs is dated 2020 or later. Prefer **Karin Roelofs' group** (Nijmegen Donders/Behavioural Science Institute — fear bradycardia, approach-avoidance conflict, threat anticipation cardiac deceleration): e.g. Klaassen et al. 2021 *Neuroimage* / 2024 *Biol Psychiatry*, Terburg et al. 2020+, Hulsman et al. 2020+, Ly et al. 2022+, Roelofs 2017/2020 reviews. Explicitly retire the Browning 2015 / Daw 2006 / Schönberg 2007 defaults from Phase 18's config where they conflict with HEART2ADAPT spec numbers (which supersede literature)
+  10. **Citation hygiene enforced**: every literature citation in config files, docstrings, and planning docs is dated 2020 or later. Prefer **Karin Roelofs' group** (Nijmegen Donders/Behavioural Science Institute — fear bradycardia, approach-avoidance conflict, threat anticipation cardiac deceleration): e.g. Klaassen et al. 2021 *Neuroimage* / 2024 *Biol Psychiatry*, Terburg et al. 2020+, Hulsman et al. 2020+, Ly et al. 2022+, Roelofs 2017/2020 reviews. Explicitly retire the Browning 2015 / Daw 2006 / Schönberg 2007 defaults from Phase 18's config where they conflict with the consumer study spec numbers (which supersede literature)
   11. Parallel-stack invariant preserved where possible; where config-driven adaptation necessarily extends existing modules (e.g. `models/response_patrl.py` adding `b`, B, C, D; `env/pat_rl_simulator.py` adding ε₂-coupled ΔHR; `analysis/bms.py` adding stratified variant), the extensions are ADDITIVE (new kwargs with safe defaults; existing Phase 18/19 tests remain green)
 **Plans**: 0 plans
 
@@ -312,20 +312,20 @@ Plans:
 - [ ] TBD (run /gsd:plan-phase 20 to break down)
 
 **Sources of record**:
-- `C:/Users/aman0087/Documents/Github/dcm_hgf_mixed_models/docs/files/GSD_heart2adapt_sim.yaml` — HEART2ADAPT study-level hypotheses (§H2A.1.1–H2A.1.6 + §H2A.2.4). The phenotype table in H2A.1.2 is the source-of-truth for phenotype priors; the contingency block in H2A.1.1 is the source-of-truth for `configs/pat_rl.yaml`
-- `C:/Users/aman0087/Documents/Github/dcm_hgf_mixed_models/docs/files/GSD_prl_hgf.yaml` — PRL implementation spec (PRL.1-5, V1-V2); response-model signatures for B/C/D come from here
+- Downstream consumer repo (sister-toolbox) task spec — read the consumer's task YAML when the planner spawns; the phenotype table there is the source-of-truth for phenotype priors; the contingency block is the source-of-truth for `configs/pat_rl.yaml`. Do NOT hardcode a path to the consumer repo in any committed file in this toolbox (keep it task-agnostic)
 - `docs/PAT_RL_API_HANDOFF.md` (quick-005) — current public API surface; Phase 20 extends this, does NOT break it
 - Phase 18 gap analysis — see STATE.md decision 114 (EV direction), 121 (log_beta parameterisation), 114-128 (PAT-RL runtime lessons)
 
 **Architectural directives (USER-SPECIFIED, non-negotiable)**:
 - **No new scripts.** All new behaviour lives in existing numbered scripts (`scripts/{03,04,05,06}_*.py`, `scripts/12_smoke_patrl_foundation.py`) made config-driven via `configs/pat_rl.yaml` toggles. If a new concern genuinely doesn't fit any existing script, the planner must surface it as a checkpoint before proceeding. Verify via `git diff --stat scripts/` at phase close
-- **Citations must be 2020 or later, Roelofs-group-first.** Retire Browning 2015 / Daw 2006 / Schönberg 2007 defaults from the Phase 18 config. Substitute with Klaassen 2021/2024, Terburg 2020+, Hulsman 2020+, Ly 2022+, Roelofs 2020+ reviews. The HEART2ADAPT spec is the primary source of truth for parameter values; literature is secondary grounding for direction/magnitude
+- **Citations must be 2020 or later, Roelofs-group-first.** Retire Browning 2015 / Daw 2006 / Schönberg 2007 defaults from the Phase 18 config. Substitute with Klaassen 2021/2024, Terburg 2020+, Hulsman 2020+, Ly 2022+, Roelofs 2020+ reviews. The the consumer study spec is the primary source of truth for parameter values; literature is secondary grounding for direction/magnitude
 - **Config-driven adaptation.** Every behavioural variant (Model choice, phenotype group, ε₂-coupling coefficient, cohort size, stratified-BMS toggle) must be reachable via a `configs/pat_rl.yaml` key. No hardcoded magic numbers. No new CLI flags for things that belong in YAML
 
 **Scope notes**:
 - This phase supersedes the Phase 18 "Option A Minimum Viable" deferrals (Models B/C/D, full PRL-V1 gate, PRL-V2 gate, stratified BMS, PEB export)
-- This phase DOES NOT open v1.3 HEART2ADAPT milestone — it completes v1.2 per user's explicit "Option B" choice
-- Post-Phase-20 the `dcm_hgf_mixed_models` v2 bridge layer has everything it needs to fit H2A.1.4-1.6 end-to-end
+- This phase completes v1.2 per user's explicit "Option B" choice — no new milestone opened
+- Post-Phase-20 the downstream sister-repo v2 bridge layer has everything it needs to fit its end-to-end pipeline without this toolbox needing to know the study codename
+- **Repo-framing directive**: this phase kicks off repositioning this repo as a general-purpose HGF analysis toolbox (not psilocybin-specific). Existing psilocybin pick_best_cue support stays as one use case in configs/notebooks; project-specific grant terminology is scrubbed from code/docs at commit time (see accompanying quick task on naming hygiene)
 
 ---
 
@@ -350,6 +350,6 @@ Plans:
 | 15 - Production Run + Results | v1.2 | 0/2 | Pending | -- |
 | 16 - NumPyro Direct + CUDA Fix | v1.2 | 2/2 | Complete | 2026-04-13 |
 | 17 - BlackJAX NUTS Sampler | v1.2 | 2/2 | Complete | 2026-04-15 |
-| 18 - PAT-RL Task Adaptation (HEART2ADAPT) | v1.2 | 6/6 | Complete (Option A scope) | 2026-04-18 |
+| 18 - PAT-RL Task Adaptation (the consumer study) | v1.2 | 6/6 | Complete (Option A scope) | 2026-04-18 |
 | 19 - VB-Laplace Fit Path (Tapas-Parity) | v1.2 | 5/5 | Complete | 2026-04-18 |
-| 20 - HEART2ADAPT Scientific Completion | v1.2 | 0/0 | Not planned | -- |
+| 20 - PAT-RL Scientific Completion | v1.2 | 0/0 | Not planned | -- |
