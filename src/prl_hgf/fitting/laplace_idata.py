@@ -32,6 +32,7 @@ __all__ = ["build_idata_from_laplace"]
 # Canonical parameter orders (module-level constants)
 # ---------------------------------------------------------------------------
 
+# Phase 19 (Model A only)
 _PARAM_ORDER_2LEVEL: tuple[str, ...] = ("omega_2", "log_beta")
 _PARAM_ORDER_3LEVEL: tuple[str, ...] = (
     "omega_2",
@@ -41,9 +42,44 @@ _PARAM_ORDER_3LEVEL: tuple[str, ...] = (
     "mu3_0",
 )
 
+# Plan 20-02 (Models A+b, B, C)
+# Convention: b always follows log_beta (2-level) or mu3_0 (3-level);
+# gamma follows b; alpha follows gamma.
+_PARAM_ORDER_2LEVEL_B: tuple[str, ...] = ("omega_2", "log_beta", "b", "gamma")
+_PARAM_ORDER_2LEVEL_C: tuple[str, ...] = (
+    "omega_2",
+    "log_beta",
+    "b",
+    "gamma",
+    "alpha",
+)
+_PARAM_ORDER_3LEVEL_B: tuple[str, ...] = (
+    "omega_2",
+    "log_beta",
+    "omega_3",
+    "kappa",
+    "mu3_0",
+    "b",
+    "gamma",
+)
+_PARAM_ORDER_3LEVEL_C: tuple[str, ...] = (
+    "omega_2",
+    "log_beta",
+    "omega_3",
+    "kappa",
+    "mu3_0",
+    "b",
+    "gamma",
+    "alpha",
+)
+
 _VALID_PARAM_ORDERS: tuple[tuple[str, ...], ...] = (
     _PARAM_ORDER_2LEVEL,
     _PARAM_ORDER_3LEVEL,
+    _PARAM_ORDER_2LEVEL_B,
+    _PARAM_ORDER_2LEVEL_C,
+    _PARAM_ORDER_3LEVEL_B,
+    _PARAM_ORDER_3LEVEL_C,
 )
 
 

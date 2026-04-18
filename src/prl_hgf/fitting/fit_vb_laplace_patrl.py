@@ -1,4 +1,4 @@
-"""VB-Laplace fit path for PAT-RL (Phase 19).
+"""VB-Laplace fit path for PAT-RL (Phase 19/20).
 
 Runs quasi-Newton MAP optimization via ``jaxopt.LBFGS`` on the imported
 ``_build_patrl_log_posterior`` (from ``hierarchical_patrl``, reused
@@ -10,9 +10,17 @@ inverts to posterior covariance, and packages the result as an
 ``laplace_idata.py``.
 
 The Hessian is block-diagonal across participants (priors IID,
-likelihood vmap-summed — see research Q3); Phase 19 computes the dense
+likelihood vmap-summed — see research Q3); Phase 19/20 computes the dense
 representation for simplicity. Block-structured ``jax.vmap(jax.hessian(
 per_subject_logp))`` is a Phase 20+ optimization for cohorts >200.
+
+Supported response models (Plan 20-02)
+---------------------------------------
+* ``model_a``: omega_2, log_beta, b
+* ``model_b``: omega_2, log_beta, b, gamma
+* ``model_c``: omega_2, log_beta, b, gamma, alpha
+
+3-level variants add: omega_3, kappa, mu3_0 (between log_beta and b).
 
 Reference: laplax (arxiv 2507.17013), matlab tapas_fitModel /
 tapas_riddersmatrix (conceptual analog).
@@ -39,7 +47,11 @@ from prl_hgf.fitting.hierarchical_patrl import (
 )
 from prl_hgf.fitting.laplace_idata import (
     _PARAM_ORDER_2LEVEL,
+    _PARAM_ORDER_2LEVEL_B,
+    _PARAM_ORDER_2LEVEL_C,
     _PARAM_ORDER_3LEVEL,
+    _PARAM_ORDER_3LEVEL_B,
+    _PARAM_ORDER_3LEVEL_C,
     build_idata_from_laplace,
 )
 
@@ -173,10 +185,10 @@ def fit_vb_laplace_patrl(
     # ------------------------------------------------------------------
     # 1. Validate inputs
     # ------------------------------------------------------------------
-    if response_model != "model_a":
+    if response_model not in ("model_a", "model_b", "model_c"):
         raise NotImplementedError(
-            f"response_model={response_model!r}: only 'model_a' is supported "
-            f"in Phase 19. Models B/C/D are Phase 20+ scope."
+            f"response_model={response_model!r}: supported are "
+            f"'model_a', 'model_b', 'model_c'. 'model_d' lands in Plan 20-03."
         )
     if model_name not in ("hgf_2level_patrl", "hgf_3level_patrl"):
         raise ValueError(
@@ -202,18 +214,34 @@ def fit_vb_laplace_patrl(
         shock_mag_arr=arrays["shock_mag"],
         trial_mask=arrays["trial_mask"],
         model_name=model_name,
+        response_model=response_model,
+        delta_hr_arr=arrays.get("delta_hr"),
     )
     # log_posterior_fn returns a POSITIVE log-posterior (NOT negated).
-    # Verified at hierarchical_patrl.py:650 — returns prior_lp + likelihood_lp.
-    log_posterior_fn = _build_patrl_log_posterior(logp_fn, config, model_name)
+    # Verified at hierarchical_patrl.py — returns prior_lp + likelihood_lp.
+    log_posterior_fn = _build_patrl_log_posterior(
+        logp_fn, config, model_name, response_model=response_model
+    )
 
     # ------------------------------------------------------------------
     # 3. Determine parameter order + initial position at prior means
     # ------------------------------------------------------------------
+    # Select canonical parameter order based on (model_name, response_model).
+    # Order: omega_2, log_beta [, omega_3, kappa, mu3_0 if 3-level], b [, gamma if B/C] [, alpha if C]
     if model_name == "hgf_2level_patrl":
-        param_order = _PARAM_ORDER_2LEVEL
-    else:
-        param_order = _PARAM_ORDER_3LEVEL
+        if response_model == "model_c":
+            param_order = _PARAM_ORDER_2LEVEL_C
+        elif response_model == "model_b":
+            param_order = _PARAM_ORDER_2LEVEL_B
+        else:
+            param_order = _PARAM_ORDER_2LEVEL
+    else:  # hgf_3level_patrl
+        if response_model == "model_c":
+            param_order = _PARAM_ORDER_3LEVEL_C
+        elif response_model == "model_b":
+            param_order = _PARAM_ORDER_3LEVEL_B
+        else:
+            param_order = _PARAM_ORDER_3LEVEL
 
     P = len(participants)
     prior = config.fitting.priors
@@ -237,6 +265,13 @@ def fit_vb_laplace_patrl(
         )
         init_arrays["kappa"] = jnp.full((P,), kappa_init)
         init_arrays["mu3_0"] = jnp.full((P,), prior.mu3_0.mean)
+
+    # b is always sampled (Plan 20-02 forward)
+    init_arrays["b"] = jnp.full((P,), prior.b.mean)
+    if response_model in ("model_b", "model_c"):
+        init_arrays["gamma"] = jnp.full((P,), prior.gamma.mean)
+    if response_model == "model_c":
+        init_arrays["alpha"] = jnp.full((P,), prior.alpha.mean)
 
     # Build init_position dict preserving param_order (dict-insertion order
     # MUST match ravel_pytree expectation — research Q10).
