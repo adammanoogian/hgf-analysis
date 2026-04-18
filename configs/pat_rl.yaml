@@ -17,34 +17,41 @@ task:
   n_runs: 4
   trials_per_run: 48
 
-  # Hazard-rate-driven reversal (Behrens 2007 / Browning 2015 pattern).
-  # Two counterbalanced regimes across the 4 runs: stable/volatile.
+  # Hazard-rate-driven reversal. SVVS run order: stable-volatile-volatile-stable.
+  # Klaassen et al. 2021 (Scientific Reports, doi:10.1038/s41598-021-90968-z).
   hazards:
     stable: 0.03
     volatile: 0.10
-  run_order: ["stable", "volatile", "stable", "volatile"]
+  run_order: ["stable", "volatile", "volatile", "stable"]
 
-  # Outcome contingencies given state:
-  # state=safe (0): P(reward | approach)=0.75, P(shock | approach)=0.00,
-  #                 P(nothing | approach)=0.25
-  # state=dangerous (1): P(reward | approach)=0.25, P(shock | approach)=0.50,
-  #                      P(nothing | approach)=0.25
-  # avoid action always yields nothing (no outcome).
+  # Outcome contingencies given state (consumer-study specification):
+  # state=safe    (0): P(reward|approach)=0.70, P(shock|approach)=0.10,
+  #                    P(nothing|approach)=0.20
+  # state=dangerous(1): P(reward|approach)=0.10, P(shock|approach)=0.70,
+  #                     P(nothing|approach)=0.20
+  # avoid action: P(reward|avoid)=0.10, P(shock|avoid)=0.10, P(nothing|avoid)=0.80
+  #   NOTE (Plan 20-01): The avoid block is stored in config for documentation
+  #   and downstream logp use. Plans 20-02/20-03 wire stochastic avoid outcomes
+  #   into the logp and scan body; the current Model A logp treats avoid as no-outcome.
   contingencies:
     safe:
-      reward: 0.75
-      shock: 0.00
-      nothing: 0.25
+      reward: 0.70
+      shock: 0.10
+      nothing: 0.20
     dangerous:
-      reward: 0.25
-      shock: 0.50
-      nothing: 0.25
+      reward: 0.10
+      shock: 0.70
+      nothing: 0.20
+    avoid:
+      reward: 0.10
+      shock: 0.10
+      nothing: 0.80
 
   # 2x2 reward/shock magnitude design crossed within-subject per trial.
   # Each trial drawn uniformly at random from the 4 cells.
   magnitudes:
-    reward_levels: [1.0, 5.0]
-    shock_levels: [1.0, 5.0]
+    reward_levels: [1, 3]
+    shock_levels: [1, 3]
 
   # Trial timing in seconds (needed for trajectory export outcome_time_s).
   timing:
@@ -64,37 +71,68 @@ task:
 
 # ---------------------------------------------------------------------------
 # Simulation parameters — phenotype 2x2 grid (anxiety x reward_sensitivity)
-# Values grounded in: Browning et al. 2015 (Nat Neurosci), Daw 2006,
-# Schönberg 2007. omega_2 direction: higher (less negative) = faster
-# updating = anxiety. beta direction: higher = more reward-driven.
+#
+# Phenotype priors match the HEART2ADAPT consumer-study spec (sister repo
+# docs/files/GSD_heart2adapt_sim.yaml, tasks H2A.1.2 + H2A.1.4). Values
+# marked TODO:consumer-spec are placeholders pending downstream confirmation.
+#
+# Computational grounding: Klaassen et al. 2024 (Communications Biology,
+# doi:10.1038/s42003-024-06267-6) — approach-avoidance under threat x HGF.
+# omega_2: higher (less negative) = faster updating = anxiety direction.
+# beta: higher = more reward-driven.
 # ---------------------------------------------------------------------------
 simulation:
-  n_participants_per_phenotype: 8   # 4 phenotypes x 8 = 32 for V1/V2
+  n_participants_per_phenotype: 8   # 4 phenotypes x 8 = 32 for V1/V2; Plan 20-05 raises to 40
   master_seed: 5678
 
-  # Phenotype 2x2 grid (anxiety x reward_sensitivity) per research addendum.
-  # Numbers are Browning 2015 / Daw 2006 / Schönberg 2007 grounded; tune in V2.
+  # Phenotype 2x2 grid (anxiety x reward_sensitivity).
+  # Keys must match _REQUIRED_PHENOTYPE_KEYS in pat_rl_config.py exactly.
   phenotypes:
     healthy:
-      omega_2: {mean: -6.0, sd: 0.5}
-      beta:    {mean: 2.0, sd: 0.5}
-      kappa:   {mean: 1.0, sd: 0.0}    # fixed
-      mu3_0:   {mean: 1.0, sd: 0.0}
-    anxious:
-      omega_2: {mean: -3.5, sd: 0.5}
-      beta:    {mean: 2.0, sd: 0.5}
-      kappa:   {mean: 1.0, sd: 0.0}
-      mu3_0:   {mean: 1.0, sd: 0.0}
+      omega_2: {mean: -3.0, sd: 0.5}
+      omega_3: {mean: -4.0, sd: 0.5}
+      kappa:   {mean:  1.0, sd: 0.25}
+      mu3_0:   {mean:  1.0, sd: 0.3}
+      theta:   {mean:  0.005, sd: 0.002}
+      beta:    {mean:  2.0, sd: 0.5}
+      b:       {mean:  0.0, sd: 0.5}        # SC1 mean; sd=0.5 placeholder  TODO:consumer-spec b.sd
+      dhr_mean: -2.0                          # SC1 (H2A.1.2): healthy Δhr ~ N(-2, 0.5)
+      dhr_sd:    0.5                          # SC1 (H2A.1.2)
+      epsilon2_coupling_coef: 0.3             # placeholder: larger PE → more bradycardia (Klaassen 2024)  TODO:consumer-spec epsilon2_coupling_coef
     reward_sensitive:
-      omega_2: {mean: -6.0, sd: 0.5}
-      beta:    {mean: 8.0, sd: 0.5}
-      kappa:   {mean: 1.0, sd: 0.0}
-      mu3_0:   {mean: 1.0, sd: 0.0}
+      omega_2: {mean: -3.0, sd: 0.5}
+      omega_3: {mean: -4.0, sd: 0.5}
+      kappa:   {mean:  1.0, sd: 0.25}
+      mu3_0:   {mean:  1.0, sd: 0.3}
+      theta:   {mean:  0.005, sd: 0.002}
+      beta:    {mean:  3.5, sd: 0.5}
+      b:       {mean:  0.3, sd: 0.5}         # SC1 mean; sd=0.5 placeholder  TODO:consumer-spec b.sd
+      dhr_mean: -2.0                          # inherited from healthy baseline (H2A.1.4); SC1 silent on reward-susceptible  TODO:consumer-spec dhr_mean
+      dhr_sd:    0.5                          # inherited from healthy baseline (H2A.1.4); SC1 silent on reward-susceptible  TODO:consumer-spec dhr_sd
+      epsilon2_coupling_coef: 0.3             # placeholder  TODO:consumer-spec epsilon2_coupling_coef
+    # 'anxious' key = SC1's HIGH-ANXIETY phenotype
+    anxious:
+      omega_2: {mean: -2.0, sd: 0.5}
+      omega_3: {mean: -4.0, sd: 0.5}
+      kappa:   {mean:  1.0, sd: 0.25}
+      mu3_0:   {mean:  2.0, sd: 0.3}
+      theta:   {mean:  0.01, sd: 0.003}
+      beta:    {mean:  2.0, sd: 0.5}
+      b:       {mean: -0.3, sd: 0.5}         # SC1 mean; sd=0.5 placeholder  TODO:consumer-spec b.sd
+      dhr_mean: -0.5                          # SC1 (H2A.1.2): high-anxiety Δhr ~ N(-0.5, 0.8); weak bradycardia (sympathetic overdrive)
+      dhr_sd:    0.8                          # SC1 (H2A.1.2)
+      epsilon2_coupling_coef: 0.3             # placeholder; coupling direction same as healthy; magnitude TBD  TODO:consumer-spec epsilon2_coupling_coef
     anxious_reward_sensitive:
-      omega_2: {mean: -3.5, sd: 0.5}
-      beta:    {mean: 8.0, sd: 0.5}
-      kappa:   {mean: 1.0, sd: 0.0}
-      mu3_0:   {mean: 1.0, sd: 0.0}
+      omega_2: {mean: -2.0, sd: 0.5}
+      omega_3: {mean: -4.0, sd: 0.5}
+      kappa:   {mean:  1.0, sd: 0.25}
+      mu3_0:   {mean:  2.0, sd: 0.3}
+      theta:   {mean:  0.01, sd: 0.003}
+      beta:    {mean:  3.5, sd: 0.5}
+      b:       {mean:  0.0, sd: 0.5}         # SC1 mean; sd=0.5 placeholder  TODO:consumer-spec b.sd
+      dhr_mean: -0.5                          # inherited from high-anxiety baseline (H2A.1.4); SC1 silent on anxious+reward  TODO:consumer-spec dhr_mean
+      dhr_sd:    0.8                          # inherited from high-anxiety baseline (H2A.1.4); SC1 silent on anxious+reward  TODO:consumer-spec dhr_sd
+      epsilon2_coupling_coef: 0.3             # placeholder  TODO:consumer-spec epsilon2_coupling_coef
 
 # ---------------------------------------------------------------------------
 # Fitting parameters — MCMC settings and prior distributions
@@ -112,3 +150,7 @@ fitting:
     kappa:   {lower: 0.0, upper: 2.0, mean: 1.0, sd: 0.5}   # truncated normal
     beta:    {lower: 0.0, upper: 20.0, mean: 4.0, sd: 3.0}  # truncated normal
     mu3_0:   {mean: 1.0, sd: 1.0}
+    b:       {mean: 0.0, sd: 1.0}         # response bias (Models A+b, B, C)
+    gamma:   {mean: 0.0, sd: 0.5}         # ΔHR additive weight (Models B, C)  TODO:consumer-spec gamma prior
+    alpha:   {mean: 0.0, sd: 0.5}         # ΔHR × EV interaction weight (Model C)  TODO:consumer-spec alpha prior
+    lam:     {mean: 0.0, sd: 0.1}         # trial-varying omega coupling (Model D)  TODO:consumer-spec lam prior
