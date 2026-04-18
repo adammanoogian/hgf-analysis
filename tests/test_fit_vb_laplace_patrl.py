@@ -90,18 +90,18 @@ def test_regularize_to_pd_preserves_pd_matrix() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_notimplementederror_for_model_b() -> None:
-    """response_model='model_b' must raise NotImplementedError."""
-    with pytest.raises(NotImplementedError, match="model_b") as exc_info:
+def test_notimplementederror_for_unknown_response_model() -> None:
+    """response_model='model_e' must raise NotImplementedError (unknown model).
+
+    Plan 20-02: model_b and model_c are now supported. Only truly unrecognised
+    values (e.g. 'model_e') should raise.
+    """
+    with pytest.raises(NotImplementedError, match="model_e"):
         fit_vb_laplace_patrl(
             pd.DataFrame(),
             "hgf_2level_patrl",
-            response_model="model_b",
+            response_model="model_e",
         )
-    # Must also mention Phase 20
-    assert "Phase 20" in str(exc_info.value), (
-        f"Error message should mention 'Phase 20', got: {exc_info.value}"
-    )
 
 
 def test_jit_fallback_warning_logged(caplog: pytest.LogCaptureFixture) -> None:
@@ -415,4 +415,101 @@ def test_laplace_fit_emits_participant_id_dim() -> None:
     assert "participant" not in omega2_dims, (
         f"'participant' (OQ1 dim-name bug) must NOT appear in omega_2.dims, "
         f"got {omega2_dims}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Plan 20-02: Laplace smoke tests for Models B and C
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_fit_vb_laplace_model_b_smoke() -> None:
+    """5-agent Laplace smoke for Model B: posterior contains b and gamma.
+
+    Verifies that fit_vb_laplace_patrl no longer raises NotImplementedError
+    for model_b, and that the returned InferenceData has the expected
+    posterior variables including the ΔHR modulation parameters.
+    """
+    config = load_pat_rl_config()
+    sim_df, _, _ = simulate_patrl_cohort(
+        n_participants=5,
+        level=2,
+        master_seed=202,
+        config=config,
+    )
+
+    idata = fit_vb_laplace_patrl(
+        sim_df,
+        "hgf_2level_patrl",
+        response_model="model_b",
+        n_pseudo_draws=200,
+        max_iter=100,
+        config=config,
+    )
+
+    assert idata.posterior is not None
+    expected_vars = {"omega_2", "log_beta", "b", "gamma", "beta"}
+    actual_vars = set(idata.posterior.data_vars)
+    missing = expected_vars - actual_vars
+    assert not missing, (
+        f"Missing posterior vars for model_b: {missing}. Got: {actual_vars}"
+    )
+
+    # All finite
+    for var in expected_vars:
+        vals = idata.posterior[var].values
+        assert np.all(np.isfinite(vals)), (
+            f"model_b posterior[{var!r}] contains non-finite values"
+        )
+
+    # Shape: (chain=1, draw=200, participant_id=5)
+    assert idata.posterior["omega_2"].shape[2] == 5, (
+        f"Expected participant_id dim = 5, got {idata.posterior['omega_2'].shape}"
+    )
+
+
+@pytest.mark.slow
+def test_fit_vb_laplace_model_c_smoke() -> None:
+    """5-agent Laplace smoke for Model C: posterior contains b, gamma, alpha.
+
+    Verifies that fit_vb_laplace_patrl dispatches correctly for model_c,
+    and that the returned InferenceData has the expected posterior variables
+    including the ΔHR × value sensitivity alpha parameter.
+    """
+    config = load_pat_rl_config()
+    sim_df, _, _ = simulate_patrl_cohort(
+        n_participants=5,
+        level=2,
+        master_seed=203,
+        config=config,
+    )
+
+    idata = fit_vb_laplace_patrl(
+        sim_df,
+        "hgf_2level_patrl",
+        response_model="model_c",
+        n_pseudo_draws=200,
+        max_iter=100,
+        config=config,
+    )
+
+    assert idata.posterior is not None
+    expected_vars = {"omega_2", "log_beta", "b", "gamma", "alpha", "beta"}
+    actual_vars = set(idata.posterior.data_vars)
+    missing = expected_vars - actual_vars
+    assert not missing, (
+        f"Missing posterior vars for model_c: {missing}. Got: {actual_vars}"
+    )
+
+    # All finite
+    for var in expected_vars:
+        vals = idata.posterior[var].values
+        assert np.all(np.isfinite(vals)), (
+            f"model_c posterior[{var!r}] contains non-finite values"
+        )
+
+    # Shape: (chain=1, draw=200, participant_id=5)
+    assert idata.posterior["omega_2"].shape[2] == 5, (
+        f"Expected participant_id dim = 5, got {idata.posterior['omega_2'].shape}"
     )

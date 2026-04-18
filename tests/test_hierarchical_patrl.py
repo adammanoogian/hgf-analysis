@@ -320,17 +320,118 @@ def test_5participant_smoke_fit_3level() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 7: NotImplementedError for Models B/C/D
+# Test 7: NotImplementedError only for unrecognised response_model values
 # ---------------------------------------------------------------------------
 
 
-def test_not_implemented_for_models_bcd() -> None:
-    """fit_batch_hierarchical_patrl raises NotImplementedError with 'Phase 19+'."""
+def test_not_implemented_for_unknown_response_model() -> None:
+    """fit_batch_hierarchical_patrl raises NotImplementedError for unrecognised model.
+
+    Plan 20-02: model_a/b/c are now supported; only unknown values raise.
+    """
     from prl_hgf.fitting.hierarchical_patrl import fit_batch_hierarchical_patrl
 
     df = _make_synthetic_patrl_df(n_participants=1, n_trials=5, seed=0)
-    with pytest.raises(NotImplementedError, match="Phase 19\\+"):
-        fit_batch_hierarchical_patrl(df, response_model="model_b")
+    with pytest.raises(NotImplementedError, match="model_e"):
+        fit_batch_hierarchical_patrl(df, response_model="model_e")
+
+
+# ---------------------------------------------------------------------------
+# Tests 9-12: Plan 20-02 factory tests (no blackjax dependency)
+# ---------------------------------------------------------------------------
+
+
+def test_build_logp_fn_batched_patrl_accepts_delta_hr_arr() -> None:
+    """build_logp_fn_batched_patrl accepts delta_hr_arr kwarg; output is finite."""
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import build_logp_fn_batched_patrl
+
+    P, T = 5, 192
+    rng = np.random.default_rng(42)
+    state = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    choices = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    reward = np.ones((P, T), dtype=np.float32)
+    shock = np.ones((P, T), dtype=np.float32)
+    mask = np.ones((P, T), dtype=bool)
+    delta_hr = rng.normal(0.0, 2.0, size=(P, T)).astype(np.float64)
+
+    fn = build_logp_fn_batched_patrl(
+        state, choices, reward, shock, mask, "hgf_2level_patrl",
+        response_model="model_a",
+        delta_hr_arr=delta_hr,
+    )
+    params = {
+        "omega_2": jnp.full((P,), -4.0),
+        "beta": jnp.full((P,), 2.0),
+        "b": jnp.full((P,), 0.0),
+    }
+    lp = fn(params)
+    assert lp.shape == (), f"Expected scalar, got {lp.shape}"
+    assert np.isfinite(float(lp)), f"Expected finite logp, got {float(lp)}"
+
+
+def test_build_logp_fn_batched_patrl_model_b() -> None:
+    """build_logp_fn_batched_patrl with response_model='model_b' returns finite logp."""
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import build_logp_fn_batched_patrl
+
+    P, T = 5, 192
+    rng = np.random.default_rng(43)
+    state = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    choices = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    reward = np.ones((P, T), dtype=np.float32)
+    shock = np.ones((P, T), dtype=np.float32)
+    mask = np.ones((P, T), dtype=bool)
+    delta_hr = rng.normal(0.0, 2.0, size=(P, T)).astype(np.float64)
+
+    fn = build_logp_fn_batched_patrl(
+        state, choices, reward, shock, mask, "hgf_2level_patrl",
+        response_model="model_b",
+        delta_hr_arr=delta_hr,
+    )
+    params = {
+        "omega_2": jnp.full((P,), -4.0),
+        "beta": jnp.full((P,), 2.0),
+        "b": jnp.full((P,), 0.0),
+        "gamma": jnp.full((P,), 0.3),
+    }
+    lp = fn(params)
+    assert lp.shape == (), f"Expected scalar, got {lp.shape}"
+    assert np.isfinite(float(lp)), f"Expected finite logp for model_b, got {float(lp)}"
+
+
+def test_build_logp_fn_batched_patrl_model_c() -> None:
+    """build_logp_fn_batched_patrl with response_model='model_c' returns finite logp."""
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import build_logp_fn_batched_patrl
+
+    P, T = 5, 192
+    rng = np.random.default_rng(44)
+    state = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    choices = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    reward = np.ones((P, T), dtype=np.float32)
+    shock = np.ones((P, T), dtype=np.float32)
+    mask = np.ones((P, T), dtype=bool)
+    delta_hr = rng.normal(0.0, 2.0, size=(P, T)).astype(np.float64)
+
+    fn = build_logp_fn_batched_patrl(
+        state, choices, reward, shock, mask, "hgf_2level_patrl",
+        response_model="model_c",
+        delta_hr_arr=delta_hr,
+    )
+    params = {
+        "omega_2": jnp.full((P,), -4.0),
+        "beta": jnp.full((P,), 2.0),
+        "b": jnp.full((P,), 0.0),
+        "alpha": jnp.full((P,), 0.1),
+        "gamma": jnp.full((P,), 0.3),
+    }
+    lp = fn(params)
+    assert lp.shape == (), f"Expected scalar, got {lp.shape}"
+    assert np.isfinite(float(lp)), f"Expected finite logp for model_c, got {float(lp)}"
 
 
 # ---------------------------------------------------------------------------

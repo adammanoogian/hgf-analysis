@@ -24,7 +24,7 @@ from prl_hgf.models.hgf_3level_patrl import (
     build_3level_network_patrl,
     extract_beliefs_patrl_3level,
 )
-from prl_hgf.models.response_patrl import model_a_logp
+from prl_hgf.models.response_patrl import model_a_logp, model_b_logp, model_c_logp
 
 # ---------------------------------------------------------------------------
 # Shared test constants
@@ -251,3 +251,157 @@ def test_pick_best_cue_models_unchanged() -> None:
     assert callable(softmax_stickiness_surprise), (
         "softmax_stickiness_surprise import failed"
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 20-02: Tests for model_a_logp(b), model_b_logp, model_c_logp
+# ---------------------------------------------------------------------------
+
+
+class TestPhase20ResponseModels:
+    """Tests for the Plan 20-02 response model extensions.
+
+    Covers model_a_logp with bias b, model_b_logp, and model_c_logp.
+    """
+
+    _rng = np.random.default_rng(20)
+    _N = 10  # number of trials for shape tests
+
+    @classmethod
+    def _inputs(cls) -> tuple:
+        """Return (mu2, choices, reward, shock) test arrays of length _N."""
+        mu2 = jnp.array(
+            cls._rng.standard_normal(cls._N).astype(np.float32)
+        )
+        choices = jnp.array(
+            cls._rng.integers(0, 2, size=cls._N), dtype=jnp.int32
+        )
+        reward = jnp.full(cls._N, 3.0)
+        shock = jnp.full(cls._N, 3.0)
+        return mu2, choices, reward, shock
+
+    def test_model_a_logp_accepts_b_default_zero(self) -> None:
+        """model_a_logp with b=0.0 default must match Phase 18 behavior."""
+        mu2, choices, reward, shock = self._inputs()
+        logp_new_default = model_a_logp(mu2, choices, reward, shock, beta=2.0)
+        logp_explicit_zero = model_a_logp(mu2, choices, reward, shock, beta=2.0, b=0.0)
+        np.testing.assert_allclose(
+            np.asarray(logp_new_default),
+            np.asarray(logp_explicit_zero),
+            atol=1e-6,
+            err_msg="model_a_logp b=0 default must equal explicit b=0",
+        )
+
+    def test_model_a_logp_b_shifts_logits(self) -> None:
+        """b=2.0 shifts approach logit at ev=0; P(approach) > 0.5.
+
+        At mu2=0: P(danger)=0.5, EV = 0.5*V_rew - 0.5*V_shk.
+        With V_rew=V_shk=3: EV = 0.  Approach logit before b: beta*EV=0.
+        With b=2.0: approach logit = 2.0 -> P(approach) = sigmoid(2) ~ 0.88.
+        With b=0.0: approach logit = 0 -> P(approach) = 0.5.
+        """
+        mu2 = jnp.zeros(1)
+        choices_approach = jnp.array([1], dtype=jnp.int32)
+        reward = jnp.array([3.0])
+        shock = jnp.array([3.0])
+
+        logp_b0 = model_a_logp(mu2, choices_approach, reward, shock, beta=2.0, b=0.0)
+        logp_b2 = model_a_logp(mu2, choices_approach, reward, shock, beta=2.0, b=2.0)
+
+        p_approach_b0 = float(jnp.exp(logp_b0[0]))
+        p_approach_b2 = float(jnp.exp(logp_b2[0]))
+
+        assert abs(p_approach_b0 - 0.5) < 1e-4, (
+            f"Expected P(approach)~0.5 at EV=0,b=0; got {p_approach_b0:.6f}"
+        )
+        assert p_approach_b2 > 0.8, (
+            f"Expected P(approach)>0.8 with b=2.0; got {p_approach_b2:.6f}"
+        )
+
+    def test_model_b_logp_shape_and_finite(self) -> None:
+        """model_b_logp returns (n_trials,) all-finite array."""
+        mu2, choices, reward, shock = self._inputs()
+        dhr = jnp.array(
+            self._rng.normal(0.0, 2.0, size=self._N).astype(np.float32)
+        )
+        logp = model_b_logp(mu2, choices, reward, shock, beta=2.0, b=0.3, gamma=0.5, delta_hr=dhr)
+        assert logp.shape == (self._N,), (
+            f"Expected shape ({self._N},), got {logp.shape}"
+        )
+        assert np.all(np.isfinite(np.asarray(logp))), "model_b_logp is not all-finite"
+
+    def test_model_b_logp_gamma_zero_equals_model_a_plus_b(self) -> None:
+        """model_b_logp with gamma=0 must equal model_a_logp with same b."""
+        mu2, choices, reward, shock = self._inputs()
+        dhr = jnp.array(
+            self._rng.normal(0.0, 2.0, size=self._N).astype(np.float32)
+        )
+        logp_b = model_b_logp(
+            mu2, choices, reward, shock, beta=2.0, b=0.3, gamma=0.0, delta_hr=dhr
+        )
+        logp_a = model_a_logp(mu2, choices, reward, shock, beta=2.0, b=0.3)
+        np.testing.assert_allclose(
+            np.asarray(logp_b),
+            np.asarray(logp_a),
+            atol=1e-6,
+            err_msg="model_b with gamma=0 must equal model_a with same b",
+        )
+
+    def test_model_c_logp_shape_and_finite(self) -> None:
+        """model_c_logp returns (n_trials,) all-finite array."""
+        mu2, choices, reward, shock = self._inputs()
+        dhr = jnp.array(
+            self._rng.normal(0.0, 2.0, size=self._N).astype(np.float32)
+        )
+        logp = model_c_logp(
+            mu2, choices, reward, shock, beta=2.0, b=0.3, alpha=0.1, gamma=0.5, delta_hr=dhr
+        )
+        assert logp.shape == (self._N,), (
+            f"Expected shape ({self._N},), got {logp.shape}"
+        )
+        assert np.all(np.isfinite(np.asarray(logp))), "model_c_logp is not all-finite"
+
+    def test_model_c_logp_alpha_zero_equals_model_b(self) -> None:
+        """model_c_logp with alpha=0 must equal model_b_logp elementwise."""
+        mu2, choices, reward, shock = self._inputs()
+        dhr = jnp.array(
+            self._rng.normal(0.0, 2.0, size=self._N).astype(np.float32)
+        )
+        logp_c = model_c_logp(
+            mu2, choices, reward, shock, beta=2.0, b=0.3, alpha=0.0, gamma=0.5, delta_hr=dhr
+        )
+        logp_b = model_b_logp(
+            mu2, choices, reward, shock, beta=2.0, b=0.3, gamma=0.5, delta_hr=dhr
+        )
+        np.testing.assert_allclose(
+            np.asarray(logp_c),
+            np.asarray(logp_b),
+            atol=1e-6,
+            err_msg="model_c with alpha=0 must equal model_b",
+        )
+
+    def test_model_c_alpha_effect_sign(self) -> None:
+        """With alpha>0 and ΔHR<0, effective_beta < beta; approach logit decreases.
+
+        At mu2 = -5 (very safe state): EV_approach > 0.
+        With alpha>0 and negative dhr: effective_beta = beta + alpha*dhr < beta.
+        Therefore approach logit at positive EV is smaller under Model C vs Model A.
+        """
+        mu2_safe = jnp.full(5, -5.0)  # P(danger) very low → EV > 0
+        choices_approach = jnp.ones(5, dtype=jnp.int32)
+        reward = jnp.full(5, 5.0)
+        shock = jnp.full(5, 1.0)
+        dhr_bradycardia = jnp.full(5, -3.0)  # freezing
+
+        # Model A baseline (no dhr effect)
+        logp_a = model_a_logp(mu2_safe, choices_approach, reward, shock, beta=2.0, b=0.0)
+        # Model C with alpha=0.5: effective_beta = 2.0 + 0.5*(-3) = 0.5 < 2.0
+        logp_c = model_c_logp(
+            mu2_safe, choices_approach, reward, shock,
+            beta=2.0, b=0.0, alpha=0.5, gamma=0.0, delta_hr=dhr_bradycardia,
+        )
+
+        # Lower effective_beta → lower approach logit → lower P(approach) → lower logp
+        assert np.all(np.asarray(logp_c) < np.asarray(logp_a)), (
+            "Expected model_c with alpha>0, dhr<0 to have lower approach logp than model_a"
+        )
