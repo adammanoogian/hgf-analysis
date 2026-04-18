@@ -181,4 +181,27 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
+# =============================================================================
+# Auto-push logs and results to git (mirrors 18_smoke_patrl_cpu.slurm)
+# Runs regardless of EXIT_CODE so failed bench still uploads its .err log.
+# =============================================================================
+echo ""
+echo "Pushing benchmark results to git..."
+_LOG_OUT="cluster/logs/bench14_${SLURM_JOB_ID}.out"
+_LOG_ERR="cluster/logs/bench14_${SLURM_JOB_ID}.err"
+
+git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
+git add results/power/benchmark_batched.json 2>/dev/null
+git add .planning/STATE.md 2>/dev/null
+if ! git diff --cached --quiet 2>/dev/null; then
+    git commit -m "bench phase14 gpu sampler=${SAMPLER} (job ${SLURM_JOB_ID})"
+    if git push origin main 2>/dev/null; then
+        echo "Pushed benchmark results to origin/main"
+    else
+        echo "WARNING: git push failed — results committed locally only"
+    fi
+else
+    echo "No new files to push"
+fi
+
 exit $EXIT_CODE
