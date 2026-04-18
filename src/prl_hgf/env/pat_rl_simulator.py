@@ -13,7 +13,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from prl_hgf.env.pat_rl_config import PATRLConfig
+from prl_hgf.env.pat_rl_config import PHENOTYPE_COLUMN_NAME, PATRLConfig
 from prl_hgf.env.pat_rl_sequence import PATRLTrial, generate_session_patrl
 from prl_hgf.models.hgf_2level_patrl import build_2level_network_patrl
 from prl_hgf.models.hgf_3level_patrl import build_3level_network_patrl
@@ -33,7 +33,8 @@ def run_hgf_forward_patrl(
     omega_3: float = -6.0,
     kappa: float = 1.0,
     mu3_0: float = 1.0,
-) -> np.ndarray:
+    return_epsilon2: bool = False,
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     """Run HGF forward pass and return per-trial mu2 trajectory.
 
     Parameters
@@ -50,11 +51,29 @@ def run_hgf_forward_patrl(
         Volatility coupling strength (3-level only).
     mu3_0 : float, optional
         Initial volatility state mean (3-level only).
+    return_epsilon2 : bool, default False
+        If True, also return the level-2 prediction error trajectory
+        epsilon2(t) = ``node_trajectories[1]['temp']['value_prediction_error']``.
+        Used by the phenotype-specific Delta-HR generative model
+        (``simulate_patrl_cohort``, SC4). Decision 126 confirms pyhgf 0.2.8
+        exposes this key. Default False preserves the Phase 18/19 return
+        shape (mu2 only).
 
     Returns
     -------
-    np.ndarray
-        Shape ``(n_trials,)`` float64 array of posterior belief means mu2.
+    mu2_array : np.ndarray, shape (n_trials,), float64
+        Posterior belief mean trajectory.
+    epsilon2_array : np.ndarray, shape (n_trials,), float64
+        Level-2 value prediction error trajectory.
+        ONLY returned when ``return_epsilon2=True``.
+
+    Raises
+    ------
+    RuntimeError
+        If ``return_epsilon2=True`` and the pyhgf temp key
+        ``value_prediction_error`` is missing (surfaces API changes).
+    ValueError
+        If the epsilon2 shape does not match mu2 shape.
     """
     u = np.array([t.state for t in trials], dtype=np.float64)
     n_trials = len(trials)
@@ -71,7 +90,29 @@ def run_hgf_forward_patrl(
         time_steps=np.ones(n_trials, dtype=np.float64),
     )
     traj = net.node_trajectories[1]  # BELIEF_NODE = 1
-    return np.asarray(traj["mean"], dtype=np.float64)
+    mu2 = np.asarray(traj["mean"], dtype=np.float64)
+
+    if return_epsilon2:
+        # Decision 126: pyhgf 0.2.8 temp keys confirmed present.
+        # value_prediction_error is the epsilon2(t) trajectory at level 2.
+        try:
+            epsilon2 = np.asarray(
+                traj["temp"]["value_prediction_error"],
+                dtype=np.float64,
+            )
+        except (KeyError, TypeError) as exc:
+            raise RuntimeError(
+                "run_hgf_forward_patrl: expected "
+                "node_trajectories[1]['temp']['value_prediction_error'] "
+                "to be present (Decision 126). Check pyhgf version."
+            ) from exc
+        if epsilon2.shape != mu2.shape:
+            raise ValueError(
+                f"epsilon2 shape {epsilon2.shape} != mu2 shape "
+                f"{mu2.shape}; aborting to surface pyhgf API change."
+            )
+        return mu2, epsilon2
+    return mu2
 
 
 def simulate_patrl_cohort(
