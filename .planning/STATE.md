@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ## Current Position
 
 Phase: 14 gap closure (14.1) of 19 (VB-Laplace Fit Path)
-Plan: 14.1-01/6 complete (14.1-01: SAMPLER env-var + git auto-push for 14_benchmark_gpu.slurm)
-Status: In progress — 14.1-01 complete; 14.1-02 through 14.1-06 pending
-Last activity: 2026-04-18 — Completed 14.1-01: SAMPLER env-var (default blackjax) + git auto-push block in cluster/14_benchmark_gpu.slurm
+Plan: 14.1-01/6 complete; 14.1-02 SUPERSEDED by 14.1-03; remaining: 14.1-03, 14.1-04, 14.1-05, 14.1-06
+Status: In progress — next action is 14.1-03 (submit BlackJAX benchmark on M3)
+Last activity: 2026-04-18 — Superseded 14.1-02 (numpyro run was erroneous, no artifact); rewrote 14.1-03 as sole benchmark-execution gap-closure under BlackJAX
 
 [===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6)
 
@@ -189,6 +189,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Completed 14.1-01 — SAMPLER env-var (default blackjax) + git auto-push block in cluster/14_benchmark_gpu.slurm
+Stopped at: Superseded 14.1-02 (M3 numpyro run was erroneous); rewrote 14.1-03 as the sole benchmark-execution gap-closure (submit BlackJAX bench on M3 with auto-push).
 Resume file: None
-Next action: Execute remaining 14.1 gap-closure plans (14.1-02 through 14.1-06).
+Next action: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1). SAMPLER defaults to blackjax. Auto-push lands benchmark_batched.json + STATE.md row. Then run 14.1-03 Task 2 locally (schema + row-relabel + SUMMARY) followed by 14.1-04, 14.1-05, 14.1-06.

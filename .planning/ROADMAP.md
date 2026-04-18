@@ -164,9 +164,9 @@ Plans:
 - [x] 14-03-PLAN.md — VALID-03 cross-platform consistency validation script + comparison tests
 
 Gap-closure (14.1): code complete post-verification, operational gaps remain (cluster runs never executed; sampler drift post-Phase 17)
-- [ ] 14.1-01-PLAN.md — SLURM auto-push + SAMPLER env var on cluster/14_benchmark_gpu.slurm
-- [ ] 14.1-02-PLAN.md — Triage in-flight numpyro benchmark, backfill STATE.md decision-gate row if needed
-- [ ] 14.1-03-PLAN.md — BlackJAX benchmark re-run for Phase 15 production sampler gate
+- [x] 14.1-01-PLAN.md — SLURM auto-push + SAMPLER env var on cluster/14_benchmark_gpu.slurm (completed 2026-04-18)
+- [~] 14.1-02-PLAN.md — ~~Triage in-flight numpyro benchmark~~ SUPERSEDED 2026-04-18 by 14.1-03 (numpyro run was erroneous; no artifact to preserve)
+- [ ] 14.1-03-PLAN.md — Submit BlackJAX benchmark on M3 for Phase 15 production sampler gate (sole benchmark-execution gap-closure)
 - [ ] 14.1-04-PLAN.md — VALID-03 CPU vs GPU run (auto-push patch + submit + compare verdict)
 - [ ] 14.1-05-PLAN.md — Cross-chunk JIT cache persistence test (BENCH-05 human-verify #2)
 - [ ] 14.1-06-PLAN.md — Phase 14 re-verification; flip VERIFICATION.md status; unblock Phase 15
@@ -306,10 +306,18 @@ Plans:
   9. **No new scripts created**: every analysis lives in an existing numbered script (`03_simulate_participants.py`, `04_fit_participants.py`, `05_run_validation.py`, `06_group_analysis.py`, `scripts/12_smoke_patrl_foundation.py`) or in the corresponding `src/prl_hgf/` module, made config-driven via `configs/pat_rl.yaml` flags. Verify via `git diff --stat scripts/` showing ONLY modifications (zero additions) to scripts/
   10. **Citation hygiene enforced**: every literature citation in config files, docstrings, and planning docs is dated 2020 or later. Prefer **Karin Roelofs' group** (Nijmegen Donders/Behavioural Science Institute — fear bradycardia, approach-avoidance conflict, threat anticipation cardiac deceleration): e.g. Klaassen et al. 2021 *Neuroimage* / 2024 *Biol Psychiatry*, Terburg et al. 2020+, Hulsman et al. 2020+, Ly et al. 2022+, Roelofs 2017/2020 reviews. Explicitly retire the Browning 2015 / Daw 2006 / Schönberg 2007 defaults from Phase 18's config where they conflict with the consumer study spec numbers (which supersede literature)
   11. Parallel-stack invariant preserved where possible; where config-driven adaptation necessarily extends existing modules (e.g. `models/response_patrl.py` adding `b`, B, C, D; `env/pat_rl_simulator.py` adding ε₂-coupled ΔHR; `analysis/bms.py` adding stratified variant), the extensions are ADDITIVE (new kwargs with safe defaults; existing Phase 18/19 tests remain green)
-**Plans**: 0 plans
+**Plans**: 8 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 20 to break down)
+- [ ] 20-01-config-delta-and-loader-PLAN.md — correct `configs/pat_rl.yaml` to consumer spec (contingencies SVVS, magnitudes [1,3], 4-phenotype priors + new b/dhr_*/epsilon2_coupling_coef fields) and extend `env/pat_rl_config.py` loader (ContingencyConfig.avoid + PhenotypeParams + FittingPriorConfig.b/gamma/alpha/lam + PHENOTYPE_COLUMN_NAME)
+- [ ] 20-02-model-a-bias-and-models-b-c-PLAN.md — add bias `b` kwarg to `model_a_logp` (default 0.0, backwards compatible), implement `model_b_logp` and `model_c_logp`, dispatch in both fit paths (hierarchical + Laplace), thread `delta_hr_arr` into the batched logp, 5-agent Laplace smoke for A+b/B/C
+- [ ] 20-03-model-d-trial-varying-omega-PLAN.md — implement Model D `_clamped_step_model_d` mirroring Phase 18-04 kappa-via-attrs pattern (per-trial `omega_eff(t) = omega + lam·dHR(t)`), preserve Layer-2 clamp and fp64 invariants, shared `_run_patrl_scan` helper, 5-agent λ-recovery smoke within 0.3 of truth (SC3)
+- [ ] 20-04-epsilon2-coupled-dhr-simulator-PLAN.md — extend `run_hgf_forward_patrl` with `return_epsilon2` kwarg, replace stub ΔHR with ε₂-coupled generative model in `simulate_patrl_cohort`, add canonical `phenotype` column to sim_df (SC4; unblocks Plans 20-05 and 20-06)
+- [ ] 20-05-cohort-scale-40x4-PLAN.md — bump `n_participants_per_phenotype` to 40, add multi-phenotype loop with per-phenotype SeedSequence spawn (4 × 40 = 160 deterministic agents), update SLURM smoke defaults (PRL_PATRL_SMOKE_N=40 PRL_PATRL_SMOKE_PHENOTYPES=all), prove determinism across phenotype subsets (SC5)
+- [ ] 20-06-stratified-bms-peb-export-PLAN.md — implement `compute_stratified_bms(fit_df, phenotype_col='phenotype')` and `export_peb_covariates(fit_df_2level, fit_df_3level, output_path)` in `analysis/bms.py`, preserve existing `run_stratified_bms` per Decision 109 parallel-stack invariant (SC6)
+- [ ] 20-07-validation-gates-prl-v1-v2-PLAN.md — extend `scripts/05_run_validation.py` with `--task=patrl` + PRL-V1 r≥0.7 gate (ω₂/κ/β primary; ω₃/μ₃⁰ exploratory), extend `scripts/06_group_analysis.py` with `--analysis=phenotype_separability` + PRL-V2 Cohen's d≥0.5 and |cor|<0.5 gates, add `compute_batch_waic_patrl` to bridge sim_df phenotype → fit_df phenotype (SC7, SC8, SC9)
+- [ ] 20-08-citation-replacement-PLAN.md — retire Browning 2015 / Daw 2006 / Schönberg 2007 references across configs + docstrings + .planning/ docs; replace with Klaassen 2021/2024 Roelofs-group citations; create `docs/references.bib` with BibTeX; audit gate at Task 2 checkpoint (SC10)
+
 
 **Sources of record**:
 - Downstream consumer repo (sister-toolbox) task spec — read the consumer's task YAML when the planner spawns; the phenotype table there is the source-of-truth for phenotype priors; the contingency block is the source-of-truth for `configs/pat_rl.yaml`. Do NOT hardcode a path to the consumer repo in any committed file in this toolbox (keep it task-agnostic)
@@ -352,4 +360,4 @@ Plans:
 | 17 - BlackJAX NUTS Sampler | v1.2 | 2/2 | Complete | 2026-04-15 |
 | 18 - PAT-RL Task Adaptation (the consumer study) | v1.2 | 6/6 | Complete (Option A scope) | 2026-04-18 |
 | 19 - VB-Laplace Fit Path (Tapas-Parity) | v1.2 | 5/5 | Complete | 2026-04-18 |
-| 20 - PAT-RL Scientific Completion | v1.2 | 0/0 | Not planned | -- |
+| 20 - PAT-RL Scientific Completion | v1.2 | 0/8 | Planned | -- |
