@@ -10,7 +10,8 @@
 #   5. Appends decision to .planning/STATE.md
 #
 # Usage:
-#   sbatch cluster/14_benchmark_gpu.slurm
+#   sbatch cluster/14_benchmark_gpu.slurm                              # BlackJAX (default, Phase 17 production sampler)
+#   sbatch --export=ALL,SAMPLER=numpyro cluster/14_benchmark_gpu.slurm # NumPyro baseline (legacy)
 # =============================================================================
 
 #SBATCH --job-name=prl_bench14
@@ -125,6 +126,7 @@ echo "Job ID:  ${SLURM_JOB_ID:-local}"
 echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
+echo "Sampler:  ${SAMPLER}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -144,6 +146,7 @@ echo ""
 # =============================================================================
 # Run Benchmark (BENCH-01, BENCH-02, BENCH-04, BENCH-05)
 # =============================================================================
+export SAMPLER="${SAMPLER:-blackjax}"
 echo "Running batched hierarchical benchmark..."
 echo ""
 
@@ -154,7 +157,7 @@ python scripts/08_run_power_iteration.py \
     --fit-chains 4 \
     --fit-draws 500 \
     --fit-tune 500 \
-    --sampler numpyro
+    --sampler "${SAMPLER}"
 
 EXIT_CODE=$?
 
