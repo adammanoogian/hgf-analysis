@@ -90,7 +90,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests", "validation"]
 pythonpath = ["src", "."]
-addopts = "-v --tb=short --strict-markers --durations=10"
+addopts = "-v --tb=short --strict-markers --durations=10 -m \"not slow\""
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks integration tests",

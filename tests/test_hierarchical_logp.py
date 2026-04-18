@@ -87,6 +87,7 @@ def _simulated_data_session():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_valid_01_batched_at_p1_bit_exact_3level(_simulated_data_session):
     """VALID-01: batched logp at P=1 equals legacy 3-level logp.
 
@@ -145,6 +146,7 @@ def test_valid_01_batched_at_p1_bit_exact_3level(_simulated_data_session):
     )
 
 
+@pytest.mark.slow
 def test_valid_01_batched_at_p1_bit_exact_2level(_simulated_data_session):
     """VALID-01: batched logp at P=1 equals legacy 2-level logp.
 
@@ -202,6 +204,7 @@ def test_valid_01_batched_at_p1_bit_exact_2level(_simulated_data_session):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_valid_01_batched_at_p2_doubles_logp(_simulated_data_session):
     """VALID-01 P=2: batched logp with 2 identical participants equals 2x legacy.
 
@@ -265,6 +268,7 @@ def test_valid_01_batched_at_p2_doubles_logp(_simulated_data_session):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_layer_2_clamping_returns_finite_under_unstable_params(
     _simulated_data_session,
 ):
@@ -515,6 +519,7 @@ def test_valid_02_batched_numpyro_convergence(_five_participant_sim_df):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_build_logp_fn_batched_smoke():
     """Smoke test: build_logp_fn_batched returns finite logp for dummy data.
 
@@ -584,6 +589,7 @@ def test_numpyro_model_importable():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_blackjax_log_posterior_smoke_3level():
     """BlackJAX: _build_log_posterior returns finite scalar for 3-level model.
 
@@ -636,6 +642,7 @@ def test_blackjax_log_posterior_smoke_3level():
     )
 
 
+@pytest.mark.slow
 def test_blackjax_log_posterior_smoke_2level():
     """BlackJAX: _build_log_posterior returns finite scalar for 2-level model.
 
@@ -683,6 +690,7 @@ def test_blackjax_log_posterior_smoke_2level():
     )
 
 
+@pytest.mark.slow
 def test_blackjax_log_posterior_gradient_smoke():
     """BlackJAX: gradient of log-posterior is finite (no NaN/inf).
 
@@ -738,6 +746,7 @@ def test_blackjax_log_posterior_gradient_smoke():
         )
 
 
+@pytest.mark.slow
 def test_blackjax_samples_to_idata_smoke():
     """BlackJAX: _samples_to_idata produces correct InferenceData.
 
