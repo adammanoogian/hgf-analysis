@@ -48,7 +48,18 @@ __all__ = [
     "PriorTruncated",
     "TimingConfig",
     "load_pat_rl_config",
+    "PHENOTYPE_COLUMN_NAME",
 ]
+
+# ---------------------------------------------------------------------------
+# Module-level constants
+# ---------------------------------------------------------------------------
+
+#: Canonical column name for the phenotype label in simulation and fit
+#: DataFrames. Use this constant everywhere to avoid silent name mismatches
+#: when propagating the phenotype dimension from sim_df → fit_df → BMS.
+#: (RESEARCH.md §12 Risk 3)
+PHENOTYPE_COLUMN_NAME: str = "phenotype"
 
 
 # ---------------------------------------------------------------------------
@@ -135,13 +146,23 @@ class ContingencyConfig:
     Parameters
     ----------
     safe : OutcomeProbs
-        Probabilities for the safe state (state=0).
+        Probabilities for the safe state (state=0) under approach action.
     dangerous : OutcomeProbs
-        Probabilities for the dangerous state (state=1).
+        Probabilities for the dangerous state (state=1) under approach action.
+    avoid : OutcomeProbs
+        Probabilities for the avoid action regardless of context state.
+        Consumer spec: P(reward|avoid)=0.10, P(shock|avoid)=0.10,
+        P(nothing|avoid)=0.80 (stochastic avoid; Klaassen 2024 Comms Bio).
+        NOTE (Plan 20-01): This field exposes the avoid contingency at the
+        config surface. Wiring stochastic avoid outcomes into the logp and
+        scan body is deferred to Plans 20-02/20-03. Legacy configs without
+        an ``avoid`` key default to P(nothing|avoid)=1.0 (deterministic
+        no-outcome), preserving Phase 18/19 behavior.
     """
 
     safe: OutcomeProbs
     dangerous: OutcomeProbs
+    avoid: OutcomeProbs = OutcomeProbs(reward=0.0, shock=0.0, nothing=1.0)
 
 
 @dataclass(frozen=True)
@@ -412,19 +433,66 @@ class PhenotypeParams:
     Parameters
     ----------
     omega_2 : PriorGaussian
-        Tonic volatility distribution.
+        Tonic volatility distribution (level-2 log-space learning rate).
     beta : PriorGaussian
-        Inverse temperature distribution.
+        Inverse temperature distribution (decision noise).
     kappa : PriorGaussian
         Volatility-coupling distribution (sd=0 means fixed).
     mu3_0 : PriorGaussian
         Initial volatility prior distribution (sd=0 means fixed).
+    omega_3 : PriorGaussian, optional
+        Meta-volatility distribution (3-level HGF only; sd=0 means fixed).
+        Defaults to ``PriorGaussian(mean=-4.0, sd=0.5)`` per consumer spec.
+    theta : PriorGaussian, optional
+        Volatility hyperparameter ϑ (scale factor for volatility updates).
+        Defaults to ``PriorGaussian(mean=0.005, sd=0.002)`` per consumer spec.
+    b : PriorGaussian, optional
+        Response bias distribution (additive offset in decision logit).
+        Defaults to ``PriorGaussian(mean=0.0, sd=0.5)`` (neutral bias).
+        Prior for Models A+b, B, C. Validated: ``b.sd >= 0``.
+    dhr_mean : float, optional
+        Mean anticipatory heart-rate change (bpm) for ε₂-coupled ΔHR
+        generative model. Negative values = bradycardia. Default -2.0 (healthy
+        phenotype SC1 value from Klaassen et al. 2024 Comms Bio).
+    dhr_sd : float, optional
+        Standard deviation of ΔHR generative distribution (bpm). Must be
+        > 0. Default 0.5.
+    epsilon2_coupling_coef : float, optional
+        Coefficient λ_dhr scaling level-2 prediction error ε₂(t) in the
+        ΔHR generative model: ΔHR ~ N(dhr_mean, dhr_sd) + λ_dhr·ε₂(t).
+        Positive = larger PE → more bradycardia (Klaassen 2024 direction).
+        Must be >= 0. Default 0.3 (placeholder; TODO:consumer-spec).
+
+    Notes
+    -----
+    The ``omega_3``, ``theta``, ``b``, ``dhr_mean``, ``dhr_sd``, and
+    ``epsilon2_coupling_coef`` fields are new in Plan 20-01 and default
+    to values that preserve Phase 18/19 simulation behavior on configs that
+    omit them.
     """
 
     omega_2: PriorGaussian
     beta: PriorGaussian
     kappa: PriorGaussian
     mu3_0: PriorGaussian
+    # --- Phase 20-01 additions (all have defaults for backward compat) ---
+    omega_3: PriorGaussian = PriorGaussian(mean=-4.0, sd=0.5)
+    theta: PriorGaussian = PriorGaussian(mean=0.005, sd=0.002)
+    b: PriorGaussian = PriorGaussian(mean=0.0, sd=0.5)
+    dhr_mean: float = -2.0
+    dhr_sd: float = 0.5
+    epsilon2_coupling_coef: float = 0.3
+
+    def __post_init__(self) -> None:
+        if self.dhr_sd <= 0.0:
+            raise ValueError(
+                f"PhenotypeParams: dhr_sd must be > 0, got {self.dhr_sd}"
+            )
+        if self.epsilon2_coupling_coef < 0.0:
+            raise ValueError(
+                "PhenotypeParams: epsilon2_coupling_coef must be >= 0, "
+                f"got {self.epsilon2_coupling_coef}"
+            )
 
 
 @dataclass(frozen=True)
@@ -485,6 +553,25 @@ class FittingPriorConfig:
         Inverse temperature prior (truncated Normal).
     mu3_0 : PriorGaussian
         Initial volatility-state prior (Normal).
+    b : PriorGaussian, optional
+        Response bias prior (Normal). Used by Models A+b, B, C.
+        Defaults to ``PriorGaussian(mean=0.0, sd=1.0)``.
+    gamma : PriorGaussian, optional
+        ΔHR additive weight prior (Normal). Used by Models B, C.
+        Defaults to ``PriorGaussian(mean=0.0, sd=0.5)``.
+    alpha : PriorGaussian, optional
+        ΔHR × EV interaction weight prior (Normal). Used by Model C.
+        Defaults to ``PriorGaussian(mean=0.0, sd=0.5)``.
+    lam : PriorGaussian, optional
+        Trial-varying omega coupling coefficient prior (Normal). Used by
+        Model D (ω_eff(t) = ω + λ·ΔHR(t)). Defaults to
+        ``PriorGaussian(mean=0.0, sd=0.1)``.
+
+    Notes
+    -----
+    The ``b``, ``gamma``, ``alpha``, and ``lam`` fields are new in Plan
+    20-01 and default to values consistent with no-effect (mean=0) that
+    preserve Model A behavior on configs that omit them.
     """
 
     omega_2: PriorGaussian
@@ -492,6 +579,11 @@ class FittingPriorConfig:
     kappa: PriorTruncated
     beta: PriorTruncated
     mu3_0: PriorGaussian
+    # --- Phase 20-01 additions (all have defaults for backward compat) ---
+    b: PriorGaussian = PriorGaussian(mean=0.0, sd=1.0)
+    gamma: PriorGaussian = PriorGaussian(mean=0.0, sd=0.5)
+    alpha: PriorGaussian = PriorGaussian(mean=0.0, sd=0.5)
+    lam: PriorGaussian = PriorGaussian(mean=0.0, sd=0.1)
 
 
 @dataclass(frozen=True)
@@ -583,9 +675,19 @@ def _parse_outcome_probs(d: dict[str, Any], state_name: str) -> OutcomeProbs:
 
 
 def _parse_contingencies(d: dict[str, Any]) -> ContingencyConfig:
+    # NOTE (Plan 20-01): The ``avoid`` key is new in the consumer-spec YAML.
+    # Legacy configs (Phase 18/19) that omit it receive the default
+    # OutcomeProbs(reward=0.0, shock=0.0, nothing=1.0), preserving the
+    # original deterministic no-outcome avoid behavior. Wiring stochastic
+    # avoid outcomes into the logp/scan body is deferred to Plans 20-02/20-03.
+    if "avoid" in d:
+        avoid = _parse_outcome_probs(d["avoid"], "avoid")
+    else:
+        avoid = OutcomeProbs(reward=0.0, shock=0.0, nothing=1.0)
     return ContingencyConfig(
         safe=_parse_outcome_probs(d["safe"], "safe"),
         dangerous=_parse_outcome_probs(d["dangerous"], "dangerous"),
+        avoid=avoid,
     )
 
 
@@ -651,12 +753,28 @@ def _parse_prior_truncated(d: dict[str, Any]) -> PriorTruncated:
 
 
 def _parse_phenotype_params(d: dict[str, Any]) -> PhenotypeParams:
-    return PhenotypeParams(
-        omega_2=_parse_prior_gaussian(d["omega_2"]),
-        beta=_parse_prior_gaussian(d["beta"]),
-        kappa=_parse_prior_gaussian(d["kappa"]),
-        mu3_0=_parse_prior_gaussian(d["mu3_0"]),
-    )
+    # Required fields (present since Phase 18)
+    kwargs: dict[str, Any] = {
+        "omega_2": _parse_prior_gaussian(d["omega_2"]),
+        "beta": _parse_prior_gaussian(d["beta"]),
+        "kappa": _parse_prior_gaussian(d["kappa"]),
+        "mu3_0": _parse_prior_gaussian(d["mu3_0"]),
+    }
+    # Phase 20-01 optional fields — fall back to PhenotypeParams defaults
+    # when absent (preserves Phase 18/19 configs that lack these keys).
+    if "omega_3" in d:
+        kwargs["omega_3"] = _parse_prior_gaussian(d["omega_3"])
+    if "theta" in d:
+        kwargs["theta"] = _parse_prior_gaussian(d["theta"])
+    if "b" in d:
+        kwargs["b"] = _parse_prior_gaussian(d["b"])
+    if "dhr_mean" in d:
+        kwargs["dhr_mean"] = float(d["dhr_mean"])
+    if "dhr_sd" in d:
+        kwargs["dhr_sd"] = float(d["dhr_sd"])
+    if "epsilon2_coupling_coef" in d:
+        kwargs["epsilon2_coupling_coef"] = float(d["epsilon2_coupling_coef"])
+    return PhenotypeParams(**kwargs)
 
 
 def _parse_simulation(d: dict[str, Any]) -> PATRLSimulationConfig:
@@ -672,13 +790,25 @@ def _parse_simulation(d: dict[str, Any]) -> PATRLSimulationConfig:
 
 
 def _parse_fitting_priors(d: dict[str, Any]) -> FittingPriorConfig:
-    return FittingPriorConfig(
-        omega_2=_parse_prior_gaussian(d["omega_2"]),
-        omega_3=_parse_prior_gaussian(d["omega_3"]),
-        kappa=_parse_prior_truncated(d["kappa"]),
-        beta=_parse_prior_truncated(d["beta"]),
-        mu3_0=_parse_prior_gaussian(d["mu3_0"]),
-    )
+    # Required fields (present since Phase 18)
+    kwargs: dict[str, Any] = {
+        "omega_2": _parse_prior_gaussian(d["omega_2"]),
+        "omega_3": _parse_prior_gaussian(d["omega_3"]),
+        "kappa": _parse_prior_truncated(d["kappa"]),
+        "beta": _parse_prior_truncated(d["beta"]),
+        "mu3_0": _parse_prior_gaussian(d["mu3_0"]),
+    }
+    # Phase 20-01 optional fields — fall back to FittingPriorConfig defaults
+    # when absent (preserves Phase 18/19 configs that lack these keys).
+    if "b" in d:
+        kwargs["b"] = _parse_prior_gaussian(d["b"])
+    if "gamma" in d:
+        kwargs["gamma"] = _parse_prior_gaussian(d["gamma"])
+    if "alpha" in d:
+        kwargs["alpha"] = _parse_prior_gaussian(d["alpha"])
+    if "lam" in d:
+        kwargs["lam"] = _parse_prior_gaussian(d["lam"])
+    return FittingPriorConfig(**kwargs)
 
 
 def _parse_fitting(d: dict[str, Any]) -> PATRLFittingConfig:
