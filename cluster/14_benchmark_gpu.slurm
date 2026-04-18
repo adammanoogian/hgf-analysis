@@ -117,6 +117,12 @@ fi
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
 
 # =============================================================================
+# Sampler selection (default: blackjax — Phase 17 production sampler)
+# Set BEFORE the banner so echoed value reflects the actual invocation.
+# =============================================================================
+export SAMPLER="${SAMPLER:-blackjax}"
+
+# =============================================================================
 # Verify GPU
 # =============================================================================
 echo "============================================================"
@@ -146,7 +152,6 @@ echo ""
 # =============================================================================
 # Run Benchmark (BENCH-01, BENCH-02, BENCH-04, BENCH-05)
 # =============================================================================
-export SAMPLER="${SAMPLER:-blackjax}"
 echo "Running batched hierarchical benchmark..."
 echo ""
 

@@ -136,12 +136,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sampler",
         type=str,
-        choices=["pymc", "numpyro"],
-        default="numpyro",
+        choices=["pymc", "numpyro", "blackjax"],
+        default="blackjax",
         help=(
-            "DEPRECATED: ignored for the batched path (always uses "
-            "numpyro-direct MCMC). Retained for backward compatibility "
-            "with existing SLURM scripts."
+            "Sampler for fit_batch_hierarchical. 'blackjax' is the "
+            "Phase 17 production sampler (STATE decision 98); "
+            "'numpyro' is the fallback; 'pymc' is deprecated and "
+            "falls through to numpyro (STATE decision 102)."
         ),
     )
     parser.add_argument(
