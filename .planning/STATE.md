@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 19 VB-Laplace Fit Path (Tapas-Parity Validation) — Plans 1-3 complete; Plans 4-5 pending
+**Current focus:** Phase 19 VB-Laplace Fit Path (Tapas-Parity Validation) — Plans 1-4 complete; Plan 5 pending
 
 ## Current Position
 
 Phase: 19 of 19 (VB-Laplace Fit Path)
-Plan: 3/5 complete (19-01 pat_rl_simulator, 19-02 Laplace InferenceData factory, 19-03 fit_vb_laplace_patrl)
-Status: In progress — Phase 19 Plans 1-3 complete; Plans 4-5 pending
-Last activity: 2026-04-18 — Completed 19-03: fit_vb_laplace_patrl MAP+Hessian+InferenceData; 12 tests pass; 4/5 omega_2 recovery within 0.5
+Plan: 4/5 complete (19-01 pat_rl_simulator, 19-02 Laplace InferenceData factory, 19-03 fit_vb_laplace_patrl, 19-04 VBL-06 comparison harness)
+Status: In progress — Phase 19 Plans 1-4 complete; Plan 5 pending
+Last activity: 2026-04-18 — Completed 19-04: compare_posteriors + _apply_hard_gates + CLI harness; 8 fast tests pass; parallel-stack invariant preserved
 
-[===========█████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 in progress (3/5)
+[===========█████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 in progress (4/5)
 
 ## Performance Metrics
 
@@ -138,6 +138,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Dense (P*K)x(P*K) Hessian via jax.hessian on ravel_pytree flat vector | Tractable for P<=200; block-diagonal property documented in TODO; block-structured vmap path deferred to Phase 20+ | 19-03 |
 | Re-project best_mode_params to param_order after LBFGS before ravel_pytree | JAX pytrees (dicts) are flattened in sorted-key order by jaxopt; ravel_pytree must see insertion order matching param_order to align cov columns with build_idata_from_laplace | 19-03 |
 | kappa in native TruncatedNormal space for Phase 19; logit-reparam deferred (OQ2) | Avoids extra Jacobian complexity; cluster smoke (Plan 19-05) will reveal if MAP hits boundary | 19-03 |
+| within_gate=pd.NA for non-omega_2 rows; True/False only for omega_2 | No tolerance defined for beta/omega_3/kappa/mu3_0 in Phase 19 (VB_LAPLACE_FEASIBILITY.md §6); pd.BooleanDtype allows mixed T/F/NA | 19-04 |
+| NUTS dim rename on idata_nuts.copy() inside compare_posteriors; caller idata never mutated | Read-only contract for idata_nuts; rename scoped to comparison; caller can still use original NUTS idata for other purposes | 19-04 |
+| _apply_hard_gates filters to df[df.parameter=='omega_2'] before .all() | Non-omega_2 rows have pd.NA in within_gate; .all() on mixed T/F/NA would raise or give wrong result | 19-04 |
+| CLI exit codes: 0 all omega_2 gates pass / skip-nuts, 1 gate fails, 2 loader error | 3-state map mirrors smoke script convention (18-06); distinguishes gate failure from environment error | 19-04 |
 
 ### Pending Todos
 
@@ -178,6 +182,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Completed 19-03 — fit_vb_laplace_patrl: jaxopt.LBFGS MAP + jax.hessian + eigh-clip PD + build_idata_from_laplace; 12 tests pass; 4/5 omega_2 recovery within 0.5; parallel-stack invariant preserved.
+Stopped at: Completed 19-04 — VBL-06 Laplace-vs-NUTS comparison harness; compare_posteriors + _apply_hard_gates + CLI (run/compare subcommands); 8 fast tests pass; nullable-bool within_gate for omega_2 only; NUTS dim rename on .copy(); parallel-stack invariant preserved.
 Resume file: None
-Next action: Execute 19-04 (pipeline integration test: fit_vb_laplace_patrl -> export_subject_trajectories -> CSV end-to-end).
+Next action: Execute 19-05 (smoke script integration test: run --skip-nuts-comparison end-to-end on scripts/12_smoke_patrl_foundation.py).
