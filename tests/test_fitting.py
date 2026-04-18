@@ -87,6 +87,7 @@ def _simulated_data():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_2level_op_finite_logp(_simulated_data):
     """2-level Op returns a finite log-probability at canonical parameters."""
     from prl_hgf.fitting.ops import build_logp_ops_2level
@@ -112,6 +113,7 @@ def test_2level_op_finite_logp(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_3level_op_finite_logp(_simulated_data):
     """3-level Op returns a finite log-probability at canonical parameters."""
     from prl_hgf.fitting.ops import build_logp_ops_3level
@@ -139,6 +141,7 @@ def test_3level_op_finite_logp(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_2level_grad_finite(_simulated_data):
     """All gradient components of the 2-level Op are finite at realistic parameters.
 
@@ -177,6 +180,7 @@ def test_2level_grad_finite(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_omega2_positive_returns_neginf(_simulated_data):
     """2-level Op returns -inf when omega_2 is positive (NaN guard activated).
 

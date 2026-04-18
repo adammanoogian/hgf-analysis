@@ -18,6 +18,8 @@ matplotlib.use("Agg")  # must precede any matplotlib.pyplot import
 import numpy as np
 import pytest
 
+pytest.importorskip("ipywidgets")
+
 from prl_hgf.gui.explorer import PROFILES, ParamExplorer
 
 
