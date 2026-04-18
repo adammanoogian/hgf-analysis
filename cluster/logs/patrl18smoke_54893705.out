@@ -1,0 +1,30 @@
+
+============================================================
+Phase 18 PAT-RL Foundation Smoke Test (CPU)
+============================================================
+Job ID:    54893705
+Node:      m3s104
+Partition: comp (CPU only)
+MCMC:      tune=500 draws=500 N=5
+Level:     2
+Seed:      42
+JAX cache: /scratch/fc37/aman0087/.jax_cache_cpu/patrl/m3s104
+Start:     Sat Apr 18 07:30:08 PM AEST 2026
+============================================================
+
+JAX devices: [CpuDevice(id=0)]
+jax_enable_x64 (pre-run): False
+
+============================================================
+PAT-RL foundation smoke — Phase 18
+============================================================
+  level=2  n_participants=5
+  n_tune=500  n_draws=500  seed=42
+
+============================================================
+PAT-RL SMOKE FAILED (exit code: 1)
+  Check: cluster/logs/patrl18smoke_54893705.err
+End:       Sat Apr 18 07:31:14 PM AEST 2026
+============================================================
+
+Pushing PAT-RL smoke results to git...
