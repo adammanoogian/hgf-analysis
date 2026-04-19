@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 COMPLETE — verifier found 1 silent-runtime gap (YAML phenotype keys vs script axis masks), closed inline via commit 96b40b1. Gate logic wired; 160-agent numeric run is cluster-deferred.
+**Current focus:** Phase 21 Wave 1 in progress — benchmark bottleneck diagnosis. Plan 21-01 COMPLETE: HLO graph-scope memo produced with empirical scan-body-depth numbers (PAT-RL 3-level ~175 ops/trial inlined; pick_best_cue 3-level ~1170 ops/trial) and closure-over-data HLO evidence. Verdict deferred to 21-07.
 
 ## Current Position
 
-Phase: 20 (PAT-RL Scientific Completion) — COMPLETE ✓ (verified 2026-04-19)
-Plan: all 8/8 plans complete (20-01 through 20-08) + 1 gap-closure commit
-Status: Verified 10/11 must_haves + gap closed; cluster numeric gates deferred to SLURM run
-Last activity: 2026-04-19 — Closed SC8 phenotype naming gap via rename migration (25 files aligned on sister-repo spec: healthy/high_anxiety/reward_susceptible/anxious_reward)
+Phase: 21 (Benchmark Bottleneck Diagnosis) — IN PROGRESS (Wave 1)
+Plan: 21-01 COMPLETE ✓ (1/7 plans); next is 21-02 (cache forensics audit)
+Status: Wave 1 local desk work underway; benchmark-scope-memo.md on disk with all 6 verification checks passing; no src/ changes (diagnostic memo only)
+Last activity: 2026-04-19 — Completed plan 21-01: scope memo with HLO op counts + scan-body depth + FLOPs/draw for PAT-RL 2/3-level and pick_best_cue 2/3-level at P=3
 
-[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8)
+[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8); Phase 21 Wave 1 IN PROGRESS (1/7)
 
 ## Performance Metrics
 
@@ -175,6 +175,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | PRL-V2 axis mapping: Option A (2x2 factorial) — ANXIETY_HIGH={high_anxiety, anxious_reward}, ANXIETY_LOW={healthy, reward_susceptible}, REWARD_HIGH={reward_susceptible, anxious_reward}, REWARD_LOW={healthy, high_anxiety}; 80 agents per side; supplementary B-style pairwise as secondary output | User decision 2026-04-19; standard in anxiety×reward literature (Klaassen 2024); maximises power at 160 agents | 20-07 |
 | Default fit-method for PRL-V1 + PRL-V2: Laplace (NUTS deferred to post-Phase-14-15) | Laplace means agree with NUTS (Phase 19 OQ7 closure); over-wide β posterior does not affect PRL-V1/V2 gates which use posterior means | 20-07 |
 | SC9 / SC11 / Option A axis mask tests enforce Phase 20 invariants | test_sc9_no_new_scripts_audit asserts zero A-lines in git diff scripts/; test_sc11_phase_18_19_regression_suite_green runs full regression as subprocess; test_option_a_factorial_axis_masks_are_correct imports scripts/06 and asserts frozenset constants | 20-07 |
+| Scope-memo scan-body depth reported as "direct (@None callee) / inlined (sum of all nested @jit sub-fns)" | pyhgf's nested @partial(jit, static_argnames=...) decorators on beliefs_propagation, continuous_node_posterior_update, posterior_update_{precision,mean}_continuous_node cause each to appear as a separate func.func private MLIR block; raw @None callee count (23 for PAT-RL 3-level) understates real per-trial work (~175 inlined) | 21-01 |
+| P=3 is the local traceable cohort size for jax.make_jaxpr + jax.jit.lower.as_text on CPU | P=50 would exceed the 5-min local wall-time cap and is exactly the shape that blew up on cluster (job 54899271); extrapolation rule (scan body shape-invariant under vmap, outer graph sub-linear in P) substituted for a P=50 measurement | 21-01 |
+| Closure-over-data HLO signature confirmed at stablehlo.constant level | patrl_3level_P3.hlo.txt:3-8 contains state/reward/shock/mask arrays as `stablehlo.constant dense<"0x..."> : tensor<3x192xi32>` blobs (HLO constants); pick_best_cue HLO dump has same arrays as @main %arg5/6/7/8 (traced args, STATE #106/107 pattern); no verdict call yet — VERDICT (21-07) combines this with cache forensics (21-02) + VB-Laplace probe (21-03) | 21-01 |
+| pyhgf 0.2.10 installed locally (research/plans cite 0.2.8); structural pattern re-confirmed unchanged | Nested `@partial(jit, static_argnames=...)` decorators are first-line decorations on each public entry point — unlikely to have shifted between patch releases; HLO findings valid for cluster environment (assumed same minor version) | 21-01 |
 
 ### Pending Todos
 
@@ -219,6 +223,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-19
-Stopped at: Phase 20 fully closed. Verifier passed 10/11 must_haves; 1 gap (SC8 phenotype-key misalignment between YAML and scripts/06 axis masks) closed inline via commit 96b40b1 migrating 25 files onto sister-repo spec naming. 111/116 tests pass, 5 skipped (blackjax), 0 fail.
+Stopped at: Completed 21-01-PLAN.md (benchmark scope memo). All 6 plan verification checks pass; git diff --stat src/ clean. Empirical HLO scan-body depth: PAT-RL 3-level ~175 ops/trial inlined; pick_best_cue 3-level ~1170 ops/trial. Closure-over-data HLO constant signature confirmed at stablehlo.constant level. Verdict deferred to 21-07.
 Resume file: None
-Next action: Cluster 160-agent PRL-V1/V2 numeric runs — `sbatch cluster/patrl_smoke.slurm` with `scripts/05_run_validation.py --task=patrl --fit-method=laplace` + `scripts/06_group_analysis.py --task=patrl --analysis=phenotype_separability`. Per user directive 2026-04-19, default fit_method is Laplace; NUTS feasibility revisit gated on Phase 14-15 GPU benchmarks. Also pending: `sbatch cluster/14_benchmark_gpu.slurm` for 14.1-03 (standalone — not a v1.2 blocker).
+Next action: Plan 21-02 (cache forensics audit) — design `JAX_LOG_COMPILES=1` + `XLA_FLAGS=--xla_dump_hlo_as_text` instrumentation for cluster jobs + write SLURM scripts + probe harness code. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) and 14.1-03 GPU benchmark.
