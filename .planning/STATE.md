@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01 and 20-02 COMPLETE; Phase 14.1 gap closure (cluster benchmark) still pending
+**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01, 20-02, 20-03, 20-04 COMPLETE; Wave 2 done; Wave 3: 20-05/06/07/08 pending
 
 ## Current Position
 
-Phase: 20 (PAT-RL Scientific Completion) — Wave 1 in progress
-Plan: 20-02 COMPLETE; remaining Wave 1: none; Wave 2: 20-03/04/05; Wave 3: 20-06/07/08
-Status: In progress — next action is 20-03 (Model D: trial-varying omega scan body)
-Last activity: 2026-04-18 — Completed 20-02 (Model A+b, Models B/C); Laplace B/C smoke passed in 105s; 5 task commits pushed
+Phase: 20 (PAT-RL Scientific Completion) — Wave 2 complete
+Plan: 20-04 COMPLETE; Wave 2 (20-03/04) done; remaining Wave 3: 20-05/06/07/08
+Status: In progress — next action is 20-05 (cohort scale 40x4 + SeedSequence spawn)
+Last activity: 2026-04-18 — Completed 20-04 (ε₂-coupled ΔHR + phenotype column + M7 bridge); 6 task commits + push
 
-[===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (1/8)
+[===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (4/8)
 
 ## Performance Metrics
 
@@ -154,6 +154,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | blackjax NUTS smoke for B/C deferred to cluster SLURM (Plan 20-07): only Laplace path exercised locally | 20-02 |
 | 4 _PARAM_ORDER tuples added to laplace_idata.py for B/C 2-level+3-level: ravel_pytree flat order must match dict insertion order for Hessian column alignment | 20-02 |
 | CLI exit codes: 0 all omega_2 gates pass / skip-nuts, 1 gate fails, 2 loader error | 3-state map mirrors smoke script convention (18-06); distinguishes gate failure from environment error | 19-04 |
+| epsilon2 node index is 0 (input/observation node), not 1 (belief node): node_trajectories[1]['temp']['value_prediction_error'] is always 0 in pyhgf 0.2.8; actual ε₂ at node 0 (std=3.01 vs 0) | 20-04 |
+| epsilon2_coupling_coef is POSITIVE in YAML; formula: ΔHR(t) = N(dhr_mean, dhr_sd) + coef * ε₂(t); positive coef + positive surprise ε₂ → ΔHR moves toward zero (less bradycardia); consistent with Klaassen 2024 | 20-04 |
+| Model D two-pass generative uses mean-omega approx: omega_eff_mean = omega_2_true + lam_true * mean(delta_hr) as scalar; exact per-trial injection deferred (tracked as followup TODO in 20-04-SUMMARY.md) | 20-04 |
+| M7 bridge: simulate_patrl_cohort(response_model='model_d', lam_true=...) kwarg pair closes Plan 20-03 λ-recovery loop; test_model_d_lambda_recovery_smoke_epsilon2_coupled (seed=404) added as sibling to 20-03's seed=42 test | 20-04 |
 
 ### Pending Todos
 
@@ -197,6 +201,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Completed 20-02 (Model A+b + Models B/C). 5 task commits + 1 docs commit pushed to main. Laplace B/C smoke passed 105s.
+Stopped at: Completed 20-04 (ε₂-coupled ΔHR simulator + phenotype column + M7 bridge). 6 task commits pushed to main.
 Resume file: None
-Next action: Execute 20-03 (Model D: trial-varying omega scan body surgery). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
+Next action: Execute 20-05 (cohort scale 40x4 + per-phenotype SeedSequence spawn). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
