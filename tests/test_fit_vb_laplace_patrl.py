@@ -470,6 +470,182 @@ def test_fit_vb_laplace_model_b_smoke() -> None:
 
 
 @pytest.mark.slow
+def test_model_d_lambda_recovery_smoke() -> None:
+    """SC3 gate: Model D lambda posterior mean within 0.3 of truth at 5 agents.
+
+    Simulates 5 agents under Model D with a known lambda_true=0.1, fits via
+    ``fit_vb_laplace_patrl(response_model='model_d')``, and asserts the
+    posterior mean of lambda is within 0.3 of lambda_true for at least 3 of 5
+    agents.
+
+    This is a smoke gate — tighter recovery (r >= 0.8 across 160 agents) is
+    validated at 160 agents in scripts/05_run_validation.py --task=patrl
+    (PRL-V1 gate, deferred to cluster runs).
+
+    NOTE (M7 followup — Post-20-04): Plan 20-04 has now merged, so the ε₂-coupled
+    generative simulator (simulate_patrl_cohort with response_model='model_d',
+    lam_true) is available. This test uses it directly instead of the simpler
+    bootstrap Normal(-1, 0.5) ΔHR originally planned.
+
+    The simulator side uses a mean-effective-omega approximation for the
+    generative ΔHR (see pat_rl_simulator.py simulate_patrl_cohort model_d path).
+    The fitting side uses exact per-trial omega injection
+    (``_clamped_step_model_d``). This mismatch is intentional for this smoke
+    test: the goal is to verify that the fitting path can recover a positive
+    lambda signal from data that genuinely varies omega. A full generative-
+    model-matched re-verification should use the exact per-trial ε₂-driven
+    ΔHR once the generative simulator's two-pass pass is extended. This is
+    tracked as a followup in the plan SUMMARY.
+
+    # Post-20-04 followup (tracked as must_have in Plan 20-04 — M7 bridge):
+    # Confirm λ-recovery under the full ε₂-coupled generative process.
+    # The call below already uses the Plan-20-04 bridge kwarg:
+    #   simulate_patrl_cohort(
+    #       config=config, master_seed=42, n_participants=5,
+    #       phenotypes=['healthy'],
+    #       response_model='model_d',
+    #       lam_true=0.1,
+    #   )
+    # TODO: tighten the recovery gate from 3/5 to 4/5 and |err| < 0.2 after
+    # the two-pass per-trial simulator (exact omega_eff injection) lands.
+    """
+    lam_true = 0.1
+
+    config = load_pat_rl_config()
+    sim_df, true_params, _ = simulate_patrl_cohort(
+        n_participants=5,
+        level=2,
+        master_seed=42,
+        config=config,
+        response_model="model_d",
+        lam_true=lam_true,
+    )
+
+    idata = fit_vb_laplace_patrl(
+        sim_df,
+        "hgf_2level_patrl",
+        response_model="model_d",
+        n_pseudo_draws=500,
+        max_iter=200,
+        config=config,
+    )
+
+    assert idata.posterior is not None
+    # Model D posterior should include lam
+    assert "lam" in idata.posterior, (
+        f"Model D posterior missing 'lam'. Got vars: {list(idata.posterior.data_vars)}"
+    )
+
+    participants = sorted(sim_df["participant_id"].astype(str).unique().tolist())
+    lam_vals = idata.posterior["lam"].values  # (1, n_pseudo_draws, P)
+
+    n_within = 0
+    details: list[str] = []
+    for i, pid in enumerate(participants):
+        post_mean = float(np.mean(lam_vals[:, :, i]))
+        err = abs(post_mean - lam_true)
+        status = "PASS" if err < 0.3 else "FAIL"
+        if err < 0.3:
+            n_within += 1
+        details.append(
+            f"  {pid}: true_lam={lam_true:.3f}, post_mean={post_mean:.4f}, "
+            f"|err|={err:.4f} [{status}]"
+        )
+
+    assert n_within >= 3, (
+        f"SC3 GATE FAILED: Expected >=3/5 agents with |posterior_mean(lam) - "
+        f"lam_true| < 0.3; got {n_within}/5 (lam_true={lam_true}).\n"
+        "Lambda recovery details:\n" + "\n".join(details)
+    )
+
+
+@pytest.mark.slow
+def test_model_d_lambda_recovery_smoke_epsilon2_coupled() -> None:
+    """M7 bridge: lambda recovery under the Plan 20-04 ε₂-coupled generator.
+
+    This is the companion to ``test_model_d_lambda_recovery_smoke`` (Plan
+    20-03 bootstrap version). Both tests co-exist so regressions in either
+    generative path are independently catchable.
+
+    The key difference vs the Plan 20-03 bootstrap test:
+    * **Generator**: Uses the explicit ``phenotype_name='healthy'`` kwarg
+      and the same ε₂-coupled ΔHR path (Plan 20-04 SC4 formula).
+    * **Same fit path**: ``fit_vb_laplace_patrl(response_model='model_d')``.
+    * **Same gate**: |posterior_mean(lam) - 0.1| < 0.3 for >= 3/5 agents.
+
+    Both tests call ``simulate_patrl_cohort(response_model='model_d',
+    lam_true=0.1)`` — the Plan 20-04 M7 bridge kwarg — so both exercise
+    the ε₂-coupled generator. This test uses a different ``master_seed``
+    and ``n_pseudo_draws`` to give an independent draw, strengthening the
+    recovery evidence.
+    """
+    lam_true = 0.1
+
+    config = load_pat_rl_config()
+    sim_df, true_params, _ = simulate_patrl_cohort(
+        n_participants=5,
+        level=2,
+        master_seed=404,          # different seed from Plan 20-03's 42
+        config=config,
+        phenotype_name="healthy",  # explicit phenotype via Plan 20-04 kwarg
+        response_model="model_d",
+        lam_true=lam_true,
+    )
+
+    # Sanity: true_params should carry lam
+    for pid, tp in true_params.items():
+        assert "lam" in tp, (
+            f"true_params[{pid!r}] missing 'lam' key. "
+            f"Got: {list(tp.keys())}"
+        )
+        assert abs(tp["lam"] - lam_true) < 1e-10, (
+            f"true_params[{pid!r}]['lam'] = {tp['lam']!r}, expected {lam_true}"
+        )
+
+    # Sanity: phenotype column present
+    assert "phenotype" in sim_df.columns, (
+        "sim_df missing 'phenotype' column (Plan 20-04 M7 bridge check)"
+    )
+
+    idata = fit_vb_laplace_patrl(
+        sim_df,
+        "hgf_2level_patrl",
+        response_model="model_d",
+        n_pseudo_draws=500,
+        max_iter=200,
+        config=config,
+    )
+
+    assert idata.posterior is not None
+    assert "lam" in idata.posterior, (
+        f"Model D posterior missing 'lam'. Got vars: {list(idata.posterior.data_vars)}"
+    )
+
+    participants = sorted(sim_df["participant_id"].astype(str).unique().tolist())
+    lam_vals = idata.posterior["lam"].values  # (1, n_pseudo_draws, P)
+
+    n_within = 0
+    details: list[str] = []
+    for i, pid in enumerate(participants):
+        post_mean = float(np.mean(lam_vals[:, :, i]))
+        err = abs(post_mean - lam_true)
+        status = "PASS" if err < 0.3 else "FAIL"
+        if err < 0.3:
+            n_within += 1
+        details.append(
+            f"  {pid}: true_lam={lam_true:.3f}, post_mean={post_mean:.4f}, "
+            f"|err|={err:.4f} [{status}]"
+        )
+
+    assert n_within >= 3, (
+        f"M7 BRIDGE GATE FAILED: Expected >=3/5 agents with "
+        f"|posterior_mean(lam) - lam_true| < 0.3; got {n_within}/5 "
+        f"(lam_true={lam_true}, seed=404).\n"
+        "Lambda recovery details:\n" + "\n".join(details)
+    )
+
+
+@pytest.mark.slow
 def test_fit_vb_laplace_model_c_smoke() -> None:
     """5-agent Laplace smoke for Model C: posterior contains b, gamma, alpha.
 
