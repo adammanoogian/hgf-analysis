@@ -273,7 +273,7 @@ Plans:
   4. 5-agent CPU smoke completes in <60 seconds total (not per subject) on a dev laptop; parameter recovery sanity: posterior-mean omega_2 is within 0.5 of the generative truth for at least 4 of 5 agents
   5. Laplace-vs-NUTS comparison harness produces a diff table per subject per parameter: `|Δ posterior_mean| < 0.3` for omega_2 and `|Δ log_sd| < 0.5` across 5-agent smoke when both fit paths run on the identical sim_df
   6. Parallel-stack invariant preserved: `git diff` is empty for `hierarchical.py`, `hierarchical_patrl.py`, `task_config.py`, `simulator.py`, `hgf_{2,3}level.py`, `response.py`, `configs/prl_analysis.yaml`
-**Plans**: 0 plans
+**Plans**: 7 plans
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 19 to break down)
@@ -353,10 +353,16 @@ Plans:
   6. **Diagnostic-only scope preserved**: `git diff --stat` at phase close shows NO changes to `results/power/benchmark_batched.json` (Phase 14.1-03 still owns that artifact); NO changes to production production-sampler defaults; NO changes to `apply_decision_gate` thresholds (STATE #105 defers those to a post-bench plan). New code is isolated to `scripts/<NN>_diagnose_bench.py` or `src/prl_hgf/diagnostics/` and opt-in via `--p-scan` / `--svi-probe` CLI flags on existing entry points
   7. **Fast feedback loop**: every SLURM job spawned by this phase has `#SBATCH --time=00:30:00` or less; no job in this phase runs the full 8h budget. If a single P≥20 cold compile exceeds 30 min, that is itself a data point recorded in the CSV and the job is allowed to time out without retrying at longer walltime (the diagnostic value is in the scaling curve, not in completing the final draw)
 
-**Plans**: 0 plans
+**Plans**: 7 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 21 to break down)
+- [ ] 21-01-PLAN.md — graph scope memo (HLO op counts + scan-body depth + FLOPs/draw + state-space comparison)
+- [ ] 21-02-PLAN.md — re-instrument _run_benchmark (JAX_LOG_COMPILES + cache-delta tracking + warmup_params) + add --p-scan and --vb-laplace-probe CLI flags
+- [ ] 21-03-PLAN.md — VB-Laplace GPU probe at P in {5, 20} (cluster/21_diagnose_laplace.slurm)
+- [ ] 21-04-PLAN.md — NUTS (PAT-RL) GPU probe at P in {5, 20} matched to Laplace shapes (cluster/21_diagnose_nuts.slurm)
+- [ ] 21-05-PLAN.md — P-sweep chain at P in {5, 20, 50} with afterok cold→warm dependencies (cluster/21_diagnose_pscan.slurm + 21_submit_pscan_chain.sh)
+- [ ] 21-06-PLAN.md — cache forensics: HLO hash matrix + cache-dir listing + N=2-vs-N=50 verdict + 1.1x speedup narrative
+- [ ] 21-07-PLAN.md — VERDICT.md synthesis: name single dominant bottleneck + PR-level fix recommendation + 14.1-03 unblock signal
 
 **Sources of record / reference implementations**:
 - Failed bench job 54899271 logs: `cluster/logs/bench14_54899271.{out,err}` — the 2197s cold / 1965s warm / 1.1x speedup observation that triggered this phase
