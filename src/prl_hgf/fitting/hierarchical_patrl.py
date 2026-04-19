@@ -247,10 +247,16 @@ def _make_single_logp_fn(
         jnp.ndarray
             Scalar log-likelihood.
         """
-        # Model D: trial-varying tonic_volatility scan body (Plan 20-03).
-        # omega_eff(t) = omega_2 + lam * dHR(t). Inject per-trial into
-        # attrs[belief_idx]["tonic_volatility"] inside the scan step (mirrors
-        # Decision 120 kappa-via-attrs pattern, but per-trial instead of once).
+        # Model D: trial-varying tonic volatility — omega_eff(t) = omega_2 + lam * dHR(t).
+        # Scientific grounding: Klaassen et al. 2024 (Communications Biology,
+        # doi:10.1038/s42003-024-06267-6) demonstrates that cardiac deceleration
+        # (anticipatory bradycardia, captured here by delta_hr) modulates perceptual
+        # precision in threat anticipation. The HGF-level instantiation couples
+        # bradycardia to the level-2 tonic volatility parameter omega_2 via lam.
+        # See docs/references.bib::klaassen2024neurocomputational.
+        # Implementation: inject per-trial into attrs[belief_idx]["tonic_volatility"]
+        # inside the scan step (mirrors Decision 120 kappa-via-attrs pattern,
+        # but per-trial instead of once). Plan 20-03.
         if response_model == "model_d":
             # 1d) Start from base_attrs; inject 3-level params once (omega_3,
             #     kappa, mu3_0 are NOT trial-varying — only omega_2 via lam).
