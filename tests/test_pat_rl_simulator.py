@@ -319,7 +319,6 @@ def test_simulate_patrl_cohort_epsilon2_contributes_nonzero_variance() -> None:
     phenotype in-memory to set coupling to zero and compares ΔHR std
     against the default (0.3).
     """
-    import copy
     import dataclasses
 
     config = load_pat_rl_config()
@@ -363,8 +362,6 @@ def test_simulate_patrl_cohort_model_d_uses_lam_true() -> None:
     2. response_model='model_d' + lam_true=None raises ValueError.
     3. response_model='model_a' + lam_true=0.1 raises ValueError.
     """
-    import pytest  # noqa: PLC0415
-
     config = load_pat_rl_config()
 
     # Sub-check 1: lam_true=0.0 vs lam_true=0.5 should differ.
