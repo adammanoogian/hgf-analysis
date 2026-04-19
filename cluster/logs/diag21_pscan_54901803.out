@@ -1,0 +1,117 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 12.8
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 21 P-scan Probe
+============================================================
+Job ID:       54901803
+Node:         m3g109
+GPU(s):       0
+JAX cache:    /scratch/fc37/aman0087/.jax_cache_gpu/m3g109
+JAX_LOG_COMPILES: 1
+PROBE_P:      5
+PROBE_ROLE:   cold
+Start:        Sun Apr 19 11:20:26 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+========================================
+P-scan probe: P=5 role=cold
+========================================
+Start: Sun Apr 19 11:20:34 PM AEST 2026
+XLA_FLAGS=--xla_dump_hlo_as_text --xla_dump_to=.planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P5_cold
+Probe exit: 0
+--- pscan P=5 role=cold log tail (80 lines) ---
+    * at args[0], seen bool[10,2], but now given i64[10,2]
+Compiling transpose with global shapes and types [ShapedArray(int64[10,2], weak_type=True)]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(transpose) in 0.001837015 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_transpose' with key 'jit_transpose-9bfa08eb1e637926601615c6997d58e076129f93f38c90acb9e366528ddb56b1'
+Writing jit_transpose to persistent compilation cache with key 'jit_transpose-9bfa08eb1e637926601615c6997d58e076129f93f38c90acb9e366528ddb56b1'
+Finished XLA compilation of jit(transpose) in 0.035329342 sec
+Finished tracing + transforming scan for pjit in 0.000850439 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py:160 (_build_session_scanner_patrl) because:
+  never seen function:
+    scan id=139743741212656 defined at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py:94
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Compiling scan with global shapes and types [ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[]), ShapedArray(int64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[1]), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(int64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[1]), ShapedArray(float64[1]), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(int64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[1]), ShapedArray(float64[1,1]), ShapedArray(int64[1]), ShapedArray(float64[1])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.051537991 sec
+Persistent compilation cache hit for 'jit_scan' with key 'jit_scan-6b3ba0a8612af8dd3bdfeb2dbfdf7977404bb3a13298aac925e796a8613aba82'
+Finished XLA compilation of jit(scan) in 0.013971329 sec
+Compiling exp with global shapes and types [ShapedArray(float64[4], weak_type=True)]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(exp) in 0.001714706 sec
+Persistent compilation cache hit for 'jit_exp' with key 'jit_exp-e32a81c5f7e59fd398120814f9a8622a608b6821fc6a4c761bb35eb6fc065200'
+Finished XLA compilation of jit(exp) in 0.002421379 sec
+Compiling beliefs_propagation with global shapes and types []. Argument mapping: ().
+Finished jaxpr to MLIR module conversion jit(beliefs_propagation) in 0.008183241 sec
+Persistent compilation cache hit for 'jit_beliefs_propagation' with key 'jit_beliefs_propagation-4366a4c385ed6f2b49e8bc688b05593a4117892c360d7a7ec21be882e855b4a2'
+Finished XLA compilation of jit(beliefs_propagation) in 0.004427433 sec
+Finished tracing + transforming scan for pjit in 0.001366138 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py:378 (_single_logp) because:
+  never seen function:
+    scan id=139742277195600 defined at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py:94
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Compiling scan with global shapes and types [ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4]), ShapedArray(int32[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4,1]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(int64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4,1]), ShapedArray(float64[4,1]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(int64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4,1]), ShapedArray(float64[192,4,1]), ShapedArray(int32[192]), ShapedArray(float64[192])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.101064444 sec
+Persistent compilation cache hit for 'jit_scan' with key 'jit_scan-1ec79288f29ea437db0698d47c6b348a108e0761de5410c6ff2d23b799064170'
+Finished XLA compilation of jit(scan) in 0.050173759 sec
+Compiling multiply with global shapes and types [ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4,192])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(multiply) in 0.002099514 sec
+Persistent compilation cache hit for 'jit_multiply' with key 'jit_multiply-03e4b5730318b4fba4874765b69867f974d0a4878d62af6f1ef8c455608ac4cf'
+Finished XLA compilation of jit(multiply) in 0.002849340 sec
+Compiling add with global shapes and types [ShapedArray(float64[4,192]), ShapedArray(float64[4], weak_type=True)]. Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(add) in 0.001592636 sec
+Persistent compilation cache hit for 'jit_add' with key 'jit_add-576c1141dc8da63ce4c000d7b62c4a399f561c1922d61eceac0c3f3cdbd72dbe'
+Finished XLA compilation of jit(add) in 0.002274275 sec
+Finished tracing + transforming scan for pjit in 0.000744343 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py:378 (_single_logp) because:
+  never seen function:
+    scan id=139742270334448 defined at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py:94
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Compiling scan with global shapes and types [ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4,1]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(bool[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(bool[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(int32[192]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(bool[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(int32[192,4]), ShapedArray(bool[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4]), ShapedArray(float64[192,4], weak_type=True), ShapedArray(float64[192,4]), ShapedArray(bool[192,4]), ShapedArray(bool[192,4,1]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(float64[192,4]), ShapedArray(bool[192,4]), ShapedArray(bool[192,4]), ShapedArray(bool[192,4,1])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.075267076 sec
+Persistent compilation cache hit for 'jit_scan' with key 'jit_scan-7d77cd68e61ab877d143a51bf835cfee784353634a0d62b5405aa18009514e29'
+Finished XLA compilation of jit(scan) in 0.026732445 sec
+Finished tracing + transforming scan for pjit in 0.000918388 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py:1011 (_run_blackjax_nuts) because:
+  never seen function:
+    scan id=139741510744624 defined at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py:94
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Compiling scan with global shapes and types [ShapedArray(int32[4,192]), ShapedArray(float64[1]), ShapedArray(float64[1]), ShapedArray(float64[1]), ShapedArray(float32[4,192]), ShapedArray(float32[4,192]), ShapedArray(int32[4,192]), ShapedArray(bool[4,192]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[]), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[4], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(int64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[24]), ShapedArray(float64[24]), ShapedArray(float64[24]), ShapedArray(int64[], weak_type=True), ShapedArray(float64[], weak_type=True), ShapedArray(float64[24]), ShapedArray(uint32[10,2]), ShapedArray(int64[10,2])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.721328020 sec
+Persistent compilation cache hit for 'jit_scan' with key 'jit_scan-be5a09c29efc8ae4eb626d1c22cba9bad680f077cc0d71798e28887953ddb74e'
+Finished XLA compilation of jit(scan) in 0.248740435 sec
+Finished tracing + transforming _one_step for pjit in 1.301386833 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py:1153 (_run_vmap_chains) because:
+  never seen function:
+    _run_vmap_chains.<locals>._one_step id=139742270329264 defined at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py:1144
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Finished tracing + transforming scan for pjit in 0.000743866 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py:1153 (_run_vmap_chains) because:
+  never seen function:
+    scan id=139742286033632 defined at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/jax/_src/dispatch.py:94
+  but seen another function defined on the same line; maybe the function is
+  being re-defined repeatedly, preventing caching?
+Compiling scan with global shapes and types [ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2]), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(float64[2,4], weak_type=True), ShapedArray(uint32[10,2])]. Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.554468632 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_scan' with key 'jit_scan-c450ea14f479ed0ce9dd67fe669ce05d36172cd1e1c3994b6c12ea6dce7156a9'
+Writing jit_scan to persistent compilation cache with key 'jit_scan-c450ea14f479ed0ce9dd67fe669ce05d36172cd1e1c3994b6c12ea6dce7156a9'
+Finished XLA compilation of jit(scan) in 2.833000183 sec
+--p-scan 5 complete: status=completed, cold=55.8s, warm=27.7s, row appended to .planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv
+--- end log ---
+End: Sun Apr 19 11:22:34 PM AEST 2026
+
+
+========================================
+Phase 21 p-scan probe: git auto-push
+========================================

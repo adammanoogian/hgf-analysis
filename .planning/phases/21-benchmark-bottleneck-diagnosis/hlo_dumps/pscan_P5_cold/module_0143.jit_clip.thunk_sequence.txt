@@ -1,0 +1,1 @@
+kKernel	, kernel = loop_divide_minimum_fusion, launch dimensions = blocks: {1, 1, 1}, threads/block: {768, 1, 1}, cluster_dim = nullopt

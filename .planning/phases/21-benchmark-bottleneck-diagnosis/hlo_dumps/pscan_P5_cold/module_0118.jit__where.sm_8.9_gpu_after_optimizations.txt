@@ -1,0 +1,6 @@
+HloModule jit__where, is_scheduled=true, entry_computation_layout={()->()}, frontend_attributes={fingerprint_before_lhs="f8c902e21cb1cf6dfc41f63bf4576aeb"}
+
+ENTRY main.2 {
+  ROOT tuple.1.0 = () tuple()
+}
+

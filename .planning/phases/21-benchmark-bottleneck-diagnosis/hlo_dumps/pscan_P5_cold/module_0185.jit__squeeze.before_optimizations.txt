@@ -1,0 +1,7 @@
+HloModule jit__squeeze, entry_computation_layout={(f64[4,192,1]{2,1,0})->f64[4,192]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY main.3 {
+  Arg_0.1 = f64[4,192,1]{2,1,0} parameter(0)
+  ROOT reshape.2 = f64[4,192]{1,0} reshape(Arg_0.1), metadata={op_name="jit(_squeeze)/jit(main)/squeeze[dimensions=(2,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=163}
+}
+
