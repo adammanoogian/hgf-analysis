@@ -175,6 +175,70 @@ def parse_args() -> argparse.Namespace:
             "BlackJAX NUTS path."
         ),
     )
+    # -----------------------------------------------------------------
+    # Phase 21 diagnostic flags (BENCH-DIAG-04).  Gated behind
+    # --diagnostic-mode / --p-scan / --vb-laplace-probe; production
+    # --benchmark path is unaffected when these are omitted.
+    # -----------------------------------------------------------------
+    parser.add_argument(
+        "--p-scan",
+        type=int,
+        default=None,
+        help=(
+            "Phase 21 diagnostic: run one cold+warm PAT-RL fit at P "
+            "participants and append a row to .planning/phases/"
+            "21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv. "
+            "Mutually exclusive with --benchmark."
+        ),
+    )
+    parser.add_argument(
+        "--p-scan-early-stop",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 21 diagnostic: mark the P-scan row status as "
+            "'early_stopped' (used by the SLURM dependency chain when a "
+            "prior P value has already produced a clear verdict)."
+        ),
+    )
+    parser.add_argument(
+        "--vb-laplace-probe",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 21 diagnostic: run fit_vb_laplace_patrl at --probe-p "
+            "and write .planning/phases/21-benchmark-bottleneck-diagnosis/"
+            "vb_laplace_vs_nuts_jit.json per-stage compile events + "
+            "per-call wall-clock."
+        ),
+    )
+    parser.add_argument(
+        "--vb-laplace-subproc-only",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 21 diagnostic: run ONE fit_vb_laplace_patrl call at "
+            "--probe-p and exit.  Used internally by --vb-laplace-probe "
+            "to spawn a fresh subprocess for the next-proc persistent-"
+            "cache wall-clock measurement.  Do not invoke manually."
+        ),
+    )
+    parser.add_argument(
+        "--probe-p",
+        type=int,
+        default=5,
+        help="Participants for --vb-laplace-probe (default 5).",
+    )
+    parser.add_argument(
+        "--diagnostic-mode",
+        action="store_true",
+        default=False,
+        help=(
+            "Enable Phase 21 diagnostic instrumentation in _run_benchmark "
+            "(JAX_LOG_COMPILES=1, jax_explain_cache_misses=True, cache "
+            "delta tracking)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -946,8 +1010,6 @@ def _run_benchmark(
     print("=" * 60)
 
     # --- Phase 0: GPU device info ---
-    import os
-
     devices = jax.devices()
     gpu_devices = [d for d in devices if d.platform == "gpu"]
     n_gpus = len(gpu_devices)
@@ -1189,6 +1251,450 @@ def _run_benchmark(
     print("=" * 60)
 
 
+# ---------------------------------------------------------------------------
+# Phase 21 diagnostic probe helpers (BENCH-DIAG-04).
+# ---------------------------------------------------------------------------
+
+
+def _run_p_scan_probe(
+    base_config: object,
+    power_config: object,
+    output_dir: Path,
+    P: int,
+    args: argparse.Namespace,
+) -> None:
+    """Phase 21 diagnostic: single-P cold+warm PAT-RL JIT timing probe.
+
+    Runs ``fit_batch_hierarchical_patrl`` twice in one process at N=P
+    participants (hgf_3level_patrl, model_a, n_chains chains, n_draws
+    draws, n_tune tune) and appends one row to
+    ``.planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv``.
+
+    Named ``n_chains`` and ``n_draws`` constants at the top of the body
+    ensure the ``draws_per_s`` computation stays consistent with the fit
+    kwargs (M2: no hardcoded ``2 * 10``).
+
+    Parameters
+    ----------
+    base_config : object
+        Unused (pick_best_cue config); kept for signature parity with
+        the other dispatched helpers.  The PAT-RL path loads its own
+        config via ``load_pat_rl_config``.
+    power_config : object
+        Unused (pick_best_cue grid); kept for signature parity.
+    output_dir : Path
+        Unused (the probe writes to a fixed Phase 21 path); kept for
+        signature parity.
+    P : int
+        Number of PAT-RL participants to simulate for the probe.
+    args : argparse.Namespace
+        Parsed CLI args (provides ``p_scan_early_stop`` flag).
+
+    Notes
+    -----
+    - ``next_proc_warm_s`` column is written empty; filled by a different
+      SLURM job per plan 21-05's submission chain.
+    - ``status`` enum: ``completed | early_stopped | infeasible``.
+    - Exceptions during the fit are caught so an infeasible status is
+      recorded (a cold-compile OOM at P=50 should not block the CSV
+      from gaining a row).
+    """
+    os.environ.setdefault("JAX_LOG_COMPILES", "1")
+    jax.config.update("jax_explain_cache_misses", True)
+
+    from prl_hgf.env.pat_rl_config import load_pat_rl_config
+    from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort
+    from prl_hgf.fitting.hierarchical_patrl import (
+        fit_batch_hierarchical_patrl,
+    )
+
+    # Probe config constants (M2: these must track the n_chains * n_draws
+    # passed to fit_batch_hierarchical_patrl below; draws_per_s uses
+    # n_total_draws).
+    n_chains = 2
+    n_draws = 10
+    n_tune = 10
+    n_total_draws = n_chains * n_draws
+
+    csv_path = Path(
+        ".planning/phases/21-benchmark-bottleneck-diagnosis/"
+        "jit_scaling_sweep.csv"
+    )
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    patrl_config = load_pat_rl_config()
+    # Spread P across as many phenotypes as possible (min 1 per phenotype).
+    n_per_phenotype = max(1, P // 4)
+    sim_df, _true_params, _trials = simulate_patrl_cohort(
+        n_participants=n_per_phenotype,
+        config=patrl_config,
+        master_seed=99999,
+    )
+    # Trim to exactly P participants for shape fidelity.
+    pids = sim_df["participant_id"].unique()[:P]
+    sim_df = sim_df[sim_df["participant_id"].isin(pids)].reset_index(drop=True)
+
+    status = "completed"
+    vram_peak_mb = 0.0
+    cold_s = float("nan")
+    same_proc_warm_s = float("nan")
+    try:
+        t0 = time.perf_counter()
+        fit_batch_hierarchical_patrl(
+            sim_df,
+            model_name="hgf_3level_patrl",
+            response_model="model_a",
+            config=patrl_config,
+            n_chains=n_chains,
+            n_draws=n_draws,
+            n_tune=n_tune,
+            target_accept=0.9,
+            random_seed=42,
+        )
+        cold_s = time.perf_counter() - t0
+
+        t0 = time.perf_counter()
+        fit_batch_hierarchical_patrl(
+            sim_df,
+            model_name="hgf_3level_patrl",
+            response_model="model_a",
+            config=patrl_config,
+            n_chains=n_chains,
+            n_draws=n_draws,
+            n_tune=n_tune,
+            target_accept=0.9,
+            random_seed=43,
+        )
+        same_proc_warm_s = time.perf_counter() - t0
+
+        gpus = _query_gpu_table()
+        if gpus:
+            vram_peak_mb = float(gpus[0].get("vram_used_mb", 0.0))
+
+        if args.p_scan_early_stop:
+            status = "early_stopped"
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"ERROR: --p-scan {P} fit failed: {exc!r}",
+            file=sys.stderr,
+        )
+        status = "infeasible"
+
+    if status == "completed" and same_proc_warm_s > 0:
+        draws_per_s = n_total_draws / same_proc_warm_s
+    else:
+        draws_per_s = float("nan")
+
+    write_header = not csv_path.exists()
+    with csv_path.open("a", encoding="utf-8") as f:
+        if write_header:
+            f.write(
+                "P,cold_jit_s,same_proc_warm_s,next_proc_warm_s,"
+                "draws_per_s,vram_peak_mb,status\n"
+            )
+        f.write(
+            f"{P},{cold_s:.2f},{same_proc_warm_s:.2f},,"
+            f"{draws_per_s:.4f},{vram_peak_mb:.1f},{status}\n"
+        )
+
+    print(
+        f"--p-scan {P} complete: status={status}, cold={cold_s:.1f}s, "
+        f"warm={same_proc_warm_s:.1f}s, row appended to {csv_path}"
+    )
+
+
+def _run_vb_laplace_subproc_one_shot(P: int) -> None:
+    """Phase 21 diagnostic: one-shot ``fit_vb_laplace_patrl`` call + exit.
+
+    Invoked by :func:`_run_vb_laplace_probe` as a fresh subprocess to
+    measure the next-proc persistent-cache wall-clock time.  Does NOT
+    write to the shared ``vb_laplace_vs_nuts_jit.json``; only performs
+    one fit so the parent's ``subprocess.run()`` wall-clock is the
+    ``next_proc_s`` measurement.
+
+    Parameters
+    ----------
+    P : int
+        Number of PAT-RL participants to simulate (same shape as the
+        parent call so the XLA persistent cache can land a hit).
+    """
+    os.environ.setdefault("JAX_LOG_COMPILES", "1")
+    jax.config.update("jax_explain_cache_misses", True)
+
+    from prl_hgf.env.pat_rl_config import load_pat_rl_config
+    from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort
+    from prl_hgf.fitting.fit_vb_laplace_patrl import fit_vb_laplace_patrl
+
+    patrl_config = load_pat_rl_config()
+    n_per_phenotype = max(1, P // 4)
+    sim_df, _true_params, _trials = simulate_patrl_cohort(
+        n_participants=n_per_phenotype,
+        config=patrl_config,
+        master_seed=99999,
+    )
+    pids = sim_df["participant_id"].unique()[:P]
+    sim_df = sim_df[sim_df["participant_id"].isin(pids)].reset_index(drop=True)
+
+    fit_vb_laplace_patrl(
+        sim_df,
+        model_name="hgf_3level_patrl",
+        response_model="model_a",
+        config=patrl_config,
+        random_seed=42,
+    )
+    print(f"--vb-laplace-subproc-only P={P} complete")
+
+
+def _run_vb_laplace_probe(
+    base_config: object,
+    power_config: object,
+    output_dir: Path,
+    P: int,
+    args: argparse.Namespace,
+) -> None:
+    """Phase 21 diagnostic: VB-Laplace JIT timing probe.
+
+    Runs ``fit_vb_laplace_patrl`` end-to-end at P participants
+    (``hgf_3level_patrl``, ``model_a``).  Captures ``JAX_LOG_COMPILES``
+    event COUNTS (not timings — B4: the originally-proposed
+    ``per_stage_compile_X`` (timings) field was replaced with
+    ``per_stage_compile_events`` because JAX_LOG_COMPILES does not
+    emit timings).  Captures full-pipeline
+    wall-clock via ``time.perf_counter`` wrappers around three calls
+    (cold, in-process warm, subprocess-spawned next-proc) into the
+    ``per_call_wall_clock`` field.  Writes/appends to
+    ``.planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json``.
+
+    Parameters
+    ----------
+    base_config, power_config, output_dir : object
+        Unused — kept for signature parity with the other probe helpers.
+    P : int
+        Number of PAT-RL participants to simulate for the probe.
+    args : argparse.Namespace
+        Parsed CLI args (unused in the current body but kept for parity).
+
+    Notes
+    -----
+    - Captures ``JAX_LOG_COMPILES`` output in-process via a ``StringIO``
+      ``logging`` handler (robust to subprocess details).
+    - Fills ``per_stage_compile_events`` (counts),
+      ``per_call_wall_clock`` (timings), and ``per_p_scaling``
+      (aggregate) slices for the invoked P.  The ``bottleneck_verdict``
+      and ``hlo_op_counts`` keys remain undetermined/empty; plan 21-07
+      fills them at synthesis time.
+    - Spawns a subprocess via :func:`_run_vb_laplace_subproc_one_shot`
+      (wired through the ``--vb-laplace-subproc-only`` flag) so the
+      next-proc wall-clock actually crosses a fresh Python invocation —
+      exercises the persistent compilation cache.
+    - Archives the raw log per-P for reproducibility.
+    """
+    del args  # unused — kept for signature parity
+
+    import logging
+    import re
+    from io import StringIO
+
+    os.environ.setdefault("JAX_LOG_COMPILES", "1")
+    jax.config.update("jax_explain_cache_misses", True)
+
+    # Capture JAX logger output for the in-process calls.
+    log_buffer = StringIO()
+    jax_logger = logging.getLogger("jax")
+    handler = logging.StreamHandler(log_buffer)
+    handler.setLevel(logging.WARNING)
+    jax_logger.addHandler(handler)
+    jax_logger.setLevel(logging.WARNING)
+
+    from prl_hgf.env.pat_rl_config import load_pat_rl_config
+    from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort
+    from prl_hgf.fitting.fit_vb_laplace_patrl import fit_vb_laplace_patrl
+
+    json_path = Path(
+        ".planning/phases/21-benchmark-bottleneck-diagnosis/"
+        "vb_laplace_vs_nuts_jit.json"
+    )
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+
+    patrl_config = load_pat_rl_config()
+    n_per_phenotype = max(1, P // 4)
+    sim_df, _true_params, _trials = simulate_patrl_cohort(
+        n_participants=n_per_phenotype,
+        config=patrl_config,
+        master_seed=99999,
+    )
+    pids = sim_df["participant_id"].unique()[:P]
+    sim_df = sim_df[sim_df["participant_id"].isin(pids)].reset_index(drop=True)
+
+    # Call 1: cold (full-pipeline wall-clock).
+    t0 = time.perf_counter()
+    fit_vb_laplace_patrl(
+        sim_df,
+        model_name="hgf_3level_patrl",
+        response_model="model_a",
+        config=patrl_config,
+        random_seed=42,
+    )
+    cold_s = time.perf_counter() - t0
+
+    # Call 2: in-process warm (second call at same shape).
+    t0 = time.perf_counter()
+    fit_vb_laplace_patrl(
+        sim_df,
+        model_name="hgf_3level_patrl",
+        response_model="model_a",
+        config=patrl_config,
+        random_seed=43,
+    )
+    warm_s = time.perf_counter() - t0
+
+    jax_logger.removeHandler(handler)
+    log_text = log_buffer.getvalue()
+
+    # Call 3: subprocess-spawned next-proc warm (persistent-cache landing).
+    # Reuses JAX_COMPILATION_CACHE_DIR from the parent env so a warm hit
+    # is possible.  Time only the subprocess.run wall-clock; the child's
+    # own internal timing is not needed.
+    t0 = time.perf_counter()
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                __file__,
+                "--vb-laplace-subproc-only",
+                "--probe-p",
+                str(P),
+                # --chunk-id and --job-id are required args in parse_args,
+                # so pass sentinel values that will never run production
+                # logic (the subproc flag short-circuits main()).
+                "--chunk-id",
+                "0",
+                "--job-id",
+                "vb-laplace-subproc",
+            ],
+            check=True,
+            timeout=1800,  # 30min safety cap (matches SC7)
+        )
+        next_proc_s = time.perf_counter() - t0
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        print(
+            f"WARNING: vb-laplace next-proc subproc failed: {exc!r}",
+            file=sys.stderr,
+        )
+        next_proc_s = float("nan")
+
+    # Parse JAX_LOG_COMPILES event counts (NOT timings — B4 rationale).
+    # Message format: "Compiling <function_name> for args ..."
+    compile_events = re.findall(r"Compiling (\S+) for args", log_text)
+    cache_hits = re.findall(
+        r"Persistent compilation cache hit for '(\S+)'",
+        log_text,
+    )
+    cache_misses = re.findall(
+        r"PERSISTENT COMPILATION CACHE MISS for '(\S+)'",
+        log_text,
+    )
+
+    # Aggregate by stage: LBFGS body = any event with "log_posterior" or
+    # "_clamped_step" or "logp_fn" in name; Hessian = any event with
+    # "hessian" or "jvp" in name; NUTS kernel = N/A for this probe (plan
+    # 21-04 captures that).
+    def _matches_stage(name: str, keywords: list[str]) -> bool:
+        return any(kw in name for kw in keywords)
+
+    lbfgs_events = [
+        e
+        for e in compile_events
+        if _matches_stage(e, ["log_posterior", "_clamped_step", "logp_fn"])
+    ]
+    hessian_events = [
+        e for e in compile_events if _matches_stage(e, ["hessian", "jvp"])
+    ]
+
+    # Load existing JSON if present, else initialize with the 5-key
+    # schema (B4: per_stage_compile_events + per_call_wall_clock replace
+    # the originally-proposed single per-stage-timings field).
+    if json_path.exists():
+        with json_path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.setdefault("per_stage_compile_events", {})
+        data.setdefault("per_call_wall_clock", {})
+        data.setdefault("per_p_scaling", {})
+        data.setdefault(
+            "bottleneck_verdict",
+            {
+                "bottleneck_layer": "undetermined",
+                "evidence": (
+                    "Filled by plan 21-07 after all probes complete."
+                ),
+            },
+        )
+        data.setdefault("hlo_op_counts", {})
+    else:
+        data = {
+            "per_stage_compile_events": {},
+            "per_call_wall_clock": {},
+            "per_p_scaling": {},
+            "bottleneck_verdict": {
+                "bottleneck_layer": "undetermined",
+                "evidence": (
+                    "Filled by plan 21-07 after all probes complete."
+                ),
+            },
+            "hlo_op_counts": {},
+        }
+
+    # Fill per_stage_compile_events for this P (counts, not timings).
+    data["per_stage_compile_events"][str(P)] = {
+        "lbfgs_n_events": len(lbfgs_events),
+        "hessian_n_events": len(hessian_events),
+        "total_n_events": len(compile_events),
+        "notes": (
+            "JAX_LOG_COMPILES emits event counts, not timings; "
+            "per-stage wall-clock timing would require harness-splitting "
+            "which CONTEXT explicitly rejects.  See per_call_wall_clock "
+            "for full-pipeline wall-clock times."
+        ),
+    }
+
+    # Fill per_call_wall_clock for this P (full-pipeline timings).
+    data["per_call_wall_clock"][str(P)] = {
+        "cold_s": round(cold_s, 2),
+        "warm_s": round(warm_s, 2),
+        "next_proc_s": (
+            round(next_proc_s, 2)
+            if next_proc_s == next_proc_s  # NaN check
+            else None
+        ),
+    }
+
+    # Fill per_p_scaling for this P (aggregate slice).
+    data["per_p_scaling"][str(P)] = {
+        "total_s": round(cold_s + warm_s, 2),
+        "n_compile_events": len(compile_events),
+        "n_lbfgs_events": len(lbfgs_events),
+        "n_hessian_events": len(hessian_events),
+        "n_cache_hits": len(cache_hits),
+        "n_cache_misses": len(cache_misses),
+    }
+
+    # Archive the raw JAX_LOG_COMPILES text for this P.
+    log_archive = json_path.parent / f"vb_laplace_jax_compiles_P{P}.log"
+    log_archive.write_text(log_text, encoding="utf-8")
+
+    with json_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+    print(
+        f"--vb-laplace-probe P={P} complete: cold={cold_s:.1f}s "
+        f"warm={warm_s:.1f}s next_proc={next_proc_s:.1f}s, "
+        f"{len(compile_events)} compile events, "
+        f"{len(cache_hits)} cache hits, "
+        f"{len(cache_misses)} cache misses.  "
+        f"Log archived to {log_archive}"
+    )
+
+
 def main() -> None:
     """Execute one chunk of the power sweep.
 
@@ -1199,8 +1705,62 @@ def main() -> None:
     """
     args = parse_args()
 
+    # -----------------------------------------------------------------
+    # Phase 21 diagnostic mutual-exclusion guards (BENCH-DIAG-04).
+    # -----------------------------------------------------------------
+    diag_flags = (
+        (args.p_scan is not None),
+        bool(args.vb_laplace_probe),
+        bool(args.vb_laplace_subproc_only),
+    )
+    if sum(diag_flags) > 1:
+        print(
+            "ERROR: --p-scan, --vb-laplace-probe, and "
+            "--vb-laplace-subproc-only are mutually exclusive.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    if args.benchmark and any(diag_flags):
+        print(
+            "ERROR: --benchmark cannot be combined with --p-scan, "
+            "--vb-laplace-probe, or --vb-laplace-subproc-only.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    # -----------------------------------------------------------------
+    # Phase 21 probe dispatch: short-circuit BEFORE loading power config
+    # or building the SBF grid.  The probes do not use chunk/grid logic
+    # and write to their own Phase 21 artifact paths.
+    # -----------------------------------------------------------------
+    if args.vb_laplace_subproc_only:
+        _run_vb_laplace_subproc_one_shot(args.probe_p)
+        return
+
     base_config = load_config()
     power_config = load_power_config()
+
+    if args.p_scan is not None:
+        output_dir = (
+            args.output_dir
+            if args.output_dir is not None
+            else _cfg.RESULTS_DIR / "power"
+        )
+        _run_p_scan_probe(
+            base_config, power_config, output_dir, args.p_scan, args,
+        )
+        return
+
+    if args.vb_laplace_probe:
+        output_dir = (
+            args.output_dir
+            if args.output_dir is not None
+            else _cfg.RESULTS_DIR / "power"
+        )
+        _run_vb_laplace_probe(
+            base_config, power_config, output_dir, args.probe_p, args,
+        )
+        return
 
     grid_size = sbf_grid_size(
         power_config.effect_size_grid,
