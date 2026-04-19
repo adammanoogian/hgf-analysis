@@ -65,10 +65,14 @@ positivity, phenotype key completeness, MCMC hyperparam positivity.
   distribution.
 - `.simulation: PATRLSimulationConfig` — phenotype 2x2 grid
   (`healthy / anxious / reward_sensitive / anxious_reward_sensitive`) with
-  omega_2 / beta / kappa / mu3_0 priors per phenotype. Literature-grounded:
-  omega_2 (-6.0 healthy vs -3.5 anxious, Browning 2015 direction); beta
-  (2.0 low vs 8.0 high reward, Daw 2006). kappa fixed at 1.0 across
-  phenotypes. Master seed 5678.
+  omega_2 / beta / kappa / mu3_0 priors per phenotype. omega_2 direction
+  (healthy vs anxious) and beta direction (low vs high reward sensitivity)
+  grounded in Klaassen et al. 2024, Communications Biology (HGF x
+  approach-avoidance under threat; `klaassen2024neurocomputational`). Exact
+  numeric values come from the downstream consumer study specification — see
+  `configs/pat_rl.yaml` phenotype blocks and Plan 20-01 SUMMARY for the
+  canonical reference values (updated from Phase-18 placeholders by Plan
+  20-01). kappa fixed at 1.0 across phenotypes. Master seed 5678.
 - `.fitting: PATRLFittingConfig` — MCMC defaults (n_chains=2, n_tune=500,
   n_draws=500, target_accept=0.9, seed=42) and fitting priors (truncated
   normals for kappa/beta, normals for omega_2/omega_3/mu3_0).
@@ -535,3 +539,31 @@ and send the diff over. This is the single source of truth for the PAT-RL
 public API going forward; the consumer repo's `SISTER_API_PRL_HGF.md` should
 be treated as deprecated stub documentation for the older pick_best_cue
 surface only.**
+
+---
+
+## 8. References
+
+See `docs/references.bib` for BibTeX. Primary Phase 20 references:
+
+- Klaassen, F. H., Bramson, B., & Roelofs, K. (2021). Defensive freezing and
+  its relation to approach-avoidance decision-making under threat. *Scientific
+  Reports*, 11, 12030. (`klaassen2021freezing`)
+- Klaassen, F. H., & Roelofs, K. (2024). The neurocomputational link between
+  defensive cardiac states and approach-avoidance arbitration under threat.
+  *Communications Biology*. (`klaassen2024neurocomputational`) — primary
+  methodological grounding for PAT-RL response models and phenotype priors.
+- Klaassen, F. H., Bramson, B., Schoffelen, J.-M., de Voogd, L. D., &
+  Roelofs, K. (2024). Defensive freezing sharpens threat-reward information
+  processing during approach-avoidance decision making. *bioRxiv*.
+  (`klaassen2024freezing_preprint`)
+- Klaassen, F. H., et al. (2021). Approach-Avoidance Decisions Under Threat:
+  The Role of Autonomic Psychophysiological States. *Frontiers in
+  Neuroscience*. (`klaassen2021autonomic`)
+
+Methodology citations retained from pre-2020 (original algorithm references):
+
+- Rigoux et al. 2014, NeuroImage — random-effects groupBMS (`rigoux2014bms`)
+- Watanabe 2010, JMLR — WAIC (`watanabe2010waic`)
+- Friston & Stephan 2007, Synthese — free energy (`friston2007freeenergy`)
+- Gelman et al. 2014, BDA3 (`gelman2014bda`)
