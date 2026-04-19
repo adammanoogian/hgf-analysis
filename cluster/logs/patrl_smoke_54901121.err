@@ -3385,3 +3385,6 @@ Finished XLA compilation of jit(_threefry_seed) in 0.087742329 sec
 20:26:03 WARNING __main__: Directional check: 122/151 participants have posterior omega_2 moving toward true.
 20:26:03 INFO __main__: Recovery table logged.
 20:26:03 INFO __main__: PAT-RL foundation smoke PASSED in 84.1 s
+From github.com:adammanoogian/psilocybin-prl-analyses
+ * branch            main       -> FETCH_HEAD
+   c95cc05..9504d26  main       -> origin/main

@@ -57,3 +57,9 @@ End: Sun Apr 19 08:45:27 PM AEST 2026
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
+[main 7d368b6] chore(21-05): p-scan probe P=50 role=cold job=54901176
+ 3 files changed, 81 insertions(+)
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/pscan_P50_cold.log
+ create mode 100644 cluster/logs/diag21_pscan_54901176.err
+ create mode 100644 cluster/logs/diag21_pscan_54901176.out
+Pushed Phase 21 p-scan probe artifacts (P=50 cold) to origin/main

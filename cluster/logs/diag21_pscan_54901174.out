@@ -55,3 +55,27 @@ End: Sun Apr 19 08:45:29 PM AEST 2026
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
+[main 6873671] chore(21-05): p-scan probe P=20 role=cold job=54901174
+ 21 files changed, 396 insertions(+)
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.autotune_results.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.before_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.gpu_target_config.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.ir-no-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.ir-with-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.ptx
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.sm_8.9_gpu_after_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0001.jit_convert_element_type.thunk_sequence.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.autotune_results.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.before_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.gpu_target_config.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.ir-no-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.ir-with-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.ptx
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.sm_8.9_gpu_after_optimizations-buffer-assignment.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.sm_8.9_gpu_after_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P20_cold/module_0004.jit__threefry_seed.thunk_sequence.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/pscan_P20_cold.log
+ create mode 100644 cluster/logs/diag21_pscan_54901174.err
+ create mode 100644 cluster/logs/diag21_pscan_54901174.out
+Pushed Phase 21 p-scan probe artifacts (P=20 cold) to origin/main

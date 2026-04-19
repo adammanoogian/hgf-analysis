@@ -35,3 +35,8 @@ End:           Sun Apr 19 07:34:06 PM AEST 2026
 ============================================================
 
 Pushing PAT-RL smoke results to git...
+[main 1e8fc8e] smoke patrl sc5 N=40 phenotypes=all level=3 method=laplace (job 54901075)
+ 2 files changed, 1186 insertions(+)
+ create mode 100644 cluster/logs/patrl_smoke_54901075.err
+ create mode 100644 cluster/logs/patrl_smoke_54901075.out
+Pushed PAT-RL smoke results to origin/main

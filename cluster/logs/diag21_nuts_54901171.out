@@ -94,3 +94,29 @@ Merged NUTS rows for P=['20', '5']
 ========================================
 Phase 21 NUTS probe: git auto-push
 ========================================
+[main fffa294] chore(21-04): NUTS GPU probe job 54901171
+ 23 files changed, 481 insertions(+)
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.autotune_results.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.before_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.gpu_target_config.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.ir-no-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.ir-with-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.ptx
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.sm_8.0_gpu_after_optimizations-buffer-assignment.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.sm_8.0_gpu_after_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0001.jit_convert_element_type.thunk_sequence.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.autotune_results.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.before_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.gpu_target_config.pbtxt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.ir-no-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.ir-with-opt.ll
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.ptx
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.sm_8.0_gpu_after_optimizations-buffer-assignment.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.sm_8.0_gpu_after_optimizations.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/module_0004.jit__threefry_seed.thunk_sequence.txt
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/nuts_jax_compiles_P20.log
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/nuts_jax_compiles_P5.log
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json
+ create mode 100644 cluster/logs/diag21_nuts_54901171.err
+ create mode 100644 cluster/logs/diag21_nuts_54901171.out
+Pushed Phase 21 NUTS probe artifacts to origin/main
