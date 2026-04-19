@@ -927,6 +927,17 @@ def _run_benchmark(
     from prl_hgf.power.iteration import apply_decision_gate, run_sbf_iteration
     from prl_hgf.simulation.batch import simulate_batch
 
+    # Phase 21 diagnostic instrumentation (BENCH-DIAG-04).
+    # Only activate when --diagnostic-mode is set OR JAX_LOG_COMPILES is
+    # already set externally (SLURM-level env injection).  In production
+    # benchmark mode without the flag, behaviour is unchanged — the env
+    # var and jax.config update are no-ops when not requested.
+    if getattr(args, "diagnostic_mode", False) or os.environ.get(
+        "JAX_LOG_COMPILES"
+    ) == "1":
+        os.environ.setdefault("JAX_LOG_COMPILES", "1")
+        jax.config.update("jax_explain_cache_misses", True)
+
     output_dir.mkdir(parents=True, exist_ok=True)
     results: dict = {}
 
@@ -991,7 +1002,10 @@ def _run_benchmark(
     sim_tiny = simulate_batch(cfg_tiny)
 
     t0 = time.perf_counter()
-    fit_batch_hierarchical(
+    # Cold call: returns (idata, adapted_params) when warmup_params is None
+    # (Phase 21 Patch C: capture adapted params so the warm call can skip
+    # window adaptation and we get a real cold-vs-warm comparison).
+    _cold_return = fit_batch_hierarchical(
         sim_tiny,
         "hgf_3level",
         n_chains=2,
@@ -1001,11 +1015,38 @@ def _run_benchmark(
         random_seed=42,
         progressbar=False,
     )
+    if isinstance(_cold_return, tuple):
+        _idata_cold, adapted_params = _cold_return
+    else:
+        # Fallback: older signatures returned just an idata.  Pass None
+        # through and the warm call will re-run warmup.
+        _idata_cold = _cold_return
+        adapted_params = None
     jit_cold_s = time.perf_counter() - t0
     results["jit_cold_s"] = round(jit_cold_s, 2)
     print(f"  Cold JIT: {jit_cold_s:.2f}s")
 
+    # Phase 21 Patch B: cache stats AFTER cold call (parity with
+    # _run_smoke_test).  Delta fields let downstream readers know how many
+    # cache entries the cold compile produced.
+    cache_after_cold = _get_cache_stats(cache_dir)
+    results["cache_after_cold"] = cache_after_cold
+    results["cache_delta_cold_n_files"] = (
+        cache_after_cold["n_files"] - cache_before["n_files"]
+    )
+    results["cache_delta_cold_mb"] = round(
+        cache_after_cold["total_size_mb"] - cache_before["total_size_mb"], 2,
+    )
+    print(
+        f"  Cache delta (cold): +{results['cache_delta_cold_n_files']} files, "
+        f"+{results['cache_delta_cold_mb']:.1f} MB"
+    )
+
     t0 = time.perf_counter()
+    # Phase 21 Patch C: pass warmup_params to the warm call so it skips
+    # NUTS window adaptation.  This eliminates the ~1100s warmup-duplication
+    # confound observed in job-54899271 (1.1x speedup was because both cold
+    # and warm re-ran warmup, not because the XLA cache was missing).
     fit_batch_hierarchical(
         sim_tiny,
         "hgf_3level",
@@ -1015,12 +1056,30 @@ def _run_benchmark(
         target_accept=0.9,
         random_seed=43,
         progressbar=False,
+        warmup_params=adapted_params,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
-    print(f"  Warm JIT: {jit_warm_s:.2f}s")
+    print(f"  Warm JIT: {jit_warm_s:.2f}s (warmup skipped via warmup_params)")
     cache_speedup = jit_cold_s / max(jit_warm_s, 0.001)
     print(f"  Cache speedup: {cache_speedup:.1f}x")
+
+    # Phase 21 Patch B: cache stats AFTER warm call.  If new cache files
+    # appeared, the warm call hit a cache miss (HLO changed between cold
+    # and warm — closure-over-data signature drift, retrace, etc.).
+    cache_after_warm = _get_cache_stats(cache_dir)
+    results["cache_after_warm"] = cache_after_warm
+    results["cache_delta_warm_n_files"] = (
+        cache_after_warm["n_files"] - cache_after_cold["n_files"]
+    )
+    results["cache_delta_warm_mb"] = round(
+        cache_after_warm["total_size_mb"] - cache_after_cold["total_size_mb"],
+        2,
+    )
+    print(
+        f"  Cache delta (warm): +{results['cache_delta_warm_n_files']} files, "
+        f"+{results['cache_delta_warm_mb']:.1f} MB"
+    )
 
     # --- Phase 2: Full batched iteration at max N (BENCH-01) ---
     max_n = max(power_config.n_per_group_grid)
