@@ -1,0 +1,26 @@
+HloModule jit_add, is_scheduled=true, entry_computation_layout={(f64[4,192]{1,0})->(f64[4,192]{1,0}, f64[4]{0})}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="5c577c5ecd95d4e54f947dd383249d0b"}
+
+region_0.3 {
+  Arg_1.5 = f64[] parameter(1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]"}
+  Arg_0.4 = f64[] parameter(0), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]"}
+  ROOT add.1 = f64[] add(Arg_0.4, Arg_1.5), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+fused_reduce {
+  param_0 = f64[4,192]{1,0} parameter(0)
+  constant_2_1 = f64[] constant(0)
+  ROOT reduce.7.1 = f64[4]{0} reduce(param_0, constant_2_1), dimensions={1}, to_apply=region_0.3, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+wrapped_copy_computation {
+  param_0.1 = f64[4,192]{1,0} parameter(0)
+  ROOT copy.1 = f64[4,192]{1,0} copy(param_0.1)
+}
+
+ENTRY main.15 {
+  Arg_0.1.0 = f64[4,192]{1,0} parameter(0)
+  input_reduce_fusion = f64[4]{0} fusion(Arg_0.1.0), kind=kInput, calls=fused_reduce, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  wrapped_copy = f64[4,192]{1,0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_copy_computation
+  ROOT tuple = (f64[4,192]{1,0}, f64[4]{0}) tuple(wrapped_copy, input_reduce_fusion)
+}
+
