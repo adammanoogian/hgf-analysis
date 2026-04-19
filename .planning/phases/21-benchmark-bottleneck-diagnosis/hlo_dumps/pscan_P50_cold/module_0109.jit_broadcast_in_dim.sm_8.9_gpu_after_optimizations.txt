@@ -1,0 +1,12 @@
+HloModule jit_broadcast_in_dim, is_scheduled=true, entry_computation_layout={(f64[])->f64[48]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="2413f04f1aead76f47be2450f9125d80"}
+
+wrapped_broadcast_computation {
+  param_0 = f64[] parameter(0)
+  ROOT broadcast.1.1 = f64[48]{0} broadcast(param_0), dimensions={}, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(48,) broadcast_dimensions=()]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1302}
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[] parameter(0), metadata={op_name="args[0]"}
+  ROOT wrapped_broadcast = f64[48]{0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_broadcast_computation, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(48,) broadcast_dimensions=()]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1302}
+}
+
