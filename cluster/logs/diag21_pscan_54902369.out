@@ -1,3 +1,33 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 12.8
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 21 P-scan Probe
+============================================================
+Job ID:       54902369
+Node:         m3g110
+GPU(s):       0
+JAX cache:    /scratch/fc37/aman0087/.jax_cache_gpu/shared
+JAX_LOG_COMPILES: 1
+PROBE_P:      50
+PROBE_ROLE:   cold
+Start:        Mon Apr 20 02:10:57 AM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+========================================
+P-scan probe: P=50 role=cold
+========================================
+Start: Mon Apr 20 02:11:10 AM AEST 2026
+XLA_FLAGS=--xla_dump_hlo_as_text --xla_dump_to=.planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P50_cold
+Probe exit: 1
+--- pscan P=50 role=cold log tail (80 lines) ---
 /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/arviz/__init__.py:50: FutureWarning: 
 ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
 Some upcoming changes may be backward incompatible.
@@ -23,3 +53,10 @@ Traceback (most recent call last):
   File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/pathlib.py", line 1247, in replace
     self._accessor.replace(self, target)
 FileNotFoundError: [Errno 2] No such file or directory: '/home/aman0087/.cache/arviz/daily_warning.tmp' -> '/home/aman0087/.cache/arviz/daily_warning'
+--- end log ---
+End: Mon Apr 20 02:11:56 AM AEST 2026
+
+
+========================================
+Phase 21 p-scan probe: git auto-push
+========================================
