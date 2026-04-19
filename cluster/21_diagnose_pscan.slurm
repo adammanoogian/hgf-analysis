@@ -228,6 +228,8 @@ echo "XLA_FLAGS=${XLA_FLAGS}"
 python scripts/08_run_power_iteration.py \
     --p-scan "${PROBE_P}" \
     --diagnostic-mode \
+    --chunk-id 0 \
+    --job-id "${SLURM_JOB_ID:-diag21_pscan}" \
     > "${PSCAN_LOG}" 2>&1
 PROBE_EXIT=$?
 

@@ -206,6 +206,8 @@ for P in 5 20; do
     python scripts/08_run_power_iteration.py \
         --p-scan "${P}" \
         --diagnostic-mode \
+        --chunk-id 0 \
+        --job-id "${SLURM_JOB_ID:-diag21_nuts}" \
         > "${NUTS_LOG}" 2>&1 \
         || echo "WARNING: NUTS probe at P=${P} exited non-zero; continuing"
 
