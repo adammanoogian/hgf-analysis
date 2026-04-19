@@ -479,24 +479,24 @@ Yes — ΔHR = per-trial change in heart rate, specifically **anticipatory cardi
 
 User asked me to "do research to inform the parameters." Literature findings:
 
-**Direction of anxiety effect on ω (ω₂):** higher ω (less negative) = faster updating = anxiety. Browning, Behrens, Jocham, O'Reilly & Bishop (2015, *Nat Neurosci*) shows trait-anxious subjects fail to reduce learning rate in stable blocks, effectively inferring higher volatility. Replicated by Aylward et al. (2019, *Nat Hum Behav*) for GAD patients, and Huang, Thompson & Paulus (2017).
+**Direction of anxiety effect on ω (ω₂):** higher ω (less negative) = faster updating = anxiety. Browning, Behrens, Jocham, O'Reilly & Bishop (2015, *Nat Neurosci*) shows trait-anxious subjects fail to reduce learning rate in stable blocks, effectively inferring higher volatility. Replicated by Aylward et al. (2019, *Nat Hum Behav*) for GAD patients, and Huang, Thompson & Paulus (2017). *(Note: Phase 20 supersedes these pre-2020 refs with Klaassen 2024 — see 20-08-citation-audit.md)*
 
 **Suggested simulation priors for the 2×2 phenotype grid (PRL.V2):**
 
 | Phenotype dimension | Low | High | Source |
 |---|---|---|---|
-| Anxiety — ω₂ | −6.0 | −4.0 to −3.0 | Browning 2015; Aylward 2019 |
-| Reward sensitivity — β | 2.0 | 6.0 to 10.0 | Daw 2006; Schönberg 2007; Gershman 2016 |
+| Anxiety — ω₂ | −6.0 | −4.0 to −3.0 | Browning 2015; Aylward 2019 *(Note: Phase 20 supersedes these pre-2020 refs with Klaassen 2024 — see 20-08-citation-audit.md)* |
+| Reward sensitivity — β | 2.0 | 6.0 to 10.0 | Daw 2006; Schönberg 2007; Gershman 2016 *(Note: Phase 20 supersedes these pre-2020 refs with Klaassen 2024 — see 20-08-citation-audit.md)* |
 | κ (3-level coupling) | fix at 1.0 | fix at 1.0 | Weak evidence in anxiety; fix across phenotypes (de Berker 2016 insufficient) |
 
 **Known confound to watch:** ω × β are modestly negatively correlated (r ≈ −0.2 to −0.4) in published fits (Wise & Dolan 2020; Reiter et al. 2021). To keep the 2×2 grid cleanly separable in simulation, use a wide β gap (β_low=2, β_high=8) and moderate ω gap (Δω ≈ 2–3).
 
-**Scope warning:** Browning's anxiety-by-volatility effect REQUIRES multiple volatility regimes in the task. PAT-RL has stable (hazard=0.03) and volatile (hazard=0.10) runs — this provides the regime contrast the signature depends on. Do NOT claim anxiety will separate on ω without the counterbalanced stable/volatile run structure actually being simulated in the generator.
+**Scope warning:** Browning's anxiety-by-volatility effect REQUIRES multiple volatility regimes in the task. PAT-RL has stable (hazard=0.03) and volatile (hazard=0.10) runs — this provides the regime contrast the signature depends on. Do NOT claim anxiety will separate on ω without the counterbalanced stable/volatile run structure actually being simulated in the generator. *(Note: Phase 20 supersedes these pre-2020 refs with Klaassen 2024 — see 20-08-citation-audit.md)*
 
 ### Open questions RESOLVED by this addendum
 
 1. ΔHR generative model → caller-supplied; literature stub `N(−3, 3)` threat / `N(0, 3)` safe for Phase 18 smoke only
-2. Phenotype 2×2 numeric values → table above (Browning/Daw/Schönberg grounded)
+2. Phenotype 2×2 numeric values → table above (Browning/Daw/Schönberg grounded) *(Note: Phase 20 supersedes these pre-2020 refs with Klaassen 2024 — see 20-08-citation-audit.md)*
 3. pyhgf version concerns → "rely on the other toolbox"; use installed 0.2.10 as-is, no version-bump work in Phase 18
 
 ### Open questions REMAINING (planner should mark as deferred)
