@@ -52,6 +52,7 @@ _PARAM_ORDER_3LEVEL: tuple[str, ...] = (
     "omega_3",
     "kappa",
     "mu3_0",
+    "b",
 )
 
 # Plan 20-02 (Models A+b, B, C)
