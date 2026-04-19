@@ -11,8 +11,24 @@ Run from the project root::
     conda run -n ds_env python scripts/05_run_validation.py
     conda run -n ds_env python scripts/05_run_validation.py --skip-waic
 
+    # PAT-RL PRL-V1 gate (Phase 20)
+    conda run -n ds_env python scripts/05_run_validation.py \\
+        --task=patrl \\
+        --sim-path results/patrl/sim_df.csv \\
+        --idata-dir results/patrl/idata \\
+        --fit-method laplace
+
 Options
 -------
+--task {prl,patrl}
+    Task to validate.  ``'prl'`` = pick_best_cue (default, Phase 1-9);
+    ``'patrl'`` = PAT-RL PRL-V1 gate (Phase 20).
+--fit-method {laplace,nuts}
+    Fitting back-end for PAT-RL (ignored for ``--task=prl``).
+    Default ``laplace`` (fast-path; NUTS deferred to post-Phase-14-15
+    per user directive 2026-04-19).
+--r-threshold FLOAT
+    Pearson r threshold for PRL-V1 primary parameters.  Default 0.7.
 --skip-waic
     Skip the slow WAIC computation (useful for recovery-only diagnostics).
 --sim-path PATH
@@ -24,12 +40,13 @@ Options
     Path to 3-level fit results CSV.  Default:
     ``results/fit_results_hgf_3level.csv``.
 --idata-dir PATH
-    Directory containing per-participant InferenceData .nc files, organised
-    as ``{idata_dir}/{model}/{participant_id}_{group}_{session}.nc``.
+    Directory containing per-participant InferenceData .nc files.
+    * prl: ``{idata_dir}/{model}/{participant_id}_{group}_{session}.nc``
+    * patrl: ``{idata_dir}/{model}/{participant_id}.nc``
     Default: ``results/idata``.
 
-Output
-------
+Output (prl, unchanged)
+-----------------------
 ``results/validation/`` directory with:
 
 * ``recovery_metrics_{model}.csv``   — per-parameter r, p, bias, RMSE
@@ -38,6 +55,13 @@ Output
 * ``waic_results.csv``               — per-participant ELPD-WAIC by model
 * ``bms_summary.csv``                — BMS summary (exp_r, xp, pxp, bor)
 * ``bms_exceedance.png``             — exceedance probability bar plot
+
+Output (patrl)
+--------------
+``results/patrl/validation/`` directory with:
+
+* ``patrl_recovery_metrics.csv`` — per-parameter r, bias, passes_threshold,
+  exploratory flag.  Exploratory: ω₃, μ₃⁰.
 """
 
 from __future__ import annotations
@@ -53,6 +77,8 @@ from pathlib import Path
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
+
+import logging  # noqa: E402
 
 import pandas as pd  # noqa: E402
 
@@ -70,9 +96,18 @@ from prl_hgf.analysis.recovery import (  # noqa: E402
     build_recovery_df,
     compute_correlation_matrix,
     compute_recovery_metrics,
+    compute_recovery_metrics_patrl,
 )
 
 _MODEL_NAMES = ["hgf_2level", "hgf_3level"]
+_MODEL_NAMES_PATRL = ["hgf_2level_patrl", "hgf_3level_patrl"]
+
+log = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +122,35 @@ def _parse_args() -> argparse.Namespace:
             "Phase 5: Parameter recovery validation and Bayesian model comparison."
         )
     )
+    # --- Task toggle (Phase 20 PRL-V1 gate) ---
+    parser.add_argument(
+        "--task",
+        choices=["prl", "patrl"],
+        default="prl",
+        help=(
+            "Task to validate.  'prl' = pick_best_cue (Phase 1-9, default); "
+            "'patrl' = PAT-RL PRL-V1 gate (Phase 20)."
+        ),
+    )
+    parser.add_argument(
+        "--fit-method",
+        choices=["laplace", "nuts"],
+        default="laplace",
+        dest="fit_method",
+        help=(
+            "Fitting back-end for --task=patrl.  Default 'laplace' (fast-path; "
+            "NUTS deferred to post-Phase-14-15 per user directive 2026-04-19).  "
+            "Ignored for --task=prl."
+        ),
+    )
+    parser.add_argument(
+        "--r-threshold",
+        type=float,
+        default=0.7,
+        dest="r_threshold",
+        help="Pearson r threshold for PRL-V1 primary parameters.  Default 0.7.",
+    )
+    # --- Common options ---
     parser.add_argument(
         "--skip-waic",
         action="store_true",
@@ -397,6 +461,349 @@ def _save_recovery_outputs(
 
 
 # ---------------------------------------------------------------------------
+# PAT-RL helpers (Phase 20 PRL-V1 gate)
+# ---------------------------------------------------------------------------
+
+_PATRL_PRIMARY_PARAMS: tuple[str, ...] = ("omega_2", "kappa", "beta")
+_PATRL_EXPLORATORY_PARAMS: tuple[str, ...] = ("omega_3", "mu3_0")
+
+
+def _resolve_patrl_sim_path(args_path: Path | None) -> Path:
+    """Return path to PAT-RL simulated data CSV, or exit with instructions."""
+    if args_path is not None:
+        return args_path
+    candidates = [
+        RESULTS_DIR / "patrl" / "sim_df.csv",
+        RESULTS_DIR / "patrl_smoke" / "sim_df.csv",
+        _PROJECT_ROOT / "output" / "patrl_smoke" / "sim_df.csv",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    print(
+        "ERROR: PAT-RL simulated data not found.  Expected at:\n"
+        f"  {candidates[0]}\n"
+        "Run scripts/03_simulate_participants.py --task=patrl first, or\n"
+        "submit cluster/patrl_smoke.slurm for a 160-agent cohort."
+    )
+    sys.exit(2)
+
+
+def _resolve_patrl_idata_dir(args_path: Path | None) -> Path:
+    """Return idata directory for PAT-RL fits."""
+    if args_path is not None:
+        return args_path
+    candidates = [
+        RESULTS_DIR / "patrl" / "idata",
+        RESULTS_DIR / "patrl_smoke" / "idata",
+        _PROJECT_ROOT / "output" / "patrl_smoke" / "idata",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    # Return default even if it doesn't exist yet; caller will handle missing files
+    return RESULTS_DIR / "patrl" / "idata"
+
+
+def _load_patrl_idata(
+    idata_dir: Path,
+    model: str,
+    participant_ids: list[str],
+    fit_method: str,
+) -> dict[str, object]:
+    """Load per-participant InferenceData .nc files for a PAT-RL model.
+
+    Parameters
+    ----------
+    idata_dir : Path
+        Root directory.  Files expected at ``{idata_dir}/{model}/{pid}.nc``.
+    model : str
+        PAT-RL model name (e.g. ``'hgf_2level_patrl'``).
+    participant_ids : list[str]
+        Participant IDs to load.
+    fit_method : str
+        ``'laplace'`` or ``'nuts'`` — used for logging only.
+
+    Returns
+    -------
+    dict mapping participant_id → InferenceData (or None if file missing).
+    """
+    import arviz as az
+
+    model_dir = idata_dir / model
+    idata_map: dict[str, object] = {}
+    n_loaded = n_missing = 0
+
+    for pid in participant_ids:
+        nc_path = model_dir / f"{pid}.nc"
+        if nc_path.exists():
+            idata_map[pid] = az.from_netcdf(str(nc_path))
+            n_loaded += 1
+        else:
+            idata_map[pid] = None
+            n_missing += 1
+
+    log.info(
+        "PAT-RL idata (%s, %s): loaded %d, missing %d",
+        model,
+        fit_method,
+        n_loaded,
+        n_missing,
+    )
+    return idata_map
+
+
+def _extract_patrl_posterior_means(
+    idata: object,
+    model: str,
+    participant_id: str,
+) -> dict[str, float]:
+    """Extract posterior means for PAT-RL parameters from InferenceData.
+
+    Handles both ``participant_id`` (Laplace) and ``participant`` (NUTS)
+    coordinate names (Decision 128/132).
+
+    Parameters
+    ----------
+    idata : az.InferenceData
+        Posterior InferenceData for a single participant.
+    model : str
+        PAT-RL model name.
+    participant_id : str
+        Participant identifier (used for error messages).
+
+    Returns
+    -------
+    dict mapping parameter name → posterior mean (float).
+    """
+    import numpy as np
+
+    is_3level = "3level" in model
+    # Parameters present in both 2-level and 3-level
+    params = ["omega_2", "beta"]
+    if is_3level:
+        params += ["kappa", "omega_3", "mu3_0"]
+
+    posterior = idata.posterior  # type: ignore[union-attr]
+    means: dict[str, float] = {}
+
+    for p in params:
+        if p not in posterior:
+            continue
+        arr = posterior[p].values  # (chains, draws, [participant_dim])
+        if arr.ndim == 3:
+            # shape (chains, draws, participants) — single-participant idata
+            # should have dim size 1
+            arr = arr[:, :, 0]
+        means[p] = float(np.mean(arr))
+
+    # Also extract kappa if it's a 2-level model with a b-parameter (Model A+b)
+    if "kappa" in posterior and "kappa" not in means:
+        arr = posterior["kappa"].values
+        if arr.ndim == 3:
+            arr = arr[:, :, 0]
+        means["kappa"] = float(np.mean(arr))
+
+    return means
+
+
+def _build_patrl_recovery_fit_df(
+    sim_df: pd.DataFrame,
+    idata_dict: dict[str, dict[str, object]],
+    model: str,
+) -> pd.DataFrame:
+    """Build long-format fit_df suitable for compute_recovery_metrics_patrl.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Simulation DataFrame with ``participant_id``, ``true_omega_2``,
+        ``true_kappa``, ``true_beta``, ``true_omega_3``, ``true_mu3_0``
+        columns (one row per trial; true params are trial-constant).
+    idata_dict : dict[str, dict[str, az.InferenceData]]
+        ``idata_dict[model][participant_id]`` → InferenceData.
+    model : str
+        PAT-RL model name to use from ``idata_dict``.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Long-format DataFrame with columns:
+        ``participant_id``, ``param``, ``true_value``, ``posterior_mean``.
+    """
+    # Collapse sim_df to one row per participant with true params
+    true_cols = [
+        c
+        for c in [
+            "true_omega_2",
+            "true_kappa",
+            "true_beta",
+            "true_omega_3",
+            "true_mu3_0",
+        ]
+        if c in sim_df.columns
+    ]
+    true_wide = (
+        sim_df.groupby("participant_id")[true_cols].first().reset_index()
+    )
+
+    rows: list[dict] = []
+    model_map = idata_dict.get(model, {})
+
+    for _, row in true_wide.iterrows():
+        pid = str(row["participant_id"])
+        idata = model_map.get(pid)
+        if idata is None:
+            log.warning(
+                "_build_patrl_recovery_fit_df: no idata for participant=%s model=%s — skipping",
+                pid,
+                model,
+            )
+            continue
+
+        post_means = _extract_patrl_posterior_means(idata, model, pid)
+
+        # Map true_* column → canonical param name
+        param_to_true = {
+            "omega_2": "true_omega_2",
+            "kappa": "true_kappa",
+            "beta": "true_beta",
+            "omega_3": "true_omega_3",
+            "mu3_0": "true_mu3_0",
+        }
+        for param, true_col in param_to_true.items():
+            if param not in post_means:
+                continue
+            if true_col not in true_wide.columns:
+                continue
+            rows.append(
+                {
+                    "participant_id": pid,
+                    "param": param,
+                    "true_value": float(row[true_col]),
+                    "posterior_mean": post_means[param],
+                }
+            )
+
+    return pd.DataFrame(
+        rows,
+        columns=["participant_id", "param", "true_value", "posterior_mean"],
+    )
+
+
+def _run_recovery_patrl(
+    sim_df: pd.DataFrame,
+    idata_dict: dict[str, dict[str, object]],
+    out_dir: Path,
+    r_threshold: float,
+) -> dict[str, pd.DataFrame]:
+    """Run PAT-RL PRL-V1 recovery loop over both model variants.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        PAT-RL simulation DataFrame.
+    idata_dict : dict[str, dict[str, InferenceData]]
+        Nested mapping ``idata_dict[model][participant_id]``.
+    out_dir : Path
+        Output directory for ``patrl_recovery_metrics.csv``.
+    r_threshold : float
+        Pearson r gate threshold.
+
+    Returns
+    -------
+    dict mapping model name → recovery metrics DataFrame.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    metrics_by_model: dict[str, pd.DataFrame] = {}
+
+    for model in _MODEL_NAMES_PATRL:
+        if model not in idata_dict or not idata_dict[model]:
+            log.warning(
+                "_run_recovery_patrl: no idata for model=%s — skipping", model
+            )
+            continue
+
+        log.info("--- PAT-RL Recovery: %s ---", model)
+        fit_df_long = _build_patrl_recovery_fit_df(sim_df, idata_dict, model)
+
+        if len(fit_df_long) == 0:
+            log.warning(
+                "_run_recovery_patrl: empty fit_df for model=%s — skipping", model
+            )
+            continue
+
+        metrics_df = compute_recovery_metrics_patrl(
+            fit_df_long,
+            r_threshold=r_threshold,
+            primary_params=_PATRL_PRIMARY_PARAMS,
+            exploratory_params=_PATRL_EXPLORATORY_PARAMS,
+        )
+        metrics_by_model[model] = metrics_df
+
+        # Save per-model CSV
+        metrics_path = out_dir / f"patrl_recovery_metrics_{model}.csv"
+        metrics_df.to_csv(metrics_path, index=False)
+        log.info("  Saved: %s", metrics_path)
+        print(metrics_df.to_string(index=False))
+
+    return metrics_by_model
+
+
+def _print_prl_v1_gate_report(
+    metrics_by_model: dict[str, pd.DataFrame],
+    r_threshold: float,
+) -> int:
+    """Print PRL-V1 gate report and return exit code.
+
+    Parameters
+    ----------
+    metrics_by_model : dict
+        Mapping model name → recovery metrics DataFrame.
+    r_threshold : float
+        Gate threshold.
+
+    Returns
+    -------
+    int
+        0 if all primary parameters pass for all models; 1 otherwise.
+    """
+    print("=" * 60)
+    print("PRL-V1 GATE REPORT")
+    print(f"Threshold: r >= {r_threshold:.2f}")
+    print("=" * 60)
+
+    overall_pass = True
+
+    for model, metrics_df in metrics_by_model.items():
+        print(f"\nModel: {model}")
+        primary = metrics_df[~metrics_df["exploratory"]]
+        exploratory = metrics_df[metrics_df["exploratory"]]
+
+        model_pass = bool(primary["passes_threshold"].all())
+        overall_pass = overall_pass and model_pass
+
+        for _, row in primary.iterrows():
+            status = "PASS" if row["passes_threshold"] else "FAIL"
+            print(
+                f"  {row['param']}: r={row['pearson_r']:.3f} "
+                f"(threshold {r_threshold:.2f}) [{status}]"
+            )
+
+        for _, row in exploratory.iterrows():
+            print(
+                f"  {row['param']}: r={row['pearson_r']:.3f} [exploratory — not gated]"
+            )
+
+        print(f"  --> Model {model}: {'PASS' if model_pass else 'FAIL'}")
+
+    print()
+    print(f"PRL-V1 OVERALL: {'PASS' if overall_pass else 'FAIL'}")
+    print("=" * 60)
+    return 0 if overall_pass else 1
+
+
+# ---------------------------------------------------------------------------
 # BMS helpers
 # ---------------------------------------------------------------------------
 
@@ -477,12 +884,104 @@ def _run_bms(
 # ---------------------------------------------------------------------------
 
 
+def _main_patrl(args: argparse.Namespace) -> None:
+    """PAT-RL PRL-V1 gate pipeline (Phase 20).
+
+    Loads PAT-RL sim_df and idata, builds long-format recovery DataFrame,
+    calls :func:`~prl_hgf.analysis.recovery.compute_recovery_metrics_patrl`,
+    prints PRL-V1 gate report, and saves ``patrl_recovery_metrics.csv``.
+
+    Exit codes per Decision 148:
+    * 0 — all primary gate parameters pass (r >= r_threshold).
+    * 1 — at least one primary parameter fails the gate.
+    * 2 — loader error (missing sim_df, idata dir, or import failure).
+    """
+    print("=" * 60)
+    print("Phase 5 — PAT-RL PRL-V1 Parameter Recovery Gate")
+    print(f"fit-method: {args.fit_method}")
+    print(f"r-threshold: {args.r_threshold}")
+    print("=" * 60)
+
+    out_dir = RESULTS_DIR / "patrl" / "validation"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Load sim_df
+    sim_path = _resolve_patrl_sim_path(args.sim_path)
+    print(f"\nLoading PAT-RL sim_df from: {sim_path}")
+    sim_df = pd.read_csv(sim_path)
+    n_agents = sim_df["participant_id"].nunique()
+    print(f"  {len(sim_df):,} trial rows loaded ({n_agents} participants)")
+
+    participant_ids = sim_df["participant_id"].unique().tolist()
+
+    # 2. Resolve idata directory
+    idata_dir = _resolve_patrl_idata_dir(args.idata_dir)
+    print(f"\nLoading PAT-RL idata from: {idata_dir}")
+
+    # 3. Load InferenceData for both model variants
+    idata_dict: dict[str, dict[str, object]] = {}
+    for model in _MODEL_NAMES_PATRL:
+        model_dir = idata_dir / model
+        if model_dir.exists() and any(model_dir.glob("*.nc")):
+            idata_dict[model] = _load_patrl_idata(
+                idata_dir, model, participant_ids, args.fit_method
+            )
+        else:
+            log.warning(
+                "_main_patrl: idata dir missing or empty for model=%s at %s",
+                model,
+                model_dir,
+            )
+
+    if not idata_dict:
+        print(
+            "\nERROR: No PAT-RL idata found.  Run fitting first:\n"
+            f"  scripts/12_smoke_patrl_foundation.py --fit-method {args.fit_method}\n"
+            "  or: sbatch cluster/patrl_smoke.slurm"
+        )
+        sys.exit(2)
+
+    # 4. Run recovery loop
+    print("\n=== PAT-RL Recovery Analysis ===")
+    metrics_by_model = _run_recovery_patrl(sim_df, idata_dict, out_dir, args.r_threshold)
+
+    if not metrics_by_model:
+        print("\nERROR: Recovery failed for all models.")
+        sys.exit(2)
+
+    # Save combined CSV
+    combined_rows: list[pd.DataFrame] = []
+    for model_name, mdf in metrics_by_model.items():
+        tagged = mdf.copy()
+        tagged.insert(0, "model", model_name)
+        combined_rows.append(tagged)
+    if combined_rows:
+        combined_metrics = pd.concat(combined_rows, ignore_index=True)
+        combined_path = out_dir / "patrl_recovery_metrics.csv"
+        combined_metrics.to_csv(combined_path, index=False)
+        print(f"\nSaved combined: {combined_path}")
+
+    # 5. PRL-V1 gate report + exit code
+    exit_code = _print_prl_v1_gate_report(metrics_by_model, args.r_threshold)
+    sys.exit(exit_code)
+
+
 def main() -> None:
     """Run full Phase 5 validation pipeline."""
     args = _parse_args()
 
     VALIDATION_DIR.mkdir(parents=True, exist_ok=True)
 
+    # -----------------------------------------------------------------------
+    # PAT-RL branch (Phase 20 PRL-V1 gate)
+    # -----------------------------------------------------------------------
+    if args.task == "patrl":
+        _main_patrl(args)
+        return
+
+    # -----------------------------------------------------------------------
+    # PRL (pick_best_cue) branch — original Phase 5 code (unchanged)
+    # -----------------------------------------------------------------------
     print("=" * 60)
     print("Phase 5 — Parameter Recovery Validation & BMS")
     print("=" * 60)
