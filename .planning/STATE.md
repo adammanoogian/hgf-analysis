@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 21 Wave 1 in progress — benchmark bottleneck diagnosis. Plan 21-01 COMPLETE: HLO graph-scope memo produced with empirical scan-body-depth numbers (PAT-RL 3-level ~175 ops/trial inlined; pick_best_cue 3-level ~1170 ops/trial) and closure-over-data HLO evidence. Verdict deferred to 21-07.
+**Current focus:** Phase 21 Wave 1 in progress — benchmark bottleneck diagnosis. Plans 21-01 + 21-02 COMPLETE: scope memo produced; harness re-instrumented with JAX_LOG_COMPILES + cache-stats parity + warmup_params-on-warm; new `--p-scan` and `--vb-laplace-probe` CLI probes landed with 7 passing unit tests locking CSV/JSON schemas for Waves 2-3 consumption.
 
 ## Current Position
 
 Phase: 21 (Benchmark Bottleneck Diagnosis) — IN PROGRESS (Wave 1)
-Plan: 21-01 COMPLETE ✓ (1/7 plans); next is 21-02 (cache forensics audit)
-Status: Wave 1 local desk work underway; benchmark-scope-memo.md on disk with all 6 verification checks passing; no src/ changes (diagnostic memo only)
-Last activity: 2026-04-19 — Completed plan 21-01: scope memo with HLO op counts + scan-body depth + FLOPs/draw for PAT-RL 2/3-level and pick_best_cue 2/3-level at P=3
+Plan: 21-02 COMPLETE ✓ (2/7 plans); next is 21-03 (VB-Laplace cluster probe)
+Status: Wave 1 local desk work continues; harness instrumentation in scripts/08_run_power_iteration.py lands 2 new probe entry points + re-instrumented _run_benchmark; zero src/ changes; zero results/ changes; 7 CPU-only unit tests pass in ~22s.
+Last activity: 2026-04-19 — Completed plan 21-02: harness instrumentation (Patches A/B/C to _run_benchmark + --p-scan/--vb-laplace-probe helpers + tests/test_bench_harness_diagnostics.py with 7 tests).
 
-[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8); Phase 21 Wave 1 IN PROGRESS (1/7)
+[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8); Phase 21 Wave 1 IN PROGRESS (2/7)
 
 ## Performance Metrics
 
@@ -179,6 +179,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | P=3 is the local traceable cohort size for jax.make_jaxpr + jax.jit.lower.as_text on CPU | P=50 would exceed the 5-min local wall-time cap and is exactly the shape that blew up on cluster (job 54899271); extrapolation rule (scan body shape-invariant under vmap, outer graph sub-linear in P) substituted for a P=50 measurement | 21-01 |
 | Closure-over-data HLO signature confirmed at stablehlo.constant level | patrl_3level_P3.hlo.txt:3-8 contains state/reward/shock/mask arrays as `stablehlo.constant dense<"0x..."> : tensor<3x192xi32>` blobs (HLO constants); pick_best_cue HLO dump has same arrays as @main %arg5/6/7/8 (traced args, STATE #106/107 pattern); no verdict call yet — VERDICT (21-07) combines this with cache forensics (21-02) + VB-Laplace probe (21-03) | 21-01 |
 | pyhgf 0.2.10 installed locally (research/plans cite 0.2.8); structural pattern re-confirmed unchanged | Nested `@partial(jit, static_argnames=...)` decorators are first-line decorations on each public entry point — unlikely to have shifted between patch releases; HLO findings valid for cluster environment (assumed same minor version) | 21-01 |
+| Patch C (warmup_params on warm) landed — `fit_batch_hierarchical` already accepts `warmup_params` and returns `(idata, adapted_params)` when None | Signature verified at `src/prl_hgf/fitting/hierarchical.py:2012`; cold return tuple unpack + warm kwarg pass-through is a ~10-line edit with zero production-code churn; eliminates ~1100s NUTS warmup duplication that confounded job-54899271's 1.1x speedup observation | 21-02 |
+| B4 rename + per_call_wall_clock sibling field in vb_laplace_vs_nuts_jit.json | JAX_LOG_COMPILES emits event COUNTS (not timings); per-stage wall-clock would require harness-splitting which CONTEXT explicitly rejects; full-pipeline wall-clock from time.perf_counter wrappers around cold/warm/next-proc is the timing signal we CAN measure; 5-key schema with bottleneck_layer 7-value enum (`logp_graph \| lbfgs_loop \| hessian_graph \| nuts_kernel \| cache_key \| both \| undetermined`) locks downstream 21-07 reader contract | 21-02 |
+| --diagnostic-mode gate on _run_benchmark Patch A; probe entry points short-circuit before grid/chunk setup in main() | Production-default `--benchmark` keeps unchanged HLO (no JAX_LOG_COMPILES env pollution, no log-handler installation); probe invocations do not need the SBF grid (PAT-RL is their subject, not pick_best_cue); SLURM dispatch remains one-liner per probe | 21-02 |
 
 ### Pending Todos
 
@@ -223,6 +226,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-19
-Stopped at: Completed 21-01-PLAN.md (benchmark scope memo). All 6 plan verification checks pass; git diff --stat src/ clean. Empirical HLO scan-body depth: PAT-RL 3-level ~175 ops/trial inlined; pick_best_cue 3-level ~1170 ops/trial. Closure-over-data HLO constant signature confirmed at stablehlo.constant level. Verdict deferred to 21-07.
+Stopped at: Completed 21-02-PLAN.md (benchmark harness instrumentation). `scripts/08_run_power_iteration.py` now sets JAX_LOG_COMPILES + tracks cache-delta around cold/warm + passes warmup_params on warm call in `_run_benchmark`; two new probe entry points `--p-scan N` and `--vb-laplace-probe --probe-p N` write locked-schema CSV/JSON under `.planning/phases/21-benchmark-bottleneck-diagnosis/`; `tests/test_bench_harness_diagnostics.py` has 7 CPU-only passing tests (~22s). Zero `src/` changes; zero `results/` changes; production `--benchmark` default unchanged.
 Resume file: None
-Next action: Plan 21-02 (cache forensics audit) — design `JAX_LOG_COMPILES=1` + `XLA_FLAGS=--xla_dump_hlo_as_text` instrumentation for cluster jobs + write SLURM scripts + probe harness code. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) and 14.1-03 GPU benchmark.
+Next action: Plan 21-03 (VB-Laplace cluster probe) — write SLURM script that invokes `python scripts/08_run_power_iteration.py --vb-laplace-probe --probe-p {5,20} --diagnostic-mode` on the cluster and collects the `vb_laplace_vs_nuts_jit.json` artifact. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) and 14.1-03 GPU benchmark.
