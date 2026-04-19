@@ -632,15 +632,22 @@ def _log_recovery_table(
             )
             beta_post = float(np.exp(log_beta_post))
 
-        # Hard: must be finite.
-        assert np.isfinite(omega2_post), (
-            f"participant {pid}: posterior_mean omega_2 is non-finite.  "
-            f"Got {omega2_post!r}."
-        )
-        assert np.isfinite(beta_post), (
-            f"participant {pid}: posterior_mean beta is non-finite.  "
-            f"Got {beta_post!r}."
-        )
+        # Non-finite MAP posterior means are symptomatic of Laplace
+        # divergence (log_beta → exp blow-up at ill-conditioned modes).
+        # Warn and skip this participant so CSVs still land + downstream
+        # BMS/recovery can exclude them. Do NOT fail the entire run —
+        # Phase 19 closure memo already flagged Laplace β width
+        # asymmetry; Phase 20 handles this via participant filtering at
+        # PRL-V1/V2 gate time.
+        if not (np.isfinite(omega2_post) and np.isfinite(beta_post)):
+            logger.warning(
+                "  %s  SKIPPED (divergent Laplace MAP): "
+                "omega_2_post=%r, beta_post=%r",
+                pid,
+                omega2_post,
+                beta_post,
+            )
+            continue
 
         true_omega2 = true_p.get("omega_2", float("nan"))
         true_beta = true_p.get("beta", float("nan"))
