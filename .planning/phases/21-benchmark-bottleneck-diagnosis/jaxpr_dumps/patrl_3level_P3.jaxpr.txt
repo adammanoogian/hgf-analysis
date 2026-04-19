@@ -1,0 +1,1100 @@
+let _where = { lambda ; a:bool[3] b:f64[3] c:f64[3]. let
+    d:f64[3] = convert_element_type[new_dtype=float64 weak_type=False] c
+    e:f64[3] = select_n a d b
+  in (e,) } in
+let _where1 = { lambda ; f:bool[3] g:f64[3,1] h:f64[3,1]. let
+    i:bool[3,1] = broadcast_in_dim[broadcast_dimensions=(0,) shape=(3, 1)] f
+    j:f64[3,1] = select_n i h g
+  in (j,) } in
+let _where2 = { lambda ; k:bool[3] l:f64[3] m:f64[3]. let
+    n:f64[3] = select_n k m l
+  in (n,) } in
+let _where3 = { lambda ; o:bool[3] p:i64[3] q:i64[3]. let
+    r:i64[3] = select_n o q p
+  in (r,) } in
+let _where4 = { lambda ; s:bool[3] t:f64[3] u:f64[]. let
+    v:f64[] = convert_element_type[new_dtype=float64 weak_type=False] u
+    w:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] v
+    x:f64[3] = select_n s w t
+  in (x,) } in
+{ lambda y:i32[3,192] z:f64[1] ba:f64[1] bb:f64[1] bc:f32[3,192] bd:f32[3,192] be:i32[3,192]
+    bf:bool[3,192]; bg:f64[3] bh:f64[3] bi:f64[3] bj:f64[3] bk:f64[3] bl:f64[3]. let
+    bm:f64[3] = exp bi
+    bn:f64[] = integer_pow[y=2] 2.0
+    bo:f64[] = mul 6.283185307179586 bn
+    bp:f64[] = log bo
+    bq:f64[3] = sub bk -4.0
+    br:f64[3] = integer_pow[y=2] bq
+    bs:f64[3] = div br bn
+    bt:f64[3] = add bp bs
+    bu:f64[3] = div bt -2.0
+    bv:f64[] = reduce_sum[axes=(0,)] bu
+    bw:f64[] = integer_pow[y=2] 0.75
+    bx:f64[] = mul 6.283185307179586 bw
+    by:f64[] = log bx
+    bz:f64[3] = sub bi 1.3862943611198906
+    ca:f64[3] = integer_pow[y=2] bz
+    cb:f64[3] = div ca bw
+    cc:f64[3] = add by cb
+    cd:f64[3] = div cc -2.0
+    ce:f64[] = reduce_sum[axes=(0,)] cd
+    cf:f64[] = add bv ce
+    cg:f64[] = integer_pow[y=2] 1.0
+    ch:f64[] = mul 6.283185307179586 cg
+    ci:f64[] = log ch
+    cj:f64[3] = sub bg 0.0
+    ck:f64[3] = integer_pow[y=2] cj
+    cl:f64[3] = div ck cg
+    cm:f64[3] = add ci cl
+    cn:f64[3] = div cm -2.0
+    co:f64[] = reduce_sum[axes=(0,)] cn
+    cp:f64[] = add cf co
+    cq:f64[] = integer_pow[y=2] 2.0
+    cr:f64[] = mul 6.283185307179586 cq
+    cs:f64[] = log cr
+    ct:f64[3] = sub bl -6.0
+    cu:f64[3] = integer_pow[y=2] ct
+    cv:f64[3] = div cu cq
+    cw:f64[3] = add cs cv
+    cx:f64[3] = div cw -2.0
+    cy:f64[] = reduce_sum[axes=(0,)] cx
+    cz:f64[] = add cp cy
+    da:f64[] = integer_pow[y=2] 0.5
+    db:f64[] = mul 6.283185307179586 da
+    dc:f64[] = log db
+    dd:f64[3] = sub bh 1.0
+    de:f64[3] = integer_pow[y=2] dd
+    df:f64[3] = div de da
+    dg:f64[3] = add dc df
+    dh:f64[3] = div dg -2.0
+    di:f64[] = reduce_sum[axes=(0,)] dh
+    dj:f64[] = add cz di
+    dk:f64[] = integer_pow[y=2] 1.0
+    dl:f64[] = mul 6.283185307179586 dk
+    dm:f64[] = log dl
+    dn:f64[3] = sub bj 1.0
+    do:f64[3] = integer_pow[y=2] dn
+    dp:f64[3] = div do dk
+    dq:f64[3] = add dm dp
+    dr:f64[3] = div dq -2.0
+    ds:f64[] = reduce_sum[axes=(0,)] dr
+    dt:f64[] = add dj ds
+    du:f64[3] = convert_element_type[new_dtype=float64 weak_type=False] bh
+    dv:f64[3,1] = broadcast_in_dim[broadcast_dimensions=(0,) shape=(3, 1)] du
+    dw:f64[3,192] = convert_element_type[new_dtype=float64 weak_type=False] y
+    dx:f64[3,192,1] = broadcast_in_dim[
+      broadcast_dimensions=(0, np.int64(1))
+      shape=(3, 192, 1)
+    ] dw
+    dy:i32[192] = broadcast_in_dim[broadcast_dimensions=() shape=(192,)] 1
+    dz:f64[192] = broadcast_in_dim[broadcast_dimensions=() shape=(192,)] 1.0
+    ea:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    eb:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.5
+    ec:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    ed:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    ee:i32[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1
+    ef:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    eg:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    eh:f64[3,1] = broadcast_in_dim[
+      broadcast_dimensions=(np.int64(1),)
+      shape=(3, 1)
+    ] z
+    ei:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    ej:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    ek:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    el:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    em:i64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1
+    en:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    eo:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    ep:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    eq:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    er:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    es:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    et:f64[3,1] = broadcast_in_dim[
+      broadcast_dimensions=(np.int64(1),)
+      shape=(3, 1)
+    ] ba
+    eu:f64[3,1] = broadcast_in_dim[
+      broadcast_dimensions=(np.int64(1),)
+      shape=(3, 1)
+    ] bb
+    ev:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    ew:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    ex:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    ey:i64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1
+    ez:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    fa:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 1.0
+    fb:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    fc:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    fd:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    fe:f64[3] = broadcast_in_dim[broadcast_dimensions=() shape=(3,)] 0.0
+    ff:f64[192,3,1] = transpose[permutation=(1, 0, 2)] dx
+    _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:i32[3] _:f64[3] _:f64[3] _:f64[3,1] _:f64[3]
+      _:f64[3] _:f64[3] _:f64[3] _:i64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3]
+      _:f64[3] _:f64[3] _:f64[3,1] _:f64[3,1] _:f64[3] _:f64[3] _:f64[3] _:f64[3]
+      _:i64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3,1]
+      fg:f64[192,3] = scan[
+      _split_transpose=False
+      jaxpr={ lambda ; fh:f64[3] fi:f64[3] fj:f64[3] fk:f64[3] fl:i32[3] fm:f64[3]
+          fn:f64[3] fo:f64[3,1] fp:f64[3] fq:f64[3] fr:f64[3] fs:f64[3] ft:i64[3]
+          fu:f64[3] fv:f64[3] fw:f64[3] fx:f64[3] fy:f64[3] fz:f64[3] ga:f64[3] gb:f64[3,1]
+          gc:f64[3,1] gd:f64[3] ge:f64[3] gf:f64[3] gg:f64[3] gh:i64[3] gi:f64[3]
+          gj:f64[3] gk:f64[3] gl:f64[3] gm:f64[3] gn:f64[3] go:f64[3] gp:f64[3,1]
+          gq:f64[3,1] gr:i32[] gs:f64[]. let
+          gt:f64[3] gu:f64[3] gv:f64[3] gw:f64[3] gx:f64[3] gy:f64[3] gz:f64[3] ha:f64[3]
+            hb:f64[3] hc:f64[3] hd:f64[3] he:f64[3] hf:f64[3] hg:f64[3] hh:f64[3]
+            hi:f64[3] hj:f64[3] hk:f64[3] hl:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3]
+            _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3]
+            _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] _:f64[3] = pjit[
+            name=beliefs_propagation
+            jaxpr={ lambda ; hm:f64[3] hn:f64[3] ho:f64[3] hp:f64[3] hq:i32[3] hr:f64[3]
+                hs:f64[3] ht:f64[3,1] hu:f64[3] hv:f64[3] hw:f64[3] hx:f64[3] hy:i64[3]
+                hz:f64[3] ia:f64[3] ib:f64[3] ic:f64[3] id:f64[3] ie:f64[3] if:f64[3]
+                ig:f64[3,1] ih:f64[3,1] ii:f64[3] ij:f64[3] ik:f64[3] il:f64[3] im:i64[3]
+                in:f64[3] io:f64[3] ip:f64[3] iq:f64[3] ir:f64[3] is:f64[3] it:f64[3]
+                iu:f64[3,1] iv:f64[3,1] iw:i32[] ix:f64[]. let
+                iy:f64[3] iz:f64[3] ja:f64[3] jb:f64[3] = pjit[
+                  name=continuous_node_prediction
+                  jaxpr={ lambda ; jc:f64[] jd:f64[3] je:f64[3] jf:f64[3] jg:i32[3]
+                      jh:f64[3] ji:f64[3] jj:f64[3,1] jk:f64[3] jl:f64[3] jm:f64[3]
+                      jn:f64[3] jo:i64[3] jp:f64[3] jq:f64[3] jr:f64[3] js:f64[3]
+                      jt:f64[3] ju:f64[3] jv:f64[3] jw:f64[3,1] jx:f64[3,1] jy:f64[3]
+                      jz:f64[3] ka:f64[3] kb:f64[3] kc:i64[3] kd:f64[3] ke:f64[3]
+                      kf:f64[3] kg:f64[3] kh:f64[3] ki:f64[3] kj:f64[3] kk:f64[3,1]. let
+                      kl:f64[3] = div 1.0 kd
+                      km:f64[3] = pjit[
+                        name=predict_mean
+                        jaxpr={ lambda ; kn:f64[] ko:f64[3] kp:f64[3] kq:f64[3] kr:i32[3]
+                            ks:f64[3] kt:f64[3] ku:f64[3,1] kv:f64[3] kw:f64[3] kx:f64[3]
+                            ky:f64[3] kz:i64[3] la:f64[3] lb:f64[3] lc:f64[3] ld:f64[3]
+                            le:f64[3] lf:f64[3] lg:f64[3] lh:f64[3,1] li:f64[3,1]
+                            lj:f64[3] lk:f64[3] ll:f64[3] lm:f64[3] ln:i64[3] lo:f64[3]
+                            lp:f64[3] lq:f64[3] lr:f64[3] ls:f64[3] lt:f64[3] lu:f64[3]
+                            lv:f64[3,1]. let
+                            lw:f64[3] = mul lj lm
+                            lx:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] lt
+                            ly:f64[3] = mul kn lx
+                            lz:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] lw
+                            ma:f64[3] = add lz ly
+                          in (ma,) }
+                      ] jc jd je jf jg jh ji jj jk jl jm jn jo jp jq jr js jt ju
+                        jv jw jx jy jz ka kb kc kd kl kf kg kh ki kj kk
+                      mb:f64[3] mc:f64[3] = pjit[
+                        name=predict_precision
+                        jaxpr={ lambda ; md:f64[] me:f64[3] mf:f64[3] mg:f64[3] mh:i32[3]
+                            mi:f64[3] mj:f64[3] mk:f64[3,1] ml:f64[3] mm:f64[3] mn:f64[3]
+                            mo:f64[3] mp:i64[3] mq:f64[3] mr:f64[3] ms:f64[3] mt:f64[3]
+                            mu:f64[3] mv:f64[3] mw:f64[3] mx:f64[3,1] my:f64[3,1]
+                            mz:f64[3] na:f64[3] nb:f64[3] nc:f64[3] nd:i64[3] ne:f64[3]
+                            nf:f64[3] ng:f64[3] nh:f64[3] ni:f64[3] nj:f64[3] nk:f64[3]
+                            nl:f64[3,1]. let
+                            nm:f64[3] = pjit[
+                              name=clip
+                              jaxpr={ lambda ; nn:f64[3] no:f64[] np:f64[]. let
+                                  nq:f64[3] = max np nn
+                                  nr:f64[3] = min no nq
+                                in (nr,) }
+                            ] nk 80.0 -80.0
+                            ns:f64[3] = exp nm
+                            nt:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] ns
+                            nu:f64[3] = mul md nt
+                            nv:f64[3] = max nu 1e-128
+                            nw:f64[3] = div 1.0 ne
+                            nx:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] nw
+                            ny:f64[3] = add nx nv
+                            nz:f64[3] = div 1.0 ny
+                            oa:f64[3] = mul nv nz
+                          in (nz, oa) }
+                      ] jc jd je jf jg jh ji jj jk jl jm jn jo jp jq jr js jt ju
+                        jv jw jx jy jz ka kb kc kd kl kf kg kh ki kj kk
+                    in (km, mb, kl, mc) }
+                ] ix hn ho hp hq hr hs ht hu hv hw hx hy hz ia ib ic id ie if ig
+                  ih ii ij ik il im in io ip iq ir is it iu
+                ob:f64[3] oc:f64[3] od:f64[3] oe:f64[3] = pjit[
+                  name=continuous_node_prediction
+                  jaxpr={ lambda ; of:f64[] og:f64[3] oh:f64[3] oi:f64[3] oj:i32[3]
+                      ok:f64[3] ol:f64[3] om:f64[3,1] on:f64[3] oo:f64[3] op:f64[3]
+                      oq:f64[3] or:i64[3] os:f64[3] ot:f64[3] ou:f64[3] ov:f64[3]
+                      ow:f64[3] ox:f64[3] oy:f64[3] oz:f64[3,1] pa:f64[3,1] pb:f64[3]
+                      pc:f64[3] pd:f64[3] pe:f64[3] pf:i64[3] pg:f64[3] ph:f64[3]
+                      pi:f64[3] pj:f64[3] pk:f64[3] pl:f64[3] pm:f64[3] pn:f64[3,1]. let
+                      po:f64[3] = div 1.0 os
+                      pp:f64[3] = pjit[
+                        name=predict_mean
+                        jaxpr={ lambda ; pq:f64[] pr:f64[3] ps:f64[3] pt:f64[3] pu:i32[3]
+                            pv:f64[3] pw:f64[3] px:f64[3,1] py:f64[3] pz:f64[3] qa:f64[3]
+                            qb:f64[3] qc:i64[3] qd:f64[3] qe:f64[3] qf:f64[3] qg:f64[3]
+                            qh:f64[3] qi:f64[3] qj:f64[3] qk:f64[3,1] ql:f64[3,1]
+                            qm:f64[3] qn:f64[3] qo:f64[3] qp:f64[3] qq:i64[3] qr:f64[3]
+                            qs:f64[3] qt:f64[3] qu:f64[3] qv:f64[3] qw:f64[3] qx:f64[3]
+                            qy:f64[3,1]. let
+                            qz:f64[3] = mul py qb
+                            ra:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] qi
+                            rb:f64[3] = mul pq ra
+                            rc:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] qz
+                            rd:f64[3] = add rc rb
+                          in (rd,) }
+                      ] of og oh oi oj ok ol om on oo op oq or os po ou ov ow ox
+                        oy oz pa pb pc pd pe pf pg ph pi pj pk pl pm pn
+                      re:f64[3] rf:f64[3] = pjit[
+                        name=predict_precision
+                        jaxpr={ lambda ; rg:f64[] rh:f64[3] ri:f64[3] rj:f64[3] rk:i32[3]
+                            rl:f64[3] rm:f64[3] rn:f64[3,1] ro:f64[3] rp:f64[3] rq:f64[3]
+                            rr:f64[3] rs:i64[3] rt:f64[3] ru:f64[3] rv:f64[3] rw:f64[3]
+                            rx:f64[3] ry:f64[3] rz:f64[3] sa:f64[3,1] sb:f64[3,1]
+                            sc:f64[3] sd:f64[3] se:f64[3] sf:f64[3] sg:i64[3] sh:f64[3]
+                            si:f64[3] sj:f64[3] sk:f64[3] sl:f64[3] sm:f64[3] sn:f64[3]
+                            so:f64[3,1]. let
+                            sp:f64[3,1] = slice[
+                              limit_indices=(3, 1)
+                              start_indices=(0, 0)
+                              strides=(1, 1)
+                            ] sb
+                            sq:f64[3] = squeeze[dimensions=(1,)] sp
+                            sr:f64[3] = mul sq sd
+                            ss:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] rz
+                            st:f64[3] = add ss sr
+                            su:f64[3] = pjit[
+                              name=clip
+                              jaxpr={ lambda ; sv:f64[3] sw:f64[] sx:f64[]. let
+                                  sy:f64[] = convert_element_type[
+                                    new_dtype=float64
+                                    weak_type=False
+                                  ] sx
+                                  sz:f64[3] = max sy sv
+                                  ta:f64[] = convert_element_type[
+                                    new_dtype=float64
+                                    weak_type=False
+                                  ] sw
+                                  tb:f64[3] = min ta sz
+                                in (tb,) }
+                            ] st 80.0 -80.0
+                            tc:f64[3] = exp su
+                            td:f64[3] = mul rg tc
+                            te:f64[3] = max td 1e-128
+                            tf:f64[3] = div 1.0 rt
+                            tg:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] tf
+                            th:f64[3] = add tg te
+                            ti:f64[3] = div 1.0 th
+                            tj:f64[3] = mul te ti
+                          in (ti, tj) }
+                      ] of og oh oi oj ok ol om on oo op oq or os po ou ov ow ox
+                        oy oz pa pb pc pd pe pf pg ph pi pj pk pl pm pn
+                    in (pp, re, po, rf) }
+                ] ix hn ho hp hq hr hs ht hu hv hw hx hy hz ia ib ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+                tk:f64[3] tl:f64[3] = pjit[
+                  name=binary_state_node_prediction
+                  jaxpr={ lambda ; tm:f64[] tn:f64[3] to:f64[3] tp:f64[3] tq:i32[3]
+                      tr:f64[3] ts:f64[3] tt:f64[3,1] tu:f64[3] tv:f64[3] tw:f64[3]
+                      tx:f64[3] ty:i64[3] tz:f64[3] ua:f64[3] ub:f64[3] uc:f64[3]
+                      ud:f64[3] ue:f64[3] uf:f64[3] ug:f64[3,1] uh:f64[3,1] ui:f64[3]
+                      uj:f64[3] uk:f64[3] ul:f64[3] um:i64[3] un:f64[3] uo:f64[3]
+                      up:f64[3] uq:f64[3] ur:f64[3] us:f64[3] ut:f64[3] uu:f64[3,1]. let
+                      uv:f64[3] = add 0.0 tv
+                      uw:f64[3] = logistic uv
+                      ux:f64[3] = pjit[
+                        name=clip
+                        jaxpr={ lambda ; uy:f64[3] uz:f64[] va:f64[]. let
+                            vb:f64[] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] uz
+                            vc:f64[3] = max vb uy
+                            vd:f64[] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] va
+                            ve:f64[3] = min vd vc
+                          in (ve,) }
+                      ] uw 1e-06 0.999999
+                      vf:f64[3] = sub 1.0 ux
+                      vg:f64[3] = mul ux vf
+                    in (ux, vg) }
+                ] ix hn ho hp hq hr hs ht hu ob oc hx hy hz od oe ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+                vh:f64[3] = squeeze[dimensions=(1,)] iv
+                pjit[
+                  name=set_observation
+                  jaxpr={ lambda ; vi:f64[] vj:f64[3] vk:f64[3] vl:f64[3] vm:i32[3]
+                      vn:f64[3] vo:f64[3] vp:f64[3,1] vq:f64[3] vr:f64[3] vs:f64[3]
+                      vt:f64[3] vu:i64[3] vv:f64[3] vw:f64[3] vx:f64[3] vy:f64[3]
+                      vz:f64[3] wa:f64[3] wb:f64[3] wc:f64[3,1] wd:f64[3,1] we:f64[3]
+                      wf:f64[3] wg:f64[3] wh:f64[3] wi:i64[3] wj:f64[3] wk:f64[3]
+                      wl:f64[3] wm:f64[3] wn:f64[3] wo:f64[3] wp:f64[3] wq:f64[3,1]
+                      wr:i32[] ws:f64[3]. let
+                      
+                    in () }
+                ] ix tk tl hp hq hr hs ht hu ob oc hx hy hz od oe ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu iw vh
+                wt:f64[3] = pjit[
+                  name=binary_state_node_prediction_error
+                  jaxpr={ lambda ; wu:f64[] wv:f64[3] ww:f64[3] wx:f64[3] wy:i32[]
+                      wz:f64[3] xa:f64[3] xb:f64[3,1] xc:f64[3] xd:f64[3] xe:f64[3]
+                      xf:f64[3] xg:i64[3] xh:f64[3] xi:f64[3] xj:f64[3] xk:f64[3]
+                      xl:f64[3] xm:f64[3] xn:f64[3] xo:f64[3,1] xp:f64[3,1] xq:f64[3]
+                      xr:f64[3] xs:f64[3] xt:f64[3] xu:i64[3] xv:f64[3] xw:f64[3]
+                      xx:f64[3] xy:f64[3] xz:f64[3] ya:f64[3] yb:f64[3] yc:f64[3,1]. let
+                      yd:f64[3] = sub wx wv
+                      ye:f64[] = convert_element_type[
+                        new_dtype=float64
+                        weak_type=False
+                      ] wy
+                      yf:f64[3] = mul yd ye
+                      yg:f64[3] = div yf ww
+                    in (yg,) }
+                ] ix tk tl vh iw hr hs ht hu ob oc hx hy hz od oe ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+                yh:f64[3] yi:f64[3] = pjit[
+                  name=continuous_node_posterior_update
+                  jaxpr={ lambda ; yj:f64[] yk:f64[3] yl:f64[3] ym:f64[3] yn:i32[]
+                      yo:f64[3] yp:f64[3] yq:f64[3,1] yr:f64[3] ys:f64[3] yt:f64[3]
+                      yu:f64[3] yv:i64[3] yw:f64[3] yx:f64[3] yy:f64[3] yz:f64[3]
+                      za:f64[3] zb:f64[3] zc:f64[3] zd:f64[3,1] ze:f64[3,1] zf:f64[3]
+                      zg:f64[3] zh:f64[3] zi:f64[3] zj:i64[3] zk:f64[3] zl:f64[3]
+                      zm:f64[3] zn:f64[3] zo:f64[3] zp:f64[3] zq:f64[3] zr:f64[3,1]. let
+                      zs:f64[3] = pjit[
+                        name=posterior_update_precision_continuous_node
+                        jaxpr={ lambda ; zt:f64[] zu:f64[3] zv:f64[3] zw:f64[3] zx:i32[]
+                            zy:f64[3] zz:f64[3] baa:f64[3,1] bab:f64[3] bac:f64[3]
+                            bad:f64[3] bae:f64[3] baf:i64[3] bag:f64[3] bah:f64[3]
+                            bai:f64[3] baj:f64[3] bak:f64[3] bal:f64[3] bam:f64[3]
+                            ban:f64[3,1] bao:f64[3,1] bap:f64[3] baq:f64[3] bar:f64[3]
+                            bas:f64[3] bat:i64[3] bau:f64[3] bav:f64[3] baw:f64[3]
+                            bax:f64[3] bay:f64[3] baz:f64[3] bba:f64[3] bbb:f64[3,1]. let
+                            bbc:i32[1] = broadcast_in_dim[
+                              broadcast_dimensions=()
+                              shape=(1,)
+                            ] zx
+                            bbd:bool[1] = convert_element_type[
+                              new_dtype=bool
+                              weak_type=False
+                            ] bbc
+                            bbe:bool[] = reduce_or[axes=(0,)] bbd
+                            bbf:i32[] = convert_element_type[
+                              new_dtype=int32
+                              weak_type=False
+                            ] bbe
+                            bbg:f64[3] = cond[
+                              branches=(
+                                { lambda ; bbh:f64[] bbi:f64[3] bbj:f64[3] bbk:f64[3]
+                                    bbl:i32[] bbm:f64[3] bbn:f64[3] bbo:f64[3,1]
+                                    bbp:f64[3] bbq:f64[3] bbr:f64[3] bbs:f64[3] bbt:i64[3]
+                                    bbu:f64[3] bbv:f64[3] bbw:f64[3] bbx:f64[3] bby:f64[3]
+                                    bbz:f64[3] bca:f64[3] bcb:f64[3,1] bcc:f64[3,1]
+                                    bcd:f64[3] bce:f64[3] bcf:f64[3] bcg:f64[3] bch:i64[3]
+                                    bci:f64[3] bcj:f64[3] bck:f64[3] bcl:f64[3] bcm:f64[3]
+                                    bcn:f64[3] bco:f64[3] bcp:f64[3,1]. let
+                                    bcq:f64[3] = pjit[
+                                      name=precision_update_missing_values
+                                      jaxpr={ lambda ; bcr:f64[] bcs:f64[3] bct:f64[3]
+                                          bcu:f64[3] bcv:i32[] bcw:f64[3] bcx:f64[3]
+                                          bcy:f64[3,1] bcz:f64[3] bda:f64[3] bdb:f64[3]
+                                          bdc:f64[3] bdd:i64[3] bde:f64[3] bdf:f64[3]
+                                          bdg:f64[3] bdh:f64[3] bdi:f64[3] bdj:f64[3]
+                                          bdk:f64[3] bdl:f64[3,1] bdm:f64[3,1] bdn:f64[3]
+                                          bdo:f64[3] bdp:f64[3] bdq:f64[3] bdr:i64[3]
+                                          bds:f64[3] bdt:f64[3] bdu:f64[3] bdv:f64[3]
+                                          bdw:f64[3] bdx:f64[3] bdy:f64[3] bdz:f64[3,1]. let
+                                          bea:f64[3,1] = slice[
+                                            limit_indices=(3, 1)
+                                            start_indices=(0, 0)
+                                            strides=(1, 1)
+                                          ] bdm
+                                          beb:f64[3] = squeeze[dimensions=(1,)] bea
+                                          bec:f64[3] = convert_element_type[
+                                            new_dtype=float64
+                                            weak_type=False
+                                          ] bdq
+                                          bed:f64[3] = mul beb bec
+                                          bee:f64[3] = convert_element_type[
+                                            new_dtype=float64
+                                            weak_type=False
+                                          ] bdk
+                                          bef:f64[3] = add bee bed
+                                          beg:f64[3] = exp bef
+                                          beh:f64[3] = mul bcr beg
+                                          bei:f64[3] = div 1.0 bde
+                                          bej:f64[3] = convert_element_type[
+                                            new_dtype=float64
+                                            weak_type=False
+                                          ] bei
+                                          bek:f64[3] = add bej beh
+                                          bel:f64[3] = div 1.0 bek
+                                        in (bel,) }
+                                    ] bbh bbi bbj bbk bbl bbm bbn bbo bbp bbq bbr
+                                      bbs bbt bbu bbv bbw bbx bby bbz bca bcb bcc
+                                      bcd bce bcf bcg bch bci bcj bck bcl bcm bcn
+                                      bco bcp
+                                  in (bcq,) }
+                                { lambda ; bem:f64[] ben:f64[3] beo:f64[3] bep:f64[3]
+                                    beq:i32[] ber:f64[3] bes:f64[3] bet:f64[3,1]
+                                    beu:f64[3] bev:f64[3] bew:f64[3] bex:f64[3] bey:i64[3]
+                                    bez:f64[3] bfa:f64[3] bfb:f64[3] bfc:f64[3] bfd:f64[3]
+                                    bfe:f64[3] bff:f64[3] bfg:f64[3,1] bfh:f64[3,1]
+                                    bfi:f64[3] bfj:f64[3] bfk:f64[3] bfl:f64[3] bfm:i64[3]
+                                    bfn:f64[3] bfo:f64[3] bfp:f64[3] bfq:f64[3] bfr:f64[3]
+                                    bfs:f64[3] bft:f64[3] bfu:f64[3,1]. let
+                                    bfv:f64[3] = pjit[
+                                      name=precision_update
+                                      jaxpr={ lambda ; bfw:f64[] bfx:f64[3] bfy:f64[3]
+                                          bfz:f64[3] bga:i32[] bgb:f64[3] bgc:f64[3]
+                                          bgd:f64[3,1] bge:f64[3] bgf:f64[3] bgg:f64[3]
+                                          bgh:f64[3] bgi:i64[3] bgj:f64[3] bgk:f64[3]
+                                          bgl:f64[3] bgm:f64[3] bgn:f64[3] bgo:f64[3]
+                                          bgp:f64[3] bgq:f64[3,1] bgr:f64[3,1] bgs:f64[3]
+                                          bgt:f64[3] bgu:f64[3] bgv:f64[3] bgw:i64[3]
+                                          bgx:f64[3] bgy:f64[3] bgz:f64[3] bha:f64[3]
+                                          bhb:f64[3] bhc:f64[3] bhd:f64[3] bhe:f64[3,1]. let
+                                          bhf:f64[3,1] = slice[
+                                            limit_indices=(3, 1)
+                                            start_indices=(0, 0)
+                                            strides=(1, 1)
+                                          ] bgq
+                                          bhg:f64[3] = squeeze[dimensions=(1,)] bhf
+                                          bhh:f64[3] = integer_pow[y=2] bhg
+                                          bhi:f64[3] = mul bhh bfy
+                                          bhj:f64[3] = mul bhi 1.0
+                                          bhk:f64[3] = sub bhj 0.0
+                                          bhl:f64[] = convert_element_type[
+                                            new_dtype=float64
+                                            weak_type=False
+                                          ] bga
+                                          bhm:f64[3] = mul bhk bhl
+                                          bhn:f64[3] = add 0.0 bhm
+                                          bho:f64[3] = add bgg bhn
+                                          bhp:bool[3] = gt bho 1e-128
+                                          bhq:f64[3] = pjit[
+                                            name=_where
+                                            jaxpr=_where4
+                                          ] bhp bho nan
+                                        in (bhq,) }
+                                    ] bem ben beo bep beq ber bes bet beu bev bew
+                                      bex bey bez bfa bfb bfc bfd bfe bff bfg bfh
+                                      bfi bfj bfk bfl bfm bfn bfo bfp bfq bfr bfs
+                                      bft bfu
+                                  in (bfv,) }
+                              )
+                            ] bbf zt zu zv zw zx zy zz baa bab bac bad bae baf bag
+                              bah bai baj bak bal bam ban bao bap baq bar bas bat
+                              bau bav baw bax bay baz bba bbb
+                          in (bbg,) }
+                      ] yj yk yl ym yn yo yp yq yr ys yt yu yv yw yx yy yz za zb
+                        zc zd ze zf zg zh zi zj zk zl zm zn zo zp zq zr
+                      bhr:f64[3] = pjit[
+                        name=posterior_update_mean_continuous_node
+                        jaxpr={ lambda ; bhs:f64[] bht:f64[3] bhu:f64[3] bhv:f64[3]
+                            bhw:i32[] bhx:f64[3] bhy:f64[3] bhz:f64[3,1] bia:f64[3]
+                            bib:f64[3] bic:f64[3] bid:f64[3] bie:i64[3] bif:f64[3]
+                            big:f64[3] bih:f64[3] bii:f64[3] bij:f64[3] bik:f64[3]
+                            bil:f64[3] bim:f64[3,1] bin:f64[3,1] bio:f64[3] bip:f64[3]
+                            biq:f64[3] bir:f64[3] bis:i64[3] bit:f64[3] biu:f64[3]
+                            biv:f64[3] biw:f64[3] bix:f64[3] biy:f64[3] biz:f64[3]
+                            bja:f64[3,1] bjb:f64[3]. let
+                            bjc:f64[3,1] = slice[
+                              limit_indices=(3, 1)
+                              start_indices=(0, 0)
+                              strides=(1, 1)
+                            ] bim
+                            bjd:f64[3] = squeeze[dimensions=(1,)] bjc
+                            bje:f64[] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] bhw
+                            bjf:f64[3] = mul bhy bje
+                            bjg:f64[3] = mul bjd bhu
+                            bjh:f64[3] = mul bjg 1.0
+                            bji:f64[3] = div bjh bjb
+                            bjj:f64[3] = mul bji bjf
+                            bjk:f64[3] = add 0.0 bjj
+                            bjl:f64[3] = add bib bjk
+                            bjm:f64[3] = add bjl 0.0
+                          in (bjm,) }
+                      ] yj yk yl ym yn yo yp yq yr ys yt yu yv zs yx yy yz za zb
+                        zc zd ze zf zg zh zi zj zk zl zm zn zo zp zq zr zs
+                    in (bhr, zs) }
+                ] ix tk tl vh iw tl wt ht hu ob oc hx hy hz od oe ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+                bjn:f64[3] bjo:f64[3] = pjit[
+                  name=continuous_node_prediction_error
+                  jaxpr={ lambda ; bjp:f64[] bjq:f64[3] bjr:f64[3] bjs:f64[3] bjt:i32[]
+                      bju:f64[3] bjv:f64[3] bjw:f64[3,1] bjx:f64[3] bjy:f64[3] bjz:f64[3]
+                      bka:f64[3] bkb:i64[3] bkc:f64[3] bkd:f64[3] bke:f64[3] bkf:f64[3]
+                      bkg:f64[3] bkh:f64[3] bki:f64[3] bkj:f64[3,1] bkk:f64[3,1]
+                      bkl:f64[3] bkm:f64[3] bkn:f64[3] bko:f64[3] bkp:i64[3] bkq:f64[3]
+                      bkr:f64[3] bks:f64[3] bkt:f64[3] bku:f64[3] bkv:f64[3] bkw:f64[3]
+                      bkx:f64[3,1]. let
+                      bky:f64[3] = pjit[
+                        name=continuous_node_value_prediction_error
+                        jaxpr={ lambda ; bkz:f64[] bla:f64[3] blb:f64[3] blc:f64[3]
+                            bld:i32[] ble:f64[3] blf:f64[3] blg:f64[3,1] blh:f64[3]
+                            bli:f64[3] blj:f64[3] blk:f64[3] bll:i64[3] blm:f64[3]
+                            bln:f64[3] blo:f64[3] blp:f64[3] blq:f64[3] blr:f64[3]
+                            bls:f64[3] blt:f64[3,1] blu:f64[3,1] blv:f64[3] blw:f64[3]
+                            blx:f64[3] bly:f64[3] blz:i64[3] bma:f64[3] bmb:f64[3]
+                            bmc:f64[3] bmd:f64[3] bme:f64[3] bmf:f64[3] bmg:f64[3]
+                            bmh:f64[3,1]. let
+                            bmi:f64[3] = sub blk bli
+                          in (bmi,) }
+                      ] bjp bjq bjr bjs bjt bju bjv bjw bjx bjy bjz bka bkb bkc bkd
+                        bke bkf bkg bkh bki bkj bkk bkl bkm bkn bko bkp bkq bkr bks
+                        bkt bku bkv bkw bkx
+                      bmj:f64[3] = pjit[
+                        name=continuous_node_volatility_prediction_error
+                        jaxpr={ lambda ; bmk:f64[] bml:f64[3] bmm:f64[3] bmn:f64[3]
+                            bmo:i32[] bmp:f64[3] bmq:f64[3] bmr:f64[3,1] bms:f64[3]
+                            bmt:f64[3] bmu:f64[3] bmv:f64[3] bmw:i64[3] bmx:f64[3]
+                            bmy:f64[3] bmz:f64[3] bna:f64[3] bnb:f64[3] bnc:f64[3]
+                            bnd:f64[3] bne:f64[3,1] bnf:f64[3,1] bng:f64[3] bnh:f64[3]
+                            bni:f64[3] bnj:f64[3] bnk:i64[3] bnl:f64[3] bnm:f64[3]
+                            bnn:f64[3] bno:f64[3] bnp:f64[3] bnq:f64[3] bnr:f64[3]
+                            bns:f64[3,1]. let
+                            bnt:f64[3] = div bmu bmx
+                            bnu:f64[3] = sub bmv bmt
+                            bnv:f64[3] = integer_pow[y=2] bnu
+                            bnw:f64[3] = mul bmu bnv
+                            bnx:f64[3] = add bnt bnw
+                            bny:f64[3] = sub bnx 1.0
+                            bnz:f64[3] = div bny 1.0
+                          in (bnz,) }
+                      ] bjp bjq bjr bjs bjt bju bjv bjw bjx bjy bjz bka bkb bkc bkd
+                        bke bky bkg bkh bki bkj bkk bkl bkm bkn bko bkp bkq bkr bks
+                        bkt bku bkv bkw bkx
+                    in (bky, bmj) }
+                ] ix tk tl vh iw tl wt ht hu ob oc yh hy yi od oe ic id ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+                boa:f64[3] bob:f64[3] = pjit[
+                  name=continuous_node_posterior_update_ehgf
+                  jaxpr={ lambda ; boc:f64[] bod:f64[3] boe:f64[3] bof:f64[3] bog:i32[]
+                      boh:f64[3] boi:f64[3] boj:f64[3,1] bok:f64[3] bol:f64[3] bom:f64[3]
+                      bon:f64[3] boo:i64[3] bop:f64[3] boq:f64[3] bor:f64[3] bos:f64[3]
+                      bot:f64[3] bou:f64[3] bov:f64[3] bow:f64[3,1] box:f64[3,1]
+                      boy:f64[3] boz:f64[3] bpa:f64[3] bpb:f64[3] bpc:i64[3] bpd:f64[3]
+                      bpe:f64[3] bpf:f64[3] bpg:f64[3] bph:f64[3] bpi:f64[3] bpj:f64[3]
+                      bpk:f64[3,1]. let
+                      bpl:f64[3] = pjit[
+                        name=posterior_update_mean_continuous_node
+                        jaxpr={ lambda ; bpm:f64[] bpn:f64[3] bpo:f64[3] bpp:f64[3]
+                            bpq:i32[] bpr:f64[3] bps:f64[3] bpt:f64[3,1] bpu:f64[3]
+                            bpv:f64[3] bpw:f64[3] bpx:f64[3] bpy:i64[3] bpz:f64[3]
+                            bqa:f64[3] bqb:f64[3] bqc:f64[3] bqd:f64[3] bqe:f64[3]
+                            bqf:f64[3] bqg:f64[3,1] bqh:f64[3,1] bqi:f64[3] bqj:f64[3]
+                            bqk:f64[3] bql:f64[3] bqm:i64[3] bqn:f64[3] bqo:f64[3]
+                            bqp:f64[3] bqq:f64[3] bqr:f64[3] bqs:f64[3] bqt:f64[3]
+                            bqu:f64[3,1] bqv:f64[3]. let
+                            bqw:f64[3,1] = slice[
+                              limit_indices=(3, 1)
+                              start_indices=(0, 0)
+                              strides=(1, 1)
+                            ] bqu
+                            bqx:f64[3] = squeeze[dimensions=(1,)] bqw
+                            bqy:f64[3] = mul bqx bqb
+                            bqz:f64[3] = mul bqy bqd
+                            bra:f64[3] = mul 2.0 bqv
+                            brb:f64[3] = div 1.0 bra
+                            brc:f64[3] = mul bqz brb
+                            brd:f64[3] = convert_element_type[
+                              new_dtype=float64
+                              weak_type=False
+                            ] bpy
+                            bre:f64[3] = mul brc brd
+                            brf:f64[3] = add 0.0 bre
+                            brg:f64[3] = add bqj 0.0
+                            brh:f64[3] = add brg brf
+                          in (brh,) }
+                      ] boc bod boe bof bog boh boi boj bok bol bom bon boo bop boq
+                        bor bos bot bou bov bow box boy boz bpa bpb bpc bpd bpe bpf
+                        bpg bph bpi bpj bpk bpa
+                      bri:f64[3] = pjit[
+                        name=posterior_update_precision_continuous_node
+                        jaxpr={ lambda ; brj:f64[] brk:f64[3] brl:f64[3] brm:f64[3]
+                            brn:i32[] bro:f64[3] brp:f64[3] brq:f64[3,1] brr:f64[3]
+                            brs:f64[3] brt:f64[3] bru:f64[3] brv:i64[3] brw:f64[3]
+                            brx:f64[3] bry:f64[3] brz:f64[3] bsa:f64[3] bsb:f64[3]
+                            bsc:f64[3] bsd:f64[3,1] bse:f64[3,1] bsf:f64[3] bsg:f64[3]
+                            bsh:f64[3] bsi:f64[3] bsj:i64[3] bsk:f64[3] bsl:f64[3]
+                            bsm:f64[3] bsn:f64[3] bso:f64[3] bsp:f64[3] bsq:f64[3]
+                            bsr:f64[3,1]. let
+                            bss:i64[3] = convert_element_type[
+                              new_dtype=int64
+                              weak_type=False
+                            ] brv
+                            bst:i64[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bss
+                            bsu:bool[3,1] = convert_element_type[
+                              new_dtype=bool
+                              weak_type=False
+                            ] bst
+                            bsv:bool[3] = reduce_or[axes=(np.int64(1),)] bsu
+                            bsw:i32[3] = convert_element_type[
+                              new_dtype=int32
+                              weak_type=False
+                            ] bsv
+                            bsx:f64[3] = broadcast_in_dim[
+                              broadcast_dimensions=()
+                              shape=(3,)
+                            ] brj
+                            bsy:i32[3] = broadcast_in_dim[
+                              broadcast_dimensions=()
+                              shape=(3,)
+                            ] brn
+                            bsz:bool[3] = eq bsw 0
+                            bta:f64[3] = stop_gradient bsx
+                            btb:f64[3] = select_n bsz bta bsx
+                            btc:f64[3] = stop_gradient brk
+                            btd:f64[3] = select_n bsz btc brk
+                            bte:f64[3] = stop_gradient brl
+                            btf:f64[3] = select_n bsz bte brl
+                            btg:f64[3] = stop_gradient brm
+                            bth:f64[3] = select_n bsz btg brm
+                            bti:i32[3] = select_n bsz bsy bsy
+                            btj:f64[3] = stop_gradient bro
+                            btk:f64[3] = select_n bsz btj bro
+                            btl:f64[3] = stop_gradient brp
+                            btm:f64[3] = select_n bsz btl brp
+                            btn:f64[3,1] = stop_gradient brq
+                            bto:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bsz
+                            btp:f64[3,1] = select_n bto btn brq
+                            btq:f64[3] = stop_gradient brr
+                            btr:f64[3] = select_n bsz btq brr
+                            bts:f64[3] = stop_gradient brs
+                            btt:f64[3] = select_n bsz bts brs
+                            btu:f64[3] = stop_gradient brt
+                            btv:f64[3] = select_n bsz btu brt
+                            btw:f64[3] = stop_gradient bru
+                            btx:f64[3] = select_n bsz btw bru
+                            bty:i64[3] = select_n bsz brv brv
+                            btz:f64[3] = stop_gradient brw
+                            bua:f64[3] = select_n bsz btz brw
+                            bub:f64[3] = stop_gradient brx
+                            buc:f64[3] = select_n bsz bub brx
+                            bud:f64[3] = stop_gradient bry
+                            bue:f64[3] = select_n bsz bud bry
+                            buf:f64[3] = stop_gradient brz
+                            bug:f64[3] = select_n bsz buf brz
+                            buh:f64[3] = stop_gradient bsa
+                            bui:f64[3] = select_n bsz buh bsa
+                            buj:f64[3] = stop_gradient bsb
+                            buk:f64[3] = select_n bsz buj bsb
+                            bul:f64[3] = stop_gradient bsc
+                            bum:f64[3] = select_n bsz bul bsc
+                            bun:f64[3,1] = stop_gradient bsd
+                            buo:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bsz
+                            bup:f64[3,1] = select_n buo bun bsd
+                            buq:f64[3,1] = stop_gradient bse
+                            bur:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bsz
+                            bus:f64[3,1] = select_n bur buq bse
+                            but:f64[3] = stop_gradient bsf
+                            buu:f64[3] = select_n bsz but bsf
+                            buv:f64[3] = stop_gradient bsg
+                            buw:f64[3] = select_n bsz buv bsg
+                            bux:f64[3] = stop_gradient bsh
+                            buy:f64[3] = select_n bsz bux bsh
+                            buz:f64[3] = stop_gradient bsi
+                            bva:f64[3] = select_n bsz buz bsi
+                            bvb:i64[3] = select_n bsz bsj bsj
+                            bvc:f64[3] = stop_gradient bsk
+                            bvd:f64[3] = select_n bsz bvc bsk
+                            bve:f64[3] = stop_gradient bsl
+                            bvf:f64[3] = select_n bsz bve bsl
+                            bvg:f64[3] = stop_gradient bsm
+                            bvh:f64[3] = select_n bsz bvg bsm
+                            bvi:f64[3] = stop_gradient bsn
+                            bvj:f64[3] = select_n bsz bvi bsn
+                            bvk:f64[3] = stop_gradient bso
+                            bvl:f64[3] = select_n bsz bvk bso
+                            bvm:f64[3] = stop_gradient bsp
+                            bvn:f64[3] = select_n bsz bvm bsp
+                            bvo:f64[3] = stop_gradient bsq
+                            bvp:f64[3] = select_n bsz bvo bsq
+                            bvq:f64[3,1] = stop_gradient bsr
+                            bvr:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bsz
+                            bvs:f64[3,1] = select_n bvr bvq bsr
+                            bvt:f64[3] = pjit[
+                              name=precision_update_missing_values
+                              jaxpr={ lambda ; bvu:f64[3] bvv:f64[3] bvw:f64[3] bvx:f64[3]
+                                  bvy:i32[3] bvz:f64[3] bwa:f64[3] bwb:f64[3,1] bwc:f64[3]
+                                  bwd:f64[3] bwe:f64[3] bwf:f64[3] bwg:i64[3] bwh:f64[3]
+                                  bwi:f64[3] bwj:f64[3] bwk:f64[3] bwl:f64[3] bwm:f64[3]
+                                  bwn:f64[3] bwo:f64[3,1] bwp:f64[3,1] bwq:f64[3]
+                                  bwr:f64[3] bws:f64[3] bwt:f64[3] bwu:i64[3] bwv:f64[3]
+                                  bww:f64[3] bwx:f64[3] bwy:f64[3] bwz:f64[3] bxa:f64[3]
+                                  bxb:f64[3] bxc:f64[3,1]. let
+                                  bxd:f64[3] = exp bxb
+                                  bxe:f64[3] = convert_element_type[
+                                    new_dtype=float64
+                                    weak_type=False
+                                  ] bxd
+                                  bxf:f64[3] = mul bvu bxe
+                                  bxg:f64[3] = div 1.0 bwv
+                                  bxh:f64[3] = convert_element_type[
+                                    new_dtype=float64
+                                    weak_type=False
+                                  ] bxg
+                                  bxi:f64[3] = add bxh bxf
+                                  bxj:f64[3] = div 1.0 bxi
+                                in (bxj,) }
+                            ] btb btd btf bth bti btk btm btp btr btt btv btx bty
+                              bua buc bue bug bui buk bum bup bus buu buw buy bva
+                              bvb bvd bvf bvh bvj bvl bvn bvp bvs
+                            bxk:bool[3] = eq bsw 1
+                            bxl:f64[3] = stop_gradient bsx
+                            bxm:f64[3] = select_n bxk bxl bsx
+                            bxn:f64[3] = stop_gradient brk
+                            bxo:f64[3] = select_n bxk bxn brk
+                            bxp:f64[3] = stop_gradient brl
+                            bxq:f64[3] = select_n bxk bxp brl
+                            bxr:f64[3] = stop_gradient brm
+                            bxs:f64[3] = select_n bxk bxr brm
+                            bxt:i32[3] = select_n bxk bsy bsy
+                            bxu:f64[3] = stop_gradient bro
+                            bxv:f64[3] = select_n bxk bxu bro
+                            bxw:f64[3] = stop_gradient brp
+                            bxx:f64[3] = select_n bxk bxw brp
+                            bxy:f64[3,1] = stop_gradient brq
+                            bxz:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bxk
+                            bya:f64[3,1] = select_n bxz bxy brq
+                            byb:f64[3] = stop_gradient brr
+                            byc:f64[3] = select_n bxk byb brr
+                            byd:f64[3] = stop_gradient brs
+                            bye:f64[3] = select_n bxk byd brs
+                            byf:f64[3] = stop_gradient brt
+                            byg:f64[3] = select_n bxk byf brt
+                            byh:f64[3] = stop_gradient bru
+                            byi:f64[3] = select_n bxk byh bru
+                            byj:i64[3] = select_n bxk brv brv
+                            byk:f64[3] = stop_gradient brw
+                            byl:f64[3] = select_n bxk byk brw
+                            bym:f64[3] = stop_gradient brx
+                            byn:f64[3] = select_n bxk bym brx
+                            byo:f64[3] = stop_gradient bry
+                            byp:f64[3] = select_n bxk byo bry
+                            byq:f64[3] = stop_gradient brz
+                            byr:f64[3] = select_n bxk byq brz
+                            bys:f64[3] = stop_gradient bsa
+                            byt:f64[3] = select_n bxk bys bsa
+                            byu:f64[3] = stop_gradient bsb
+                            byv:f64[3] = select_n bxk byu bsb
+                            byw:f64[3] = stop_gradient bsc
+                            byx:f64[3] = select_n bxk byw bsc
+                            byy:f64[3,1] = stop_gradient bsd
+                            byz:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bxk
+                            bza:f64[3,1] = select_n byz byy bsd
+                            bzb:f64[3,1] = stop_gradient bse
+                            bzc:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bxk
+                            bzd:f64[3,1] = select_n bzc bzb bse
+                            bze:f64[3] = stop_gradient bsf
+                            bzf:f64[3] = select_n bxk bze bsf
+                            bzg:f64[3] = stop_gradient bsg
+                            bzh:f64[3] = select_n bxk bzg bsg
+                            bzi:f64[3] = stop_gradient bsh
+                            bzj:f64[3] = select_n bxk bzi bsh
+                            bzk:f64[3] = stop_gradient bsi
+                            bzl:f64[3] = select_n bxk bzk bsi
+                            bzm:i64[3] = select_n bxk bsj bsj
+                            bzn:f64[3] = stop_gradient bsk
+                            bzo:f64[3] = select_n bxk bzn bsk
+                            bzp:f64[3] = stop_gradient bsl
+                            bzq:f64[3] = select_n bxk bzp bsl
+                            bzr:f64[3] = stop_gradient bsm
+                            bzs:f64[3] = select_n bxk bzr bsm
+                            bzt:f64[3] = stop_gradient bsn
+                            bzu:f64[3] = select_n bxk bzt bsn
+                            bzv:f64[3] = stop_gradient bso
+                            bzw:f64[3] = select_n bxk bzv bso
+                            bzx:f64[3] = stop_gradient bsp
+                            bzy:f64[3] = select_n bxk bzx bsp
+                            bzz:f64[3] = stop_gradient bsq
+                            caa:f64[3] = select_n bxk bzz bsq
+                            cab:f64[3,1] = stop_gradient bsr
+                            cac:bool[3,1] = broadcast_in_dim[
+                              broadcast_dimensions=(0,)
+                              shape=(3, 1)
+                            ] bxk
+                            cad:f64[3,1] = select_n cac cab bsr
+                            cae:f64[3] = pjit[
+                              name=precision_update
+                              jaxpr={ lambda ; caf:f64[3] cag:f64[3] cah:f64[3] cai:f64[3]
+                                  caj:i32[3] cak:f64[3] cal:f64[3] cam:f64[3,1] can:f64[3]
+                                  cao:f64[3] cap:f64[3] caq:f64[3] car:i64[3] cas:f64[3]
+                                  cat:f64[3] cau:f64[3] cav:f64[3] caw:f64[3] cax:f64[3]
+                                  cay:f64[3] caz:f64[3,1] cba:f64[3,1] cbb:f64[3]
+                                  cbc:f64[3] cbd:f64[3] cbe:f64[3] cbf:i64[3] cbg:f64[3]
+                                  cbh:f64[3] cbi:f64[3] cbj:f64[3] cbk:f64[3] cbl:f64[3]
+                                  cbm:f64[3] cbn:f64[3,1]. let
+                                  cbo:f64[3,1] = slice[
+                                    limit_indices=(3, 1)
+                                    start_indices=(0, 0)
+                                    strides=(1, 1)
+                                  ] cbn
+                                  cbp:f64[3] = squeeze[dimensions=(1,)] cbo
+                                  cbq:f64[3] = mul cbp cau
+                                  cbr:f64[3] = integer_pow[y=2] cbq
+                                  cbs:f64[3] = mul 0.5 cbr
+                                  cbt:f64[3] = mul cbp cau
+                                  cbu:f64[3] = integer_pow[y=2] cbt
+                                  cbv:f64[3] = mul cbu caw
+                                  cbw:f64[3] = add cbs cbv
+                                  cbx:f64[3] = integer_pow[y=2] cbp
+                                  cby:f64[3] = mul 0.5 cbx
+                                  cbz:f64[3] = mul cby cau
+                                  cca:f64[3] = mul cbz caw
+                                  ccb:f64[3] = sub cbw cca
+                                  ccc:f64[3] = convert_element_type[
+                                    new_dtype=float64
+                                    weak_type=False
+                                  ] car
+                                  ccd:f64[3] = mul ccb ccc
+                                  cce:f64[3] = add 0.0 ccd
+                                  ccf:f64[3] = add cbd cce
+                                  ccg:bool[3] = gt ccf 1e-128
+                                  cch:f64[3] = pjit[name=_where jaxpr=_where4] ccg
+                                    ccf nan
+                                in (cch,) }
+                            ] bxm bxo bxq bxs bxt bxv bxx bya byc bye byg byi byj
+                              byl byn byp byr byt byv byx bza bzd bzf bzh bzj bzl
+                              bzm bzo bzq bzs bzu bzw bzy caa cad
+                            cci:f64[3] = select_n bsw bvt cae
+                          in (cci,) }
+                      ] boc bod boe bof bog boh boi boj bok bol bom bon boo bop boq
+                        bor bos bot bou bov bow box boy boz bpa bpl bpc bpd bpe bpf
+                        bpg bph bpi bpj bpk
+                    in (bpl, bri) }
+                ] ix tk tl vh iw tl wt ht hu ob oc yh hy yi od oe bjn bjo ie if ig
+                  ih ii iy iz il im in ja jb iq ir is it iu
+              in (tk, tl, vh, tl, wt, ob, oc, yh, yi, od, oe, bjn, bjo, iy, iz, boa,
+                bob, ja, jb, tk, tl, vh, tl, wt, ob, oc, yh, yi, od, oe, bjn, bjo,
+                iy, iz, boa, bob, ja, jb) }
+          ] fh fi fj fk fl fm fn fo fp fq fr fs ft fu fv fw fx fy fz ga gb gc gd
+            ge gf gg gh gi gj gk gl gm gn go gp gq gr gs
+          ccj:bool[3] = is_finite ha
+          cck:bool[3] = reduce_and[axes=()] ccj
+          ccl:f64[3] = abs ha
+          ccm:bool[3] = lt ccl 14.0
+          ccn:bool[3] = and cck ccm
+          cco:f64[3] = pjit[
+            name=_where
+            jaxpr={ lambda ; ccp:bool[3] ccq:f64[] ccr:f64[3]. let
+                ccs:f64[3] = convert_element_type[
+                  new_dtype=float64
+                  weak_type=False
+                ] ccr
+                cct:f64[3] = broadcast_in_dim[
+                  broadcast_dimensions=()
+                  shape=(3,)
+                ] ccq
+                ccu:f64[3] = select_n ccp ccs cct
+              in (ccu,) }
+          ] ccn gs fh
+          ccv:f64[3] = pjit[name=_where jaxpr=_where] ccn gt fi
+          ccw:f64[3] = pjit[name=_where jaxpr=_where] ccn gu fj
+          ccx:f64[3] = pjit[
+            name=_where
+            jaxpr={ lambda ; ccy:bool[3] ccz:f64[3] cda:f64[3]. let
+                cdb:f64[3] = select_n ccy cda ccz
+              in (cdb,) }
+          ] ccn gv fk
+          cdc:i32[3] = pjit[
+            name=_where
+            jaxpr={ lambda ; cdd:bool[3] cde:i32[] cdf:i32[3]. let
+                cdg:i32[3] = broadcast_in_dim[
+                  broadcast_dimensions=()
+                  shape=(3,)
+                ] cde
+                cdh:i32[3] = select_n cdd cdf cdg
+              in (cdh,) }
+          ] ccn gr fl
+          cdi:f64[3] = pjit[name=_where jaxpr=_where] ccn gw fm
+          cdj:f64[3] = pjit[name=_where jaxpr=_where] ccn gx fn
+          cdk:f64[3,1] = pjit[name=_where jaxpr=_where1] ccn fo fo
+          cdl:f64[3] = pjit[name=_where jaxpr=_where2] ccn fp fp
+          cdm:f64[3] = pjit[name=_where jaxpr=_where] ccn gy fq
+          cdn:f64[3] = pjit[name=_where jaxpr=_where] ccn gz fr
+          cdo:f64[3] = pjit[name=_where jaxpr=_where] ccn ha fs
+          cdp:i64[3] = pjit[name=_where jaxpr=_where3] ccn ft ft
+          cdq:f64[3] = pjit[name=_where jaxpr=_where] ccn hb fu
+          cdr:f64[3] = pjit[name=_where jaxpr=_where2] ccn hc fv
+          cds:f64[3] = pjit[name=_where jaxpr=_where] ccn hd fw
+          cdt:f64[3] = pjit[name=_where jaxpr=_where] ccn he fx
+          cdu:f64[3] = pjit[name=_where jaxpr=_where] ccn hf fy
+          cdv:f64[3] = pjit[name=_where jaxpr=_where2] ccn fz fz
+          cdw:f64[3] = pjit[name=_where jaxpr=_where2] ccn ga ga
+          cdx:f64[3,1] = pjit[name=_where jaxpr=_where1] ccn gb gb
+          cdy:f64[3,1] = pjit[name=_where jaxpr=_where1] ccn gc gc
+          cdz:f64[3] = pjit[name=_where jaxpr=_where2] ccn gd gd
+          cea:f64[3] = pjit[name=_where jaxpr=_where] ccn hg ge
+          ceb:f64[3] = pjit[name=_where jaxpr=_where] ccn hh gf
+          cec:f64[3] = pjit[name=_where jaxpr=_where] ccn hi gg
+          ced:i64[3] = pjit[name=_where jaxpr=_where3] ccn gh gh
+          cee:f64[3] = pjit[name=_where jaxpr=_where] ccn hj gi
+          cef:f64[3] = pjit[name=_where jaxpr=_where2] ccn hk gj
+          ceg:f64[3] = pjit[name=_where jaxpr=_where] ccn hl gk
+          ceh:f64[3] = pjit[name=_where jaxpr=_where2] ccn gl gl
+          cei:f64[3] = pjit[name=_where jaxpr=_where2] ccn gm gm
+          cej:f64[3] = pjit[name=_where jaxpr=_where2] ccn gn gn
+          cek:f64[3] = pjit[name=_where jaxpr=_where2] ccn go go
+          cel:f64[3,1] = pjit[name=_where jaxpr=_where1] ccn gp gp
+        in (cco, ccv, ccw, ccx, cdc, cdi, cdj, cdk, cdl, cdm, cdn, cdo, cdp, cdq,
+          cdr, cds, cdt, cdu, cdv, cdw, cdx, cdy, cdz, cea, ceb, cec, ced, cee, cef,
+          ceg, ceh, cei, cej, cek, cel, cdo) }
+      length=192
+      linear=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+      num_carry=35
+      num_consts=0
+      reverse=False
+      unroll=1
+    ] ea eb ec ed ee ef eg eh ei ej ek el em en eo ep eq er es bk et eu ev ew ex
+      bj ey ez fa fb fc fd fe bl dv ff dy dz
+    cem:f64[3,192] = convert_element_type[new_dtype=float64 weak_type=False] bc
+    cen:f64[3,192] = convert_element_type[new_dtype=float64 weak_type=False] bd
+    ceo:f64[192,3] = pjit[
+      name=clip
+      jaxpr={ lambda ; cep:f64[192,3] ceq:f64[] cer:f64[]. let
+          ces:f64[] = convert_element_type[new_dtype=float64 weak_type=False] ceq
+          cet:f64[192,3] = max ces cep
+          ceu:f64[] = convert_element_type[new_dtype=float64 weak_type=False] cer
+          cev:f64[192,3] = min ceu cet
+        in (cev,) }
+    ] fg -30.0 30.0
+    cew:f64[192,3] = logistic ceo
+    cex:f64[192,3] = sub 1.0 cew
+    cey:f64[3,192] = transpose[permutation=(1, 0)] cex
+    cez:f64[3,192] = mul cey cem
+    cfa:f64[3,192] = transpose[permutation=(1, 0)] cew
+    cfb:f64[3,192] = mul cfa cen
+    cfc:f64[3,192] = sub cez cfb
+    cfd:f64[192] = broadcast_in_dim[broadcast_dimensions=() shape=(192,)] 0.0
+    cfe:f64[3] = convert_element_type[new_dtype=float64 weak_type=False] bm
+    cff:f64[3,1] = broadcast_in_dim[broadcast_dimensions=(0,) shape=(3, 1)] cfe
+    cfg:f64[3,192] = mul cff cfc
+    cfh:f64[3] = convert_element_type[new_dtype=float64 weak_type=False] bg
+    cfi:f64[3,1] = broadcast_in_dim[broadcast_dimensions=(0,) shape=(3, 1)] cfh
+    cfj:f64[3,192] = add cfg cfi
+    cfk:f64[192,1] = broadcast_in_dim[broadcast_dimensions=(0,) shape=(192, 1)] cfd
+    cfl:f64[3,192,1] = broadcast_in_dim[
+      broadcast_dimensions=(0, np.int64(1))
+      shape=(3, 192, 1)
+    ] cfj
+    cfm:f64[3,192,1] = broadcast_in_dim[
+      broadcast_dimensions=(1, 2)
+      shape=(3, 192, 1)
+    ] cfk
+    cfn:f64[3,192,2] = concatenate[dimension=2] cfm cfl
+    cfo:f64[3,192,2] = pjit[
+      name=log_softmax
+      jaxpr={ lambda ; cfp:f64[3,192,2]. let
+          cfq:f64[3,192] = reduce_max[axes=(np.int64(2),)] cfp
+          cfr:f64[3,192] = max -inf cfq
+          cfs:f64[3,192,1] = broadcast_in_dim[
+            broadcast_dimensions=(0, np.int64(1))
+            shape=(3, 192, 1)
+          ] cfr
+          cft:f64[3,192,1] = stop_gradient cfs
+          cfu:f64[3,192,2] = sub cfp cft
+          cfv:f64[3,192,2] = exp cfu
+          cfw:f64[3,192] = reduce_sum[axes=(np.int64(2),)] cfv
+          cfx:f64[3,192,1] = broadcast_in_dim[
+            broadcast_dimensions=(0, np.int64(1))
+            shape=(3, 192, 1)
+          ] cfw
+          cfy:f64[3,192,1] = log cfx
+          cfz:f64[3,192,2] = sub cfu cfy
+        in (cfz,) }
+    ] cfn
+    cga:i32[3,192,1] = broadcast_in_dim[
+      broadcast_dimensions=(0, np.int64(1))
+      shape=(3, 192, 1)
+    ] be
+    cgb:f64[3,192,1] = pjit[
+      name=take_along_axis
+      jaxpr={ lambda ; cgc:f64[3,192,2] cgd:i32[3,192,1]. let
+          cge:i32[192,1,1] = iota[dimension=0 dtype=int32 shape=(192, 1, 1)] 
+          cgf:bool[3,192,1] = lt cgd 0
+          cgg:i32[3,192,1] = add cgd 2
+          cgh:i32[3,192,1] = select_n cgf cgd cgg
+          cgi:i32[3,192,1,1] = reshape[dimensions=None new_sizes=(3, 192, 1, 1)] cgh
+          cgj:i32[3,192,1,1] = broadcast_in_dim[
+            broadcast_dimensions=(1, 2, 3)
+            shape=(3, 192, 1, 1)
+          ] cge
+          cgk:i32[3,192,1,2] = concatenate[dimension=3] cgj cgi
+          cgl:i32[3,192,1,1] = iota[
+            dimension=0
+            dtype=int32
+            shape=(3, 192, 1, 1)
+          ] 
+          cgm:i32[3,192,1,3] = concatenate[dimension=3] cgl cgk
+          cgn:f64[3,192,1] = gather[
+            dimension_numbers=GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0, np.int64(1), np.int64(2)), start_index_map=(0, np.int64(1), np.int64(2)))
+            fill_value=nan
+            indices_are_sorted=False
+            mode=GatherScatterMode.FILL_OR_DROP
+            slice_sizes=(1, 1, 1)
+            unique_indices=False
+          ] cgc cgm
+        in (cgn,) }
+    ] cfo cga
+    cgo:f64[3,192] = squeeze[dimensions=(2,)] cgb
+    cgp:f64[3,192] = pjit[
+      name=_where
+      jaxpr={ lambda ; cgq:bool[3,192] cgr:f64[3,192] cgs:f64[]. let
+          cgt:f64[] = convert_element_type[new_dtype=float64 weak_type=False] cgs
+          cgu:f64[192] = broadcast_in_dim[broadcast_dimensions=() shape=(192,)] cgt
+          cgv:f64[3,192] = broadcast_in_dim[
+            broadcast_dimensions=(np.int64(1),)
+            shape=(3, 192)
+          ] cgu
+          cgw:f64[3,192] = select_n cgq cgv cgr
+        in (cgw,) }
+    ] bf cgo 0.0
+    cgx:f64[3] = reduce_sum[axes=(np.int64(1),)] cgp
+    cgy:f64[] = reduce_sum[axes=(0,)] cgx
+    cgz:f64[] = add dt cgy
+  in (cgz,) }
