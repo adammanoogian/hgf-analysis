@@ -15,12 +15,22 @@ Tests cover:
 12. simulate_patrl_cohort delta_hr within config bounds
 13. epsilon2 coupling contributes non-zero variance vs zero coupling
 14. simulate_patrl_cohort model_d uses lam_true (choices differ at lam=0 vs lam=0.5)
+15. [Plan 20-05] simulate_patrl_cohort multi-phenotype default all four
+16. [Plan 20-05] simulate_patrl_cohort determinism across phenotype subsets
+17. [Plan 20-05] simulate_patrl_cohort repeat call identical choices (L10)
+18. [Plan 20-05] simulate_patrl_cohort global PID naming P000..P{N-1}
+19. [Plan 20-05] simulate_patrl_cohort legacy phenotype_name kwarg deprecated
+20. [Plan 20-05] simulate_patrl_cohort full 160-agent scale (slow)
+21. [Plan 20-05] simulate_patrl_cohort unknown phenotype raises ValueError
 """
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from prl_hgf.env.pat_rl_config import load_pat_rl_config
 from prl_hgf.env.pat_rl_sequence import PATRLTrial, generate_session_patrl
@@ -418,4 +428,230 @@ def test_simulate_patrl_cohort_model_d_uses_lam_true() -> None:
     except ValueError as exc:
         assert "lam_true" in str(exc).lower() or "model_a" in str(exc).lower(), (
             f"ValueError message should mention lam_true/model_a; got: {exc}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Phase 20-05 new tests: multi-phenotype determinism (SC5 + L10)
+# ---------------------------------------------------------------------------
+
+
+def test_simulate_patrl_cohort_multi_phenotype_default_all_four() -> None:
+    """phenotypes=None returns all 4 phenotypes × n_participants agents.
+
+    SC5: 3 agents × 4 phenotypes = 12 unique participants, 12 × 192 = 2304 rows.
+    All 4 phenotype names must be present.
+    """
+    config = load_pat_rl_config()
+    df, tp, tbp = simulate_patrl_cohort(
+        n_participants=3, phenotypes=None, master_seed=42, config=config
+    )
+
+    n_unique = len(df["participant_id"].unique())
+    assert n_unique == 12, (
+        f"Expected 12 unique participants (3 × 4); got {n_unique}"
+    )
+
+    expected_phenotypes = {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    actual_phenotypes = set(df["phenotype"].unique())
+    assert actual_phenotypes == expected_phenotypes, (
+        f"Expected all 4 phenotypes {expected_phenotypes}; got {actual_phenotypes}"
+    )
+
+    assert len(tp) == 12, (
+        f"Expected 12 keys in true_params; got {len(tp)}"
+    )
+    assert len(tbp) == 12, (
+        f"Expected 12 keys in trials_by_participant; got {len(tbp)}"
+    )
+
+    expected_rows = 12 * _N_TRIALS
+    assert len(df) == expected_rows, (
+        f"Expected {expected_rows} rows (12 agents × {_N_TRIALS} trials); got {len(df)}"
+    )
+
+    # Verify b_true is present in true_params (Plan 20-02 SC1).
+    for pid, params in tp.items():
+        assert "b" in params, (
+            f"Participant {pid}: 'b' missing from true_params; got keys {list(params.keys())}"
+        )
+
+
+def test_simulate_patrl_cohort_determinism_across_phenotype_subsets() -> None:
+    """Subset determinism: healthy rows in full-cohort run match healthy-only run.
+
+    This is the L10 user-observable property: the per-phenotype SeedSequence
+    spawn guarantees that ``phenotypes=['healthy']`` produces IDENTICAL agent
+    data as the 'healthy' slice of ``phenotypes=None``, regardless of whether
+    other phenotypes are also generated in the same call.
+
+    Reference: RESEARCH.md §5, Decision 20-05 (per-phenotype SeedSequence spawn).
+    """
+    config = load_pat_rl_config()
+
+    # Run 1: all 4 phenotypes.
+    df_all, _, _ = simulate_patrl_cohort(
+        n_participants=3, phenotypes=None, master_seed=7, config=config
+    )
+    # Run 2: healthy only.
+    df_h, _, _ = simulate_patrl_cohort(
+        n_participants=3, phenotypes=["healthy"], master_seed=7, config=config
+    )
+
+    healthy_all = df_all[df_all["phenotype"] == "healthy"].reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(
+        healthy_all[["trial_idx", "state", "choice", "delta_hr"]],
+        df_h[["trial_idx", "state", "choice", "delta_hr"]],
+        check_exact=True,
+        obj="healthy subset vs healthy-only run",
+    )
+
+
+def test_simulate_patrl_cohort_repeat_call_identical_choices() -> None:
+    """Identical args → identical choice array (L10 user-observable determinism).
+
+    Calling simulate_patrl_cohort with the same master_seed twice must
+    produce bit-for-bit identical 'choice' columns.  This anchors the
+    determinism guarantee for downstream callers that need reproducible
+    simulation results.
+    """
+    config = load_pat_rl_config()
+
+    df_a, _, _ = simulate_patrl_cohort(
+        n_participants=3, phenotypes=["healthy"], master_seed=42, config=config
+    )
+    df_b, _, _ = simulate_patrl_cohort(
+        n_participants=3, phenotypes=["healthy"], master_seed=42, config=config
+    )
+
+    np.testing.assert_array_equal(
+        df_a["choice"].to_numpy(),
+        df_b["choice"].to_numpy(),
+        err_msg=(
+            "choice arrays differ between two calls with identical args. "
+            "Seed determinism broken (L10 violation)."
+        ),
+    )
+
+
+def test_simulate_patrl_cohort_pid_naming() -> None:
+    """Global PID counter produces P000..P011 for 3 agents × 4 phenotypes."""
+    config = load_pat_rl_config()
+    df, _, _ = simulate_patrl_cohort(
+        n_participants=3, phenotypes=None, master_seed=1, config=config
+    )
+
+    unique_pids = sorted(df["participant_id"].unique())
+    expected_pids = [f"P{i:03d}" for i in range(12)]
+
+    assert unique_pids == expected_pids, (
+        f"PID list mismatch.\n"
+        f"Expected: {expected_pids}\n"
+        f"Got:      {unique_pids}"
+    )
+
+    # Verify P000..P002 are healthy, P003..P005 are reward_sensitive, etc.
+    # (order from YAML: healthy, reward_sensitive, anxious, anxious_reward_sensitive)
+    config_phenotypes = list(config.simulation.phenotypes.keys())
+    for ph_idx, ph_name in enumerate(config_phenotypes):
+        for local_i in range(3):
+            global_i = ph_idx * 3 + local_i
+            pid = f"P{global_i:03d}"
+            pid_rows = df[df["participant_id"] == pid]
+            actual_ph = pid_rows["phenotype"].unique()
+            assert list(actual_ph) == [ph_name], (
+                f"PID {pid} has phenotype {actual_ph}; expected [{ph_name}] "
+                f"(phenotype index {ph_idx}, local agent {local_i})"
+            )
+
+
+def test_simulate_patrl_cohort_legacy_phenotype_name_kwarg() -> None:
+    """Legacy phenotype_name kwarg emits DeprecationWarning and produces correct result.
+
+    phenotype_name='healthy' must:
+    1. Emit a DeprecationWarning mentioning 'deprecated'.
+    2. Produce the same sim_df as phenotypes=['healthy'] with the same master_seed.
+    """
+    config = load_pat_rl_config()
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        df_legacy, _, _ = simulate_patrl_cohort(
+            n_participants=2,
+            phenotype_name="healthy",
+            master_seed=42,
+            config=config,
+        )
+        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+        assert len(dep_warnings) >= 1, (
+            f"Expected at least one DeprecationWarning; got {[str(x.message) for x in w]}"
+        )
+        msg_lower = str(dep_warnings[0].message).lower()
+        assert "deprecated" in msg_lower, (
+            f"DeprecationWarning message should contain 'deprecated'; got: {dep_warnings[0].message}"
+        )
+
+    df_new, _, _ = simulate_patrl_cohort(
+        n_participants=2, phenotypes=["healthy"], master_seed=42, config=config
+    )
+    pd.testing.assert_frame_equal(df_legacy, df_new, check_exact=True)
+
+
+@pytest.mark.slow
+def test_simulate_patrl_cohort_full_160_scale() -> None:
+    """Full 160-agent cohort (40 per phenotype × 4 phenotypes) runs in <5 min on CPU.
+
+    This is the SC5 production-scale test.  Marked @pytest.mark.slow; run with
+    ``pytest --run-slow`` or ``pytest -m slow``.
+
+    Asserts:
+    - 160 unique participants
+    - 40 per phenotype
+    - 160 × 192 = 30720 rows total
+    - All required columns present
+    """
+    config = load_pat_rl_config()
+    df, tp, tbp = simulate_patrl_cohort(
+        n_participants=40, phenotypes=None, master_seed=42, config=config
+    )
+
+    n_unique = len(df["participant_id"].unique())
+    assert n_unique == 160, (
+        f"Expected 160 unique participants (40 × 4); got {n_unique}"
+    )
+
+    expected_phenotypes = {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    actual_phenotypes = set(df["phenotype"].unique())
+    assert actual_phenotypes == expected_phenotypes, (
+        f"Expected all 4 phenotypes; got {actual_phenotypes}"
+    )
+
+    phenotype_counts = df.groupby("phenotype")["participant_id"].nunique()
+    for ph_name in expected_phenotypes:
+        count = phenotype_counts.get(ph_name, 0)
+        assert count == 40, (
+            f"Phenotype '{ph_name}': expected 40 agents; got {count}"
+        )
+
+    expected_rows = 160 * _N_TRIALS
+    assert len(df) == expected_rows, (
+        f"Expected {expected_rows} rows (160 × {_N_TRIALS}); got {len(df)}"
+    )
+
+    required_cols = {"participant_id", "phenotype", "trial_idx", "state", "choice",
+                     "reward_mag", "shock_mag", "delta_hr", "outcome_time_s"}
+    missing_cols = required_cols - set(df.columns)
+    assert not missing_cols, (
+        f"sim_df missing required columns: {missing_cols}"
+    )
+
+
+def test_simulate_patrl_cohort_unknown_phenotype_raises() -> None:
+    """Passing an unknown phenotype name raises ValueError with available names listed."""
+    config = load_pat_rl_config()
+
+    with pytest.raises(ValueError, match="nonexistent"):
+        simulate_patrl_cohort(
+            n_participants=2, phenotypes=["nonexistent"], master_seed=1, config=config
         )
