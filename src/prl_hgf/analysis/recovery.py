@@ -23,6 +23,7 @@ __all__ = [
     "build_recovery_df",
     "compute_recovery_metrics",
     "compute_correlation_matrix",
+    "compute_recovery_metrics_patrl",
 ]
 
 log = logging.getLogger(__name__)
@@ -245,6 +246,120 @@ def compute_recovery_metrics(
         )
 
     return pd.DataFrame(rows, columns=["parameter", "r", "p", "bias", "rmse", "n", "passes_threshold"])
+
+
+def compute_recovery_metrics_patrl(
+    fit_df: pd.DataFrame,
+    r_threshold: float = 0.7,
+    primary_params: tuple[str, ...] = ("omega_2", "kappa", "beta"),
+    exploratory_params: tuple[str, ...] = ("omega_3", "mu3_0"),
+) -> pd.DataFrame:
+    """PAT-RL parameter recovery metrics with exploratory labels.
+
+    Computes Pearson r and signed bias for each parameter in
+    ``primary_params`` and ``exploratory_params``.  Only primary parameters
+    are gated against ``r_threshold``; exploratory parameters are reported
+    but not gated (Decision 141, Phase 9-01 precedent — ω₃ recovery is
+    known to be poor with binary data).
+
+    Parameters
+    ----------
+    fit_df : pandas.DataFrame
+        Long-format DataFrame with one row per (participant_id, param).
+        Required columns: ``param``, ``true_value``, ``posterior_mean``.
+    r_threshold : float, optional
+        Pearson r threshold applied to ``primary_params``.  Default 0.7
+        (PRL-V1 gate criterion).
+    primary_params : tuple of str, optional
+        Parameters gated by ``r_threshold``.  Default
+        ``("omega_2", "kappa", "beta")``.
+    exploratory_params : tuple of str, optional
+        Parameters reported but not gated.  Default ``("omega_3", "mu3_0")``.
+        These receive ``exploratory=True`` and ``passes_threshold=pd.NA``.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Columns: ``param``, ``pearson_r``, ``bias``, ``passes_threshold``,
+        ``exploratory``.  One row per parameter.
+
+        * ``passes_threshold`` is True/False for primary parameters.
+        * ``passes_threshold`` is ``pd.NA`` for exploratory parameters.
+        * ``exploratory`` is False for primary parameters, True for
+          exploratory parameters.
+    """
+    from scipy.stats import pearsonr  # local import; scipy always available
+
+    rows: list[dict] = []
+    all_params = list(primary_params) + list(exploratory_params)
+
+    for p in all_params:
+        sub = fit_df[fit_df["param"] == p]
+        is_exploratory = p in exploratory_params
+
+        if len(sub) < 3:
+            log.warning(
+                "compute_recovery_metrics_patrl: param '%s' has only %d rows "
+                "(need >= 3 for Pearson r) — returning NaN.",
+                p,
+                len(sub),
+            )
+            rows.append(
+                {
+                    "param": p,
+                    "pearson_r": float("nan"),
+                    "bias": float("nan"),
+                    "passes_threshold": pd.NA if is_exploratory else False,
+                    "exploratory": is_exploratory,
+                }
+            )
+            continue
+
+        true_vals = sub["true_value"].to_numpy(dtype=float)
+        post_means = sub["posterior_mean"].to_numpy(dtype=float)
+
+        # Mask NaN / Inf before computing metrics
+        valid = np.isfinite(true_vals) & np.isfinite(post_means)
+        if valid.sum() < 3:
+            log.warning(
+                "compute_recovery_metrics_patrl: param '%s' has only %d finite "
+                "pairs — returning NaN.",
+                p,
+                int(valid.sum()),
+            )
+            rows.append(
+                {
+                    "param": p,
+                    "pearson_r": float("nan"),
+                    "bias": float("nan"),
+                    "passes_threshold": pd.NA if is_exploratory else False,
+                    "exploratory": is_exploratory,
+                }
+            )
+            continue
+
+        r_val, _ = pearsonr(true_vals[valid], post_means[valid])
+        bias = float((post_means[valid] - true_vals[valid]).mean())
+
+        if is_exploratory:
+            passes: bool | pd.NAType = pd.NA
+        else:
+            passes = bool(r_val >= r_threshold)
+
+        rows.append(
+            {
+                "param": p,
+                "pearson_r": float(r_val),
+                "bias": bias,
+                "passes_threshold": passes,
+                "exploratory": is_exploratory,
+            }
+        )
+
+    return pd.DataFrame(
+        rows,
+        columns=["param", "pearson_r", "bias", "passes_threshold", "exploratory"],
+    )
 
 
 def compute_correlation_matrix(
