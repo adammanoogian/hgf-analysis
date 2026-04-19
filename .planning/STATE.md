@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01 through 20-05 + 20-08 COMPLETE; Wave 3: 20-06/07 pending
+**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01 through 20-06 + 20-08 COMPLETE; Wave 3: 20-07 pending
 
 ## Current Position
 
 Phase: 20 (PAT-RL Scientific Completion) — Wave 3 in progress
-Plan: 20-05 COMPLETE; remaining: 20-06/07
-Status: In progress — 20-05 (cohort scale 40×4), 20-08 (citation replacement) complete; 20-06/07 remain
-Last activity: 2026-04-19 — Completed 20-05 (cohort scale 40×4 + per-phenotype SeedSequence); 5 task commits + push
+Plan: 20-06 COMPLETE; remaining: 20-07
+Status: In progress — 20-06 (stratified BMS + PEB export) complete; 20-07 remains
+Last activity: 2026-04-19 — Completed 20-06 (stratified BMS + PEB Δ-evidence export); 2 task commits + push
 
-[===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (7/8)
+[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (8/8 — only 20-07 remains)
 
 ## Performance Metrics
 
@@ -169,6 +169,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | b_true added to true_params in simulate_patrl_cohort (b ~ N(phenotype.b.mean, phenotype.b.sd)); was absent in Plan 20-04 — required for PRL-V1 parameter recovery validation (Plan 20-07). | 20-05 |
 | Stochastic avoid deferred from simulator: choice loop uses EV_approach vs EV_avoid=0 (Model A softmax); avoid contingency outcomes wired only in logp path (Plans 20-02/20-03). No change for SC5 cohort scale. | 20-05 |
 | Retire pre-2020 citations; substitute Klaassen 2024 (Comms Bio) for PAT-RL | Consumer-spec phenotype priors (Plan 20-01) supersede Browning 2015/Daw 2006; user approved scope 2026-04-18; no fabricated Terburg/Hulsman/Ly/Roelofs refs | 20-08 |
+| compute_stratified_bms is new — run_stratified_bms preserved unchanged | Parallel-stack invariant per Decision 109; both call run_group_bms internally; neither delegates to the other | 20-06 |
+| delta_f sign convention: delta_f = delta_waic (unscaled proxy for free-energy difference) | Under WAIC ≈ -2·log-evidence, delta_f ≈ delta_waic/2 + constant; constant cancels in PEB contrasts; exact scaling is consumer-dependent (RESEARCH §12 Risk 6); confirm at manuscript-prep | 20-06 |
+| Phase 20 BMS/PEB uses Laplace-produced InferenceData as default input (fast-path via pre-populated log_likelihood) | Per user directive 2026-04-19; NUTS deferred to post-Phase-14-15; compute_subject_waic_patrl has slow-path fallback (JAX logp re-evaluation) for idatas without log_likelihood | 20-06 |
 
 ### Pending Todos
 
@@ -213,6 +216,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-19
-Stopped at: Completed 20-05 (cohort scale 40×4 + per-phenotype SeedSequence spawn + 7 determinism tests). 5 task commits + 1 metadata commit pushed to main.
+Stopped at: Completed 20-06 (stratified BMS + PEB Δ-evidence export). 2 task commits + 1 metadata commit pushed to main.
 Resume file: None
-Next action: Execute 20-06 (stratified BMS + PEB Δ-evidence export) and 20-07 (validation gates PRL-V1/V2). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
+Next action: Execute 20-07 (validation gates PRL-V1/V2). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
