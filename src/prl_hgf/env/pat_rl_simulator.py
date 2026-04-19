@@ -53,7 +53,10 @@ def run_hgf_forward_patrl(
         Initial volatility state mean (3-level only).
     return_epsilon2 : bool, default False
         If True, also return the level-2 prediction error trajectory
-        epsilon2(t) = ``node_trajectories[1]['temp']['value_prediction_error']``.
+        epsilon2(t) = ``node_trajectories[0]['temp']['value_prediction_error']``.
+        Node 0 is the observation/input node; its ``value_prediction_error``
+        is the surprise at the observation level (state_t minus the belief
+        node's prediction), i.e. the true ε₂ used in SC4 ΔHR coupling.
         Used by the phenotype-specific Delta-HR generative model
         (``simulate_patrl_cohort``, SC4). Decision 126 confirms pyhgf 0.2.8
         exposes this key. Default False preserves the Phase 18/19 return
@@ -93,18 +96,31 @@ def run_hgf_forward_patrl(
     mu2 = np.asarray(traj["mean"], dtype=np.float64)
 
     if return_epsilon2:
-        # Decision 126: pyhgf 0.2.8 temp keys confirmed present.
-        # value_prediction_error is the epsilon2(t) trajectory at level 2.
+        # Runtime-confirmed: pyhgf 0.2.8 stores epsilon2 (the PE passed
+        # upward from the observation node to the belief node) at
+        # node_trajectories[0]['temp']['value_prediction_error'] — the
+        # INPUT/OBSERVATION node (index 0), NOT the belief node (index 1).
+        # node_trajectories[1]['temp']['value_prediction_error'] is always
+        # zero because it records the PE received by node 1 FROM its value
+        # parent (node 2), which is the volatility/omega path — that PE
+        # is handled via volatility_prediction_error. The SC4 ε₂ we want
+        # is the surprise at the observation level: how much the incoming
+        # binary state at t differed from the node-1 posterior prediction.
+        # Confirmed by runtime inspection in tests/test_pat_rl_simulator.py::
+        # test_run_hgf_forward_patrl_returns_epsilon2.
+        # (Decision 126 note: temp keys ARE present; the correct node index
+        # is 0, not 1 as originally assumed.)
         try:
             epsilon2 = np.asarray(
-                traj["temp"]["value_prediction_error"],
+                net.node_trajectories[0]["temp"]["value_prediction_error"],
                 dtype=np.float64,
             )
         except (KeyError, TypeError) as exc:
             raise RuntimeError(
                 "run_hgf_forward_patrl: expected "
-                "node_trajectories[1]['temp']['value_prediction_error'] "
-                "to be present (Decision 126). Check pyhgf version."
+                "node_trajectories[0]['temp']['value_prediction_error'] "
+                "to be present (pyhgf 0.2.8). Check pyhgf version. "
+                "node_trajectories[0] is the observation/input node."
             ) from exc
         if epsilon2.shape != mu2.shape:
             raise ValueError(
@@ -141,14 +157,16 @@ def simulate_patrl_cohort(
     Biology, doi:10.1038/s42003-024-06267-6).
 
     Sign convention: ``phenotype.epsilon2_coupling_coef`` is *positive* in
-    the YAML (e.g. 0.3). ε₂(t) = value_prediction_error at the belief node,
-    which has positive values when the observed state surprises the agent.
-    The formula *adds* ``coef * |... |`` — meaning larger PE → larger (less
-    negative) ΔHR, i.e. reduced bradycardia on high-surprise trials.
-    Equivalently, ``coef`` is positive and ΔHR moves *toward zero* (less
-    bradycardia) when PE is large.  Document in citing context: Klaassen 2024
-    describes anticipatory bradycardia as inversely related to threat
-    expectation; high PE = unexpected state → attenuated response.
+    the YAML (e.g. 0.3). ε₂(t) = ``node_trajectories[0]['temp'][
+    'value_prediction_error']`` at the observation/input node (node 0).
+    When the observed state surprises the agent (e.g. sudden reversal),
+    ε₂ is large and positive; the formula *adds* ``coef * ε₂(t)`` to
+    the Gaussian base, moving ΔHR *toward zero* (less bradycardia).
+    When the agent accurately predicts the state, ε₂ ≈ 0 and ΔHR is
+    drawn from the pure phenotype Gaussian.  This is consistent with
+    Klaassen 2024: anticipatory bradycardia is inversely related to
+    threat expectation; high PE (unexpected state) attenuates the
+    anticipatory cardiac deceleration.
 
     M7 bridge: When ``response_model='model_d'`` is combined with
     ``lam_true``, this function becomes the generator for Plan 20-03's
