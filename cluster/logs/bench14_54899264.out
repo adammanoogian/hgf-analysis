@@ -30,3 +30,8 @@ End: Sun Apr 19 06:26:04 AM AEST 2026
 ============================================================
 
 Pushing benchmark results to git...
+[main 0834172] bench phase14 gpu sampler=blackjax (job 54899264)
+ 2 files changed, 40 insertions(+)
+ create mode 100644 cluster/logs/bench14_54899264.err
+ create mode 100644 cluster/logs/bench14_54899264.out
+Pushed benchmark results to origin/main
