@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01, 20-02, 20-03, 20-04 COMPLETE; Wave 2 done; Wave 3: 20-05/06/07/08 pending
+**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01 through 20-04 COMPLETE; Wave 2 done; Wave 3: 20-05/06/07/08 pending
 
 ## Current Position
 
 Phase: 20 (PAT-RL Scientific Completion) — Wave 2 complete
 Plan: 20-04 COMPLETE; Wave 2 (20-03/04) done; remaining Wave 3: 20-05/06/07/08
 Status: In progress — next action is 20-05 (cohort scale 40x4 + SeedSequence spawn)
-Last activity: 2026-04-18 — Completed 20-04 (ε₂-coupled ΔHR + phenotype column + M7 bridge); 6 task commits + push
+Last activity: 2026-04-18 — Completed 20-03 (Model D trial-varying omega, SC3 lambda recovery 5/5 pass); 4 task commits + push
 
 [===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (4/8)
 
@@ -153,6 +153,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Stochastic avoid intentionally NOT in Models A/B/C logp: EV=0 by safe-avoid assumption; stochastic avoid in config/sim only; logp wiring deferred to 20-03 Model D scan body | 20-02 |
 | blackjax NUTS smoke for B/C deferred to cluster SLURM (Plan 20-07): only Laplace path exercised locally | 20-02 |
 | 4 _PARAM_ORDER tuples added to laplace_idata.py for B/C 2-level+3-level: ravel_pytree flat order must match dict insertion order for Hessian column alignment | 20-02 |
+| Decision 121 (Model D scan body): per-trial tonic_volatility injection via {**carry} dict copy inside lax.scan; 3-level kappa/omega_3/mu3_0 still injected once before scan; only omega_2 becomes trial-varying via lam | 20-03 |
+| Decision 122 (lam prior): Normal(0.0, 0.1) closed over in logdensity_fn (Decision 119 pattern); sd=0.1 chosen for physiological interpretability (1 bpm ΔHR → ~0.1 omega shift) | 20-03 |
+| Decision 123 (SC3 recovery): uses real ε₂-coupled generative simulator (Plan 20-04 already merged); bootstrap Normal(-1,0.5) fallback not needed; tighten gate post exact two-pass per-trial simulator | 20-03 |
+| Laplace-only local smoke gate for Model D: blackjax NUTS path for D deferred to cluster (Plan 20-07), consistent with Models B/C policy from 20-02 | 20-03 |
 | CLI exit codes: 0 all omega_2 gates pass / skip-nuts, 1 gate fails, 2 loader error | 3-state map mirrors smoke script convention (18-06); distinguishes gate failure from environment error | 19-04 |
 | epsilon2 node index is 0 (input/observation node), not 1 (belief node): node_trajectories[1]['temp']['value_prediction_error'] is always 0 in pyhgf 0.2.8; actual ε₂ at node 0 (std=3.01 vs 0) | 20-04 |
 | epsilon2_coupling_coef is POSITIVE in YAML; formula: ΔHR(t) = N(dhr_mean, dhr_sd) + coef * ε₂(t); positive coef + positive surprise ε₂ → ΔHR moves toward zero (less bradycardia); consistent with Klaassen 2024 | 20-04 |
