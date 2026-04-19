@@ -1,0 +1,59 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 12.8
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 21 P-scan Probe
+============================================================
+Job ID:       54901176
+Node:         m3n109
+GPU(s):       0
+JAX cache:    /scratch/fc37/aman0087/.jax_cache_gpu/m3n109
+JAX_LOG_COMPILES: 1
+PROBE_P:      50
+PROBE_ROLE:   cold
+Start:        Sun Apr 19 08:45:22 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+========================================
+P-scan probe: P=50 role=cold
+========================================
+Start: Sun Apr 19 08:45:23 PM AEST 2026
+XLA_FLAGS=--xla_dump_hlo_as_text --xla_dump_to=.planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P50_cold
+Probe exit: 2
+--- pscan P=50 role=cold log tail (80 lines) ---
+Finished tracing + transforming convert_element_type for pjit in 0.000449419 sec
+Compiling convert_element_type with global shapes and types [ShapedArray(int64[])]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.004923820 sec
+Persistent compilation cache hit for 'jit_convert_element_type' with key 'jit_convert_element_type-01751c561d39d09b0b68763ba6d598bdc5d0b1fa239247ff4a3bf549bf3ccd22'
+Finished XLA compilation of jit(convert_element_type) in 0.004236698 sec
+Finished tracing + transforming bitwise_and for pjit in 0.000473976 sec
+Finished tracing + transforming _threefry_seed for pjit in 0.001855612 sec
+Compiling _threefry_seed with global shapes and types [ShapedArray(int64[])]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(_threefry_seed) in 0.004860878 sec
+Persistent compilation cache hit for 'jit__threefry_seed' with key 'jit__threefry_seed-14fa819abb71531ca3bbf496cea9874e17f5370cc00153665ca5cf56c0700817'
+Finished XLA compilation of jit(_threefry_seed) in 0.002739191 sec
+usage: 08_run_power_iteration.py [-h] --chunk-id CHUNK_ID --job-id JOB_ID
+                                 [--dry-run] [--benchmark] [--smoke-test]
+                                 [--fit-chains FIT_CHAINS]
+                                 [--fit-draws FIT_DRAWS] [--fit-tune FIT_TUNE]
+                                 [--sampler {pymc,numpyro,blackjax}]
+                                 [--output-dir OUTPUT_DIR] [--legacy]
+                                 [--enable-x64] [--p-scan P_SCAN]
+                                 [--p-scan-early-stop] [--vb-laplace-probe]
+                                 [--vb-laplace-subproc-only]
+                                 [--probe-p PROBE_P] [--diagnostic-mode]
+08_run_power_iteration.py: error: the following arguments are required: --chunk-id, --job-id
+--- end log ---
+End: Sun Apr 19 08:45:27 PM AEST 2026
+
+
+========================================
+Phase 21 p-scan probe: git auto-push
+========================================
