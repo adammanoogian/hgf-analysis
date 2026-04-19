@@ -1,0 +1,863 @@
+HloModule jit_scan, is_scheduled=true, entry_computation_layout={(f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0})->(f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/s64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true}, frontend_attributes={fingerprint_before_lhs="f6d427db0ff5964f64c57091cc7ff1be"}
+
+fused_divide {
+  constant_3_1 = f64[] constant(1)
+  param_2.3 = f64[] parameter(2)
+  divide.35.1 = f64[] divide(constant_3_1, param_2.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_0.1 = f64[] parameter(0)
+  param_1.3 = f64[] parameter(1)
+  exponential.13.1 = f64[] exponential(param_1.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.65.1 = f64[] multiply(param_0.1, exponential.13.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.31.1 = f64[] add(divide.35.1, multiply.65.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT divide.36.1 = f64[] divide(constant_3_1, add.31.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_divide
+
+region_2.109 {
+  arg_tuple.110.0 = (f64[], f64[], f64[]) parameter(0)
+  get-tuple-element.113.0 = f64[] get-tuple-element(arg_tuple.110.0), index=2
+  get-tuple-element.112.0 = f64[] get-tuple-element(arg_tuple.110.0), index=1
+  get-tuple-element.111.0 = f64[] get-tuple-element(arg_tuple.110.0), index=0
+  loop_divide_fusion = f64[] fusion(get-tuple-element.111.0, get-tuple-element.113.0, get-tuple-element.112.0), kind=kLoop, calls=fused_divide, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.44 = (f64[]) tuple(loop_divide_fusion)
+} // region_2.109
+
+fused_select {
+  param_0.13 = f64[] parameter(0)
+  param_3.11 = f64[1]{0} parameter(3)
+  multiply.66.1 = f64[1]{0} multiply(param_3.11, param_3.11), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.582.7 = f64[] bitcast(multiply.66.1)
+  param_1.19 = f64[] parameter(1)
+  multiply.67.7 = f64[] multiply(bitcast.582.7, param_1.19), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_2.15 = s64[] parameter(2)
+  convert.21.1 = f64[] convert(param_2.15), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.68.5 = f64[] multiply(multiply.67.7, convert.21.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.32.3 = f64[] add(param_0.13, multiply.68.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_5_1 = f64[] constant(1e-128)
+  compare.18.1 = pred[] compare(add.32.3, constant_5_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_6_1 = f64[] constant(nan)
+  ROOT select.12.1 = f64[] select(compare.18.1, add.32.3, constant_6_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_select
+
+region_3.137 {
+  arg_tuple.138.0 = (f64[], s64[], f64[], f64[1]{0}) parameter(0)
+  get-tuple-element.142.0 = f64[1]{0} get-tuple-element(arg_tuple.138.0), index=3, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/squeeze[dimensions=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.141.0 = f64[] get-tuple-element(arg_tuple.138.0), index=2
+  get-tuple-element.140.0 = s64[] get-tuple-element(arg_tuple.138.0), index=1
+  get-tuple-element.139.0 = f64[] get-tuple-element(arg_tuple.138.0), index=0
+  loop_select_fusion = f64[] fusion(get-tuple-element.141.0, get-tuple-element.139.0, get-tuple-element.140.0, get-tuple-element.142.0), kind=kLoop, calls=fused_select, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.45 = (f64[]) tuple(loop_select_fusion)
+} // region_3.137
+
+fused_add_divide_dynamic_slice_multiply {
+  constant_38_2 = f64[] constant(1)
+  param_3.147 = f64[] parameter(3)
+  param_4.102 = f64[] parameter(4)
+  multiply.69.1.clone.1 = f64[] multiply(param_3.147, param_4.102), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_1.197 = f64[192]{0} parameter(1)
+  param_2.195 = s64[] parameter(2)
+  constant_37_28_clone_1 = s64[] constant(0)
+  compare.19.55.clone.1 = pred[] compare(param_2.195, constant_37_28_clone_1), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_28_clone_1 = s64[] constant(192)
+  add.34.55.clone.1 = s64[] add(param_2.195, constant_36_28_clone_1), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.55.clone.1 = s64[] select(compare.19.55.clone.1, add.34.55.clone.1, param_2.195), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.6.2.clone.1 = f64[1]{0} dynamic-slice(param_1.197, select.13.55.clone.1), dynamic_slice_sizes={1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.714.4.clone.1 = f64[] bitcast(dynamic-slice.6.2.clone.1)
+  param_0.127 = f64[] parameter(0)
+  multiply.70.3.clone.1 = f64[] multiply(bitcast.714.4.clone.1, param_0.127), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.35.1.clone.1 = f64[] add(multiply.69.1.clone.1, multiply.70.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  negate.5.1.clone.1 = f64[] negate(add.35.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  exponential.14.1.clone.1 = f64[] exponential(negate.5.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.36.1.clone.1 = f64[] add(exponential.14.1.clone.1, constant_38_2), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  divide.37.1.clone.1 = f64[] divide(constant_38_2, add.36.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  subtract.11.1 = f64[] subtract(constant_38_2, divide.37.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.71.1 = f64[] multiply(divide.37.1.clone.1, subtract.11.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_5.44 = f64[] parameter(5)
+  exponential.15.3.clone.1 = f64[] exponential(param_5.44), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.73.5.clone.1 = f64[] multiply(bitcast.714.4.clone.1, exponential.15.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_39_1_clone_1_clone_1 = f64[] constant(1e-128)
+  compare.20.3.clone.1 = pred[] compare(multiply.73.5.clone.1, constant_39_1_clone_1_clone_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_40_1_clone_1_clone_1 = f64[] constant(nan)
+  select.14.3.clone.1 = f64[] select(compare.20.3.clone.1, multiply.73.5.clone.1, constant_40_1_clone_1_clone_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_6.28 = f64[] parameter(6)
+  divide.39.1.clone.1.clone.1 = f64[] divide(constant_38_2, param_6.28), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.37.1.clone.1.clone.1 = f64[] add(divide.39.1.clone.1.clone.1, select.14.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  divide.40.1.clone.1.clone.1 = f64[] divide(constant_38_2, add.37.1.clone.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.77.1.clone.1 = f64[] multiply(select.14.3.clone.1, divide.40.1.clone.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.42 = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[1]{0}) tuple(multiply.71.1, divide.37.1.clone.1, add.35.1.clone.1, multiply.77.1.clone.1, divide.40.1.clone.1.clone.1, /*index=5*/divide.39.1.clone.1.clone.1, dynamic-slice.6.2.clone.1)
+} // fused_add_divide_dynamic_slice_multiply
+
+fused_convert_dynamic_slice {
+  param_0.87 = s64[192]{0} parameter(0)
+  param_1.136 = s64[] parameter(1)
+  constant_37_10 = s64[] constant(0)
+  compare.19.11 = pred[] compare(param_1.136, constant_37_10), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_6 = s64[] constant(192)
+  add.34.11 = s64[] add(param_1.136, constant_36_6), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.11 = s64[] select(compare.19.11, add.34.11, param_1.136), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.8.8 = s64[1]{0} dynamic-slice(param_0.87, select.13.11), dynamic_slice_sizes={1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_41_1_clone_1 = s64[1]{0} constant({0})
+  compare.21.1.clone.1 = pred[1]{0} compare(dynamic-slice.8.8, constant_41_1_clone_1), direction=NE, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=bool weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.710.1.clone.1 = pred[] bitcast(compare.21.1.clone.1)
+  convert.23.1.clone.1 = s32[] convert(bitcast.710.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.35 = (s64[1]{0}, s32[]) tuple(dynamic-slice.8.8, convert.23.1.clone.1)
+} // fused_convert_dynamic_slice
+
+wrapped_copy_computation.1 {
+  param_0.166 = f64[] parameter(0)
+  ROOT copy.223 = f64[] copy(param_0.166)
+}
+
+fused_add_divide_dynamic_slice {
+  param_0.58 = f64[] parameter(0)
+  param_3.24 = f64[1]{0} parameter(3)
+  bitcast.701.7 = f64[] bitcast(param_3.24)
+  param_2.70 = f64[] parameter(2)
+  multiply.74.7 = f64[] multiply(bitcast.701.7, param_2.70), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_1.88 = f64[] parameter(1)
+  divide.41.5 = f64[] divide(multiply.74.7, param_1.88), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_7.20 = f64[192,1]{1,0} parameter(7)
+  param_5.40 = s64[] parameter(5)
+  constant_37_27 = s64[] constant(0)
+  compare.19.53.clone.1 = pred[] compare(param_5.40, constant_37_27), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_26 = s64[] constant(192)
+  add.34.53.clone.1 = s64[] add(param_5.40, constant_36_26), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.53.clone.1 = s64[] select(compare.19.53.clone.1, add.34.53.clone.1, param_5.40), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.7.2.clone.1 = f64[1,1]{1,0} dynamic-slice(param_7.20, select.13.53.clone.1, constant_37_27), dynamic_slice_sizes={1,1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1, 1)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.650.5.clone.1 = f64[] bitcast(dynamic-slice.7.2.clone.1)
+  param_6.24 = f64[] parameter(6)
+  subtract.12.5.clone.1 = f64[] subtract(bitcast.650.5.clone.1, param_6.24), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_4.98 = s64[192]{0} parameter(4)
+  dynamic-slice.8.7.clone.1 = s64[1]{0} dynamic-slice(param_4.98, select.13.53.clone.1), dynamic_slice_sizes={1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.722.5.clone.1 = s64[] bitcast(dynamic-slice.8.7.clone.1)
+  convert.22.5.clone.1 = f64[] convert(bitcast.722.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.72.3.clone.1 = f64[] multiply(subtract.12.5.clone.1, convert.22.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  divide.38.1.clone.1 = f64[] divide(multiply.72.3.clone.1, param_2.70), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.75.1 = f64[] multiply(divide.38.1.clone.1, convert.22.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  multiply.76.3 = f64[] multiply(divide.41.5, multiply.75.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.38.1 = f64[] add(param_0.58, multiply.76.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.36 = (f64[], f64[], f64[1,1]{1,0}) tuple(add.38.1, divide.38.1.clone.1, dynamic-slice.7.2.clone.1)
+} // fused_add_divide_dynamic_slice
+
+fused_dynamic_update_slice.9 {
+  param_0.23 = f64[192]{0} parameter(0)
+  param_1.160 = f64[] parameter(1)
+  bitcast.840.1 = f64[1]{0} bitcast(param_1.160)
+  param_2.148 = s64[] parameter(2)
+  constant_37_19 = s64[] constant(0)
+  compare.19.35 = pred[] compare(param_2.148, constant_37_19), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_18 = s64[] constant(192)
+  add.34.35 = s64[] add(param_2.148, constant_36_18), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.35 = s64[] select(compare.19.35, add.34.35, param_2.148), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.51.1 = f64[192]{0} dynamic-update-slice(param_0.23, bitcast.840.1, select.13.35), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.9
+
+fused_dynamic_update_slice.14 {
+  param_0.28 = f64[192]{0} parameter(0)
+  param_1.150 = f64[] parameter(1)
+  bitcast.793.1 = f64[1]{0} bitcast(param_1.150)
+  param_2.134 = s64[] parameter(2)
+  constant_37_15 = s64[] constant(0)
+  compare.19.25 = pred[] compare(param_2.134, constant_37_15), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_13 = s64[] constant(192)
+  add.34.25 = s64[] add(param_2.134, constant_36_13), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.25 = s64[] select(compare.19.25, add.34.25, param_2.134), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.46.1 = f64[192]{0} dynamic-update-slice(param_0.28, bitcast.793.1, select.13.25), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.14
+
+fused_dynamic_update_slice.7 {
+  param_0.21 = f64[192]{0} parameter(0)
+  param_1.164 = f64[] parameter(1)
+  bitcast.858.1 = f64[1]{0} bitcast(param_1.164)
+  param_2.154 = s64[] parameter(2)
+  constant_37_21 = s64[] constant(0)
+  compare.19.39 = pred[] compare(param_2.154, constant_37_21), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_20 = s64[] constant(192)
+  add.34.39 = s64[] add(param_2.154, constant_36_20), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.39 = s64[] select(compare.19.39, add.34.39, param_2.154), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.53.1 = f64[192]{0} dynamic-update-slice(param_0.21, bitcast.858.1, select.13.39), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.7
+
+fused_dynamic_update_slice.16 {
+  param_0.30 = f64[192]{0} parameter(0)
+  param_1.142 = f64[] parameter(1)
+  bitcast.768.1 = f64[1]{0} bitcast(param_1.142)
+  param_2.124 = s64[] parameter(2)
+  constant_37_13 = s64[] constant(0)
+  compare.19.17 = pred[] compare(param_2.124, constant_37_13), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_9 = s64[] constant(192)
+  add.34.17 = s64[] add(param_2.124, constant_36_9), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.17 = s64[] select(compare.19.17, add.34.17, param_2.124), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.43.1 = f64[192]{0} dynamic-update-slice(param_0.30, bitcast.768.1, select.13.17), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.16
+
+fused_dynamic_update_slice.17 {
+  param_0.31 = f64[192]{0} parameter(0)
+  param_1.140 = f64[] parameter(1)
+  bitcast.759.1 = f64[1]{0} bitcast(param_1.140)
+  param_2.121 = s64[] parameter(2)
+  constant_37_12 = s64[] constant(0)
+  compare.19.15 = pred[] compare(param_2.121, constant_37_12), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_8 = s64[] constant(192)
+  add.34.15 = s64[] add(param_2.121, constant_36_8), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.15 = s64[] select(compare.19.15, add.34.15, param_2.121), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.42.1 = f64[192]{0} dynamic-update-slice(param_0.31, bitcast.759.1, select.13.15), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.17
+
+fused_dynamic_update_slice.11 {
+  param_0.25 = f64[192]{0} parameter(0)
+  param_1.156 = f64[] parameter(1)
+  bitcast.822.1 = f64[1]{0} bitcast(param_1.156)
+  param_2.142 = s64[] parameter(2)
+  constant_37_17 = s64[] constant(0)
+  compare.19.31 = pred[] compare(param_2.142, constant_37_17), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_16 = s64[] constant(192)
+  add.34.31 = s64[] add(param_2.142, constant_36_16), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.31 = s64[] select(compare.19.31, add.34.31, param_2.142), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.49.1 = f64[192]{0} dynamic-update-slice(param_0.25, bitcast.822.1, select.13.31), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.11
+
+fused_dynamic_update_slice.5 {
+  param_0.19 = f64[192]{0} parameter(0)
+  param_1.168 = f64[] parameter(1)
+  bitcast.876.1 = f64[1]{0} bitcast(param_1.168)
+  param_2.160 = s64[] parameter(2)
+  constant_37_23 = s64[] constant(0)
+  compare.19.43 = pred[] compare(param_2.160, constant_37_23), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_22 = s64[] constant(192)
+  add.34.43 = s64[] add(param_2.160, constant_36_22), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.43 = s64[] select(compare.19.43, add.34.43, param_2.160), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.55.1 = f64[192]{0} dynamic-update-slice(param_0.19, bitcast.876.1, select.13.43), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.5
+
+fused_dynamic_update_slice.10 {
+  param_0.24 = f64[192]{0} parameter(0)
+  param_1.158 = f64[] parameter(1)
+  bitcast.831.1 = f64[1]{0} bitcast(param_1.158)
+  param_2.145 = s64[] parameter(2)
+  constant_37_18 = s64[] constant(0)
+  compare.19.33 = pred[] compare(param_2.145, constant_37_18), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_17 = s64[] constant(192)
+  add.34.33 = s64[] add(param_2.145, constant_36_17), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.33 = s64[] select(compare.19.33, add.34.33, param_2.145), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.50.1 = f64[192]{0} dynamic-update-slice(param_0.24, bitcast.831.1, select.13.33), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.10
+
+fused_dynamic_update_slice.6 {
+  param_0.20 = f64[192]{0} parameter(0)
+  param_1.166 = f64[] parameter(1)
+  bitcast.867.1 = f64[1]{0} bitcast(param_1.166)
+  param_2.157 = s64[] parameter(2)
+  constant_37_22 = s64[] constant(0)
+  compare.19.41 = pred[] compare(param_2.157, constant_37_22), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_21 = s64[] constant(192)
+  add.34.41 = s64[] add(param_2.157, constant_36_21), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.41 = s64[] select(compare.19.41, add.34.41, param_2.157), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.54.1 = f64[192]{0} dynamic-update-slice(param_0.20, bitcast.867.1, select.13.41), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.6
+
+fused_dynamic_update_slice {
+  param_0.14 = f64[192,1]{1,0} parameter(0)
+  param_1.180 = f64[1]{0} parameter(1)
+  bitcast.921.1 = f64[1,1]{1,0} bitcast(param_1.180)
+  param_2.177 = s64[] parameter(2)
+  constant_37_1 = s64[] constant(0)
+  compare.19.23 = pred[] compare(param_2.177, constant_37_1), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_12 = s64[] constant(192)
+  add.34.23 = s64[] add(param_2.177, constant_36_12), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.23 = s64[] select(compare.19.23, add.34.23, param_2.177), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.60.1 = f64[192,1]{1,0} dynamic-update-slice(param_0.14, bitcast.921.1, select.13.23, constant_37_1), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice
+
+fused_dynamic_update_slice.1 {
+  param_0.15 = f64[192]{0} parameter(0)
+  param_1.125 = f64[] parameter(1)
+  bitcast.912.1 = f64[1]{0} bitcast(param_1.125)
+  param_2.103 = s64[] parameter(2)
+  constant_37_8 = s64[] constant(0)
+  compare.19.5 = pred[] compare(param_2.103, constant_37_8), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_3 = s64[] constant(192)
+  add.34.5 = s64[] add(param_2.103, constant_36_3), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.5 = s64[] select(compare.19.5, add.34.5, param_2.103), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.59.1 = f64[192]{0} dynamic-update-slice(param_0.15, bitcast.912.1, select.13.5), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.1
+
+fused_dynamic_update_slice.2 {
+  param_0.16 = f64[192]{0} parameter(0)
+  param_1.123 = f64[] parameter(1)
+  bitcast.903.1 = f64[1]{0} bitcast(param_1.123)
+  param_2.100 = s64[] parameter(2)
+  constant_37_7 = s64[] constant(0)
+  compare.19.3 = pred[] compare(param_2.100, constant_37_7), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_2 = s64[] constant(192)
+  add.34.3 = s64[] add(param_2.100, constant_36_2), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.3 = s64[] select(compare.19.3, add.34.3, param_2.100), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.58.1 = f64[192]{0} dynamic-update-slice(param_0.16, bitcast.903.1, select.13.3), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.2
+
+fused_dynamic_update_slice.3 {
+  param_0.17 = f64[192]{0} parameter(0)
+  param_1.172 = f64[] parameter(1)
+  bitcast.894.1 = f64[1]{0} bitcast(param_1.172)
+  param_2.166 = s64[] parameter(2)
+  constant_37_25 = s64[] constant(0)
+  compare.19.47 = pred[] compare(param_2.166, constant_37_25), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_24 = s64[] constant(192)
+  add.34.47 = s64[] add(param_2.166, constant_36_24), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.47 = s64[] select(compare.19.47, add.34.47, param_2.166), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.57.1 = f64[192]{0} dynamic-update-slice(param_0.17, bitcast.894.1, select.13.47), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.3
+
+fused_dynamic_update_slice.4 {
+  param_0.18 = f64[192]{0} parameter(0)
+  param_1.170 = f64[] parameter(1)
+  bitcast.885.1 = f64[1]{0} bitcast(param_1.170)
+  param_2.163 = s64[] parameter(2)
+  constant_37_24 = s64[] constant(0)
+  compare.19.45 = pred[] compare(param_2.163, constant_37_24), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_23 = s64[] constant(192)
+  add.34.45 = s64[] add(param_2.163, constant_36_23), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.45 = s64[] select(compare.19.45, add.34.45, param_2.163), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.56.1 = f64[192]{0} dynamic-update-slice(param_0.18, bitcast.885.1, select.13.45), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.4
+
+fused_dynamic_update_slice.8 {
+  param_0.22 = s64[192]{0} parameter(0)
+  param_1.162 = s64[] parameter(1)
+  bitcast.849.1 = s64[1]{0} bitcast(param_1.162)
+  param_2.151 = s64[] parameter(2)
+  constant_37_20 = s64[] constant(0)
+  compare.19.37 = pred[] compare(param_2.151, constant_37_20), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_19 = s64[] constant(192)
+  add.34.37 = s64[] add(param_2.151, constant_36_19), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.37 = s64[] select(compare.19.37, add.34.37, param_2.151), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.52.1 = s64[192]{0} dynamic-update-slice(param_0.22, bitcast.849.1, select.13.37), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.8
+
+fused_dynamic_update_slice.12 {
+  param_0.26 = f64[192]{0} parameter(0)
+  param_1.154 = f64[] parameter(1)
+  bitcast.813.1 = f64[1]{0} bitcast(param_1.154)
+  param_2.139 = s64[] parameter(2)
+  constant_37_16 = s64[] constant(0)
+  compare.19.29 = pred[] compare(param_2.139, constant_37_16), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_15 = s64[] constant(192)
+  add.34.29 = s64[] add(param_2.139, constant_36_15), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.29 = s64[] select(compare.19.29, add.34.29, param_2.139), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.48.1 = f64[192]{0} dynamic-update-slice(param_0.26, bitcast.813.1, select.13.29), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.12
+
+fused_dynamic_update_slice.13 {
+  param_0.27 = f64[192,1]{1,0} parameter(0)
+  param_1.181 = f64[1]{0} parameter(1)
+  bitcast.802.1 = f64[1,1]{1,0} bitcast(param_1.181)
+  param_2.178 = s64[] parameter(2)
+  constant_37_3 = s64[] constant(0)
+  compare.19.27 = pred[] compare(param_2.178, constant_37_3), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_14 = s64[] constant(192)
+  add.34.27 = s64[] add(param_2.178, constant_36_14), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.27 = s64[] select(compare.19.27, add.34.27, param_2.178), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.47.1 = f64[192,1]{1,0} dynamic-update-slice(param_0.27, bitcast.802.1, select.13.27, constant_37_3), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.13
+
+fused_dynamic_update_slice.18 {
+  param_0.72 = s64[192]{0} parameter(0)
+  param_1.146 = s64[192]{0} parameter(1)
+  param_2.129 = s64[] parameter(2)
+  constant_37_14 = s64[] constant(0)
+  compare.19.21 = pred[] compare(param_2.129, constant_37_14), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_11 = s64[] constant(192)
+  add.34.21 = s64[] add(param_2.129, constant_36_11), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.21 = s64[] select(compare.19.21, add.34.21, param_2.129), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.8.2 = s64[1]{0} dynamic-slice(param_1.146, select.13.21), dynamic_slice_sizes={1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.45.1 = s64[192]{0} dynamic-update-slice(param_0.72, dynamic-slice.8.2, select.13.21), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.18
+
+fused_dynamic_update_slice.15 {
+  param_0.29 = f64[192]{0} parameter(0)
+  param_1.144 = f64[192,1]{1,0} parameter(1)
+  param_2.179 = s64[] parameter(2)
+  constant_37_5 = s64[] constant(0)
+  compare.19.19 = pred[] compare(param_2.179, constant_37_5), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_10 = s64[] constant(192)
+  add.34.19 = s64[] add(param_2.179, constant_36_10), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.19 = s64[] select(compare.19.19, add.34.19, param_2.179), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.7.1 = f64[1,1]{1,0} dynamic-slice(param_1.144, select.13.19, constant_37_5), dynamic_slice_sizes={1,1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1, 1)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.777.1 = f64[1]{0} bitcast(dynamic-slice.7.1)
+  ROOT dynamic-update-slice.44.1 = f64[192]{0} dynamic-update-slice(param_0.29, bitcast.777.1, select.13.19), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.15
+
+fused_dynamic_update_slice.19 {
+  param_0.74 = f64[192]{0} parameter(0)
+  param_1.138 = f64[192]{0} parameter(1)
+  param_2.118 = s64[] parameter(2)
+  constant_37_11 = s64[] constant(0)
+  compare.19.13 = pred[] compare(param_2.118, constant_37_11), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/body/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  constant_36_7 = s64[] constant(192)
+  add.34.13 = s64[] add(param_2.118, constant_36_7), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  select.13.13 = s64[] select(compare.19.13, add.34.13, param_2.118), metadata={op_name="jit(scan)/jit(main)/while/body/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  dynamic-slice.6.1 = f64[1]{0} dynamic-slice(param_1.138, select.13.13), dynamic_slice_sizes={1}, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT dynamic-update-slice.41.1 = f64[192]{0} dynamic-update-slice(param_0.74, dynamic-slice.6.1, select.13.13), metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_dynamic_update_slice.19
+
+fused_add {
+  param_0.113 = s64[] parameter(0)
+  constant_35_1 = s64[] constant(1)
+  ROOT add.33.1 = s64[] add(param_0.113, constant_35_1), metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+}
+
+command_buffer.2 {
+  p.28 = f64[] parameter(0)
+  p.29 = f64[] parameter(1)
+  p.30 = f64[] parameter(2)
+  p.31 = f64[1]{0} parameter(3)
+  p.32 = s64[192]{0} parameter(4)
+  p.33 = s64[] parameter(5)
+  p.34 = f64[] parameter(6)
+  p.35 = f64[192,1]{1,0} parameter(7)
+  p.36 = f64[192]{0} parameter(8)
+  p.37 = f64[192]{0} parameter(9)
+  p.38 = f64[192]{0} parameter(10)
+  p.39 = f64[192]{0} parameter(11)
+  p.40 = f64[192]{0} parameter(12)
+  p.41 = f64[192]{0} parameter(13)
+  p.42 = f64[192]{0} parameter(14)
+  p.43 = f64[] parameter(15)
+  p.44 = f64[192]{0} parameter(16)
+  p.45 = f64[] parameter(17)
+  p.46 = f64[192]{0} parameter(18)
+  p.47 = f64[] parameter(19)
+  p.48 = f64[192,1]{1,0} parameter(20)
+  p.49 = f64[192]{0} parameter(21)
+  p.50 = f64[] parameter(22)
+  p.51 = f64[192]{0} parameter(23)
+  p.52 = f64[] parameter(24)
+  p.53 = f64[192]{0} parameter(25)
+  p.54 = f64[] parameter(26)
+  p.55 = f64[192]{0} parameter(27)
+  p.56 = f64[] parameter(28)
+  p.57 = s64[192]{0} parameter(29)
+  p.58 = s64[] parameter(30)
+  p.59 = f64[192]{0} parameter(31)
+  p.60 = f64[] parameter(32)
+  p.61 = f64[192,1]{1,0} parameter(33)
+  p.62 = f64[1]{0} parameter(34)
+  p.63 = s64[192]{0} parameter(35)
+  p.64 = f64[192]{0} parameter(36)
+  p.65 = f64[192]{0} parameter(37)
+  p.66 = f64[192]{0} parameter(38)
+  loop_add_divide_dynamic_slice_fusion = (f64[], f64[], f64[1,1]{1,0}) fusion(p.28, p.29, p.30, p.31, p.32, /*index=5*/p.33, p.34, p.35), kind=kLoop, calls=fused_add_divide_dynamic_slice, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.192 = f64[1,1]{1,0} get-tuple-element(loop_add_divide_dynamic_slice_fusion), index=2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.650.0 = f64[] bitcast(get-tuple-element.192)
+  get-tuple-element.419 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_fusion), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.424 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_fusion), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  loop_dynamic_update_slice_fusion.9 = f64[192]{0} fusion(p.36, get-tuple-element.424, p.33), kind=kLoop, calls=fused_dynamic_update_slice.9, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.14 = f64[192]{0} fusion(p.37, get-tuple-element.419, p.33), kind=kLoop, calls=fused_dynamic_update_slice.14, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.7 = f64[192]{0} fusion(p.38, p.29, p.33), kind=kLoop, calls=fused_dynamic_update_slice.7, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.16 = f64[192]{0} fusion(p.39, p.30, p.33), kind=kLoop, calls=fused_dynamic_update_slice.16, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.17 = f64[192]{0} fusion(p.40, p.34, p.33), kind=kLoop, calls=fused_dynamic_update_slice.17, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.11 = f64[192]{0} fusion(p.41, p.28, p.33), kind=kLoop, calls=fused_dynamic_update_slice.11, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.5 = f64[192]{0} fusion(p.42, p.43, p.33), kind=kLoop, calls=fused_dynamic_update_slice.5, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.10 = f64[192]{0} fusion(p.44, p.45, p.33), kind=kLoop, calls=fused_dynamic_update_slice.10, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.6 = f64[192]{0} fusion(p.46, p.47, p.33), kind=kLoop, calls=fused_dynamic_update_slice.6, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion = f64[192,1]{1,0} fusion(p.48, p.31, p.33), kind=kLoop, calls=fused_dynamic_update_slice, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion"}
+  loop_dynamic_update_slice_fusion.1 = f64[192]{0} fusion(p.49, p.50, p.33), kind=kLoop, calls=fused_dynamic_update_slice.1, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.2 = f64[192]{0} fusion(p.51, p.52, p.33), kind=kLoop, calls=fused_dynamic_update_slice.2, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.3 = f64[192]{0} fusion(p.53, p.54, p.33), kind=kLoop, calls=fused_dynamic_update_slice.3, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.4 = f64[192]{0} fusion(p.55, p.56, p.33), kind=kLoop, calls=fused_dynamic_update_slice.4, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.8 = s64[192]{0} fusion(p.57, p.58, p.33), kind=kLoop, calls=fused_dynamic_update_slice.8, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  loop_dynamic_update_slice_fusion.12 = f64[192]{0} fusion(p.59, p.60, p.33), kind=kLoop, calls=fused_dynamic_update_slice.12, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion.1"}
+  loop_dynamic_update_slice_fusion.13 = f64[192,1]{1,0} fusion(p.61, p.62, p.33), kind=kLoop, calls=fused_dynamic_update_slice.13, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92 deduplicated_name="loop_dynamic_update_slice_fusion"}
+  loop_dynamic_update_slice_fusion.18 = s64[192]{0} fusion(p.63, p.32, p.33), kind=kLoop, calls=fused_dynamic_update_slice.18, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  loop_dynamic_update_slice_fusion.15 = f64[192]{0} fusion(p.64, p.35, p.33), kind=kLoop, calls=fused_dynamic_update_slice.15, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  loop_dynamic_update_slice_fusion.19 = f64[192]{0} fusion(p.65, p.66, p.33), kind=kLoop, calls=fused_dynamic_update_slice.19, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_update_slice" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  loop_add_fusion = s64[] fusion(p.33), kind=kLoop, calls=fused_add, control-predecessors={loop_add_divide_dynamic_slice_fusion, loop_dynamic_update_slice_fusion.9, loop_dynamic_update_slice_fusion.14, loop_dynamic_update_slice_fusion.7, loop_dynamic_update_slice_fusion.16, loop_dynamic_update_slice_fusion.17, loop_dynamic_update_slice_fusion.11, loop_dynamic_update_slice_fusion.5, loop_dynamic_update_slice_fusion.10, loop_dynamic_update_slice_fusion.6, loop_dynamic_update_slice_fusion, loop_dynamic_update_slice_fusion.1, loop_dynamic_update_slice_fusion.2, loop_dynamic_update_slice_fusion.3, loop_dynamic_update_slice_fusion.4, loop_dynamic_update_slice_fusion.8, loop_dynamic_update_slice_fusion.12, loop_dynamic_update_slice_fusion.13, loop_dynamic_update_slice_fusion.18, loop_dynamic_update_slice_fusion.15, loop_dynamic_update_slice_fusion.19}, metadata={op_name="jit(scan)/jit(main)/while/body/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.58 = (f64[], f64[], f64[], f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, f64[192]{0}, /*index=15*/f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, /*index=20*/s64[192]{0}, f64[192]{0}, f64[192]{0}, s64[]) tuple(bitcast.650.0, get-tuple-element.419, get-tuple-element.424, loop_dynamic_update_slice_fusion.9, loop_dynamic_update_slice_fusion.14, /*index=5*/loop_dynamic_update_slice_fusion.7, loop_dynamic_update_slice_fusion.16, loop_dynamic_update_slice_fusion.17, loop_dynamic_update_slice_fusion.11, loop_dynamic_update_slice_fusion.5, /*index=10*/loop_dynamic_update_slice_fusion.10, loop_dynamic_update_slice_fusion.6, loop_dynamic_update_slice_fusion, loop_dynamic_update_slice_fusion.1, loop_dynamic_update_slice_fusion.2, /*index=15*/loop_dynamic_update_slice_fusion.3, loop_dynamic_update_slice_fusion.4, loop_dynamic_update_slice_fusion.8, loop_dynamic_update_slice_fusion.12, loop_dynamic_update_slice_fusion.13, /*index=20*/loop_dynamic_update_slice_fusion.18, loop_dynamic_update_slice_fusion.15, loop_dynamic_update_slice_fusion.19, loop_add_fusion)
+} // command_buffer.2
+
+region_0.261.clone {
+  arg_tuple.1.0 = (s64[], f64[], f64[], f64[], f64[], /*index=5*/s64[], f64[], f64[], f64[1]{0}, f64[], /*index=10*/f64[], f64[], f64[], s64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[], f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0}) parameter(0)
+  get-tuple-element.421 = f64[] get-tuple-element(arg_tuple.1.0), index=9
+  get-tuple-element.379 = f64[] get-tuple-element(arg_tuple.1.0), index=12
+  get-tuple-element.425 = s64[] get-tuple-element(arg_tuple.1.0), index=13
+  get-tuple-element.381 = f64[] get-tuple-element(arg_tuple.1.0), index=14
+  get-tuple-element.420 = f64[1]{0} get-tuple-element(arg_tuple.1.0), index=8
+  get-tuple-element.325 = s64[] get-tuple-element(arg_tuple.1.0), index=0
+  get-tuple-element.429 = f64[] get-tuple-element(arg_tuple.1.0), index=17
+  get-tuple-element.430 = f64[] get-tuple-element(arg_tuple.1.0), index=18
+  get-tuple-element.431 = f64[] get-tuple-element(arg_tuple.1.0), index=19
+  get-tuple-element.432 = f64[] get-tuple-element(arg_tuple.1.0), index=20
+  get-tuple-element.433 = f64[1]{0} get-tuple-element(arg_tuple.1.0), index=21
+  get-tuple-element.455 = s64[192]{0} get-tuple-element(arg_tuple.1.0), index=43
+  get-tuple-element.454 = f64[192,1]{1,0} get-tuple-element(arg_tuple.1.0), index=42
+  get-tuple-element.456 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=44
+  get-tuple-element.389 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=22
+  get-tuple-element.390 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=23
+  get-tuple-element.391 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=24
+  get-tuple-element.392 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=25
+  get-tuple-element.393 = s64[192]{0} get-tuple-element(arg_tuple.1.0), index=26
+  get-tuple-element.394 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=27
+  get-tuple-element.395 = f64[192,1]{1,0} get-tuple-element(arg_tuple.1.0), index=28
+  get-tuple-element.396 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=29
+  get-tuple-element.397 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=30
+  get-tuple-element.398 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=31
+  get-tuple-element.399 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=32
+  get-tuple-element.400 = s64[192]{0} get-tuple-element(arg_tuple.1.0), index=33
+  get-tuple-element.401 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=34
+  get-tuple-element.402 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=35
+  get-tuple-element.403 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=36
+  get-tuple-element.404 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=37
+  get-tuple-element.405 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=38
+  get-tuple-element.406 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=39
+  get-tuple-element.407 = f64[192]{0} get-tuple-element(arg_tuple.1.0), index=40
+  get-tuple-element.408 = f64[192,1]{1,0} get-tuple-element(arg_tuple.1.0), index=41
+  loop_convert_dynamic_slice_fusion = (s64[1]{0}, s32[]) fusion(get-tuple-element.455, get-tuple-element.325), kind=kLoop, calls=fused_convert_dynamic_slice, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.191 = s32[] get-tuple-element(loop_convert_dynamic_slice_fusion), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.190 = s64[1]{0} get-tuple-element(loop_convert_dynamic_slice_fusion), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/dynamic_slice[slice_sizes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.722.0 = s64[] bitcast(get-tuple-element.190)
+  loop_add_divide_dynamic_slice_multiply_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[1]{0}) fusion(get-tuple-element.431, get-tuple-element.456, get-tuple-element.325, get-tuple-element.421, get-tuple-element.379, /*index=5*/get-tuple-element.432, get-tuple-element.381), kind=kLoop, calls=fused_add_divide_dynamic_slice_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.203 = f64[1]{0} get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=6, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  bitcast.714.0 = f64[] bitcast(get-tuple-element.203)
+  get-tuple-element.427 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=5, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.423 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=4, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.428 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=3, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.422 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.414 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.418 = f64[] get-tuple-element(loop_add_divide_dynamic_slice_multiply_fusion), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  wrapped_copy.1 = f64[] fusion(get-tuple-element.418), kind=kLoop, calls=wrapped_copy_computation.1
+  tuple.28.0 = (f64[], f64[], f64[]) tuple(bitcast.714.0, get-tuple-element.381, get-tuple-element.432), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  tuple.29.0 = (f64[], s64[], f64[], f64[1]{0}) tuple(get-tuple-element.418, bitcast.722.0, get-tuple-element.423, get-tuple-element.433), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  conditional.3.clone.1.0 = (f64[]) conditional(get-tuple-element.191, tuple.28.0, tuple.29.0), branch_computations={region_2.109, region_3.137}, control-predecessors={loop_add_divide_dynamic_slice_multiply_fusion}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.426 = f64[] get-tuple-element(conditional.3.clone.1.0), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  call.1 = (f64[], f64[], f64[], f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, f64[192]{0}, /*index=15*/f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, /*index=20*/s64[192]{0}, f64[192]{0}, f64[192]{0}, s64[]) call(get-tuple-element.422, get-tuple-element.426, get-tuple-element.418, get-tuple-element.433, get-tuple-element.455, /*index=5*/get-tuple-element.325, get-tuple-element.414, get-tuple-element.454, get-tuple-element.399, get-tuple-element.394, /*index=10*/get-tuple-element.401, get-tuple-element.391, get-tuple-element.390, get-tuple-element.397, get-tuple-element.403, /*index=15*/get-tuple-element.428, get-tuple-element.398, get-tuple-element.423, get-tuple-element.402, get-tuple-element.427, /*index=20*/get-tuple-element.408, get-tuple-element.407, get-tuple-element.432, get-tuple-element.406, get-tuple-element.431, /*index=25*/get-tuple-element.405, get-tuple-element.430, get-tuple-element.404, get-tuple-element.429, get-tuple-element.400, /*index=30*/get-tuple-element.425, get-tuple-element.396, get-tuple-element.421, get-tuple-element.395, get-tuple-element.420, /*index=35*/get-tuple-element.393, get-tuple-element.392, get-tuple-element.389, get-tuple-element.456), to_apply=command_buffer.2, control-predecessors={loop_add_divide_dynamic_slice_multiply_fusion, loop_convert_dynamic_slice_fusion}
+  get-tuple-element.671 = f64[] get-tuple-element(call.1), index=0
+  get-tuple-element.672 = f64[] get-tuple-element(call.1), index=1
+  get-tuple-element.673 = f64[] get-tuple-element(call.1), index=2
+  get-tuple-element.674 = f64[192]{0} get-tuple-element(call.1), index=3
+  get-tuple-element.675 = f64[192]{0} get-tuple-element(call.1), index=4
+  get-tuple-element.676 = f64[192]{0} get-tuple-element(call.1), index=5
+  get-tuple-element.677 = f64[192]{0} get-tuple-element(call.1), index=6
+  get-tuple-element.678 = f64[192]{0} get-tuple-element(call.1), index=7
+  get-tuple-element.679 = f64[192]{0} get-tuple-element(call.1), index=8
+  get-tuple-element.680 = f64[192]{0} get-tuple-element(call.1), index=9
+  get-tuple-element.681 = f64[192]{0} get-tuple-element(call.1), index=10
+  get-tuple-element.682 = f64[192]{0} get-tuple-element(call.1), index=11
+  get-tuple-element.683 = f64[192,1]{1,0} get-tuple-element(call.1), index=12
+  get-tuple-element.684 = f64[192]{0} get-tuple-element(call.1), index=13
+  get-tuple-element.685 = f64[192]{0} get-tuple-element(call.1), index=14
+  get-tuple-element.686 = f64[192]{0} get-tuple-element(call.1), index=15
+  get-tuple-element.687 = f64[192]{0} get-tuple-element(call.1), index=16
+  get-tuple-element.688 = s64[192]{0} get-tuple-element(call.1), index=17
+  get-tuple-element.689 = f64[192]{0} get-tuple-element(call.1), index=18
+  get-tuple-element.690 = f64[192,1]{1,0} get-tuple-element(call.1), index=19
+  get-tuple-element.691 = s64[192]{0} get-tuple-element(call.1), index=20
+  get-tuple-element.692 = f64[192]{0} get-tuple-element(call.1), index=21
+  get-tuple-element.693 = f64[192]{0} get-tuple-element(call.1), index=22
+  get-tuple-element.694 = s64[] get-tuple-element(call.1), index=23
+  ROOT tuple.48 = (s64[], f64[], f64[], f64[], f64[], /*index=5*/s64[], f64[], f64[], f64[1]{0}, f64[], /*index=10*/f64[], f64[], f64[], s64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[], f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0}) tuple(get-tuple-element.694, bitcast.714.0, get-tuple-element.414, get-tuple-element.418, get-tuple-element.671, /*index=5*/bitcast.722.0, wrapped_copy.1, get-tuple-element.672, get-tuple-element.420, get-tuple-element.421, /*index=10*/get-tuple-element.422, get-tuple-element.423, get-tuple-element.673, get-tuple-element.425, get-tuple-element.426, /*index=15*/get-tuple-element.427, get-tuple-element.428, get-tuple-element.429, get-tuple-element.430, get-tuple-element.431, /*index=20*/get-tuple-element.432, get-tuple-element.433, get-tuple-element.693, get-tuple-element.678, get-tuple-element.677, /*index=25*/get-tuple-element.692, get-tuple-element.691, get-tuple-element.675, get-tuple-element.690, get-tuple-element.689, /*index=30*/get-tuple-element.679, get-tuple-element.681, get-tuple-element.674, get-tuple-element.688, get-tuple-element.676, /*index=35*/get-tuple-element.682, get-tuple-element.680, get-tuple-element.687, get-tuple-element.686, get-tuple-element.685, /*index=40*/get-tuple-element.684, get-tuple-element.683, get-tuple-element.454, get-tuple-element.455, get-tuple-element.456)
+} // region_0.261.clone
+
+fused_compare {
+  param_0.119 = s64[] parameter(0)
+  constant_34_1 = s64[] constant(192)
+  ROOT compare.22.1 = pred[] compare(param_0.119, constant_34_1), direction=LT, metadata={op_name="jit(scan)/jit(main)/while/cond/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+}
+
+region_4.477.clone {
+  arg_tuple.0.0 = (s64[], f64[], f64[], f64[], f64[], /*index=5*/s64[], f64[], f64[], f64[1]{0}, f64[], /*index=10*/f64[], f64[], f64[], s64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[], f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0}) parameter(0)
+  get-tuple-element.94.0 = s64[] get-tuple-element(arg_tuple.0.0), index=0
+  ROOT loop_compare_fusion = pred[] fusion(get-tuple-element.94.0), kind=kLoop, calls=fused_compare, metadata={op_name="jit(scan)/jit(main)/while/cond/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+}
+
+copy_horizontally_fused_computation {
+  param_0_0 = f64[] parameter(0)
+  copy.153 = f64[] copy(param_0_0)
+  param_1_0 = f64[] parameter(1)
+  copy.154 = f64[] copy(param_1_0)
+  param_2_0 = f64[] parameter(2)
+  copy.155 = f64[] copy(param_2_0)
+  param_3_0 = f64[] parameter(3)
+  copy.156 = f64[] copy(param_3_0)
+  param_4_0 = f64[] parameter(4)
+  copy.157 = f64[] copy(param_4_0)
+  ROOT tuple.51 = (f64[], f64[], f64[], f64[], f64[]) tuple(copy.153, copy.154, copy.155, copy.156, copy.157)
+} // copy_horizontally_fused_computation
+
+copy_horizontally_fused_computation.1 {
+  param_0_0.1 = f64[1]{0} parameter(0)
+  copy.161 = f64[1]{0} copy(param_0_0.1)
+  param_1_0.1 = f64[1]{0} parameter(1)
+  copy.162 = f64[1]{0} copy(param_1_0.1)
+  param_2_0.1 = f64[192]{0} parameter(2)
+  copy.163 = f64[192]{0} copy(param_2_0.1)
+  concatenate.1 = f64[194]{0} concatenate(copy.161, copy.162, copy.163), dimensions={0}
+  slice.2 = f64[1]{0} slice(concatenate.1), slice={[0:1]}
+  slice.3 = f64[1]{0} slice(concatenate.1), slice={[1:2]}
+  slice.4 = f64[192]{0} slice(concatenate.1), slice={[2:194]}
+  ROOT tuple.52 = (f64[1]{0}, f64[1]{0}, f64[192]{0}) tuple(slice.2, slice.3, slice.4)
+} // copy_horizontally_fused_computation.1
+
+wrapped_copy_computation.2 {
+  param_0.167 = s64[] parameter(0)
+  ROOT copy.224 = s64[] copy(param_0.167)
+}
+
+copy_horizontally_fused_computation.2 {
+  param_0_0.2 = s64[] parameter(0)
+  copy.166 = s64[] copy(param_0_0.2)
+  param_1_0.2 = s64[] parameter(1)
+  copy.167 = s64[] copy(param_1_0.2)
+  ROOT tuple.53 = (s64[], s64[]) tuple(copy.166, copy.167)
+}
+
+copy_horizontally_fused_computation.3 {
+  param_0_0.3 = f64[] parameter(0)
+  copy.180 = f64[] copy(param_0_0.3)
+  param_1_0.3 = f64[] parameter(1)
+  copy.181 = f64[] copy(param_1_0.3)
+  param_2_0.2 = f64[] parameter(2)
+  copy.182 = f64[] copy(param_2_0.2)
+  param_3_0.1 = f64[] parameter(3)
+  copy.183 = f64[] copy(param_3_0.1)
+  param_4_0.1 = f64[] parameter(4)
+  copy.184 = f64[] copy(param_4_0.1)
+  param_5_0 = f64[] parameter(5)
+  copy.185 = f64[] copy(param_5_0)
+  param_6_0 = f64[] parameter(6)
+  copy.186 = f64[] copy(param_6_0)
+  param_7_0 = f64[] parameter(7)
+  copy.187 = f64[] copy(param_7_0)
+  param_8_0 = f64[] parameter(8)
+  copy.188 = f64[] copy(param_8_0)
+  param_9_0 = f64[] parameter(9)
+  copy.189 = f64[] copy(param_9_0)
+  param_10_0 = f64[] parameter(10)
+  copy.190 = f64[] copy(param_10_0)
+  param_11_0 = f64[] parameter(11)
+  copy.191 = f64[] copy(param_11_0)
+  ROOT tuple.54 = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[], f64[], /*index=10*/f64[], f64[]) tuple(copy.180, copy.181, copy.182, copy.183, copy.184, /*index=5*/copy.185, copy.186, copy.187, copy.188, copy.189, /*index=10*/copy.190, copy.191)
+} // copy_horizontally_fused_computation.3
+
+fused_slice {
+  constant_26_3 = f64[] constant(0)
+  broadcast.3.2 = f64[192]{0} broadcast(constant_26_3), dimensions={}
+  broadcast.5.2 = f64[192,1]{1,0} broadcast(constant_26_3), dimensions={}
+  reshape.52 = f64[192]{0} reshape(broadcast.5.2)
+  concatenate = f64[384]{0} concatenate(broadcast.3.2, reshape.52), dimensions={0}
+  slice = f64[192]{0} slice(concatenate), slice={[0:192]}
+  slice.1 = f64[192]{0} slice(concatenate), slice={[192:384]}
+  ROOT tuple.43 = (f64[192]{0}, f64[192]{0}) tuple(slice, slice.1)
+} // fused_slice
+
+wrapped_copy_computation {
+  param_0.165 = f64[192,1]{1,0} parameter(0)
+  ROOT copy.222 = f64[192,1]{1,0} copy(param_0.165)
+}
+
+fused_broadcast {
+  constant_25_1 = s64[] constant(0)
+  broadcast.4.1 = s64[192]{0} broadcast(constant_25_1), dimensions={}
+  copy.147 = s64[192]{0} copy(broadcast.4.1)
+  ROOT tuple.50 = (s64[192]{0}, s64[192]{0}) tuple(broadcast.4.1, copy.147)
+}
+
+copy_horizontally_fused_computation.4 {
+  param_0_0.4 = f64[192]{0} parameter(0)
+  copy.207 = f64[192]{0} copy(param_0_0.4)
+  copy.208 = f64[192]{0} copy(param_0_0.4)
+  copy.209 = f64[192]{0} copy(param_0_0.4)
+  copy.210 = f64[192]{0} copy(param_0_0.4)
+  copy.211 = f64[192]{0} copy(param_0_0.4)
+  copy.212 = f64[192]{0} copy(param_0_0.4)
+  copy.213 = f64[192]{0} copy(param_0_0.4)
+  copy.214 = f64[192]{0} copy(param_0_0.4)
+  copy.215 = f64[192]{0} copy(param_0_0.4)
+  copy.216 = f64[192]{0} copy(param_0_0.4)
+  copy.217 = f64[192]{0} copy(param_0_0.4)
+  copy.218 = f64[192]{0} copy(param_0_0.4)
+  copy.219 = f64[192]{0} copy(param_0_0.4)
+  copy.220 = f64[192]{0} copy(param_0_0.4)
+  copy.221 = f64[192]{0} copy(param_0_0.4)
+  ROOT tuple.55 = (f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}) tuple(copy.207, copy.208, copy.209, copy.210, copy.211, /*index=5*/copy.212, copy.213, copy.214, copy.215, copy.216, /*index=10*/copy.217, copy.218, copy.219, copy.220, copy.221)
+} // copy_horizontally_fused_computation.4
+
+command_buffer {
+  p = s64[] parameter(0)
+  p.1 = s64[] parameter(1)
+  p.2 = f64[] parameter(2)
+  p.3 = f64[] parameter(3)
+  p.4 = f64[] parameter(4)
+  p.5 = f64[] parameter(5)
+  p.6 = f64[] parameter(6)
+  p.7 = f64[] parameter(7)
+  p.8 = f64[] parameter(8)
+  p.9 = f64[] parameter(9)
+  p.10 = f64[] parameter(10)
+  p.11 = f64[] parameter(11)
+  p.12 = f64[] parameter(12)
+  p.13 = f64[] parameter(13)
+  copy_fusion.2 = (s64[], s64[]) fusion(p, p.1), kind=kLoop, calls=copy_horizontally_fused_computation.2
+  get-tuple-element.602 = s64[] get-tuple-element(copy_fusion.2), index=1
+  bitcast.1113 = s64[] bitcast(get-tuple-element.602)
+  get-tuple-element.601 = s64[] get-tuple-element(copy_fusion.2), index=0
+  bitcast.1112 = s64[] bitcast(get-tuple-element.601)
+  copy_fusion.3 = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[], f64[], /*index=10*/f64[], f64[]) fusion(p.2, p.3, p.4, p.5, p.6, /*index=5*/p.7, p.8, p.9, p.10, p.11, /*index=10*/p.12, p.13), kind=kLoop, calls=copy_horizontally_fused_computation.3
+  get-tuple-element.614 = f64[] get-tuple-element(copy_fusion.3), index=11
+  bitcast.1125 = f64[] bitcast(get-tuple-element.614)
+  get-tuple-element.613 = f64[] get-tuple-element(copy_fusion.3), index=10
+  bitcast.1124 = f64[] bitcast(get-tuple-element.613)
+  get-tuple-element.612 = f64[] get-tuple-element(copy_fusion.3), index=9
+  bitcast.1123 = f64[] bitcast(get-tuple-element.612)
+  get-tuple-element.611 = f64[] get-tuple-element(copy_fusion.3), index=8
+  bitcast.1122 = f64[] bitcast(get-tuple-element.611)
+  get-tuple-element.610 = f64[] get-tuple-element(copy_fusion.3), index=7
+  bitcast.1121 = f64[] bitcast(get-tuple-element.610)
+  get-tuple-element.609 = f64[] get-tuple-element(copy_fusion.3), index=6
+  bitcast.1120 = f64[] bitcast(get-tuple-element.609)
+  get-tuple-element.608 = f64[] get-tuple-element(copy_fusion.3), index=5
+  bitcast.1119 = f64[] bitcast(get-tuple-element.608)
+  get-tuple-element.607 = f64[] get-tuple-element(copy_fusion.3), index=4
+  bitcast.1118 = f64[] bitcast(get-tuple-element.607)
+  get-tuple-element.606 = f64[] get-tuple-element(copy_fusion.3), index=3
+  bitcast.1117 = f64[] bitcast(get-tuple-element.606)
+  get-tuple-element.605 = f64[] get-tuple-element(copy_fusion.3), index=2
+  bitcast.1116 = f64[] bitcast(get-tuple-element.605)
+  get-tuple-element.604 = f64[] get-tuple-element(copy_fusion.3), index=1
+  bitcast.1115 = f64[] bitcast(get-tuple-element.604)
+  get-tuple-element.603 = f64[] get-tuple-element(copy_fusion.3), index=0
+  bitcast.1114 = f64[] bitcast(get-tuple-element.603)
+  input_slice_fusion = (f64[192]{0}, f64[192]{0}) fusion(), kind=kInput, calls=fused_slice
+  get-tuple-element.320 = f64[192]{0} get-tuple-element(input_slice_fusion), index=0
+  get-tuple-element.207 = f64[192]{0} get-tuple-element(input_slice_fusion), index=1
+  bitcast.1106 = f64[192,1]{1,0} bitcast(get-tuple-element.207)
+  wrapped_copy = f64[192,1]{1,0} fusion(bitcast.1106), kind=kLoop, calls=wrapped_copy_computation
+  loop_broadcast_fusion = (s64[192]{0}, s64[192]{0}) fusion(), kind=kLoop, calls=fused_broadcast
+  get-tuple-element.591 = s64[192]{0} get-tuple-element(loop_broadcast_fusion), index=0
+  get-tuple-element.592 = s64[192]{0} get-tuple-element(loop_broadcast_fusion), index=1
+  copy_fusion.4 = (f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}) fusion(get-tuple-element.320), kind=kLoop, calls=copy_horizontally_fused_computation.4
+  ROOT tuple.56 = (s64[], s64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[], f64[], /*index=10*/f64[], f64[], f64[], f64[], f64[192]{0}, /*index=15*/f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, s64[192]{0}, (f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0})) tuple(bitcast.1113, bitcast.1112, bitcast.1125, bitcast.1124, bitcast.1123, /*index=5*/bitcast.1122, bitcast.1121, bitcast.1120, bitcast.1119, bitcast.1118, /*index=10*/bitcast.1117, bitcast.1116, bitcast.1115, bitcast.1114, get-tuple-element.320, /*index=15*/bitcast.1106, wrapped_copy, get-tuple-element.591, get-tuple-element.592, copy_fusion.4)
+} // command_buffer
+
+ENTRY main.575 {
+  constant_25_0 = s64[] constant(0)
+  Arg_20.21.0 = f64[1]{0} parameter(20), metadata={op_name="args[20]"}
+  Arg_19.20.0 = f64[] parameter(19), metadata={op_name="args[19]"}
+  Arg_18.19.0 = f64[] parameter(18), metadata={op_name="args[18]"}
+  Arg_17.18.0 = f64[] parameter(17), metadata={op_name="args[17]"}
+  Arg_16.17.0 = f64[] parameter(16), metadata={op_name="args[16]"}
+  Arg_15.16.0 = f64[] parameter(15), metadata={op_name="args[15]"}
+  Arg_14.15.0 = f64[] parameter(14), metadata={op_name="args[14]"}
+  Arg_13.14.0 = f64[] parameter(13), metadata={op_name="args[13]"}
+  Arg_12.13.0 = s64[] parameter(12), metadata={op_name="args[12]"}
+  Arg_11.12.0 = f64[] parameter(11), metadata={op_name="args[11]"}
+  Arg_10.11.0 = f64[] parameter(10), metadata={op_name="args[10]"}
+  Arg_9.10.0 = f64[] parameter(9), metadata={op_name="args[9]"}
+  Arg_8.9.0 = f64[] parameter(8), metadata={op_name="args[8]"}
+  Arg_7.8.0 = f64[1]{0} parameter(7), metadata={op_name="args[7]"}
+  Arg_6.7.0 = f64[] parameter(6), metadata={op_name="args[6]"}
+  Arg_5.6.0 = f64[] parameter(5), metadata={op_name="args[5]"}
+  Arg_4.5.0 = s64[] parameter(4), metadata={op_name="args[4]"}
+  Arg_3.4.0 = f64[] parameter(3), metadata={op_name="args[3]"}
+  Arg_2.3.0 = f64[] parameter(2), metadata={op_name="args[2]"}
+  Arg_1.2.0 = f64[] parameter(1), metadata={op_name="args[1]"}
+  Arg_0.1.0 = f64[] parameter(0), metadata={op_name="args[0]"}
+  Arg_23.24.0 = f64[192]{0} parameter(23), metadata={op_name="args[23]"}
+  Arg_22.23.0 = s64[192]{0} parameter(22), metadata={op_name="args[22]"}
+  Arg_21.22.0 = f64[192,1]{1,0} parameter(21), metadata={op_name="args[21]"}
+  call = (s64[], s64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[], f64[], /*index=10*/f64[], f64[], f64[], f64[], f64[192]{0}, /*index=15*/f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, s64[192]{0}, (f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0})) call(constant_25_0, Arg_4.5.0, Arg_0.1.0, Arg_1.2.0, Arg_2.3.0, /*index=5*/Arg_3.4.0, Arg_5.6.0, Arg_6.7.0, Arg_9.10.0, Arg_10.11.0, /*index=10*/Arg_11.12.0, Arg_13.14.0, Arg_14.15.0, Arg_15.16.0), to_apply=command_buffer
+  get-tuple-element.648 = s64[] get-tuple-element(call), index=0
+  get-tuple-element.649 = s64[] get-tuple-element(call), index=1
+  get-tuple-element.650 = f64[] get-tuple-element(call), index=2
+  get-tuple-element.651 = f64[] get-tuple-element(call), index=3
+  get-tuple-element.652 = f64[] get-tuple-element(call), index=4
+  get-tuple-element.653 = f64[] get-tuple-element(call), index=5
+  get-tuple-element.654 = f64[] get-tuple-element(call), index=6
+  get-tuple-element.655 = f64[] get-tuple-element(call), index=7
+  get-tuple-element.656 = f64[] get-tuple-element(call), index=8
+  get-tuple-element.657 = f64[] get-tuple-element(call), index=9
+  get-tuple-element.658 = f64[] get-tuple-element(call), index=10
+  get-tuple-element.659 = f64[] get-tuple-element(call), index=11
+  get-tuple-element.660 = f64[] get-tuple-element(call), index=12
+  get-tuple-element.661 = f64[] get-tuple-element(call), index=13
+  get-tuple-element.662 = f64[192]{0} get-tuple-element(call), index=14
+  get-tuple-element.663 = f64[192,1]{1,0} get-tuple-element(call), index=15
+  get-tuple-element.664 = f64[192,1]{1,0} get-tuple-element(call), index=16
+  get-tuple-element.665 = s64[192]{0} get-tuple-element(call), index=17
+  get-tuple-element.666 = s64[192]{0} get-tuple-element(call), index=18
+  get-tuple-element.667 = (f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=5*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=10*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}) get-tuple-element(call), index=19
+  get-tuple-element.629 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=14
+  get-tuple-element.628 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=13
+  get-tuple-element.627 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=12
+  get-tuple-element.626 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=11
+  get-tuple-element.625 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=10
+  get-tuple-element.624 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=9
+  get-tuple-element.623 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=8
+  get-tuple-element.622 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=7
+  get-tuple-element.621 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=6
+  get-tuple-element.620 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=5
+  get-tuple-element.619 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=4
+  get-tuple-element.618 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=3
+  get-tuple-element.617 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=2
+  get-tuple-element.616 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=1
+  get-tuple-element.615 = f64[192]{0} get-tuple-element(get-tuple-element.667), index=0
+  tuple.46 = (s64[], f64[], f64[], f64[], f64[], /*index=5*/s64[], f64[], f64[], f64[1]{0}, f64[], /*index=10*/f64[], f64[], f64[], s64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[], f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0}) tuple(get-tuple-element.649, get-tuple-element.661, get-tuple-element.660, get-tuple-element.659, get-tuple-element.658, /*index=5*/get-tuple-element.648, get-tuple-element.657, get-tuple-element.656, Arg_7.8.0, Arg_8.9.0, /*index=10*/get-tuple-element.655, get-tuple-element.654, get-tuple-element.653, Arg_12.13.0, get-tuple-element.652, /*index=15*/get-tuple-element.651, get-tuple-element.650, Arg_16.17.0, Arg_17.18.0, Arg_18.19.0, /*index=20*/Arg_19.20.0, Arg_20.21.0, get-tuple-element.662, get-tuple-element.615, get-tuple-element.616, /*index=25*/get-tuple-element.617, get-tuple-element.665, get-tuple-element.618, get-tuple-element.663, get-tuple-element.619, /*index=30*/get-tuple-element.620, get-tuple-element.621, get-tuple-element.622, get-tuple-element.666, get-tuple-element.623, /*index=35*/get-tuple-element.624, get-tuple-element.625, get-tuple-element.626, get-tuple-element.627, get-tuple-element.628, /*index=40*/get-tuple-element.629, get-tuple-element.664, Arg_21.22.0, Arg_22.23.0, Arg_23.24.0)
+  while.1 = (s64[], f64[], f64[], f64[], f64[], /*index=5*/s64[], f64[], f64[], f64[1]{0}, f64[], /*index=10*/f64[], f64[], f64[], s64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[], f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/f64[192]{0}, s64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}, f64[192,1]{1,0}, s64[192]{0}, f64[192]{0}) while(tuple.46), condition=region_4.477.clone, body=region_0.261.clone, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}, backend_config={"known_trip_count":{"n":"192"}}
+  get-tuple-element.477 = f64[1]{0} get-tuple-element(while.1), index=21, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.476 = f64[] get-tuple-element(while.1), index=20, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.475 = f64[] get-tuple-element(while.1), index=19, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.474 = f64[] get-tuple-element(while.1), index=18, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.473 = f64[] get-tuple-element(while.1), index=17, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.472 = f64[] get-tuple-element(while.1), index=16, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.471 = f64[] get-tuple-element(while.1), index=15, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.470 = f64[] get-tuple-element(while.1), index=14, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.469 = s64[] get-tuple-element(while.1), index=13, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  wrapped_copy.2 = s64[] fusion(get-tuple-element.469), kind=kLoop, calls=wrapped_copy_computation.2
+  get-tuple-element.468 = f64[] get-tuple-element(while.1), index=12, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.467 = f64[] get-tuple-element(while.1), index=11, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.466 = f64[] get-tuple-element(while.1), index=10, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.465 = f64[] get-tuple-element(while.1), index=9, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.464 = f64[1]{0} get-tuple-element(while.1), index=8, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.463 = f64[] get-tuple-element(while.1), index=7, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.462 = f64[] get-tuple-element(while.1), index=6, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.461 = s64[] get-tuple-element(while.1), index=5, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.460 = f64[] get-tuple-element(while.1), index=4, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.459 = f64[] get-tuple-element(while.1), index=3, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.458 = f64[] get-tuple-element(while.1), index=2, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.457 = f64[] get-tuple-element(while.1), index=1, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.575 = f64[192]{0} get-tuple-element(while.1), index=24, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.588 = f64[192]{0} get-tuple-element(while.1), index=39, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.587 = f64[192]{0} get-tuple-element(while.1), index=38, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.586 = f64[192]{0} get-tuple-element(while.1), index=37, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.585 = f64[192]{0} get-tuple-element(while.1), index=36, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.584 = f64[192]{0} get-tuple-element(while.1), index=35, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.583 = f64[192]{0} get-tuple-element(while.1), index=34, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.582 = s64[192]{0} get-tuple-element(while.1), index=33, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.581 = f64[192]{0} get-tuple-element(while.1), index=32, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.580 = f64[192]{0} get-tuple-element(while.1), index=31, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.579 = f64[192]{0} get-tuple-element(while.1), index=30, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.578 = f64[192]{0} get-tuple-element(while.1), index=29, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.577 = f64[192,1]{1,0} get-tuple-element(while.1), index=28, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.576 = f64[192]{0} get-tuple-element(while.1), index=27, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.589 = f64[192]{0} get-tuple-element(while.1), index=40, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.574 = s64[192]{0} get-tuple-element(while.1), index=26, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.527 = f64[192]{0} get-tuple-element(while.1), index=25, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.525 = f64[192]{0} get-tuple-element(while.1), index=23, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.478 = f64[192]{0} get-tuple-element(while.1), index=22, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  get-tuple-element.590 = f64[192,1]{1,0} get-tuple-element(while.1), index=41, metadata={op_name="jit(scan)/jit(main)/while[cond_nconsts=0 body_nconsts=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  copy_fusion = (f64[], f64[], f64[], f64[], f64[]) fusion(get-tuple-element.465, get-tuple-element.473, get-tuple-element.474, get-tuple-element.475, get-tuple-element.476), kind=kLoop, calls=copy_horizontally_fused_computation
+  get-tuple-element.597 = f64[] get-tuple-element(copy_fusion), index=4
+  bitcast.1111 = f64[] bitcast(get-tuple-element.597)
+  get-tuple-element.596 = f64[] get-tuple-element(copy_fusion), index=3
+  bitcast.1110 = f64[] bitcast(get-tuple-element.596)
+  get-tuple-element.595 = f64[] get-tuple-element(copy_fusion), index=2
+  bitcast.1109 = f64[] bitcast(get-tuple-element.595)
+  get-tuple-element.594 = f64[] get-tuple-element(copy_fusion), index=1
+  bitcast.1108 = f64[] bitcast(get-tuple-element.594)
+  get-tuple-element.593 = f64[] get-tuple-element(copy_fusion), index=0
+  bitcast.1107 = f64[] bitcast(get-tuple-element.593)
+  copy_fusion.1 = (f64[1]{0}, f64[1]{0}, f64[192]{0}) fusion(get-tuple-element.464, get-tuple-element.477, get-tuple-element.575), kind=kInput, calls=copy_horizontally_fused_computation.1
+  get-tuple-element.599 = f64[1]{0} get-tuple-element(copy_fusion.1), index=1
+  get-tuple-element.598 = f64[1]{0} get-tuple-element(copy_fusion.1), index=0
+  get-tuple-element.600 = f64[192]{0} get-tuple-element(copy_fusion.1), index=2
+  ROOT tuple.49 = (f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=25*/s64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192,1]{1,0}, f64[192]{0}, /*index=30*/f64[192]{0}, f64[192]{0}, f64[192]{0}, s64[192]{0}, f64[192]{0}, /*index=35*/f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, f64[192]{0}, /*index=40*/f64[192]{0}, f64[192,1]{1,0}) tuple(get-tuple-element.457, get-tuple-element.458, get-tuple-element.459, get-tuple-element.460, get-tuple-element.461, /*index=5*/get-tuple-element.462, get-tuple-element.463, get-tuple-element.598, bitcast.1107, get-tuple-element.466, /*index=10*/get-tuple-element.467, get-tuple-element.468, wrapped_copy.2, get-tuple-element.470, get-tuple-element.471, /*index=15*/get-tuple-element.472, bitcast.1108, bitcast.1109, bitcast.1110, bitcast.1111, /*index=20*/get-tuple-element.599, get-tuple-element.478, get-tuple-element.525, get-tuple-element.575, get-tuple-element.527, /*index=25*/get-tuple-element.574, get-tuple-element.600, get-tuple-element.576, get-tuple-element.577, get-tuple-element.578, /*index=30*/get-tuple-element.579, get-tuple-element.580, get-tuple-element.581, get-tuple-element.582, get-tuple-element.583, /*index=35*/get-tuple-element.584, get-tuple-element.585, get-tuple-element.586, get-tuple-element.587, get-tuple-element.588, /*index=40*/get-tuple-element.589, get-tuple-element.590)
+} // main.575
+

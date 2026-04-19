@@ -1,0 +1,2192 @@
+BufferAssignment:
+allocation 0: size 560, output shape is |(f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1], f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1], f64[1], f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1], /*index=35*/f64[1], f64[1], f64[1], f64[1], s64[1], /*index=40*/f64[1], f64[1], f64[1,1], f64[1], f64[1], /*index=45*/f64[1], f64[1], s64[1], f64[1], f64[1], /*index=50*/f64[1], f64[1], f64[1], f64[1], f64[1], /*index=55*/f64[1,1], f64[1,1], f64[1], f64[1], f64[1], /*index=60*/f64[1], s64[1], f64[1], f64[1], f64[1], /*index=65*/f64[1], f64[1], f64[1], f64[1], f64[1,1])|, maybe-live-out:
+ value: <430 tuple.70{} @0> (size=560,offset=0): (f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[1]{0}, f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1]{0}, /*index=35*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, s64[1]{0}, /*index=40*/f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, /*index=45*/f64[1]{0}, f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=50*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=55*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=60*/f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=65*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1,1]{1,0})
+allocation 1: size 8, parameter 11, shape |f64[]| at ShapeIndex {}:
+ value: <381 Arg_11.12.0 @0> (size=8,offset=0): f64[]
+allocation 2: size 8, parameter 13, shape |f64[]| at ShapeIndex {}:
+ value: <380 Arg_13.14.0 @0> (size=8,offset=0): f64[]
+allocation 3: size 8, parameter 25, shape |f64[]| at ShapeIndex {}:
+ value: <379 Arg_25.26.0 @0> (size=8,offset=0): f64[]
+allocation 4: size 8, parameter 27, shape |f64[]| at ShapeIndex {}:
+ value: <378 Arg_27.28.0 @0> (size=8,offset=0): f64[]
+allocation 5: size 8, parameter 7, shape |f64[1]| at ShapeIndex {}:
+ value: <377 Arg_7.8.0 @0> (size=8,offset=0): f64[1]{0}
+allocation 6: size 8, parameter 8, shape |f64[]| at ShapeIndex {}:
+ value: <376 Arg_8.9.0 @0> (size=8,offset=0): f64[]
+allocation 7: size 8, parameter 12, shape |s64[]| at ShapeIndex {}:
+ value: <375 Arg_12.13.0 @0> (size=8,offset=0): s64[]
+allocation 8: size 8, parameter 18, shape |f64[]| at ShapeIndex {}:
+ value: <374 Arg_18.19.0 @0> (size=8,offset=0): f64[]
+allocation 9: size 8, parameter 19, shape |f64[]| at ShapeIndex {}:
+ value: <373 Arg_19.20.0 @0> (size=8,offset=0): f64[]
+allocation 10: size 8, parameter 20, shape |f64[1]| at ShapeIndex {}:
+ value: <372 Arg_20.21.0 @0> (size=8,offset=0): f64[1]{0}
+allocation 11: size 8, parameter 21, shape |f64[1]| at ShapeIndex {}:
+ value: <371 Arg_21.22.0 @0> (size=8,offset=0): f64[1]{0}
+allocation 12: size 8, parameter 22, shape |f64[]| at ShapeIndex {}:
+ value: <370 Arg_22.23.0 @0> (size=8,offset=0): f64[]
+allocation 13: size 8, parameter 26, shape |s64[]| at ShapeIndex {}:
+ value: <369 Arg_26.27.0 @0> (size=8,offset=0): s64[]
+allocation 14: size 8, parameter 30, shape |f64[]| at ShapeIndex {}:
+ value: <368 Arg_30.31.0 @0> (size=8,offset=0): f64[]
+allocation 15: size 8, parameter 31, shape |f64[]| at ShapeIndex {}:
+ value: <367 Arg_31.32.0 @0> (size=8,offset=0): f64[]
+allocation 16: size 8, parameter 32, shape |f64[]| at ShapeIndex {}:
+ value: <366 Arg_32.33.0 @0> (size=8,offset=0): f64[]
+allocation 17: size 8, parameter 33, shape |f64[]| at ShapeIndex {}:
+ value: <365 Arg_33.34.0 @0> (size=8,offset=0): f64[]
+allocation 18: size 8, parameter 34, shape |f64[1]| at ShapeIndex {}:
+ value: <364 Arg_34.35.0 @0> (size=8,offset=0): f64[1]{0}
+allocation 19: size 8, maybe-live-out:
+ value: <383 copy_fusion.2{0} @0> (size=8,offset=0): f64[]
+allocation 20: size 8, maybe-live-out:
+ value: <384 copy_fusion.2{1} @0> (size=8,offset=0): f64[]
+allocation 21: size 8, maybe-live-out:
+ value: <385 copy_fusion.2{2} @0> (size=8,offset=0): f64[]
+allocation 22: size 8, maybe-live-out:
+ value: <13 loop_divide_fusion @0> (size=8,offset=0): f64[]
+ value: <28 loop_select_fusion @0> (size=8,offset=0): f64[]
+ value: <432 conditional.6.clone.1.0{0} (phi) @0> (size=8,offset=0): f64[]
+allocation 23: size 8, maybe-live-out:
+ value: <388 loop_add_divide_multiply_subtract_fusion{0} @0> (size=8,offset=0): f64[]
+allocation 24: size 8, maybe-live-out:
+ value: <389 loop_add_divide_multiply_subtract_fusion{1} @0> (size=8,offset=0): f64[]
+allocation 25: size 8, maybe-live-out:
+ value: <390 loop_add_divide_multiply_subtract_fusion{2} @0> (size=8,offset=0): f64[]
+allocation 26: size 8, maybe-live-out:
+ value: <391 loop_add_divide_multiply_subtract_fusion{3} @0> (size=8,offset=0): f64[]
+allocation 27: size 8, maybe-live-out:
+ value: <392 loop_add_divide_multiply_subtract_fusion{4} @0> (size=8,offset=0): f64[]
+allocation 28: size 8, maybe-live-out:
+ value: <393 loop_add_divide_multiply_subtract_fusion{5} @0> (size=8,offset=0): f64[]
+allocation 29: size 8, maybe-live-out:
+ value: <394 loop_add_divide_multiply_subtract_fusion{6} @0> (size=8,offset=0): f64[]
+allocation 30: size 8, maybe-live-out:
+ value: <395 loop_add_divide_multiply_subtract_fusion{7} @0> (size=8,offset=0): f64[]
+allocation 31: size 8, maybe-live-out:
+ value: <396 loop_add_divide_multiply_subtract_fusion{8} @0> (size=8,offset=0): f64[]
+allocation 32: size 8, maybe-live-out:
+ value: <39 loop_divide_fusion.1 @0> (size=8,offset=0): f64[]
+ value: <64 loop_select_fusion.1 @0> (size=8,offset=0): f64[]
+ value: <434 conditional.7.clone.1.0{0} (phi) @0> (size=8,offset=0): f64[]
+allocation 33: size 8, maybe-live-out:
+ value: <399 loop_multiply_fusion{0} @0> (size=8,offset=0): f64[]
+allocation 34: size 8, maybe-live-out:
+ value: <400 loop_multiply_fusion{1} @0> (size=8,offset=0): f64[1]{0}
+allocation 35: size 8, maybe-live-out:
+ value: <402 copy_fusion.4{0} @0> (size=8,offset=0): f64[1]{0}
+allocation 36: size 8, maybe-live-out:
+ value: <403 copy_fusion.4{1} @0> (size=8,offset=0): f64[1]{0}
+allocation 37: size 8, maybe-live-out:
+ value: <404 copy_fusion.4{2} @0> (size=8,offset=0): f64[1]{0}
+allocation 38: size 8, maybe-live-out:
+ value: <405 copy_fusion.4{3} @0> (size=8,offset=0): f64[1]{0}
+allocation 39: size 8, maybe-live-out:
+ value: <406 copy_fusion.4{4} @0> (size=8,offset=0): f64[1]{0}
+allocation 40: size 8, maybe-live-out:
+ value: <408 copy_fusion.5{0} @0> (size=8,offset=0): f64[1]{0}
+allocation 41: size 8, maybe-live-out:
+ value: <409 copy_fusion.5{1} @0> (size=8,offset=0): f64[1]{0}
+allocation 42: size 8, maybe-live-out:
+ value: <410 copy_fusion.5{2} @0> (size=8,offset=0): f64[1]{0}
+allocation 43: size 8, maybe-live-out:
+ value: <411 copy_fusion.5{3} @0> (size=8,offset=0): f64[1]{0}
+allocation 44: size 8, maybe-live-out:
+ value: <412 copy_fusion.5{4} @0> (size=8,offset=0): f64[1]{0}
+allocation 45: size 8, maybe-live-out:
+ value: <413 copy_fusion.5{5} @0> (size=8,offset=0): f64[1]{0}
+allocation 46: size 8, maybe-live-out:
+ value: <414 copy_fusion.5{6} @0> (size=8,offset=0): f64[1]{0}
+allocation 47: size 8, maybe-live-out:
+ value: <415 copy_fusion.5{7} @0> (size=8,offset=0): f64[1]{0}
+allocation 48: size 8, maybe-live-out:
+ value: <416 copy_fusion.5{8} @0> (size=8,offset=0): f64[1]{0}
+allocation 49: size 8, maybe-live-out:
+ value: <417 copy_fusion.5{9} @0> (size=8,offset=0): f64[1]{0}
+allocation 50: size 8, maybe-live-out:
+ value: <418 copy_fusion.5{10} @0> (size=8,offset=0): f64[1]{0}
+allocation 51: size 8, maybe-live-out:
+ value: <420 copy_fusion.7{0} @0> (size=8,offset=0): f64[1]{0}
+allocation 52: size 8, maybe-live-out:
+ value: <421 copy_fusion.7{1} @0> (size=8,offset=0): f64[1]{0}
+allocation 53: size 8, maybe-live-out:
+ value: <422 copy_fusion.7{2} @0> (size=8,offset=0): f64[1]{0}
+allocation 54: size 8, maybe-live-out:
+ value: <423 copy_fusion.7{3} @0> (size=8,offset=0): f64[1]{0}
+allocation 55: size 8, maybe-live-out:
+ value: <424 copy_fusion.7{4} @0> (size=8,offset=0): f64[1]{0}
+allocation 56: size 8, maybe-live-out:
+ value: <425 copy_fusion.7{5} @0> (size=8,offset=0): f64[1]{0}
+allocation 57: size 8, maybe-live-out:
+ value: <426 copy_fusion.7{6} @0> (size=8,offset=0): f64[1]{0}
+allocation 58: size 8, maybe-live-out:
+ value: <427 copy_fusion.7{7} @0> (size=8,offset=0): f64[1]{0}
+allocation 59: size 8, maybe-live-out:
+ value: <316 loop_convert_fusion.1 @0> (size=4,offset=0): s32[]
+ value: <428 copy_fusion.7{8} @0> (size=8,offset=0): f64[1]{0}
+allocation 60: size 8, maybe-live-out:
+ value: <306 loop_convert_fusion @0> (size=4,offset=0): s32[]
+ value: <429 copy_fusion.7{9} @0> (size=8,offset=0): f64[1]{0}
+allocation 61: size 8, maybe-live-out:
+ value: <304 wrapped_copy.10 @0> (size=8,offset=0): f64[1]{0}
+allocation 62: size 8, maybe-live-out:
+ value: <305 wrapped_copy.11 @0> (size=8,offset=0): s64[1]{0}
+allocation 63: size 8, maybe-live-out:
+ value: <307 wrapped_copy.9 @0> (size=8,offset=0): f64[1]{0}
+allocation 64: size 8, maybe-live-out:
+ value: <308 wrapped_copy.8 @0> (size=8,offset=0): f64[]
+allocation 65: size 8, maybe-live-out:
+ value: <309 wrapped_copy.7 @0> (size=8,offset=0): f64[]
+allocation 66: size 8, maybe-live-out:
+ value: <310 wrapped_copy.6 @0> (size=8,offset=0): f64[]
+allocation 67: size 8, maybe-live-out:
+ value: <311 wrapped_copy.5 @0> (size=8,offset=0): f64[1]{0}
+allocation 68: size 8, maybe-live-out:
+ value: <312 wrapped_copy.4 @0> (size=8,offset=0): f64[1]{0}
+allocation 69: size 8, maybe-live-out:
+ value: <313 wrapped_copy.3 @0> (size=8,offset=0): f64[]
+allocation 70: size 8, maybe-live-out:
+ value: <314 wrapped_copy.2 @0> (size=8,offset=0): f64[]
+allocation 71: size 8, maybe-live-out:
+ value: <315 wrapped_copy.1 @0> (size=8,offset=0): s64[]
+allocation 72: size 8, maybe-live-out:
+ value: <317 wrapped_copy @0> (size=8,offset=0): f64[]
+allocation 73: size 8, maybe-live-out:
+ value: <320 copy_fusion.1{0} @0> (size=8,offset=0): s64[1]{0}
+allocation 74: size 8, maybe-live-out:
+ value: <321 copy_fusion.1{1} @0> (size=8,offset=0): s64[1]{0}
+allocation 75: size 8, maybe-live-out:
+ value: <323 loop_divide_fusion.2{0} @0> (size=8,offset=0): f64[]
+allocation 76: size 8, maybe-live-out:
+ value: <324 loop_divide_fusion.2{1} @0> (size=8,offset=0): f64[]
+allocation 77: size 8, maybe-live-out:
+ value: <326 copy_fusion.6{0} @0> (size=8,offset=0): f64[1,1]{1,0}
+allocation 78: size 8, maybe-live-out:
+ value: <327 copy_fusion.6{1} @0> (size=8,offset=0): f64[1,1]{1,0}
+allocation 79: size 8, maybe-live-out:
+ value: <329 copy_fusion{0} @0> (size=8,offset=0): s64[]
+allocation 80: size 8, maybe-live-out:
+ value: <330 copy_fusion{1} @0> (size=8,offset=0): s64[]
+allocation 81: size 8, maybe-live-out:
+ value: <332 copy_fusion.3{0} @0> (size=8,offset=0): f64[]
+allocation 82: size 8, maybe-live-out:
+ value: <333 copy_fusion.3{1} @0> (size=8,offset=0): f64[]
+allocation 83: size 8, maybe-live-out:
+ value: <336 copy_fusion.8{0} @0> (size=8,offset=0): f64[1]{0}
+allocation 84: size 8, maybe-live-out:
+ value: <337 copy_fusion.8{1} @0> (size=8,offset=0): f64[1]{0}
+allocation 85: size 8, maybe-live-out:
+ value: <338 copy_fusion.8{2} @0> (size=8,offset=0): f64[1]{0}
+allocation 86: size 8, maybe-live-out:
+ value: <340 loop_add_divide_multiply_fusion{0} @0> (size=8,offset=0): f64[]
+allocation 87: size 8, maybe-live-out:
+ value: <341 loop_add_divide_multiply_fusion{1} @0> (size=8,offset=0): f64[]
+allocation 88: size 8, maybe-live-out:
+ value: <342 loop_add_divide_multiply_fusion{2} @0> (size=8,offset=0): f64[]
+allocation 89: size 8, parameter 0, shape |f64[]| at ShapeIndex {}:
+ value: <344 Arg_0.1.0 @0> (size=8,offset=0): f64[]
+allocation 90: size 8, parameter 1, shape |f64[]| at ShapeIndex {}:
+ value: <345 Arg_1.2.0 @0> (size=8,offset=0): f64[]
+allocation 91: size 8, parameter 2, shape |f64[]| at ShapeIndex {}:
+ value: <346 Arg_2.3.0 @0> (size=8,offset=0): f64[]
+allocation 92: size 8, parameter 3, shape |f64[]| at ShapeIndex {}:
+ value: <347 Arg_3.4.0 @0> (size=8,offset=0): f64[]
+allocation 93: size 8, parameter 4, shape |s64[]| at ShapeIndex {}:
+ value: <348 Arg_4.5.0 @0> (size=8,offset=0): s64[]
+allocation 94: size 8, parameter 5, shape |f64[]| at ShapeIndex {}:
+ value: <349 Arg_5.6.0 @0> (size=8,offset=0): f64[]
+allocation 95: size 8, parameter 6, shape |f64[]| at ShapeIndex {}:
+ value: <350 Arg_6.7.0 @0> (size=8,offset=0): f64[]
+allocation 96: size 8, parameter 9, shape |f64[]| at ShapeIndex {}:
+ value: <351 Arg_9.10.0 @0> (size=8,offset=0): f64[]
+allocation 97: size 8, parameter 10, shape |f64[]| at ShapeIndex {}:
+ value: <352 Arg_10.11.0 @0> (size=8,offset=0): f64[]
+allocation 98: size 8, parameter 14, shape |f64[]| at ShapeIndex {}:
+ value: <353 Arg_14.15.0 @0> (size=8,offset=0): f64[]
+allocation 99: size 8, parameter 15, shape |f64[]| at ShapeIndex {}:
+ value: <354 Arg_15.16.0 @0> (size=8,offset=0): f64[]
+allocation 100: size 8, parameter 16, shape |f64[]| at ShapeIndex {}:
+ value: <355 Arg_16.17.0 @0> (size=8,offset=0): f64[]
+allocation 101: size 8, parameter 17, shape |f64[]| at ShapeIndex {}:
+ value: <356 Arg_17.18.0 @0> (size=8,offset=0): f64[]
+allocation 102: size 8, parameter 23, shape |f64[]| at ShapeIndex {}:
+ value: <357 Arg_23.24.0 @0> (size=8,offset=0): f64[]
+allocation 103: size 8, parameter 24, shape |f64[]| at ShapeIndex {}:
+ value: <358 Arg_24.25.0 @0> (size=8,offset=0): f64[]
+allocation 104: size 8, parameter 28, shape |f64[]| at ShapeIndex {}:
+ value: <359 Arg_28.29.0 @0> (size=8,offset=0): f64[]
+allocation 105: size 8, parameter 29, shape |f64[]| at ShapeIndex {}:
+ value: <360 Arg_29.30.0 @0> (size=8,offset=0): f64[]
+allocation 106: size 8, parameter 37, shape |f64[1]| at ShapeIndex {}:
+ value: <361 Arg_37.38.0 @0> (size=8,offset=0): f64[1]{0}
+allocation 107: size 8, parameter 36, shape |s64[1]| at ShapeIndex {}:
+ value: <362 Arg_36.37.0 @0> (size=8,offset=0): s64[1]{0}
+allocation 108: size 8, parameter 35, shape |f64[1,1]| at ShapeIndex {}:
+ value: <363 Arg_35.36.0 @0> (size=8,offset=0): f64[1,1]{1,0}
+allocation 109: size 2696, preallocated-temp:
+ value: <14 tuple.66{} @0> (size=8,offset=2560): (f64[])
+ value: <29 tuple.67{} @0> (size=8,offset=2560): (f64[])
+ value: <40 tuple.68{} @0> (size=8,offset=2688): (f64[])
+ value: <65 tuple.69{} @0> (size=8,offset=2688): (f64[])
+ value: <318 tuple.52.0{} @0> (size=24,offset=1024): (f64[], f64[], f64[])
+ value: <319 copy_fusion.1{} @0> (size=16,offset=512): (s64[1]{0}, s64[1]{0})
+ value: <322 loop_divide_fusion.2{} @0> (size=16,offset=384): (f64[], f64[])
+ value: <325 copy_fusion.6{} @0> (size=16,offset=256): (f64[1,1]{1,0}, f64[1,1]{1,0})
+ value: <328 copy_fusion{} @0> (size=16,offset=128): (s64[], s64[])
+ value: <331 copy_fusion.3{} @0> (size=16,offset=0): (f64[], f64[])
+ value: <334 tuple.50.0{} @0> (size=40,offset=1408): (f64[], f64[], f64[], f64[1]{0}, f64[])
+ value: <335 copy_fusion.8{} @0> (size=24,offset=896): (f64[1]{0}, f64[1]{0}, f64[1]{0})
+ value: <339 loop_add_divide_multiply_fusion{} @0> (size=24,offset=768): (f64[], f64[], f64[])
+ value: <343 tuple.82{} @0> (size=352,offset=2176): (f64[1]{0}, f64[], s64[], s64[1]{0}, s32[], /*index=5*/f64[1]{0}, f64[], f64[1]{0}, f64[1]{0}, f64[], /*index=10*/f64[], f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=15*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=20*/f64[], f64[1]{0}, s64[], s32[], f64[], /*index=25*/f64[1]{0}, (f64[], f64[], f64[]), s64[1]{0}, s64[1]{0}, f64[], /*index=30*/f64[1]{0}, f64[], f64[1]{0}, f64[1,1]{1,0}, f64[1,1]{1,0}, /*index=35*/s64[], s64[], f64[], f64[], (f64[], f64[], f64[], f64[1]{0}, f64[]), /*index=40*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, (f64[], f64[], f64[]))
+ value: <382 copy_fusion.2{} @0> (size=24,offset=1152): (f64[], f64[], f64[])
+ value: <386 tuple.51.0{} @0> (size=32,offset=1280): (f64[], s64[], f64[], f64[1]{0})
+ value: <387 loop_add_divide_multiply_subtract_fusion{} @0> (size=72,offset=1792): (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[])
+ value: <397 tuple.53.0{} @0> (size=40,offset=1664): (s64[], f64[], f64[], f64[], f64[1]{0})
+ value: <398 loop_multiply_fusion{} @0> (size=16,offset=640): (f64[], f64[1]{0})
+ value: <401 copy_fusion.4{} @0> (size=40,offset=1536): (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0})
+ value: <407 copy_fusion.5{} @0> (size=88,offset=2048): (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0})
+ value: <419 copy_fusion.7{} @0> (size=80,offset=1920): (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0})
+ value: <431 conditional.6.clone.1.0{} (phi) @0> (size=8,offset=2560): (f64[])
+ value: <433 conditional.7.clone.1.0{} (phi) @0> (size=8,offset=2688): (f64[])
+
+Total bytes used: 4120 (4.0KiB)
+
+Used values:
+<13 loop_divide_fusion @0>
+ positions:
+  loop_divide_fusion
+  tuple.66 {0}
+ uses:
+  tuple.66, operand 0
+ from instruction: %loop_divide_fusion = f64[] fusion(f64[] %get-tuple-element.177.0, f64[] %get-tuple-element.179.0, f64[] %get-tuple-element.181.0, f64[1]{0} %get-tuple-element.180.0, f64[] %get-tuple-element.178.0), kind=kLoop, calls=%fused_divide, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<14 tuple.66{} @0>
+ positions:
+  tuple.66 {}
+ uses:
+ from instruction: %tuple.66 = (f64[]) tuple(f64[] %loop_divide_fusion)<28 loop_select_fusion @0>
+ positions:
+  loop_select_fusion
+  tuple.67 {0}
+ uses:
+  tuple.67, operand 0
+ from instruction: %loop_select_fusion = f64[] fusion(f64[] %get-tuple-element.209.0, f64[] %get-tuple-element.207.0, s64[] %get-tuple-element.208.0, f64[1]{0} %get-tuple-element.210.0), kind=kLoop, calls=%fused_select, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}<29 tuple.67{} @0>
+ positions:
+  tuple.67 {}
+ uses:
+ from instruction: %tuple.67 = (f64[]) tuple(f64[] %loop_select_fusion)<39 loop_divide_fusion.1 @0>
+ positions:
+  loop_divide_fusion.1
+  tuple.68 {0}
+ uses:
+  tuple.68, operand 0
+ from instruction: %loop_divide_fusion.1 = f64[] fusion(f64[] %get-tuple-element.317.0, f64[] %get-tuple-element.319.0, f64[] %get-tuple-element.318.0), kind=kLoop, calls=%fused_divide.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<40 tuple.68{} @0>
+ positions:
+  tuple.68 {}
+ uses:
+ from instruction: %tuple.68 = (f64[]) tuple(f64[] %loop_divide_fusion.1)<64 loop_select_fusion.1 @0>
+ positions:
+  loop_select_fusion.1
+  tuple.69 {0}
+ uses:
+  tuple.69, operand 0
+ from instruction: %loop_select_fusion.1 = f64[] fusion(f64[] %get-tuple-element.358.0, f64[] %get-tuple-element.357.0, f64[] %get-tuple-element.356.0, f64[1]{0} %get-tuple-element.359.0, s64[] %get-tuple-element.355.0), kind=kLoop, calls=%fused_select.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}<65 tuple.69{} @0>
+ positions:
+  tuple.69 {}
+ uses:
+ from instruction: %tuple.69 = (f64[]) tuple(f64[] %loop_select_fusion.1)<304 wrapped_copy.10 @0>
+ positions:
+  wrapped_copy.10
+  tuple.70 {35}
+  call.1 {0}
+  get-tuple-element.264
+  tuple.82 {0}
+ uses:
+  tuple.82, operand 0
+  tuple.70, operand 35
+ from instruction: %wrapped_copy.10 = f64[1]{0} fusion(f64[1]{0} %p), kind=kLoop, calls=%wrapped_copy_computation.10<305 wrapped_copy.11 @0>
+ positions:
+  wrapped_copy.11
+  tuple.70 {39}
+  call.1 {3}
+  get-tuple-element.267
+  tuple.82 {3}
+ uses:
+  tuple.82, operand 3
+  tuple.70, operand 39
+ from instruction: %wrapped_copy.11 = s64[1]{0} fusion(s64[1]{0} %p.1), kind=kLoop, calls=%wrapped_copy_computation.11<306 loop_convert_fusion @0>
+ positions:
+  loop_convert_fusion
+  call.1 {4}
+  get-tuple-element.268
+  tuple.82 {4}
+ uses:
+  tuple.82, operand 4
+  conditional.6.clone.1.0, operand 0
+ from instruction: %loop_convert_fusion = s32[] fusion(s64[1]{0} %p.1), kind=kLoop, calls=%fused_convert, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<307 wrapped_copy.9 @0>
+ positions:
+  wrapped_copy.9
+  tuple.70 {34}
+  call.1 {7}
+  get-tuple-element.271
+  tuple.82 {7}
+ uses:
+  tuple.82, operand 7
+  tuple.70, operand 34
+ from instruction: %wrapped_copy.9 = f64[1]{0} fusion(f64[1]{0} %p.3), kind=kLoop, calls=%wrapped_copy_computation.9<308 wrapped_copy.8 @0>
+ positions:
+  wrapped_copy.8
+  tuple.70 {33}
+  call.1 {9}
+  get-tuple-element.273
+  tuple.82 {9}
+ uses:
+  tuple.82, operand 9
+  tuple.70, operand 33
+ from instruction: %wrapped_copy.8 = f64[] fusion(f64[] %p.4), kind=kLoop, calls=%wrapped_copy_computation.8<309 wrapped_copy.7 @0>
+ positions:
+  wrapped_copy.7
+  tuple.70 {32}
+  call.1 {10}
+  get-tuple-element.274
+  tuple.82 {10}
+ uses:
+  tuple.82, operand 10
+  tuple.70, operand 32
+ from instruction: %wrapped_copy.7 = f64[] fusion(f64[] %p.5), kind=kLoop, calls=%wrapped_copy_computation.7<310 wrapped_copy.6 @0>
+ positions:
+  wrapped_copy.6
+  tuple.70 {22}
+  call.1 {14}
+  get-tuple-element.278
+  tuple.82 {14}
+ uses:
+  tuple.82, operand 14
+  tuple.70, operand 22
+ from instruction: %wrapped_copy.6 = f64[] fusion(f64[] %p.9), kind=kLoop, calls=%wrapped_copy_computation.6<311 wrapped_copy.5 @0>
+ positions:
+  wrapped_copy.5
+  tuple.70 {21}
+  call.1 {16}
+  get-tuple-element.280
+  tuple.82 {16}
+ uses:
+  tuple.82, operand 16
+  tuple.70, operand 21
+ from instruction: %wrapped_copy.5 = f64[1]{0} fusion(f64[1]{0} %p.10), kind=kLoop, calls=%wrapped_copy_computation.5<312 wrapped_copy.4 @0>
+ positions:
+  wrapped_copy.4
+  tuple.70 {20}
+  call.1 {17}
+  get-tuple-element.281
+  tuple.82 {17}
+ uses:
+  tuple.82, operand 17
+  tuple.70, operand 20
+ from instruction: %wrapped_copy.4 = f64[1]{0} fusion(f64[1]{0} %p.11), kind=kLoop, calls=%wrapped_copy_computation.4<313 wrapped_copy.3 @0>
+ positions:
+  wrapped_copy.3
+  tuple.70 {19}
+  call.1 {19}
+  get-tuple-element.283
+  tuple.82 {19}
+ uses:
+  tuple.82, operand 19
+  tuple.70, operand 19
+ from instruction: %wrapped_copy.3 = f64[] fusion(f64[] %p.12), kind=kLoop, calls=%wrapped_copy_computation.3<314 wrapped_copy.2 @0>
+ positions:
+  wrapped_copy.2
+  tuple.70 {18}
+  call.1 {20}
+  get-tuple-element.284
+  tuple.82 {20}
+ uses:
+  tuple.82, operand 20
+  tuple.70, operand 18
+ from instruction: %wrapped_copy.2 = f64[] fusion(f64[] %p.13), kind=kLoop, calls=%wrapped_copy_computation.2<315 wrapped_copy.1 @0>
+ positions:
+  wrapped_copy.1
+  tuple.70 {12}
+  call.1 {22}
+  get-tuple-element.286
+  tuple.82 {22}
+ uses:
+  tuple.82, operand 22
+  tuple.70, operand 12
+ from instruction: %wrapped_copy.1 = s64[] fusion(s64[] %p.14), kind=kLoop, calls=%wrapped_copy_computation.1<316 loop_convert_fusion.1 @0>
+ positions:
+  loop_convert_fusion.1
+  call.1 {23}
+  get-tuple-element.287
+  tuple.82 {23}
+ uses:
+  tuple.82, operand 23
+  conditional.7.clone.1.0, operand 0
+ from instruction: %loop_convert_fusion.1 = s32[] fusion(s64[] %p.14), kind=kLoop, calls=%fused_convert.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<317 wrapped_copy @0>
+ positions:
+  wrapped_copy
+  tuple.70 {8}
+  call.1 {24}
+  get-tuple-element.288
+  tuple.82 {24}
+ uses:
+  tuple.82, operand 24
+  tuple.70, operand 8
+ from instruction: %wrapped_copy = f64[] fusion(f64[] %p.15), kind=kLoop, calls=%wrapped_copy_computation<318 tuple.52.0{} @0>
+ positions:
+  tuple.52.0 {}
+  arg_tuple.316.0 {}
+  call.1 {26}
+  get-tuple-element.290 {}
+  tuple.82 {26}
+ uses:
+  tuple.82, operand 26 {}
+  get-tuple-element.317.0, operand 0 {}
+  get-tuple-element.318.0, operand 0 {}
+  get-tuple-element.319.0, operand 0 {}
+  conditional.7.clone.1.0, operand 1 {}
+ from instruction: %tuple.52.0 = (f64[], f64[], f64[]) tuple(f64[] %bitcast.935.0, f64[] %p.17, f64[] %p.4), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<319 copy_fusion.1{} @0>
+ positions:
+  copy_fusion.1 {}
+ uses:
+  get-tuple-element.214, operand 0 {}
+  get-tuple-element.213, operand 0 {}
+ from instruction: %copy_fusion.1 = (s64[1]{0}, s64[1]{0}) fusion(s64[1]{0} %bitcast.1000.0, s64[1]{0} %bitcast.1056.0), kind=kLoop, calls=%copy_horizontally_fused_computation.1<320 copy_fusion.1{0} @0>
+ positions:
+  copy_fusion.1 {0}
+  tuple.70 {47}
+  call.1 {28}
+  get-tuple-element.292
+  get-tuple-element.213
+  tuple.82 {28}
+ uses:
+  tuple.70, operand 47
+  tuple.82, operand 28
+ from instruction: %copy_fusion.1 = (s64[1]{0}, s64[1]{0}) fusion(s64[1]{0} %bitcast.1000.0, s64[1]{0} %bitcast.1056.0), kind=kLoop, calls=%copy_horizontally_fused_computation.1<321 copy_fusion.1{1} @0>
+ positions:
+  copy_fusion.1 {1}
+  tuple.70 {61}
+  call.1 {27}
+  get-tuple-element.291
+  get-tuple-element.214
+  tuple.82 {27}
+ uses:
+  tuple.70, operand 61
+  tuple.82, operand 27
+ from instruction: %copy_fusion.1 = (s64[1]{0}, s64[1]{0}) fusion(s64[1]{0} %bitcast.1000.0, s64[1]{0} %bitcast.1056.0), kind=kLoop, calls=%copy_horizontally_fused_computation.1<322 loop_divide_fusion.2{} @0>
+ positions:
+  loop_divide_fusion.2 {}
+ uses:
+  get-tuple-element.144, operand 0 {}
+  get-tuple-element.140, operand 0 {}
+ from instruction: %loop_divide_fusion.2 = (f64[], f64[]) fusion(f64[] %p.12, f64[] %p.18, f64[1]{0} %p.10, f64[1]{0} %p, f64[] %p.19), kind=kLoop, calls=%fused_divide.2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<323 loop_divide_fusion.2{0} @0>
+ positions:
+  loop_divide_fusion.2 {0}
+  arg_tuple.206.0 {2}
+  get-tuple-element.209.0
+  tuple.51.0 {2}
+  tuple.70 {10}
+  call.1 {31}
+  call.1 {32}
+  get-tuple-element.295
+  get-tuple-element.296
+  get-tuple-element.140
+  bitcast.992.0
+  tuple.82 {31}
+  tuple.82 {32}
+ uses:
+  loop_select_fusion, operand 0
+  conditional.6.clone.1.0, operand 2 {2}
+  loop_add_divide_multiply_subtract_fusion, operand 8
+  tuple.70, operand 10
+  copy_fusion.5, operand 2
+  bitcast.992.0, operand 0
+  tuple.82, operand 31
+  tuple.82, operand 32
+ from instruction: %loop_divide_fusion.2 = (f64[], f64[]) fusion(f64[] %p.12, f64[] %p.18, f64[1]{0} %p.10, f64[1]{0} %p, f64[] %p.19), kind=kLoop, calls=%fused_divide.2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<324 loop_divide_fusion.2{1} @0>
+ positions:
+  loop_divide_fusion.2 {1}
+  tuple.70 {14}
+  call.1 {29}
+  call.1 {30}
+  get-tuple-element.293
+  get-tuple-element.294
+  get-tuple-element.144
+  bitcast.1008.0
+  tuple.82 {29}
+  tuple.82 {30}
+ uses:
+  tuple.70, operand 14
+  loop_add_divide_multiply_subtract_fusion, operand 10
+  copy_fusion.5, operand 5
+  bitcast.1008.0, operand 0
+  tuple.82, operand 29
+  tuple.82, operand 30
+ from instruction: %loop_divide_fusion.2 = (f64[], f64[]) fusion(f64[] %p.12, f64[] %p.18, f64[1]{0} %p.10, f64[1]{0} %p, f64[] %p.19), kind=kLoop, calls=%fused_divide.2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<325 copy_fusion.6{} @0>
+ positions:
+  copy_fusion.6 {}
+ uses:
+  get-tuple-element.237, operand 0 {}
+  get-tuple-element.236, operand 0 {}
+ from instruction: %copy_fusion.6 = (f64[1,1]{1,0}, f64[1,1]{1,0}) fusion(f64[1,1]{1,0} %bitcast.1032.0, f64[1,1]{1,0} %bitcast.1036.0), kind=kLoop, calls=%copy_horizontally_fused_computation.6<326 copy_fusion.6{0} @0>
+ positions:
+  copy_fusion.6 {0}
+  tuple.70 {55}
+  call.1 {34}
+  get-tuple-element.298
+  get-tuple-element.236
+  bitcast.1186
+  tuple.82 {34}
+ uses:
+  tuple.70, operand 55
+  bitcast.1186, operand 0
+  tuple.82, operand 34
+ from instruction: %copy_fusion.6 = (f64[1,1]{1,0}, f64[1,1]{1,0}) fusion(f64[1,1]{1,0} %bitcast.1032.0, f64[1,1]{1,0} %bitcast.1036.0), kind=kLoop, calls=%copy_horizontally_fused_computation.6<327 copy_fusion.6{1} @0>
+ positions:
+  copy_fusion.6 {1}
+  tuple.70 {56}
+  call.1 {33}
+  get-tuple-element.297
+  get-tuple-element.237
+  bitcast.1187
+  tuple.82 {33}
+ uses:
+  tuple.70, operand 56
+  bitcast.1187, operand 0
+  tuple.82, operand 33
+ from instruction: %copy_fusion.6 = (f64[1,1]{1,0}, f64[1,1]{1,0}) fusion(f64[1,1]{1,0} %bitcast.1032.0, f64[1,1]{1,0} %bitcast.1036.0), kind=kLoop, calls=%copy_horizontally_fused_computation.6<328 copy_fusion{} @0>
+ positions:
+  copy_fusion {}
+ uses:
+  get-tuple-element.212, operand 0 {}
+  get-tuple-element.211, operand 0 {}
+ from instruction: %copy_fusion = (s64[], s64[]) fusion(s64[] %bitcast.820.0, s64[] %p.8), kind=kLoop, calls=%copy_horizontally_fused_computation<329 copy_fusion{0} @0>
+ positions:
+  copy_fusion {0}
+  tuple.70 {4}
+  call.1 {36}
+  get-tuple-element.300
+  get-tuple-element.211
+  bitcast.1179
+  tuple.82 {36}
+ uses:
+  tuple.70, operand 4
+  bitcast.1179, operand 0
+  tuple.82, operand 36
+ from instruction: %copy_fusion = (s64[], s64[]) fusion(s64[] %bitcast.820.0, s64[] %p.8), kind=kLoop, calls=%copy_horizontally_fused_computation<330 copy_fusion{1} @0>
+ positions:
+  copy_fusion {1}
+  tuple.70 {26}
+  call.1 {35}
+  get-tuple-element.299
+  get-tuple-element.212
+  bitcast.1180
+  tuple.82 {35}
+ uses:
+  tuple.70, operand 26
+  bitcast.1180, operand 0
+  tuple.82, operand 35
+ from instruction: %copy_fusion = (s64[], s64[]) fusion(s64[] %bitcast.820.0, s64[] %p.8), kind=kLoop, calls=%copy_horizontally_fused_computation<331 copy_fusion.3{} @0>
+ positions:
+  copy_fusion.3 {}
+ uses:
+  get-tuple-element.219, operand 0 {}
+  get-tuple-element.218, operand 0 {}
+ from instruction: %copy_fusion.3 = (f64[], f64[]) fusion(f64[] %p.7, f64[] %p.6), kind=kLoop, calls=%copy_horizontally_fused_computation.3<332 copy_fusion.3{0} @0>
+ positions:
+  copy_fusion.3 {0}
+  tuple.70 {30}
+  call.1 {38}
+  get-tuple-element.302
+  get-tuple-element.218
+  bitcast.1184
+  tuple.82 {38}
+ uses:
+  tuple.70, operand 30
+  bitcast.1184, operand 0
+  tuple.82, operand 38
+ from instruction: %copy_fusion.3 = (f64[], f64[]) fusion(f64[] %p.7, f64[] %p.6), kind=kLoop, calls=%copy_horizontally_fused_computation.3<333 copy_fusion.3{1} @0>
+ positions:
+  copy_fusion.3 {1}
+  tuple.70 {31}
+  call.1 {37}
+  get-tuple-element.301
+  get-tuple-element.219
+  bitcast.1185
+  tuple.82 {37}
+ uses:
+  tuple.70, operand 31
+  bitcast.1185, operand 0
+  tuple.82, operand 37
+ from instruction: %copy_fusion.3 = (f64[], f64[]) fusion(f64[] %p.7, f64[] %p.6), kind=kLoop, calls=%copy_horizontally_fused_computation.3<334 tuple.50.0{} @0>
+ positions:
+  tuple.50.0 {}
+  arg_tuple.176.0 {}
+  call.1 {39}
+  get-tuple-element.303 {}
+  tuple.82 {39}
+ uses:
+  tuple.82, operand 39 {}
+  get-tuple-element.177.0, operand 0 {}
+  get-tuple-element.178.0, operand 0 {}
+  get-tuple-element.179.0, operand 0 {}
+  get-tuple-element.180.0, operand 0 {}
+  get-tuple-element.181.0, operand 0 {}
+  conditional.6.clone.1.0, operand 1 {}
+ from instruction: %tuple.50.0 = (f64[], f64[], f64[], f64[1]{0}, f64[]) tuple(f64[] %bitcast.935.0, f64[] %p.19, f64[] %p.12, f64[1]{0} %p.10, f64[] %p.18), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<335 copy_fusion.8{} @0>
+ positions:
+  copy_fusion.8 {}
+ uses:
+  get-tuple-element.250, operand 0 {}
+  get-tuple-element.249, operand 0 {}
+  get-tuple-element.248, operand 0 {}
+ from instruction: %copy_fusion.8 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %p.16, f64[1,1]{1,0} %bitcast.980.0, f64[1,1]{1,0} %bitcast.1088.0), kind=kInput, calls=%copy_horizontally_fused_computation.8<336 copy_fusion.8{0} @0>
+ positions:
+  copy_fusion.8 {0}
+  tuple.70 {7}
+  call.1 {42}
+  get-tuple-element.306
+  get-tuple-element.248
+  tuple.82 {42}
+ uses:
+  tuple.70, operand 7
+  tuple.82, operand 42
+ from instruction: %copy_fusion.8 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %p.16, f64[1,1]{1,0} %bitcast.980.0, f64[1,1]{1,0} %bitcast.1088.0), kind=kInput, calls=%copy_horizontally_fused_computation.8<337 copy_fusion.8{1} @0>
+ positions:
+  copy_fusion.8 {1}
+  tuple.70 {42}
+  call.1 {41}
+  get-tuple-element.305
+  get-tuple-element.249
+  bitcast.1188
+  tuple.82 {41}
+ uses:
+  tuple.70, operand 42
+  bitcast.1188, operand 0
+  tuple.82, operand 41
+ from instruction: %copy_fusion.8 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %p.16, f64[1,1]{1,0} %bitcast.980.0, f64[1,1]{1,0} %bitcast.1088.0), kind=kInput, calls=%copy_horizontally_fused_computation.8<338 copy_fusion.8{2} @0>
+ positions:
+  copy_fusion.8 {2}
+  tuple.70 {69}
+  call.1 {40}
+  get-tuple-element.304
+  get-tuple-element.250
+  bitcast.1189
+  tuple.82 {40}
+ uses:
+  tuple.70, operand 69
+  bitcast.1189, operand 0
+  tuple.82, operand 40
+ from instruction: %copy_fusion.8 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %p.16, f64[1,1]{1,0} %bitcast.980.0, f64[1,1]{1,0} %bitcast.1088.0), kind=kInput, calls=%copy_horizontally_fused_computation.8<339 loop_add_divide_multiply_fusion{} @0>
+ positions:
+  loop_add_divide_multiply_fusion {}
+  call.1 {43}
+  get-tuple-element.307 {}
+  tuple.82 {43}
+ uses:
+  tuple.82, operand 43 {}
+  get-tuple-element.133, operand 0 {}
+  get-tuple-element.129, operand 0 {}
+  get-tuple-element.139, operand 0 {}
+ from instruction: %loop_add_divide_multiply_fusion = (f64[], f64[], f64[]) fusion(f64[] %p.13, f64[1]{0} %p, f64[] %p.15, f64[] %p.20), kind=kLoop, calls=%fused_add_divide_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<340 loop_add_divide_multiply_fusion{0} @0>
+ positions:
+  loop_add_divide_multiply_fusion {0}
+  arg_tuple.206.0 {0}
+  get-tuple-element.207.0
+  tuple.51.0 {0}
+  bitcast.968.0
+  get-tuple-element.133
+  tuple.70 {2}
+  call.1 {43,0}
+  get-tuple-element.307 {0}
+  tuple.82 {43,0}
+ uses:
+  tuple.82, operand 43 {0}
+  loop_select_fusion, operand 1
+  conditional.6.clone.1.0, operand 2 {0}
+  copy_fusion.4, operand 1
+  copy_fusion.2, operand 2
+  loop_add_divide_multiply_subtract_fusion, operand 15
+  bitcast.968.0, operand 0
+  tuple.70, operand 2
+ from instruction: %loop_add_divide_multiply_fusion = (f64[], f64[], f64[]) fusion(f64[] %p.13, f64[1]{0} %p, f64[] %p.15, f64[] %p.20), kind=kLoop, calls=%fused_add_divide_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<341 loop_add_divide_multiply_fusion{1} @0>
+ positions:
+  loop_add_divide_multiply_fusion {1}
+  bitcast.964.0
+  get-tuple-element.129
+  tuple.70 {1}
+  call.1 {43,1}
+  get-tuple-element.307 {1}
+  tuple.82 {43,1}
+ uses:
+  tuple.82, operand 43 {1}
+  copy_fusion.4, operand 0
+  tuple.70, operand 1
+  loop_add_divide_multiply_subtract_fusion, operand 17
+  bitcast.964.0, operand 0
+ from instruction: %loop_add_divide_multiply_fusion = (f64[], f64[], f64[]) fusion(f64[] %p.13, f64[1]{0} %p, f64[] %p.15, f64[] %p.20), kind=kLoop, calls=%fused_add_divide_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<342 loop_add_divide_multiply_fusion{2} @0>
+ positions:
+  loop_add_divide_multiply_fusion {2}
+  bitcast.988.0
+  get-tuple-element.139
+  tuple.70 {9}
+  call.1 {43,2}
+  get-tuple-element.307 {2}
+  tuple.82 {43,2}
+ uses:
+  tuple.82, operand 43 {2}
+  copy_fusion.5, operand 1
+  bitcast.988.0, operand 0
+  tuple.70, operand 9
+  loop_add_divide_multiply_subtract_fusion, operand 13
+ from instruction: %loop_add_divide_multiply_fusion = (f64[], f64[], f64[]) fusion(f64[] %p.13, f64[1]{0} %p, f64[] %p.15, f64[] %p.20), kind=kLoop, calls=%fused_add_divide_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<343 tuple.82{} @0>
+ positions:
+  tuple.82 {}
+  call.1 {}
+ uses:
+  get-tuple-element.264, operand 0 {}
+  get-tuple-element.265, operand 0 {}
+  get-tuple-element.266, operand 0 {}
+  get-tuple-element.267, operand 0 {}
+  get-tuple-element.268, operand 0 {}
+  get-tuple-element.269, operand 0 {}
+  get-tuple-element.270, operand 0 {}
+  get-tuple-element.271, operand 0 {}
+  get-tuple-element.272, operand 0 {}
+  get-tuple-element.273, operand 0 {}
+  get-tuple-element.274, operand 0 {}
+  get-tuple-element.275, operand 0 {}
+  get-tuple-element.276, operand 0 {}
+  get-tuple-element.277, operand 0 {}
+  get-tuple-element.278, operand 0 {}
+  get-tuple-element.279, operand 0 {}
+  get-tuple-element.280, operand 0 {}
+  get-tuple-element.281, operand 0 {}
+  get-tuple-element.282, operand 0 {}
+  get-tuple-element.283, operand 0 {}
+  get-tuple-element.284, operand 0 {}
+  get-tuple-element.285, operand 0 {}
+  get-tuple-element.286, operand 0 {}
+  get-tuple-element.287, operand 0 {}
+  get-tuple-element.288, operand 0 {}
+  get-tuple-element.289, operand 0 {}
+  get-tuple-element.290, operand 0 {}
+  get-tuple-element.291, operand 0 {}
+  get-tuple-element.292, operand 0 {}
+  get-tuple-element.293, operand 0 {}
+  get-tuple-element.294, operand 0 {}
+  get-tuple-element.295, operand 0 {}
+  get-tuple-element.296, operand 0 {}
+  get-tuple-element.297, operand 0 {}
+  get-tuple-element.298, operand 0 {}
+  get-tuple-element.299, operand 0 {}
+  get-tuple-element.300, operand 0 {}
+  get-tuple-element.301, operand 0 {}
+  get-tuple-element.302, operand 0 {}
+  get-tuple-element.303, operand 0 {}
+  get-tuple-element.304, operand 0 {}
+  get-tuple-element.305, operand 0 {}
+  get-tuple-element.306, operand 0 {}
+  get-tuple-element.307, operand 0 {}
+ from instruction: %tuple.82 = (f64[1]{0}, f64[], s64[], s64[1]{0}, s32[], /*index=5*/f64[1]{0}, f64[], f64[1]{0}, f64[1]{0}, f64[], /*index=10*/f64[], f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=15*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=20*/f64[], f64[1]{0}, s64[], s32[], f64[], /*index=25*/f64[1]{0}, (f64[], f64[], f64[]), s64[1]{0}, s64[1]{0}, f64[], /*index=30*/f64[1]{0}, f64[], f64[1]{0}, f64[1,1]{1,0}, f64[1,1]{1,0}, /*index=35*/s64[], s64[], f64[], f64[], (f64[], f64[], f64[], f64[1]{0}, f64[]), /*index=40*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, (f64[], f64[], f64[])) tuple(f64[1]{0} %wrapped_copy.10, f64[] %bitcast.935.0, s64[] %bitcast.820.0, s64[1]{0} %wrapped_copy.11, s32[] %loop_convert_fusion, /*index=5*/f64[1]{0} %bitcast.972.0, f64[] %bitcast.739.0, f64[1]{0} %wrapped_copy.9, f64[1]{0} %bitcast.1084.0, f64[] %wrapped_copy.8, /*index=10*/f64[] %wrapped_copy.7, f64[1]{0} %bitcast.1080.0, f64[1]{0} %bitcast.1076.0, f64[1]{0} %bitcast.1072.0, f64[] %wrapped_copy.6, /*index=15*/f64[1]{0} %bitcast.1040.0, f64[1]{0} %wrapped_copy.5, f64[1]{0} %wrapped_copy.4, f64[1]{0} %bitcast.1028.0, f64[] %wrapped_copy.3, /*index=20*/f64[] %wrapped_copy.2, f64[1]{0} %bitcast.1024.0, s64[] %wrapped_copy.1, s32[] %loop_convert_fusion.1, f64[] %wrapped_copy, /*index=25*/f64[1]{0} %bitcast.984.0, (f64[], f64[], f64[]) %tuple.52.0, s64[1]{0} %get-tuple-element.214, s64[1]{0} %get-tuple-element.213, f64[] %get-tuple-element.144, /*index=30*/f64[1]{0} %bitcast.1008.0, f64[] %get-tuple-element.140, f64[1]{0} %bitcast.992.0, f64[1,1]{1,0} %bitcast.1187, f64[1,1]{1,0} %bitcast.1186, /*index=35*/s64[] %bitcast.1180, s64[] %bitcast.1179, f64[] %bitcast.1185, f64[] %bitcast.1184, (f64[], f64[], f64[], f64[1]{0}, f64[]) %tuple.50.0, /*index=40*/f64[1,1]{1,0} %bitcast.1189, f64[1,1]{1,0} %bitcast.1188, f64[1]{0} %get-tuple-element.248, (f64[], f64[], f64[]) %loop_add_divide_multiply_fusion)<344 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+ from instruction: %Arg_0.1.0 = f64[] parameter(0), metadata={op_name="args[0]"}<345 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+ from instruction: %Arg_1.2.0 = f64[] parameter(1), metadata={op_name="args[1]"}<346 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+ from instruction: %Arg_2.3.0 = f64[] parameter(2), metadata={op_name="args[2]"}<347 Arg_3.4.0 @0>
+ positions:
+  Arg_3.4.0
+ uses:
+ from instruction: %Arg_3.4.0 = f64[] parameter(3), metadata={op_name="args[3]"}<348 Arg_4.5.0 @0>
+ positions:
+  Arg_4.5.0
+ uses:
+ from instruction: %Arg_4.5.0 = s64[] parameter(4), metadata={op_name="args[4]"}<349 Arg_5.6.0 @0>
+ positions:
+  Arg_5.6.0
+ uses:
+ from instruction: %Arg_5.6.0 = f64[] parameter(5), metadata={op_name="args[5]"}<350 Arg_6.7.0 @0>
+ positions:
+  Arg_6.7.0
+ uses:
+ from instruction: %Arg_6.7.0 = f64[] parameter(6), metadata={op_name="args[6]"}<351 Arg_9.10.0 @0>
+ positions:
+  Arg_9.10.0
+ uses:
+ from instruction: %Arg_9.10.0 = f64[] parameter(9), metadata={op_name="args[9]"}<352 Arg_10.11.0 @0>
+ positions:
+  Arg_10.11.0
+ uses:
+ from instruction: %Arg_10.11.0 = f64[] parameter(10), metadata={op_name="args[10]"}<353 Arg_14.15.0 @0>
+ positions:
+  Arg_14.15.0
+ uses:
+ from instruction: %Arg_14.15.0 = f64[] parameter(14), metadata={op_name="args[14]"}<354 Arg_15.16.0 @0>
+ positions:
+  Arg_15.16.0
+ uses:
+ from instruction: %Arg_15.16.0 = f64[] parameter(15), metadata={op_name="args[15]"}<355 Arg_16.17.0 @0>
+ positions:
+  Arg_16.17.0
+ uses:
+ from instruction: %Arg_16.17.0 = f64[] parameter(16), metadata={op_name="args[16]"}<356 Arg_17.18.0 @0>
+ positions:
+  Arg_17.18.0
+ uses:
+ from instruction: %Arg_17.18.0 = f64[] parameter(17), metadata={op_name="args[17]"}<357 Arg_23.24.0 @0>
+ positions:
+  Arg_23.24.0
+ uses:
+ from instruction: %Arg_23.24.0 = f64[] parameter(23), metadata={op_name="args[23]"}<358 Arg_24.25.0 @0>
+ positions:
+  Arg_24.25.0
+ uses:
+ from instruction: %Arg_24.25.0 = f64[] parameter(24), metadata={op_name="args[24]"}<359 Arg_28.29.0 @0>
+ positions:
+  Arg_28.29.0
+ uses:
+ from instruction: %Arg_28.29.0 = f64[] parameter(28), metadata={op_name="args[28]"}<360 Arg_29.30.0 @0>
+ positions:
+  Arg_29.30.0
+ uses:
+ from instruction: %Arg_29.30.0 = f64[] parameter(29), metadata={op_name="args[29]"}<361 Arg_37.38.0 @0>
+ positions:
+  Arg_37.38.0
+  arg_tuple.176.0 {0}
+  get-tuple-element.177.0
+  arg_tuple.316.0 {0}
+  get-tuple-element.317.0
+  call.1 {1}
+  call.1 {26,0}
+  call.1 {39,0}
+  get-tuple-element.265
+  get-tuple-element.290 {0}
+  get-tuple-element.303 {0}
+  p
+  bitcast.935.0
+  tuple.52.0 {0}
+  tuple.50.0 {0}
+  tuple.82 {1}
+  tuple.82 {26,0}
+  tuple.82 {39,0}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 3
+  loop_multiply_fusion, operand 2
+  call.1, operand 0
+  loop_divide_fusion, operand 0
+  loop_divide_fusion.1, operand 0
+  copy_fusion.2, operand 0
+  conditional.7.clone.1.0, operand 1 {0}
+  conditional.6.clone.1.0, operand 1 {0}
+  wrapped_copy.10, operand 0
+  bitcast.935.0, operand 0
+  loop_divide_fusion.2, operand 3
+  loop_add_divide_multiply_fusion, operand 1
+  tuple.82, operand 1
+  tuple.82, operand 26 {0}
+  tuple.82, operand 39 {0}
+ from instruction: %Arg_37.38.0 = f64[1]{0} parameter(37), metadata={op_name="args[37]"}<362 Arg_36.37.0 @0>
+ positions:
+  Arg_36.37.0
+  arg_tuple.206.0 {1}
+  get-tuple-element.208.0
+  tuple.51.0 {1}
+  call.1 {2}
+  get-tuple-element.266
+  p.1
+  bitcast.820.0
+  tuple.82 {2}
+ uses:
+  call.1, operand 1
+  loop_add_divide_multiply_subtract_fusion, operand 14
+  loop_select_fusion, operand 2
+  conditional.6.clone.1.0, operand 2 {1}
+  bitcast.820.0, operand 0
+  wrapped_copy.11, operand 0
+  loop_convert_fusion, operand 0
+  copy_fusion, operand 0
+  tuple.82, operand 2
+ from instruction: %Arg_36.37.0 = s64[1]{0} parameter(36), metadata={op_name="args[36]"}<363 Arg_35.36.0 @0>
+ positions:
+  Arg_35.36.0
+  call.1 {5}
+  call.1 {6}
+  get-tuple-element.269
+  get-tuple-element.270
+  p.2
+  bitcast.972.0
+  bitcast.739.0
+  tuple.82 {5}
+  tuple.82 {6}
+ uses:
+  call.1, operand 2
+  loop_add_divide_multiply_subtract_fusion, operand 18
+  copy_fusion.4, operand 2
+  copy_fusion.2, operand 1
+  bitcast.972.0, operand 0
+  bitcast.739.0, operand 0
+  tuple.82, operand 5
+  tuple.82, operand 6
+ from instruction: %Arg_35.36.0 = f64[1,1]{1,0} parameter(35), metadata={op_name="args[35]"}<364 Arg_34.35.0 @0>
+ positions:
+  Arg_34.35.0
+  arg_tuple.354.0 {4}
+  get-tuple-element.359.0
+  tuple.53.0 {4}
+  p.3
+  bitcast.1088.0
+ uses:
+  call.1, operand 3
+  loop_add_divide_multiply_subtract_fusion, operand 0
+  loop_select_fusion.1, operand 3
+  conditional.7.clone.1.0, operand 2 {4}
+  wrapped_copy.9, operand 0
+  bitcast.1088.0, operand 0
+  copy_fusion.8, operand 2
+ from instruction: %Arg_34.35.0 = f64[1]{0} parameter(34), metadata={op_name="args[34]"}<365 Arg_33.34.0 @0>
+ positions:
+  Arg_33.34.0
+  arg_tuple.316.0 {2}
+  get-tuple-element.319.0
+  call.1 {8}
+  call.1 {26,2}
+  get-tuple-element.272
+  get-tuple-element.290 {2}
+  p.4
+  bitcast.1084.0
+  tuple.52.0 {2}
+  tuple.82 {8}
+  tuple.82 {26,2}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 2
+  loop_multiply_fusion, operand 1
+  call.1, operand 4
+  loop_divide_fusion.1, operand 1
+  copy_fusion.7, operand 9
+  conditional.7.clone.1.0, operand 1 {2}
+  bitcast.1084.0, operand 0
+  wrapped_copy.8, operand 0
+  tuple.82, operand 8
+  tuple.82, operand 26 {2}
+ from instruction: %Arg_33.34.0 = f64[] parameter(33), metadata={op_name="args[33]"}<366 Arg_32.33.0 @0>
+ positions:
+  Arg_32.33.0
+  call.1 {11}
+  get-tuple-element.275
+  p.5
+  bitcast.1080.0
+  tuple.82 {11}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 5
+  call.1, operand 5
+  copy_fusion.7, operand 8
+  wrapped_copy.7, operand 0
+  bitcast.1080.0, operand 0
+  tuple.82, operand 11
+ from instruction: %Arg_32.33.0 = f64[] parameter(32), metadata={op_name="args[32]"}<367 Arg_31.32.0 @0>
+ positions:
+  Arg_31.32.0
+  call.1 {12}
+  get-tuple-element.276
+  p.6
+  bitcast.1076.0
+  tuple.82 {12}
+ uses:
+  call.1, operand 6
+  copy_fusion.7, operand 7
+  bitcast.1076.0, operand 0
+  copy_fusion.3, operand 1
+  tuple.82, operand 12
+ from instruction: %Arg_31.32.0 = f64[] parameter(31), metadata={op_name="args[31]"}<368 Arg_30.31.0 @0>
+ positions:
+  Arg_30.31.0
+  call.1 {13}
+  get-tuple-element.277
+  p.7
+  bitcast.1072.0
+  tuple.82 {13}
+ uses:
+  call.1, operand 7
+  copy_fusion.7, operand 6
+  bitcast.1072.0, operand 0
+  copy_fusion.3, operand 0
+  tuple.82, operand 13
+ from instruction: %Arg_30.31.0 = f64[] parameter(30), metadata={op_name="args[30]"}<369 Arg_26.27.0 @0>
+ positions:
+  Arg_26.27.0
+  p.8
+  bitcast.1056.0
+ uses:
+  call.1, operand 8
+  bitcast.1056.0, operand 0
+  copy_fusion, operand 1
+  copy_fusion.1, operand 1
+ from instruction: %Arg_26.27.0 = s64[] parameter(26), metadata={op_name="args[26]"}<370 Arg_22.23.0 @0>
+ positions:
+  Arg_22.23.0
+  call.1 {15}
+  get-tuple-element.279
+  p.9
+  bitcast.1040.0
+  tuple.82 {15}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 6
+  call.1, operand 9
+  copy_fusion.7, operand 0
+  wrapped_copy.6, operand 0
+  bitcast.1040.0, operand 0
+  tuple.82, operand 15
+ from instruction: %Arg_22.23.0 = f64[] parameter(22), metadata={op_name="args[22]"}<371 Arg_21.22.0 @0>
+ positions:
+  Arg_21.22.0
+  arg_tuple.176.0 {3}
+  get-tuple-element.180.0
+  call.1 {39,3}
+  get-tuple-element.303 {3}
+  p.10
+  bitcast.1036.0
+  tuple.50.0 {3}
+  tuple.82 {39,3}
+ uses:
+  call.1, operand 10
+  loop_add_divide_multiply_subtract_fusion, operand 12
+  loop_divide_fusion, operand 3
+  conditional.6.clone.1.0, operand 1 {3}
+  wrapped_copy.5, operand 0
+  bitcast.1036.0, operand 0
+  loop_divide_fusion.2, operand 2
+  copy_fusion.6, operand 1
+  tuple.82, operand 39 {3}
+ from instruction: %Arg_21.22.0 = f64[1]{0} parameter(21), metadata={op_name="args[21]"}<372 Arg_20.21.0 @0>
+ positions:
+  Arg_20.21.0
+  arg_tuple.206.0 {3}
+  get-tuple-element.210.0
+  tuple.51.0 {3}
+  p.11
+  bitcast.1032.0
+ uses:
+  call.1, operand 11
+  loop_add_divide_multiply_subtract_fusion, operand 16
+  loop_select_fusion, operand 3
+  conditional.6.clone.1.0, operand 2 {3}
+  wrapped_copy.4, operand 0
+  bitcast.1032.0, operand 0
+  copy_fusion.6, operand 0
+ from instruction: %Arg_20.21.0 = f64[1]{0} parameter(20), metadata={op_name="args[20]"}<373 Arg_19.20.0 @0>
+ positions:
+  Arg_19.20.0
+  arg_tuple.176.0 {2}
+  get-tuple-element.179.0
+  call.1 {18}
+  call.1 {39,2}
+  get-tuple-element.282
+  get-tuple-element.303 {2}
+  p.12
+  bitcast.1028.0
+  tuple.50.0 {2}
+  tuple.82 {18}
+  tuple.82 {39,2}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 11
+  call.1, operand 12
+  loop_divide_fusion, operand 1
+  copy_fusion.5, operand 10
+  conditional.6.clone.1.0, operand 1 {2}
+  bitcast.1028.0, operand 0
+  wrapped_copy.3, operand 0
+  loop_divide_fusion.2, operand 0
+  tuple.82, operand 18
+  tuple.82, operand 39 {2}
+ from instruction: %Arg_19.20.0 = f64[] parameter(19), metadata={op_name="args[19]"}<374 Arg_18.19.0 @0>
+ positions:
+  Arg_18.19.0
+  call.1 {21}
+  get-tuple-element.285
+  p.13
+  bitcast.1024.0
+  tuple.82 {21}
+ uses:
+  call.1, operand 13
+  copy_fusion.5, operand 9
+  wrapped_copy.2, operand 0
+  bitcast.1024.0, operand 0
+  loop_add_divide_multiply_fusion, operand 0
+  tuple.82, operand 21
+ from instruction: %Arg_18.19.0 = f64[] parameter(18), metadata={op_name="args[18]"}<375 Arg_12.13.0 @0>
+ positions:
+  Arg_12.13.0
+  arg_tuple.354.0 {0}
+  get-tuple-element.355.0
+  tuple.53.0 {0}
+  p.14
+  bitcast.1000.0
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 1
+  call.1, operand 14
+  loop_select_fusion.1, operand 4
+  conditional.7.clone.1.0, operand 2 {0}
+  wrapped_copy.1, operand 0
+  bitcast.1000.0, operand 0
+  loop_convert_fusion.1, operand 0
+  copy_fusion.1, operand 0
+ from instruction: %Arg_12.13.0 = s64[] parameter(12), metadata={op_name="args[12]"}<376 Arg_8.9.0 @0>
+ positions:
+  Arg_8.9.0
+  call.1 {25}
+  get-tuple-element.289
+  p.15
+  bitcast.984.0
+  tuple.82 {25}
+ uses:
+  call.1, operand 15
+  copy_fusion.5, operand 0
+  wrapped_copy, operand 0
+  bitcast.984.0, operand 0
+  loop_add_divide_multiply_fusion, operand 2
+  tuple.82, operand 25
+ from instruction: %Arg_8.9.0 = f64[] parameter(8), metadata={op_name="args[8]"}<377 Arg_7.8.0 @0>
+ positions:
+  Arg_7.8.0
+  p.16
+  bitcast.980.0
+ uses:
+  call.1, operand 16
+  bitcast.980.0, operand 0
+  copy_fusion.8, operand 0
+  copy_fusion.8, operand 1
+ from instruction: %Arg_7.8.0 = f64[1]{0} parameter(7), metadata={op_name="args[7]"}<378 Arg_27.28.0 @0>
+ positions:
+  Arg_27.28.0
+  arg_tuple.316.0 {1}
+  get-tuple-element.318.0
+  call.1 {26,1}
+  get-tuple-element.290 {1}
+  p.17
+  tuple.52.0 {1}
+  tuple.82 {26,1}
+ uses:
+  loop_add_divide_multiply_subtract_fusion, operand 4
+  call.1, operand 17
+  loop_divide_fusion.1, operand 2
+  conditional.7.clone.1.0, operand 1 {1}
+  tuple.82, operand 26 {1}
+ from instruction: %Arg_27.28.0 = f64[] parameter(27), metadata={op_name="args[27]"}<379 Arg_25.26.0 @0>
+ positions:
+  Arg_25.26.0
+  arg_tuple.176.0 {4}
+  get-tuple-element.181.0
+  call.1 {39,4}
+  get-tuple-element.303 {4}
+  p.18
+  tuple.50.0 {4}
+  tuple.82 {39,4}
+ uses:
+  call.1, operand 18
+  loop_add_divide_multiply_subtract_fusion, operand 7
+  loop_divide_fusion, operand 2
+  conditional.6.clone.1.0, operand 1 {4}
+  loop_divide_fusion.2, operand 1
+  tuple.82, operand 39 {4}
+ from instruction: %Arg_25.26.0 = f64[] parameter(25), metadata={op_name="args[25]"}<380 Arg_13.14.0 @0>
+ positions:
+  Arg_13.14.0
+  arg_tuple.176.0 {1}
+  get-tuple-element.178.0
+  call.1 {39,1}
+  get-tuple-element.303 {1}
+  p.19
+  tuple.50.0 {1}
+  tuple.82 {39,1}
+ uses:
+  call.1, operand 19
+  loop_divide_fusion, operand 4
+  conditional.6.clone.1.0, operand 1 {1}
+  loop_divide_fusion.2, operand 4
+  tuple.82, operand 39 {1}
+ from instruction: %Arg_13.14.0 = f64[] parameter(13), metadata={op_name="args[13]"}<381 Arg_11.12.0 @0>
+ positions:
+  Arg_11.12.0
+  p.20
+ uses:
+  call.1, operand 20
+  loop_add_divide_multiply_fusion, operand 3
+ from instruction: %Arg_11.12.0 = f64[] parameter(11), metadata={op_name="args[11]"}<382 copy_fusion.2{} @0>
+ positions:
+  copy_fusion.2 {}
+ uses:
+  get-tuple-element.215, operand 0 {}
+  get-tuple-element.216, operand 0 {}
+  get-tuple-element.217, operand 0 {}
+ from instruction: %copy_fusion.2 = (f64[], f64[], f64[]) fusion(f64[] %get-tuple-element.265, f64[] %get-tuple-element.270, f64[] %get-tuple-element.133), kind=kLoop, calls=%copy_horizontally_fused_computation.2<383 copy_fusion.2{0} @0>
+ positions:
+  copy_fusion.2 {0}
+  tuple.70 {0}
+  get-tuple-element.215
+  bitcast.1181
+ uses:
+  bitcast.1181, operand 0
+  tuple.70, operand 0
+ from instruction: %copy_fusion.2 = (f64[], f64[], f64[]) fusion(f64[] %get-tuple-element.265, f64[] %get-tuple-element.270, f64[] %get-tuple-element.133), kind=kLoop, calls=%copy_horizontally_fused_computation.2<384 copy_fusion.2{1} @0>
+ positions:
+  copy_fusion.2 {1}
+  tuple.70 {3}
+  get-tuple-element.216
+  bitcast.1182
+ uses:
+  bitcast.1182, operand 0
+  tuple.70, operand 3
+ from instruction: %copy_fusion.2 = (f64[], f64[], f64[]) fusion(f64[] %get-tuple-element.265, f64[] %get-tuple-element.270, f64[] %get-tuple-element.133), kind=kLoop, calls=%copy_horizontally_fused_computation.2<385 copy_fusion.2{2} @0>
+ positions:
+  copy_fusion.2 {2}
+  tuple.70 {5}
+  get-tuple-element.217
+  bitcast.1183
+ uses:
+  bitcast.1183, operand 0
+  tuple.70, operand 5
+ from instruction: %copy_fusion.2 = (f64[], f64[], f64[]) fusion(f64[] %get-tuple-element.265, f64[] %get-tuple-element.270, f64[] %get-tuple-element.133), kind=kLoop, calls=%copy_horizontally_fused_computation.2<386 tuple.51.0{} @0>
+ positions:
+  tuple.51.0 {}
+  arg_tuple.206.0 {}
+ uses:
+  conditional.6.clone.1.0, operand 2 {}
+  get-tuple-element.207.0, operand 0 {}
+  get-tuple-element.208.0, operand 0 {}
+  get-tuple-element.209.0, operand 0 {}
+  get-tuple-element.210.0, operand 0 {}
+ from instruction: %tuple.51.0 = (f64[], s64[], f64[], f64[1]{0}) tuple(f64[] %get-tuple-element.133, s64[] %get-tuple-element.266, f64[] %get-tuple-element.295, f64[1]{0} %Arg_20.21.0), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<387 loop_add_divide_multiply_subtract_fusion{} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {}
+ uses:
+  get-tuple-element.155, operand 0 {}
+  get-tuple-element.154, operand 0 {}
+  get-tuple-element.158, operand 0 {}
+  get-tuple-element.153, operand 0 {}
+  get-tuple-element.147, operand 0 {}
+  get-tuple-element.146, operand 0 {}
+  get-tuple-element.145, operand 0 {}
+  get-tuple-element.141, operand 0 {}
+  get-tuple-element.136, operand 0 {}
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<388 loop_add_divide_multiply_subtract_fusion{0} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {0}
+  bitcast.1052.0
+  get-tuple-element.155
+  tuple.70 {25}
+ uses:
+  copy_fusion.7, operand 3
+  bitcast.1052.0, operand 0
+  tuple.70, operand 25
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<389 loop_add_divide_multiply_subtract_fusion{1} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {1}
+  arg_tuple.354.0 {3}
+  get-tuple-element.358.0
+  tuple.53.0 {3}
+  bitcast.1048.0
+  get-tuple-element.154
+  tuple.70 {24}
+ uses:
+  loop_select_fusion.1, operand 0
+  conditional.7.clone.1.0, operand 2 {3}
+  copy_fusion.7, operand 2
+  tuple.70, operand 24
+  loop_multiply_fusion, operand 0
+  bitcast.1048.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<390 loop_add_divide_multiply_subtract_fusion{2} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {2}
+  bitcast.1064.0
+  get-tuple-element.158
+  tuple.70 {28}
+ uses:
+  copy_fusion.7, operand 5
+  tuple.70, operand 28
+  bitcast.1064.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<391 loop_add_divide_multiply_subtract_fusion{3} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {3}
+  bitcast.1044.0
+  get-tuple-element.153
+  tuple.70 {23}
+ uses:
+  copy_fusion.7, operand 1
+  tuple.70, operand 23
+  bitcast.1044.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<392 loop_add_divide_multiply_subtract_fusion{4} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {4}
+  arg_tuple.354.0 {2}
+  get-tuple-element.357.0
+  tuple.53.0 {2}
+  bitcast.1020.0
+  get-tuple-element.147
+  tuple.70 {17}
+ uses:
+  loop_select_fusion.1, operand 1
+  conditional.7.clone.1.0, operand 2 {2}
+  copy_fusion.5, operand 8
+  bitcast.1020.0, operand 0
+  tuple.70, operand 17
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<393 loop_add_divide_multiply_subtract_fusion{5} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {5}
+  bitcast.1016.0
+  get-tuple-element.146
+  tuple.70 {16}
+ uses:
+  copy_fusion.5, operand 7
+  tuple.70, operand 16
+  bitcast.1016.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<394 loop_add_divide_multiply_subtract_fusion{6} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {6}
+  arg_tuple.354.0 {1}
+  get-tuple-element.356.0
+  tuple.53.0 {1}
+  bitcast.1012.0
+  get-tuple-element.145
+  tuple.70 {15}
+ uses:
+  loop_select_fusion.1, operand 2
+  conditional.7.clone.1.0, operand 2 {1}
+  copy_fusion.5, operand 6
+  bitcast.1012.0, operand 0
+  tuple.70, operand 15
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<395 loop_add_divide_multiply_subtract_fusion{7} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {7}
+  bitcast.996.0
+  get-tuple-element.141
+  tuple.70 {11}
+ uses:
+  copy_fusion.5, operand 3
+  tuple.70, operand 11
+  bitcast.996.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<396 loop_add_divide_multiply_subtract_fusion{8} @0>
+ positions:
+  loop_add_divide_multiply_subtract_fusion {8}
+  bitcast.976.0
+  get-tuple-element.136
+  tuple.70 {6}
+ uses:
+  copy_fusion.4, operand 3
+  tuple.70, operand 6
+  bitcast.976.0, operand 0
+ from instruction: %loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(f64[1]{0} %Arg_34.35.0, s64[] %Arg_12.13.0, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0, f64[] %Arg_27.28.0, /*index=5*/f64[] %Arg_32.33.0, f64[] %Arg_22.23.0, f64[] %Arg_25.26.0, f64[] %get-tuple-element.295, f64[] %get-tuple-element.143, /*index=10*/f64[] %get-tuple-element.293, f64[] %Arg_19.20.0, f64[1]{0} %Arg_21.22.0, f64[] %get-tuple-element.139, s64[1]{0} %Arg_36.37.0, /*index=15*/f64[] %get-tuple-element.133, f64[1]{0} %Arg_20.21.0, f64[] %get-tuple-element.129, f64[1,1]{1,0} %Arg_35.36.0), kind=kLoop, calls=%fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<397 tuple.53.0{} @0>
+ positions:
+  tuple.53.0 {}
+  arg_tuple.354.0 {}
+ uses:
+  conditional.7.clone.1.0, operand 2 {}
+  get-tuple-element.355.0, operand 0 {}
+  get-tuple-element.356.0, operand 0 {}
+  get-tuple-element.357.0, operand 0 {}
+  get-tuple-element.358.0, operand 0 {}
+  get-tuple-element.359.0, operand 0 {}
+ from instruction: %tuple.53.0 = (s64[], f64[], f64[], f64[], f64[1]{0}) tuple(s64[] %Arg_12.13.0, f64[] %get-tuple-element.145, f64[] %get-tuple-element.147, f64[] %get-tuple-element.154, f64[1]{0} %Arg_34.35.0), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<398 loop_multiply_fusion{} @0>
+ positions:
+  loop_multiply_fusion {}
+ uses:
+  get-tuple-element.206, operand 0 {}
+  get-tuple-element.205, operand 0 {}
+ from instruction: %loop_multiply_fusion = (f64[], f64[1]{0}) fusion(f64[] %get-tuple-element.154, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<399 loop_multiply_fusion{0} @0>
+ positions:
+  loop_multiply_fusion {0}
+  tuple.70 {29}
+  get-tuple-element.205
+ uses:
+  tuple.70, operand 29
+ from instruction: %loop_multiply_fusion = (f64[], f64[1]{0}) fusion(f64[] %get-tuple-element.154, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<400 loop_multiply_fusion{1} @0>
+ positions:
+  loop_multiply_fusion {1}
+  tuple.70 {64}
+  get-tuple-element.206
+ uses:
+  tuple.70, operand 64
+ from instruction: %loop_multiply_fusion = (f64[], f64[1]{0}) fusion(f64[] %get-tuple-element.154, f64[] %Arg_33.34.0, f64[1]{0} %Arg_37.38.0), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<401 copy_fusion.4{} @0>
+ positions:
+  copy_fusion.4 {}
+ uses:
+  get-tuple-element.220, operand 0 {}
+  get-tuple-element.221, operand 0 {}
+  get-tuple-element.222, operand 0 {}
+  get-tuple-element.223, operand 0 {}
+  get-tuple-element.224, operand 0 {}
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<402 copy_fusion.4{0} @0>
+ positions:
+  copy_fusion.4 {0}
+  tuple.70 {36}
+  get-tuple-element.220
+ uses:
+  tuple.70, operand 36
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<403 copy_fusion.4{1} @0>
+ positions:
+  copy_fusion.4 {1}
+  tuple.70 {37}
+  get-tuple-element.221
+ uses:
+  tuple.70, operand 37
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<404 copy_fusion.4{2} @0>
+ positions:
+  copy_fusion.4 {2}
+  tuple.70 {38}
+  get-tuple-element.222
+ uses:
+  tuple.70, operand 38
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<405 copy_fusion.4{3} @0>
+ positions:
+  copy_fusion.4 {3}
+  tuple.70 {40}
+  get-tuple-element.223
+ uses:
+  tuple.70, operand 40
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<406 copy_fusion.4{4} @0>
+ positions:
+  copy_fusion.4 {4}
+  tuple.70 {41}
+  get-tuple-element.224
+ uses:
+  tuple.70, operand 41
+ from instruction: %copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %bitcast.964.0, f64[1]{0} %bitcast.968.0, f64[1]{0} %get-tuple-element.269, f64[1]{0} %bitcast.976.0), kind=kLoop, calls=%copy_horizontally_fused_computation.4<407 copy_fusion.5{} @0>
+ positions:
+  copy_fusion.5 {}
+ uses:
+  get-tuple-element.225, operand 0 {}
+  get-tuple-element.226, operand 0 {}
+  get-tuple-element.227, operand 0 {}
+  get-tuple-element.228, operand 0 {}
+  get-tuple-element.229, operand 0 {}
+  get-tuple-element.230, operand 0 {}
+  get-tuple-element.231, operand 0 {}
+  get-tuple-element.232, operand 0 {}
+  get-tuple-element.233, operand 0 {}
+  get-tuple-element.234, operand 0 {}
+  get-tuple-element.235, operand 0 {}
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<408 copy_fusion.5{0} @0>
+ positions:
+  copy_fusion.5 {0}
+  tuple.70 {43}
+  get-tuple-element.225
+ uses:
+  tuple.70, operand 43
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<409 copy_fusion.5{1} @0>
+ positions:
+  copy_fusion.5 {1}
+  tuple.70 {44}
+  get-tuple-element.226
+ uses:
+  tuple.70, operand 44
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<410 copy_fusion.5{2} @0>
+ positions:
+  copy_fusion.5 {2}
+  tuple.70 {45}
+  get-tuple-element.227
+ uses:
+  tuple.70, operand 45
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<411 copy_fusion.5{3} @0>
+ positions:
+  copy_fusion.5 {3}
+  tuple.70 {46}
+  get-tuple-element.228
+ uses:
+  tuple.70, operand 46
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<412 copy_fusion.5{4} @0>
+ positions:
+  copy_fusion.5 {4}
+  tuple.70 {48}
+  get-tuple-element.229
+ uses:
+  tuple.70, operand 48
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<413 copy_fusion.5{5} @0>
+ positions:
+  copy_fusion.5 {5}
+  tuple.70 {49}
+  get-tuple-element.230
+ uses:
+  tuple.70, operand 49
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<414 copy_fusion.5{6} @0>
+ positions:
+  copy_fusion.5 {6}
+  tuple.70 {50}
+  get-tuple-element.231
+ uses:
+  tuple.70, operand 50
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<415 copy_fusion.5{7} @0>
+ positions:
+  copy_fusion.5 {7}
+  tuple.70 {51}
+  get-tuple-element.232
+ uses:
+  tuple.70, operand 51
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<416 copy_fusion.5{8} @0>
+ positions:
+  copy_fusion.5 {8}
+  tuple.70 {52}
+  get-tuple-element.233
+ uses:
+  tuple.70, operand 52
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<417 copy_fusion.5{9} @0>
+ positions:
+  copy_fusion.5 {9}
+  tuple.70 {53}
+  get-tuple-element.234
+ uses:
+  tuple.70, operand 53
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<418 copy_fusion.5{10} @0>
+ positions:
+  copy_fusion.5 {10}
+  tuple.70 {54}
+  get-tuple-element.235
+ uses:
+  tuple.70, operand 54
+ from instruction: %copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.289, f64[1]{0} %bitcast.988.0, f64[1]{0} %get-tuple-element.296, f64[1]{0} %bitcast.996.0, f64[1]{0} %bitcast.1004.0, /*index=5*/f64[1]{0} %get-tuple-element.294, f64[1]{0} %bitcast.1012.0, f64[1]{0} %bitcast.1016.0, f64[1]{0} %bitcast.1020.0, f64[1]{0} %get-tuple-element.285, /*index=10*/f64[1]{0} %get-tuple-element.282), kind=kLoop, calls=%copy_horizontally_fused_computation.5<419 copy_fusion.7{} @0>
+ positions:
+  copy_fusion.7 {}
+ uses:
+  get-tuple-element.238, operand 0 {}
+  get-tuple-element.239, operand 0 {}
+  get-tuple-element.240, operand 0 {}
+  get-tuple-element.241, operand 0 {}
+  get-tuple-element.242, operand 0 {}
+  get-tuple-element.243, operand 0 {}
+  get-tuple-element.244, operand 0 {}
+  get-tuple-element.245, operand 0 {}
+  get-tuple-element.246, operand 0 {}
+  get-tuple-element.247, operand 0 {}
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<420 copy_fusion.7{0} @0>
+ positions:
+  copy_fusion.7 {0}
+  tuple.70 {57}
+  get-tuple-element.238
+ uses:
+  tuple.70, operand 57
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<421 copy_fusion.7{1} @0>
+ positions:
+  copy_fusion.7 {1}
+  tuple.70 {58}
+  get-tuple-element.239
+ uses:
+  tuple.70, operand 58
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<422 copy_fusion.7{2} @0>
+ positions:
+  copy_fusion.7 {2}
+  tuple.70 {59}
+  get-tuple-element.240
+ uses:
+  tuple.70, operand 59
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<423 copy_fusion.7{3} @0>
+ positions:
+  copy_fusion.7 {3}
+  tuple.70 {60}
+  get-tuple-element.241
+ uses:
+  tuple.70, operand 60
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<424 copy_fusion.7{4} @0>
+ positions:
+  copy_fusion.7 {4}
+  tuple.70 {62}
+  get-tuple-element.242
+ uses:
+  tuple.70, operand 62
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<425 copy_fusion.7{5} @0>
+ positions:
+  copy_fusion.7 {5}
+  tuple.70 {63}
+  get-tuple-element.243
+ uses:
+  tuple.70, operand 63
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<426 copy_fusion.7{6} @0>
+ positions:
+  copy_fusion.7 {6}
+  tuple.70 {65}
+  get-tuple-element.244
+ uses:
+  tuple.70, operand 65
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<427 copy_fusion.7{7} @0>
+ positions:
+  copy_fusion.7 {7}
+  tuple.70 {66}
+  get-tuple-element.245
+ uses:
+  tuple.70, operand 66
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<428 copy_fusion.7{8} @0>
+ positions:
+  copy_fusion.7 {8}
+  tuple.70 {67}
+  get-tuple-element.246
+ uses:
+  tuple.70, operand 67
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<429 copy_fusion.7{9} @0>
+ positions:
+  copy_fusion.7 {9}
+  tuple.70 {68}
+  get-tuple-element.247
+ uses:
+  tuple.70, operand 68
+ from instruction: %copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(f64[1]{0} %get-tuple-element.279, f64[1]{0} %bitcast.1044.0, f64[1]{0} %bitcast.1048.0, f64[1]{0} %bitcast.1052.0, f64[1]{0} %bitcast.1060.0, /*index=5*/f64[1]{0} %bitcast.1064.0, f64[1]{0} %get-tuple-element.277, f64[1]{0} %get-tuple-element.276, f64[1]{0} %get-tuple-element.275, f64[1]{0} %get-tuple-element.272), kind=kLoop, calls=%copy_horizontally_fused_computation.7<430 tuple.70{} @0>
+ positions:
+  tuple.70 {}
+ uses:
+ from instruction: %tuple.70 = (f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[1]{0}, f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1]{0}, /*index=35*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, s64[1]{0}, /*index=40*/f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, /*index=45*/f64[1]{0}, f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=50*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=55*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=60*/f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=65*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}) tuple(f64[] %bitcast.1181, f64[] %get-tuple-element.129, f64[] %get-tuple-element.133, f64[] %bitcast.1182, s64[] %get-tuple-element.300, /*index=5*/f64[] %bitcast.1183, f64[] %get-tuple-element.136, f64[1]{0} %get-tuple-element.306, f64[] %get-tuple-element.288, f64[] %get-tuple-element.139, /*index=10*/f64[] %get-tuple-element.295, f64[] %get-tuple-element.141, s64[] %get-tuple-element.286, f64[] %get-tuple-element.143, f64[] %get-tuple-element.293, /*index=15*/f64[] %get-tuple-element.145, f64[] %get-tuple-element.146, f64[] %get-tuple-element.147, f64[] %get-tuple-element.284, f64[] %get-tuple-element.283, /*index=20*/f64[1]{0} %get-tuple-element.281, f64[1]{0} %get-tuple-element.280, f64[] %get-tuple-element.278, f64[] %get-tuple-element.153, f64[] %get-tuple-element.154, /*index=25*/f64[] %get-tuple-element.155, s64[] %get-tuple-element.299, f64[] %get-tuple-element.157, f64[] %get-tuple-element.158, f64[] %get-tuple-element.205, /*index=30*/f64[] %get-tuple-element.302, f64[] %get-tuple-element.301, f64[] %get-tuple-element.274, f64[] %get-tuple-element.273, f64[1]{0} %get-tuple-element.271, /*index=35*/f64[1]{0} %get-tuple-element.264, f64[1]{0} %get-tuple-element.220, f64[1]{0} %get-tuple-element.221, f64[1]{0} %get-tuple-element.222, s64[1]{0} %get-tuple-element.267, /*index=40*/f64[1]{0} %get-tuple-element.223, f64[1]{0} %get-tuple-element.224, f64[1,1]{1,0} %get-tuple-element.305, f64[1]{0} %get-tuple-element.225, f64[1]{0} %get-tuple-element.226, /*index=45*/f64[1]{0} %get-tuple-element.227, f64[1]{0} %get-tuple-element.228, s64[1]{0} %get-tuple-element.292, f64[1]{0} %get-tuple-element.229, f64[1]{0} %get-tuple-element.230, /*index=50*/f64[1]{0} %get-tuple-element.231, f64[1]{0} %get-tuple-element.232, f64[1]{0} %get-tuple-element.233, f64[1]{0} %get-tuple-element.234, f64[1]{0} %get-tuple-element.235, /*index=55*/f64[1,1]{1,0} %get-tuple-element.298, f64[1,1]{1,0} %get-tuple-element.297, f64[1]{0} %get-tuple-element.238, f64[1]{0} %get-tuple-element.239, f64[1]{0} %get-tuple-element.240, /*index=60*/f64[1]{0} %get-tuple-element.241, s64[1]{0} %get-tuple-element.291, f64[1]{0} %get-tuple-element.242, f64[1]{0} %get-tuple-element.243, f64[1]{0} %get-tuple-element.206, /*index=65*/f64[1]{0} %get-tuple-element.244, f64[1]{0} %get-tuple-element.245, f64[1]{0} %get-tuple-element.246, f64[1]{0} %get-tuple-element.247, f64[1,1]{1,0} %get-tuple-element.304)<431 conditional.6.clone.1.0{} (phi) @0>
+ positions:
+  conditional.6.clone.1.0 {}
+ uses:
+  get-tuple-element.143, operand 0 {}
+ from instruction: %conditional.6.clone.1.0 = (f64[]) conditional(s32[] %get-tuple-element.268, (f64[], f64[], f64[], f64[1]{0}, f64[]) %get-tuple-element.303, (f64[], s64[], f64[], f64[1]{0}) %tuple.51.0), branch_computations={%region_2.175, %region_3.205}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<432 conditional.6.clone.1.0{0} (phi) @0>
+ positions:
+  conditional.6.clone.1.0 {0}
+  get-tuple-element.143
+  bitcast.1004.0
+  tuple.70 {13}
+ uses:
+  tuple.70, operand 13
+  loop_add_divide_multiply_subtract_fusion, operand 9
+  bitcast.1004.0, operand 0
+  copy_fusion.5, operand 4
+ from instruction: %conditional.6.clone.1.0 = (f64[]) conditional(s32[] %get-tuple-element.268, (f64[], f64[], f64[], f64[1]{0}, f64[]) %get-tuple-element.303, (f64[], s64[], f64[], f64[1]{0}) %tuple.51.0), branch_computations={%region_2.175, %region_3.205}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<433 conditional.7.clone.1.0{} (phi) @0>
+ positions:
+  conditional.7.clone.1.0 {}
+ uses:
+  get-tuple-element.157, operand 0 {}
+ from instruction: %conditional.7.clone.1.0 = (f64[]) conditional(s32[] %get-tuple-element.287, (f64[], f64[], f64[]) %get-tuple-element.290, (s64[], f64[], f64[], f64[], f64[1]{0}) %tuple.53.0), branch_computations={%region_5.315, %region_6.353}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}<434 conditional.7.clone.1.0{0} (phi) @0>
+ positions:
+  conditional.7.clone.1.0 {0}
+  get-tuple-element.157
+  bitcast.1060.0
+  tuple.70 {27}
+ uses:
+  bitcast.1060.0, operand 0
+  tuple.70, operand 27
+  copy_fusion.7, operand 4
+ from instruction: %conditional.7.clone.1.0 = (f64[]) conditional(s32[] %get-tuple-element.287, (f64[], f64[], f64[]) %get-tuple-element.290, (s64[], f64[], f64[], f64[], f64[1]{0}) %tuple.53.0), branch_computations={%region_5.315, %region_6.353}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+
+HloLiveRange (max 271):
+  InstructionSequence:
+    0:Arg_37.38.0
+    1:Arg_36.37.0
+    2:Arg_35.36.0
+    3:Arg_34.35.0
+    4:Arg_33.34.0
+    5:Arg_32.33.0
+    6:Arg_31.32.0
+    7:Arg_30.31.0
+    8:Arg_29.30.0
+    9:Arg_28.29.0
+    10:Arg_27.28.0
+    11:Arg_26.27.0
+    12:Arg_25.26.0
+    13:Arg_24.25.0
+    14:Arg_23.24.0
+    15:Arg_22.23.0
+    16:Arg_21.22.0
+    17:Arg_20.21.0
+    18:Arg_19.20.0
+    19:Arg_18.19.0
+    20:Arg_17.18.0
+    21:Arg_16.17.0
+    22:Arg_15.16.0
+    23:Arg_14.15.0
+    24:Arg_13.14.0
+    25:Arg_12.13.0
+    26:Arg_11.12.0
+    27:Arg_10.11.0
+    28:Arg_9.10.0
+    29:Arg_8.9.0
+    30:Arg_7.8.0
+    31:Arg_6.7.0
+    32:Arg_5.6.0
+    33:Arg_4.5.0
+    34:Arg_3.4.0
+    35:Arg_2.3.0
+    36:Arg_1.2.0
+    37:Arg_0.1.0
+    38:p
+    39:p.1
+    40:p.2
+    41:p.3
+    42:p.4
+    43:p.5
+    44:p.6
+    45:p.7
+    46:p.8
+    47:p.9
+    48:p.10
+    49:p.11
+    50:p.12
+    51:p.13
+    52:p.14
+    53:p.15
+    54:p.16
+    55:p.17
+    56:p.18
+    57:p.19
+    58:p.20
+    59:wrapped_copy.10
+    60:bitcast.935.0
+    61:bitcast.820.0
+    62:wrapped_copy.11
+    63:loop_convert_fusion
+    64:bitcast.972.0
+    65:bitcast.739.0
+    66:wrapped_copy.9
+    67:bitcast.1088.0
+    68:bitcast.1084.0
+    69:wrapped_copy.8
+    70:wrapped_copy.7
+    71:bitcast.1080.0
+    72:bitcast.1076.0
+    73:bitcast.1072.0
+    74:bitcast.1056.0
+    75:wrapped_copy.6
+    76:bitcast.1040.0
+    77:wrapped_copy.5
+    78:bitcast.1036.0
+    79:wrapped_copy.4
+    80:bitcast.1032.0
+    81:bitcast.1028.0
+    82:wrapped_copy.3
+    83:wrapped_copy.2
+    84:bitcast.1024.0
+    85:wrapped_copy.1
+    86:bitcast.1000.0
+    87:loop_convert_fusion.1
+    88:wrapped_copy
+    89:bitcast.984.0
+    90:bitcast.980.0
+    91:tuple.52.0
+    92:copy_fusion.1
+    93:get-tuple-element.214
+    94:get-tuple-element.213
+    95:loop_divide_fusion.2
+    96:get-tuple-element.144
+    97:bitcast.1008.0
+    98:get-tuple-element.140
+    99:bitcast.992.0
+    100:copy_fusion.6
+    101:get-tuple-element.237
+    102:bitcast.1187
+    103:get-tuple-element.236
+    104:bitcast.1186
+    105:copy_fusion
+    106:get-tuple-element.212
+    107:bitcast.1180
+    108:get-tuple-element.211
+    109:bitcast.1179
+    110:copy_fusion.3
+    111:get-tuple-element.219
+    112:bitcast.1185
+    113:get-tuple-element.218
+    114:bitcast.1184
+    115:tuple.50.0
+    116:copy_fusion.8
+    117:get-tuple-element.250
+    118:bitcast.1189
+    119:get-tuple-element.249
+    120:bitcast.1188
+    121:get-tuple-element.248
+    122:loop_add_divide_multiply_fusion
+    123:tuple.82
+    124:call.1
+    125:get-tuple-element.264
+    126:get-tuple-element.265
+    127:get-tuple-element.266
+    128:get-tuple-element.267
+    129:get-tuple-element.268
+    130:get-tuple-element.269
+    131:get-tuple-element.270
+    132:get-tuple-element.271
+    133:get-tuple-element.272
+    134:get-tuple-element.273
+    135:get-tuple-element.274
+    136:get-tuple-element.275
+    137:get-tuple-element.276
+    138:get-tuple-element.277
+    139:get-tuple-element.278
+    140:get-tuple-element.279
+    141:get-tuple-element.280
+    142:get-tuple-element.281
+    143:get-tuple-element.282
+    144:get-tuple-element.283
+    145:get-tuple-element.284
+    146:get-tuple-element.285
+    147:get-tuple-element.286
+    148:get-tuple-element.287
+    149:get-tuple-element.288
+    150:get-tuple-element.289
+    151:get-tuple-element.290
+    152:get-tuple-element.291
+    153:get-tuple-element.292
+    154:get-tuple-element.293
+    155:get-tuple-element.294
+    156:get-tuple-element.295
+    157:get-tuple-element.296
+    158:get-tuple-element.297
+    159:get-tuple-element.298
+    160:get-tuple-element.299
+    161:get-tuple-element.300
+    162:get-tuple-element.301
+    163:get-tuple-element.302
+    164:get-tuple-element.303
+    165:get-tuple-element.304
+    166:get-tuple-element.305
+    167:get-tuple-element.306
+    168:get-tuple-element.307
+    169:get-tuple-element.139
+    170:bitcast.988.0
+    171:get-tuple-element.129
+    172:bitcast.964.0
+    173:get-tuple-element.133
+    174:bitcast.968.0
+    175:tuple.51.0
+    176:arg_tuple.176.0
+    177:get-tuple-element.181.0
+    178:get-tuple-element.180.0
+    179:get-tuple-element.179.0
+    180:get-tuple-element.178.0
+    181:get-tuple-element.177.0
+    182:loop_divide_fusion
+    183:tuple.66
+    184:arg_tuple.206.0
+    185:get-tuple-element.210.0
+    186:get-tuple-element.209.0
+    187:get-tuple-element.208.0
+    188:get-tuple-element.207.0
+    189:loop_select_fusion
+    190:tuple.67
+    191:conditional.6.clone.1.0
+    192:get-tuple-element.143
+    193:bitcast.1004.0
+    194:copy_fusion.2
+    195:get-tuple-element.217
+    196:bitcast.1183
+    197:get-tuple-element.216
+    198:bitcast.1182
+    199:get-tuple-element.215
+    200:bitcast.1181
+    201:loop_add_divide_multiply_subtract_fusion
+    202:get-tuple-element.136
+    203:bitcast.976.0
+    204:get-tuple-element.141
+    205:bitcast.996.0
+    206:get-tuple-element.145
+    207:bitcast.1012.0
+    208:get-tuple-element.146
+    209:bitcast.1016.0
+    210:get-tuple-element.147
+    211:bitcast.1020.0
+    212:get-tuple-element.153
+    213:bitcast.1044.0
+    214:get-tuple-element.158
+    215:bitcast.1064.0
+    216:get-tuple-element.154
+    217:bitcast.1048.0
+    218:get-tuple-element.155
+    219:bitcast.1052.0
+    220:loop_multiply_fusion
+    221:get-tuple-element.205
+    222:get-tuple-element.206
+    223:tuple.53.0
+    224:arg_tuple.316.0
+    225:get-tuple-element.319.0
+    226:get-tuple-element.318.0
+    227:get-tuple-element.317.0
+    228:loop_divide_fusion.1
+    229:tuple.68
+    230:arg_tuple.354.0
+    231:get-tuple-element.359.0
+    232:get-tuple-element.358.0
+    233:get-tuple-element.357.0
+    234:get-tuple-element.356.0
+    235:get-tuple-element.355.0
+    236:loop_select_fusion.1
+    237:tuple.69
+    238:conditional.7.clone.1.0
+    239:get-tuple-element.157
+    240:bitcast.1060.0
+    241:copy_fusion.4
+    242:get-tuple-element.224
+    243:get-tuple-element.223
+    244:get-tuple-element.222
+    245:get-tuple-element.221
+    246:get-tuple-element.220
+    247:copy_fusion.7
+    248:get-tuple-element.247
+    249:get-tuple-element.246
+    250:get-tuple-element.245
+    251:get-tuple-element.244
+    252:get-tuple-element.243
+    253:get-tuple-element.242
+    254:get-tuple-element.241
+    255:get-tuple-element.240
+    256:get-tuple-element.239
+    257:get-tuple-element.238
+    258:copy_fusion.5
+    259:get-tuple-element.235
+    260:get-tuple-element.234
+    261:get-tuple-element.233
+    262:get-tuple-element.232
+    263:get-tuple-element.231
+    264:get-tuple-element.230
+    265:get-tuple-element.229
+    266:get-tuple-element.228
+    267:get-tuple-element.227
+    268:get-tuple-element.226
+    269:get-tuple-element.225
+    270:tuple.70
+  BufferLiveRange:
+    loop_divide_fusion{}:182-184
+    tuple.66{}:183-184
+    loop_select_fusion{}:189-191
+    tuple.67{}:190-191
+    loop_divide_fusion.1{}:228-230
+    tuple.68{}:229-230
+    loop_select_fusion.1{}:236-238
+    tuple.69{}:237-238
+    wrapped_copy.10{}:59-271
+    wrapped_copy.11{}:62-271
+    loop_convert_fusion{}:63-191
+    wrapped_copy.9{}:66-271
+    wrapped_copy.8{}:69-271
+    wrapped_copy.7{}:70-271
+    wrapped_copy.6{}:75-271
+    wrapped_copy.5{}:77-271
+    wrapped_copy.4{}:79-271
+    wrapped_copy.3{}:82-271
+    wrapped_copy.2{}:83-271
+    wrapped_copy.1{}:85-271
+    loop_convert_fusion.1{}:87-238
+    wrapped_copy{}:88-271
+    tuple.52.0{}:91-238
+    copy_fusion.1{}:92-94
+    copy_fusion.1{0}:92-271
+    copy_fusion.1{1}:92-271
+    loop_divide_fusion.2{}:95-98
+    loop_divide_fusion.2{0}:95-271
+    loop_divide_fusion.2{1}:95-271
+    copy_fusion.6{}:100-103
+    copy_fusion.6{0}:100-271
+    copy_fusion.6{1}:100-271
+    copy_fusion{}:105-108
+    copy_fusion{0}:105-271
+    copy_fusion{1}:105-271
+    copy_fusion.3{}:110-113
+    copy_fusion.3{0}:110-271
+    copy_fusion.3{1}:110-271
+    tuple.50.0{}:115-191
+    copy_fusion.8{}:116-121
+    copy_fusion.8{0}:116-271
+    copy_fusion.8{1}:116-271
+    copy_fusion.8{2}:116-271
+    loop_add_divide_multiply_fusion{}:122-173
+    loop_add_divide_multiply_fusion{0}:122-271
+    loop_add_divide_multiply_fusion{1}:122-271
+    loop_add_divide_multiply_fusion{2}:122-271
+    tuple.82{}:123-168
+    Arg_0.1.0{}:0-271
+    Arg_1.2.0{}:0-271
+    Arg_2.3.0{}:0-271
+    Arg_3.4.0{}:0-271
+    Arg_4.5.0{}:0-271
+    Arg_5.6.0{}:0-271
+    Arg_6.7.0{}:0-271
+    Arg_9.10.0{}:0-271
+    Arg_10.11.0{}:0-271
+    Arg_14.15.0{}:0-271
+    Arg_15.16.0{}:0-271
+    Arg_16.17.0{}:0-271
+    Arg_17.18.0{}:0-271
+    Arg_23.24.0{}:0-271
+    Arg_24.25.0{}:0-271
+    Arg_28.29.0{}:0-271
+    Arg_29.30.0{}:0-271
+    Arg_37.38.0{}:0-271
+    Arg_36.37.0{}:0-271
+    Arg_35.36.0{}:0-271
+    Arg_34.35.0{}:0-271
+    Arg_33.34.0{}:0-271
+    Arg_32.33.0{}:0-271
+    Arg_31.32.0{}:0-271
+    Arg_30.31.0{}:0-271
+    Arg_26.27.0{}:0-271
+    Arg_22.23.0{}:0-271
+    Arg_21.22.0{}:0-271
+    Arg_20.21.0{}:0-271
+    Arg_19.20.0{}:0-271
+    Arg_18.19.0{}:0-271
+    Arg_12.13.0{}:0-271
+    Arg_8.9.0{}:0-271
+    Arg_7.8.0{}:0-271
+    Arg_27.28.0{}:0-271
+    Arg_25.26.0{}:0-271
+    Arg_13.14.0{}:0-271
+    Arg_11.12.0{}:0-271
+    copy_fusion.2{}:194-199
+    copy_fusion.2{0}:194-271
+    copy_fusion.2{1}:194-271
+    copy_fusion.2{2}:194-271
+    tuple.51.0{}:175-191
+    loop_add_divide_multiply_subtract_fusion{}:201-218
+    loop_add_divide_multiply_subtract_fusion{0}:201-271
+    loop_add_divide_multiply_subtract_fusion{1}:201-271
+    loop_add_divide_multiply_subtract_fusion{2}:201-271
+    loop_add_divide_multiply_subtract_fusion{3}:201-271
+    loop_add_divide_multiply_subtract_fusion{4}:201-271
+    loop_add_divide_multiply_subtract_fusion{5}:201-271
+    loop_add_divide_multiply_subtract_fusion{6}:201-271
+    loop_add_divide_multiply_subtract_fusion{7}:201-271
+    loop_add_divide_multiply_subtract_fusion{8}:201-271
+    tuple.53.0{}:223-238
+    loop_multiply_fusion{}:220-222
+    loop_multiply_fusion{0}:220-271
+    loop_multiply_fusion{1}:220-271
+    copy_fusion.4{}:241-246
+    copy_fusion.4{0}:241-271
+    copy_fusion.4{1}:241-271
+    copy_fusion.4{2}:241-271
+    copy_fusion.4{3}:241-271
+    copy_fusion.4{4}:241-271
+    copy_fusion.5{}:258-269
+    copy_fusion.5{0}:258-271
+    copy_fusion.5{1}:258-271
+    copy_fusion.5{2}:258-271
+    copy_fusion.5{3}:258-271
+    copy_fusion.5{4}:258-271
+    copy_fusion.5{5}:258-271
+    copy_fusion.5{6}:258-271
+    copy_fusion.5{7}:258-271
+    copy_fusion.5{8}:258-271
+    copy_fusion.5{9}:258-271
+    copy_fusion.5{10}:258-271
+    copy_fusion.7{}:247-257
+    copy_fusion.7{0}:247-271
+    copy_fusion.7{1}:247-271
+    copy_fusion.7{2}:247-271
+    copy_fusion.7{3}:247-271
+    copy_fusion.7{4}:247-271
+    copy_fusion.7{5}:247-271
+    copy_fusion.7{6}:247-271
+    copy_fusion.7{7}:247-271
+    copy_fusion.7{8}:247-271
+    copy_fusion.7{9}:247-271
+    tuple.70{}:270-271
+    conditional.6.clone.1.0{}:191-192
+    conditional.6.clone.1.0{0}:191-271
+    conditional.7.clone.1.0{}:238-239
+    conditional.7.clone.1.0{0}:238-271
+  Live ranges at 270 (peak):
+    wrapped_copy.10: 8 bytes
+    wrapped_copy.11: 8 bytes
+    wrapped_copy.9: 8 bytes
+    wrapped_copy.8: 8 bytes
+    wrapped_copy.7: 8 bytes
+    wrapped_copy.6: 8 bytes
+    wrapped_copy.5: 8 bytes
+    wrapped_copy.4: 8 bytes
+    wrapped_copy.3: 8 bytes
+    wrapped_copy.2: 8 bytes
+    wrapped_copy.1: 8 bytes
+    wrapped_copy: 8 bytes
+    copy_fusion.1: 16 bytes
+    copy_fusion.1: 16 bytes
+    loop_divide_fusion.2: 16 bytes
+    loop_divide_fusion.2: 16 bytes
+    copy_fusion.6: 16 bytes
+    copy_fusion.6: 16 bytes
+    copy_fusion: 16 bytes
+    copy_fusion: 16 bytes
+    copy_fusion.3: 16 bytes
+    copy_fusion.3: 16 bytes
+    copy_fusion.8: 24 bytes
+    copy_fusion.8: 24 bytes
+    copy_fusion.8: 24 bytes
+    loop_add_divide_multiply_fusion: 24 bytes
+    loop_add_divide_multiply_fusion: 24 bytes
+    loop_add_divide_multiply_fusion: 24 bytes
+    Arg_0.1.0: 8 bytes
+    Arg_1.2.0: 8 bytes
+    Arg_2.3.0: 8 bytes
+    Arg_3.4.0: 8 bytes
+    Arg_4.5.0: 8 bytes
+    Arg_5.6.0: 8 bytes
+    Arg_6.7.0: 8 bytes
+    Arg_9.10.0: 8 bytes
+    Arg_10.11.0: 8 bytes
+    Arg_14.15.0: 8 bytes
+    Arg_15.16.0: 8 bytes
+    Arg_16.17.0: 8 bytes
+    Arg_17.18.0: 8 bytes
+    Arg_23.24.0: 8 bytes
+    Arg_24.25.0: 8 bytes
+    Arg_28.29.0: 8 bytes
+    Arg_29.30.0: 8 bytes
+    Arg_37.38.0: 8 bytes
+    Arg_36.37.0: 8 bytes
+    Arg_35.36.0: 8 bytes
+    Arg_34.35.0: 8 bytes
+    Arg_33.34.0: 8 bytes
+    Arg_32.33.0: 8 bytes
+    Arg_31.32.0: 8 bytes
+    Arg_30.31.0: 8 bytes
+    Arg_26.27.0: 8 bytes
+    Arg_22.23.0: 8 bytes
+    Arg_21.22.0: 8 bytes
+    Arg_20.21.0: 8 bytes
+    Arg_19.20.0: 8 bytes
+    Arg_18.19.0: 8 bytes
+    Arg_12.13.0: 8 bytes
+    Arg_8.9.0: 8 bytes
+    Arg_7.8.0: 8 bytes
+    Arg_27.28.0: 8 bytes
+    Arg_25.26.0: 8 bytes
+    Arg_13.14.0: 8 bytes
+    Arg_11.12.0: 8 bytes
+    copy_fusion.2: 24 bytes
+    copy_fusion.2: 24 bytes
+    copy_fusion.2: 24 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_add_divide_multiply_subtract_fusion: 72 bytes
+    loop_multiply_fusion: 16 bytes
+    loop_multiply_fusion: 16 bytes
+    copy_fusion.4: 40 bytes
+    copy_fusion.4: 40 bytes
+    copy_fusion.4: 40 bytes
+    copy_fusion.4: 40 bytes
+    copy_fusion.4: 40 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.5: 88 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    copy_fusion.7: 80 bytes
+    tuple.70: 560 bytes
+    conditional.6.clone.1.0: 8 bytes
+    conditional.7.clone.1.0: 8 bytes

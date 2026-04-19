@@ -1,0 +1,174 @@
+HloModule jit__threefry_split, is_scheduled=true, entry_computation_layout={(u32[2]{0})->u32[2,2]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="c36958e71aed0bd79b5cbcea6bedc8fa"}
+
+fused_concatenate {
+  iota.1.54 = u32[4]{0} iota(), iota_dimension=0, metadata={op_name="jit(_threefry_split)/jit(main)/iota[dtype=uint32 shape=(4,) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  slice.4.17 = u32[2]{0} slice(iota.1.54), slice={[0:2]}, metadata={op_name="jit(_threefry_split)/jit(main)/slice[start_indices=(np.int64(0),) limit_indices=(np.int64(2),) strides=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  param_0.313 = u32[2]{0} parameter(0)
+  slice.5.49 = u32[1]{0} slice(param_0.313), slice={[0:1]}, metadata={op_name="jit(_threefry_split)/jit(main)/slice[start_indices=(0,) limit_indices=(1,) strides=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  bitcast.375.68 = u32[] bitcast(slice.5.49)
+  broadcast.33.43 = u32[2]{0} broadcast(bitcast.375.68), dimensions={}, metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.37.19 = u32[2]{0} add(slice.4.17, broadcast.33.43), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  iota.1.53 = u32[4]{0} iota(), iota_dimension=0, metadata={op_name="jit(_threefry_split)/jit(main)/iota[dtype=uint32 shape=(4,) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  slice.6.37 = u32[2]{0} slice(iota.1.53), slice={[2:4]}, metadata={op_name="jit(_threefry_split)/jit(main)/slice[start_indices=(np.int64(2),) limit_indices=(np.int64(4),) strides=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  slice.7.69 = u32[1]{0} slice(param_0.313), slice={[1:2]}, metadata={op_name="jit(_threefry_split)/jit(main)/slice[start_indices=(1,) limit_indices=(2,) strides=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  bitcast.385.84 = u32[] bitcast(slice.7.69)
+  broadcast.34.59 = u32[2]{0} broadcast(bitcast.385.84), dimensions={}, metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.38.37 = u32[2]{0} add(slice.6.37, broadcast.34.59), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.39.17 = u32[2]{0} add(add.37.19, add.38.37), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_30_1 = u32[] constant(13)
+  broadcast.35.clone.35 = u32[2]{0} broadcast(constant_30_1), dimensions={}
+  shift-left.20.19 = u32[2]{0} shift-left(add.38.37, broadcast.35.clone.35), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_28_1 = u32[] constant(19)
+  broadcast.36.clone.41 = u32[2]{0} broadcast(constant_28_1), dimensions={}
+  shift-right-logical.20.21 = u32[2]{0} shift-right-logical(add.38.37, broadcast.36.clone.41), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.20.19 = u32[2]{0} or(shift-left.20.19, shift-right-logical.20.21), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.22.17 = u32[2]{0} xor(add.39.17, or.20.19), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.40.52 = u32[2]{0} add(add.39.17, xor.22.17), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_26_1 = u32[] constant(15)
+  broadcast.37.clone.57 = u32[2]{0} broadcast(constant_26_1), dimensions={}
+  shift-left.21.19 = u32[2]{0} shift-left(xor.22.17, broadcast.37.clone.57), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_24_1 = u32[] constant(17)
+  broadcast.38.clone.67 = u32[2]{0} broadcast(constant_24_1), dimensions={}
+  shift-right-logical.21.21 = u32[2]{0} shift-right-logical(xor.22.17, broadcast.38.clone.67), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.21.19 = u32[2]{0} or(shift-left.21.19, shift-right-logical.21.21), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.23.17 = u32[2]{0} xor(add.40.52, or.21.19), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.41.35 = u32[2]{0} add(add.40.52, xor.23.17), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_22_1 = u32[] constant(26)
+  broadcast.39.clone.53 = u32[2]{0} broadcast(constant_22_1), dimensions={}
+  shift-left.22.19 = u32[2]{0} shift-left(xor.23.17, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_20_1 = u32[] constant(6)
+  broadcast.40.clone.73 = u32[2]{0} broadcast(constant_20_1), dimensions={}
+  shift-right-logical.22.21 = u32[2]{0} shift-right-logical(xor.23.17, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.22.19 = u32[2]{0} or(shift-left.22.19, shift-right-logical.22.21), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.24.17 = u32[2]{0} xor(add.41.35, or.22.19), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.42.14 = u32[2]{0} add(add.41.35, xor.24.17), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.44.9 = u32[2]{0} add(add.42.14, broadcast.34.59), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.23.15 = u32[2]{0} shift-left(xor.24.17, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.23.9 = u32[2]{0} shift-right-logical(xor.24.17, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.23.13 = u32[2]{0} or(shift-left.23.15, shift-right-logical.23.9), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.25.11 = u32[2]{0} xor(add.42.14, or.23.13), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.26.25 = u32[] xor(bitcast.375.68, bitcast.385.84), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_32_1 = u32[] constant(466688986)
+  xor.27.23 = u32[] xor(xor.26.25, constant_32_1), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  broadcast.41.21 = u32[2]{0} broadcast(xor.27.23), dimensions={}, metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.47.9 = u32[2]{0} add(xor.25.11, broadcast.41.21), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_18_1 = u32[] constant(1)
+  broadcast.43.7 = u32[2]{0} broadcast(constant_18_1), dimensions={}
+  add.48.7 = u32[2]{0} add(add.47.9, broadcast.43.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.49.7 = u32[2]{0} add(add.44.9, add.48.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.24.11 = u32[2]{0} shift-left(add.48.7, broadcast.38.clone.67), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.24.9 = u32[2]{0} shift-right-logical(add.48.7, broadcast.37.clone.57), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.24.9 = u32[2]{0} or(shift-left.24.11, shift-right-logical.24.9), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.28.7 = u32[2]{0} xor(add.49.7, or.24.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.50.32 = u32[2]{0} add(add.49.7, xor.28.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_16_1 = u32[] constant(29)
+  broadcast.45.clone.21 = u32[2]{0} broadcast(constant_16_1), dimensions={}
+  shift-left.25.9 = u32[2]{0} shift-left(xor.28.7, broadcast.45.clone.21), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_14_1 = u32[] constant(3)
+  broadcast.46.clone.27 = u32[2]{0} broadcast(constant_14_1), dimensions={}
+  shift-right-logical.25.11 = u32[2]{0} shift-right-logical(xor.28.7, broadcast.46.clone.27), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.25.9 = u32[2]{0} or(shift-left.25.9, shift-right-logical.25.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.29.7 = u32[2]{0} xor(add.50.32, or.25.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.52.25 = u32[2]{0} add(add.50.32, xor.29.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_12_1 = u32[] constant(16)
+  broadcast.47.clone.47 = u32[2]{0} broadcast(constant_12_1), dimensions={}
+  shift-left.26.9 = u32[2]{0} shift-left(xor.29.7, broadcast.47.clone.47), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.26.11 = u32[2]{0} shift-right-logical(xor.29.7, broadcast.47.clone.47), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.26.9 = u32[2]{0} or(shift-left.26.9, shift-right-logical.26.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.30.7 = u32[2]{0} xor(add.52.25, or.26.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.53.14 = u32[2]{0} add(add.52.25, xor.30.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.54.7 = u32[2]{0} add(add.53.14, broadcast.41.21), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_10_1 = u32[] constant(24)
+  broadcast.48.clone.15 = u32[2]{0} broadcast(constant_10_1), dimensions={}
+  shift-left.27.9 = u32[2]{0} shift-left(xor.30.7, broadcast.48.clone.15), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_8_1 = u32[] constant(8)
+  broadcast.49.clone.25 = u32[2]{0} broadcast(constant_8_1), dimensions={}
+  shift-right-logical.27.13 = u32[2]{0} shift-right-logical(xor.30.7, broadcast.49.clone.25), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.27.11 = u32[2]{0} or(shift-left.27.9, shift-right-logical.27.13), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.31.9 = u32[2]{0} xor(add.53.14, or.27.11), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.55.9 = u32[2]{0} add(xor.31.9, broadcast.33.43), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_6_1 = u32[] constant(2)
+  broadcast.50.7 = u32[2]{0} broadcast(constant_6_1), dimensions={}
+  add.57.7 = u32[2]{0} add(add.55.9, broadcast.50.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.58.7 = u32[2]{0} add(add.54.7, add.57.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.28.9 = u32[2]{0} shift-left(add.57.7, broadcast.35.clone.35), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.28.11 = u32[2]{0} shift-right-logical(add.57.7, broadcast.36.clone.41), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.28.9 = u32[2]{0} or(shift-left.28.9, shift-right-logical.28.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.32.7 = u32[2]{0} xor(add.58.7, or.28.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.59.22 = u32[2]{0} add(add.58.7, xor.32.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.29.9 = u32[2]{0} shift-left(xor.32.7, broadcast.37.clone.57), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.29.11 = u32[2]{0} shift-right-logical(xor.32.7, broadcast.38.clone.67), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.29.9 = u32[2]{0} or(shift-left.29.9, shift-right-logical.29.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.33.7 = u32[2]{0} xor(add.59.22, or.29.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.60.15 = u32[2]{0} add(add.59.22, xor.33.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.30.9 = u32[2]{0} shift-left(xor.33.7, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.30.11 = u32[2]{0} shift-right-logical(xor.33.7, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.30.9 = u32[2]{0} or(shift-left.30.9, shift-right-logical.30.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.34.7 = u32[2]{0} xor(add.60.15, or.30.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.62.4 = u32[2]{0} add(add.60.15, xor.34.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.63.5 = u32[2]{0} add(add.62.4, broadcast.33.43), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.31.9 = u32[2]{0} shift-left(xor.34.7, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.31.5 = u32[2]{0} shift-right-logical(xor.34.7, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.31.7 = u32[2]{0} or(shift-left.31.9, shift-right-logical.31.5), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.35.5 = u32[2]{0} xor(add.62.4, or.31.7), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.64.5 = u32[2]{0} add(xor.35.5, broadcast.34.59), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.65.3 = u32[2]{0} add(add.64.5, broadcast.46.clone.27), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.66.3 = u32[2]{0} add(add.63.5, add.65.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.32.11 = u32[2]{0} shift-left(add.65.3, broadcast.38.clone.67), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.32.9 = u32[2]{0} shift-right-logical(add.65.3, broadcast.37.clone.57), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.32.9 = u32[2]{0} or(shift-left.32.11, shift-right-logical.32.9), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.36.7 = u32[2]{0} xor(add.66.3, or.32.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.68.22 = u32[2]{0} add(add.66.3, xor.36.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.33.9 = u32[2]{0} shift-left(xor.36.7, broadcast.45.clone.21), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.33.11 = u32[2]{0} shift-right-logical(xor.36.7, broadcast.46.clone.27), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.33.9 = u32[2]{0} or(shift-left.33.9, shift-right-logical.33.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.37.7 = u32[2]{0} xor(add.68.22, or.33.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.72.15 = u32[2]{0} add(add.68.22, xor.37.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.34.9 = u32[2]{0} shift-left(xor.37.7, broadcast.47.clone.47), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.34.11 = u32[2]{0} shift-right-logical(xor.37.7, broadcast.47.clone.47), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.34.9 = u32[2]{0} or(shift-left.34.9, shift-right-logical.34.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.38.7 = u32[2]{0} xor(add.72.15, or.34.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.73.4 = u32[2]{0} add(add.72.15, xor.38.7), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.74.5 = u32[2]{0} add(add.73.4, broadcast.34.59), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.35.5 = u32[2]{0} shift-left(xor.38.7, broadcast.48.clone.15), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.35.11 = u32[2]{0} shift-right-logical(xor.38.7, broadcast.49.clone.25), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.35.9 = u32[2]{0} or(shift-left.35.5, shift-right-logical.35.11), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.39.7 = u32[2]{0} xor(add.73.4, or.35.9), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.75.5 = u32[2]{0} add(xor.39.7, broadcast.41.21), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_4_1 = u32[] constant(4)
+  broadcast.51.3 = u32[2]{0} broadcast(constant_4_1), dimensions={}
+  add.77.3 = u32[2]{0} add(add.75.5, broadcast.51.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.78.3 = u32[2]{0} add(add.74.5, add.77.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.36.5 = u32[2]{0} shift-left(add.77.3, broadcast.35.clone.35), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.36.7 = u32[2]{0} shift-right-logical(add.77.3, broadcast.36.clone.41), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.36.5 = u32[2]{0} or(shift-left.36.5, shift-right-logical.36.7), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.42.3 = u32[2]{0} xor(add.78.3, or.36.5), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.79.6 = u32[2]{0} add(add.78.3, xor.42.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.37.5 = u32[2]{0} shift-left(xor.42.3, broadcast.37.clone.57), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.37.7 = u32[2]{0} shift-right-logical(xor.42.3, broadcast.38.clone.67), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.37.5 = u32[2]{0} or(shift-left.37.5, shift-right-logical.37.7), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.43.3 = u32[2]{0} xor(add.79.6, or.37.5), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.80.5 = u32[2]{0} add(add.79.6, xor.43.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.38.5 = u32[2]{0} shift-left(xor.43.3, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.38.7 = u32[2]{0} shift-right-logical(xor.43.3, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.38.5 = u32[2]{0} or(shift-left.38.5, shift-right-logical.38.7), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.44.3 = u32[2]{0} xor(add.80.5, or.38.5), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.82.1 = u32[2]{0} add(add.80.5, xor.44.3), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.83.1 = u32[2]{0} add(add.82.1, broadcast.41.21), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-left.39.7 = u32[2]{0} shift-left(xor.44.3, broadcast.40.clone.73), metadata={op_name="jit(_threefry_split)/jit(main)/shift_left" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  shift-right-logical.39.3 = u32[2]{0} shift-right-logical(xor.44.3, broadcast.39.clone.53), metadata={op_name="jit(_threefry_split)/jit(main)/shift_right_logical" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  or.39.5 = u32[2]{0} or(shift-left.39.7, shift-right-logical.39.3), metadata={op_name="jit(_threefry_split)/jit(main)/or" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  xor.45.3 = u32[2]{0} xor(add.82.1, or.39.5), metadata={op_name="jit(_threefry_split)/jit(main)/xor" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  add.84.5 = u32[2]{0} add(xor.45.3, broadcast.33.43), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  constant_2_1 = u32[] constant(5)
+  broadcast.52.1 = u32[2]{0} broadcast(constant_2_1), dimensions={}
+  add.85.3 = u32[2]{0} add(add.84.5, broadcast.52.1), metadata={op_name="jit(_threefry_split)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  ROOT concatenate.1.1 = u32[4]{0} concatenate(add.83.1, add.85.3), dimensions={0}, metadata={op_name="jit(_threefry_split)/jit(main)/concatenate[dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+} // fused_concatenate
+
+ENTRY main.173 {
+  Arg_0.1.0 = u32[2]{0} parameter(0), metadata={op_name="key"}
+  input_concatenate_fusion = u32[4]{0} fusion(Arg_0.1.0), kind=kInput, calls=fused_concatenate, metadata={op_name="jit(_threefry_split)/jit(main)/concatenate[dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+  ROOT bitcast.2.0 = u32[2,2]{1,0} bitcast(input_concatenate_fusion), metadata={op_name="jit(_threefry_split)/jit(main)/concatenate[dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1011}
+}
+

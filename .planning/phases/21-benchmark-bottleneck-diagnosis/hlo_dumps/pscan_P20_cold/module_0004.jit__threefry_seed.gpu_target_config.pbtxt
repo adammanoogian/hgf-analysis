@@ -2,21 +2,20 @@ gpu_device_info {
   threads_per_block_limit: 1024
   threads_per_warp: 32
   shared_memory_per_block: 49152
-  shared_memory_per_core: 102400
-  threads_per_core_limit: 1536
-  core_count: 142
-  fpus_per_core: 128
+  shared_memory_per_core: 167936
+  threads_per_core_limit: 2048
+  core_count: 108
+  fpus_per_core: 64
   block_dim_limit_x: 2147483647
   block_dim_limit_y: 65535
   block_dim_limit_z: 65535
-  memory_bandwidth: 864096000000
-  l2_cache_size: 100663296
-  clock_rate_ghz: 2.52
-  device_memory_size: 47676129280
-  shared_memory_per_block_optin: 101376
+  memory_bandwidth: 1935360000000
+  l2_cache_size: 41943040
+  clock_rate_ghz: 1.41
+  device_memory_size: 85095874560
+  shared_memory_per_block_optin: 166912
   cuda_compute_capability {
     major: 8
-    minor: 9
   }
   registers_per_core_limit: 65536
   registers_per_block_limit: 65536
@@ -26,4 +25,4 @@ dnn_version_info {
   major: 9
   minor: 20
 }
-device_description_str: "NVIDIA L40S"
+device_description_str: "NVIDIA A100 80GB PCIe"

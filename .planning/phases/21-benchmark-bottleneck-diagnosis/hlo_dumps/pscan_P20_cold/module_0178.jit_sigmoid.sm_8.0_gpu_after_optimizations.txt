@@ -1,0 +1,23 @@
+HloModule jit_sigmoid, is_scheduled=true, entry_computation_layout={(f64[192,20]{1,0})->(f64[192,20]{1,0}, f64[192,20]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="ad26bf235a5b35914a1ca721cf1dcdba"}
+
+fused_divide_multiply {
+  constant_2_1 = f64[] constant(1)
+  broadcast.1.1.clone.1 = f64[192,20]{1,0} broadcast(constant_2_1), dimensions={}
+  param_0.9 = f64[192,20]{1,0} parameter(0)
+  negate.1.3.clone.1 = f64[192,20]{1,0} negate(param_0.9), metadata={op_name="jit(sigmoid)/jit(main)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  exponential.1.3.clone.1 = f64[192,20]{1,0} exponential(negate.1.3.clone.1), metadata={op_name="jit(sigmoid)/jit(main)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  add.1.1.clone.1 = f64[192,20]{1,0} add(exponential.1.3.clone.1, broadcast.1.1.clone.1), metadata={op_name="jit(sigmoid)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  divide.1.1.clone.1 = f64[192,20]{1,0} divide(broadcast.1.1.clone.1, add.1.1.clone.1), metadata={op_name="jit(sigmoid)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  subtract.1.1 = f64[192,20]{1,0} subtract(broadcast.1.1.clone.1, divide.1.1.clone.1), metadata={op_name="jit(sigmoid)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  multiply.1.1 = f64[192,20]{1,0} multiply(divide.1.1.clone.1, subtract.1.1), metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  ROOT tuple = (f64[192,20]{1,0}, f64[192,20]{1,0}) tuple(multiply.1.1, divide.1.1.clone.1)
+} // fused_divide_multiply
+
+ENTRY main.11 {
+  Arg_0.1.0 = f64[192,20]{1,0} parameter(0)
+  loop_divide_multiply_fusion = (f64[192,20]{1,0}, f64[192,20]{1,0}) fusion(Arg_0.1.0), kind=kLoop, calls=fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  get-tuple-element.1 = f64[192,20]{1,0} get-tuple-element(loop_divide_multiply_fusion), index=1, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  get-tuple-element = f64[192,20]{1,0} get-tuple-element(loop_divide_multiply_fusion), index=0, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  ROOT tuple.10.0 = (f64[192,20]{1,0}, f64[192,20]{1,0}) tuple(get-tuple-element.1, get-tuple-element)
+}
+
