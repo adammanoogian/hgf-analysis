@@ -1,6 +1,6 @@
 """PAT-RL foundation smoke: simulate -> fit -> export agents on CPU.
 
-Runs the full parallel PAT-RL stack end-to-end to verify all Phase 18+19
+Runs the full parallel PAT-RL stack end-to-end to verify all Phase 18+19+20
 modules compose correctly.  Writes trajectory CSVs + parameter summary CSV
 under ``output/patrl_smoke/`` (or the dir passed via ``--output-dir``).
 
@@ -29,8 +29,13 @@ Usage
 -----
     python scripts/12_smoke_patrl_foundation.py [--level {2,3}]
         [--output-dir DIR] [--n-tune N] [--n-draws N] [--seed N]
-        [--n-participants N] [--dry-run]
+        [--n-participants N] [--phenotypes {healthy|all|...}]
+        [--n-participants-per-phenotype N] [--dry-run]
         [--fit-method {blackjax,laplace,both}]
+
+Environment variables (override CLI defaults when set):
+    PRL_PATRL_SMOKE_N             Number of participants per phenotype (default 5)
+    PRL_PATRL_SMOKE_PHENOTYPES    Phenotype filter: 'all' or a single name (default 'all')
 
 Exit codes
 ----------
@@ -43,8 +48,10 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 import time
+import warnings
 from pathlib import Path
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -77,15 +84,31 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
+_VALID_PHENOTYPES = frozenset(
+    {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+)
+
+
 def _parse_args() -> argparse.Namespace:
     """Parse command-line arguments.
+
+    Environment variables ``PRL_PATRL_SMOKE_N`` and
+    ``PRL_PATRL_SMOKE_PHENOTYPES`` override the corresponding CLI defaults.
+    CLI flags take precedence over env vars when both are specified.
 
     Returns
     -------
     argparse.Namespace
         Parsed arguments with attributes: level, output_dir, n_tune, n_draws,
-        seed, n_participants, dry_run, fit_method.
+        seed, n_participants, phenotypes, dry_run, fit_method, response_model,
+        all_models.
     """
+    # Read env-var defaults (SC5: SLURM uses PRL_PATRL_SMOKE_N=40, PHENOTYPES=all).
+    _env_n = os.environ.get("PRL_PATRL_SMOKE_N")
+    _env_ph = os.environ.get("PRL_PATRL_SMOKE_PHENOTYPES")
+    _default_n = int(_env_n) if _env_n is not None else 5
+    _default_ph = _env_ph if _env_ph is not None else "all"
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -125,8 +148,34 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--n-participants",
         type=int,
-        default=5,
-        help="Number of synthetic participants to simulate (default: 5).",
+        default=_default_n,
+        help=(
+            "Number of synthetic participants PER PHENOTYPE (default: "
+            f"{_default_n}, overridable via PRL_PATRL_SMOKE_N env var). "
+            "Total cohort = N × len(phenotypes). Alias: --n-participants-per-phenotype."
+        ),
+    )
+    parser.add_argument(
+        "--n-participants-per-phenotype",
+        type=int,
+        default=None,
+        help=(
+            "Alias for --n-participants (Plan 20-05).  If given, overrides "
+            "--n-participants."
+        ),
+    )
+    parser.add_argument(
+        "--phenotypes",
+        type=str,
+        default=_default_ph,
+        metavar="PHENOTYPE",
+        help=(
+            "Phenotype(s) to simulate. Pass 'all' (default) to use all 4 "
+            "phenotypes, or a single phenotype name "
+            f"(one of: {sorted(_VALID_PHENOTYPES)}). "
+            "Overridable via PRL_PATRL_SMOKE_PHENOTYPES env var. "
+            "(Plan 20-05)"
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -147,6 +196,14 @@ def _parse_args() -> argparse.Namespace:
             "fit_vb_laplace_patrl (Phase 19). 'both' runs both on the "
             "same seeded cohort and invokes the VBL-06 comparison if "
             "validation/vbl06_laplace_vs_nuts.py is importable."
+        ),
+    )
+    parser.add_argument(
+        "--no-blackjax",
+        action="store_true",
+        help=(
+            "Force --fit-method laplace (skip BlackJAX). Shorthand for "
+            "--fit-method laplace when blackjax is not installed."
         ),
     )
     parser.add_argument(
@@ -656,14 +713,62 @@ def main() -> int:
     response_model: str = args.response_model
     all_models: bool = args.all_models
 
+    # --no-blackjax forces laplace path.
+    if args.no_blackjax:
+        method = "laplace"
+
     # --all-models forces laplace path and loops over model_a/b/c
     if all_models:
         method = "laplace"
 
+    # Resolve n_participants (--n-participants-per-phenotype overrides --n-participants).
+    n_per_phenotype: int = (
+        args.n_participants_per_phenotype
+        if args.n_participants_per_phenotype is not None
+        else args.n_participants
+    )
+
+    # Resolve phenotype filter (Plan 20-05 SC5).
+    _pharg = args.phenotypes.strip().lower()
+    if _pharg == "all":
+        phenotypes_filter: list[str] | None = None  # simulate_patrl_cohort default
+    elif _pharg in _VALID_PHENOTYPES:
+        phenotypes_filter = [_pharg]
+    else:
+        logger.error(
+            "--phenotypes=%r is not 'all' or a valid phenotype name.  "
+            "Valid names: %s",
+            args.phenotypes,
+            sorted(_VALID_PHENOTYPES),
+        )
+        return 1
+
+    # Warn if running full 160-agent cohort on CPU without --no-blackjax / --dry-run.
+    _n_total_estimate = n_per_phenotype * (
+        4 if phenotypes_filter is None else len(phenotypes_filter)
+    )
+    if _n_total_estimate >= 40 and method != "laplace" and not args.dry_run:
+        warnings.warn(
+            f"Running {_n_total_estimate} agents with fit_method={method!r} on CPU "
+            f"will be very slow (estimated >30 min). "
+            f"Use --fit-method laplace (or --no-blackjax) for local testing, "
+            f"or submit via cluster/patrl_smoke.slurm for production-scale runs.",
+            UserWarning,
+            stacklevel=1,
+        )
+        logger.warning(
+            "Full-scale cohort (%d agents) + %s fit on CPU: "
+            "consider using cluster/patrl_smoke.slurm instead.",
+            _n_total_estimate,
+            method,
+        )
+
     print("=" * 60)
     print("PAT-RL foundation smoke — Phase 18/19/20")
     print("=" * 60)
-    print(f"  level={args.level}  n_participants={args.n_participants}")
+    print(f"  level={args.level}  n_per_phenotype={n_per_phenotype}")
+    print(f"  phenotypes={'all (4)' if phenotypes_filter is None else phenotypes_filter}")
+    print(f"  total_agents={_n_total_estimate}")
     print(f"  n_tune={args.n_tune}  n_draws={args.n_draws}  seed={args.seed}")
     print(f"  fit_method={method}")
     if all_models:
@@ -686,23 +791,26 @@ def main() -> int:
         logger.info("Loading PAT-RL config...")
         config = load_pat_rl_config()
 
-        # 2. Simulate cohort.
+        # 2. Simulate cohort (Plan 20-05: multi-phenotype via phenotypes kwarg).
         logger.info(
-            "Simulating %d synthetic participants at level %d...",
-            args.n_participants,
+            "Simulating %d agents per phenotype × %s phenotypes at level %d...",
+            n_per_phenotype,
+            "4" if phenotypes_filter is None else str(len(phenotypes_filter)),
             args.level,
         )
         t0 = time.perf_counter()
         sim_df, true_params, trials_by_participant = simulate_patrl_cohort(
-            n_participants=args.n_participants,
+            n_participants=n_per_phenotype,
             level=args.level,
             master_seed=args.seed,
             config=config,
+            phenotypes=phenotypes_filter,
         )
         logger.info(
-            "Simulation done in %.1f s  rows=%d",
+            "Simulation done in %.1f s  rows=%d  unique_participants=%d",
             time.perf_counter() - t0,
             len(sim_df),
+            len(sim_df["participant_id"].unique()),
         )
 
         # Phase 20: assert phenotype column is present (Plan 20-04).
@@ -713,7 +821,7 @@ def main() -> int:
         assert sim_df["phenotype"].notna().all(), (
             "sim_df['phenotype'] contains NA values; expected all non-empty strings."
         )
-        # Log per-phenotype participant counts.
+        # Log per-phenotype participant counts (Plan 20-05).
         phenotype_counts = (
             sim_df.groupby("phenotype")["participant_id"].nunique()
         )
@@ -734,14 +842,15 @@ def main() -> int:
         # --- Dry-run early exit ---
         if args.dry_run:
             elapsed_dry = time.perf_counter() - t_total
-            n_participants = len(true_params)
+            n_total_agents = len(true_params)
             n_trials_total = len(sim_df)
-            n_trials_per = n_trials_total // n_participants if n_participants else 0
+            n_trials_per = n_trials_total // n_total_agents if n_total_agents else 0
             phenotypes_present = sorted(sim_df["phenotype"].unique().tolist())
             print()
             print("DRY-RUN COMPLETE")
             print(f"  fit_method:            {method}")
-            print(f"  n_participants:        {n_participants}")
+            print(f"  n_per_phenotype:       {n_per_phenotype}")
+            print(f"  n_total_agents:        {n_total_agents}")
             print(f"  n_trials/participant:  {n_trials_per}")
             print(f"  total rows in sim_df:  {n_trials_total}")
             print(f"  phenotypes:            {phenotypes_present}")
