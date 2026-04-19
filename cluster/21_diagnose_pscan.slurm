@@ -165,6 +165,14 @@ mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
     unset JAX_COMPILATION_CACHE_DIR
 }
 
+# Pre-warm ArviZ daily-warning file to defeat import-time race (14.1-07 follow-up)
+# arviz/__init__.py:36 _atomic_write_text calls tmp.replace(path); when multiple
+# SLURM jobs launch near-simultaneously on the same $HOME mount, one job's
+# tmp file is gone before its replace() fires → FileNotFoundError crashes import.
+# Empty placeholder file is a no-op for ArviZ (it skips the write when fresh).
+mkdir -p "$HOME/.cache/arviz"
+touch "$HOME/.cache/arviz/daily_warning"
+
 # Phase 21 addition: emit JIT compile events to stdout/stderr for forensic parsing.
 export JAX_LOG_COMPILES=1
 
