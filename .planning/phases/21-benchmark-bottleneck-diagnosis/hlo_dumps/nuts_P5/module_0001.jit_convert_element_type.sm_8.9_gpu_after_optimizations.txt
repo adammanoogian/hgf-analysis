@@ -1,0 +1,12 @@
+HloModule jit_convert_element_type, is_scheduled=true, entry_computation_layout={(s64[])->s64[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="10cb6db102da0095256bb558956002e4"}
+
+wrapped_copy_computation {
+  param_0 = s64[] parameter(0)
+  ROOT copy.1 = s64[] copy(param_0)
+}
+
+ENTRY main.2 {
+  Arg_0.1.0 = s64[] parameter(0), metadata={op_name="args[0]"}
+  ROOT wrapped_copy = s64[] fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_copy_computation
+}
+

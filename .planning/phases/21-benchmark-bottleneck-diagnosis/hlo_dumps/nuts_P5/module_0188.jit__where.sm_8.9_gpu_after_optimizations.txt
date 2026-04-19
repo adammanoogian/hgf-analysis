@@ -1,0 +1,24 @@
+HloModule jit__where, is_scheduled=true, entry_computation_layout={(pred[4,192]{1,0}, f64[4,192]{1,0}, f64[])->(f64[4,192]{1,0}, f64[4,192]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="874e813e60aecab7a02b5fe6be8afa2d"}
+
+fused_select {
+  param_0 = pred[4,192]{1,0} parameter(0)
+  param_1 = f64[4,192]{1,0} parameter(1)
+  param_2.1 = f64[] parameter(2)
+  broadcast.2.1 = f64[4,192]{1,0} broadcast(param_2.1), dimensions={}, metadata={op_name="jit(_where)/jit(main)/broadcast_in_dim[shape=(4, 192) broadcast_dimensions=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+  ROOT select.1.1 = f64[4,192]{1,0} select(param_0, param_1, broadcast.2.1), metadata={op_name="jit(_where)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+}
+
+fused_broadcast {
+  constant_4_1 = f64[] constant(0)
+  ROOT broadcast.3.1 = f64[4,192]{1,0} broadcast(constant_4_1), dimensions={}
+}
+
+ENTRY main.9 {
+  Arg_2.3.0 = f64[] parameter(2)
+  Arg_1.2.0 = f64[4,192]{1,0} parameter(1)
+  Arg_0.1.0 = pred[4,192]{1,0} parameter(0)
+  loop_select_fusion = f64[4,192]{1,0} fusion(Arg_0.1.0, Arg_1.2.0, Arg_2.3.0), kind=kLoop, calls=fused_select, metadata={op_name="jit(_where)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+  loop_broadcast_fusion = f64[4,192]{1,0} fusion(), kind=kLoop, calls=fused_broadcast
+  ROOT tuple.8.0 = (f64[4,192]{1,0}, f64[4,192]{1,0}) tuple(loop_select_fusion, loop_broadcast_fusion)
+} // main.9
+

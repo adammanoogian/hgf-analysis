@@ -1,0 +1,10 @@
+HloModule jit__where, entry_computation_layout={(pred[20,192]{1,0}, f64[20,192]{1,0})->f64[20,192]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY main.6 {
+  Arg_0.1 = pred[20,192]{1,0} parameter(0)
+  Arg_1.2 = f64[20,192]{1,0} parameter(1)
+  constant.3 = f64[] constant(0)
+  broadcast.4 = f64[20,192]{1,0} broadcast(constant.3), dimensions={}, metadata={op_name="jit(_where)/jit(main)/broadcast_in_dim[shape=(20, 192) broadcast_dimensions=()]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+  ROOT select.5 = f64[20,192]{1,0} select(Arg_0.1, Arg_1.2, broadcast.4), metadata={op_name="jit(_where)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+}
+

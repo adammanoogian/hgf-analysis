@@ -1,0 +1,38 @@
+HloModule jit_log_softmax, entry_computation_layout={(f64[20,192,2]{2,1,0})->(f64[20,192,2]{2,1,0}, f64[20,192,2]{2,1,0}, f64[20,192,1]{2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true,true}
+
+region_0.6 {
+  Arg_0.7 = f64[] parameter(0), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]"}
+  Arg_1.8 = f64[] parameter(1), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]"}
+  ROOT maximum.9 = f64[] maximum(Arg_0.7, Arg_1.8), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+}
+
+region_1.18 {
+  Arg_0.19 = f64[] parameter(0), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  Arg_1.20 = f64[] parameter(1), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  ROOT add.21 = f64[] add(Arg_0.19, Arg_1.20), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+}
+
+ENTRY main.30 {
+  Arg_0.1 = f64[20,192,2]{2,1,0} parameter(0)
+  constant.5 = f64[] constant(-inf)
+  reduce.10 = f64[20,192]{1,0} reduce(Arg_0.1, constant.5), dimensions={2}, to_apply=region_0.6, metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  constant.2 = f64[] constant(-inf)
+  broadcast.3 = f64[20,192]{1,0} broadcast(constant.2), dimensions={}
+  maximum.11 = f64[20,192]{1,0} maximum(reduce.10, broadcast.3), metadata={op_name="jit(log_softmax)/jit(main)/max" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  reshape.12 = f64[20,192,1]{2,1,0} reshape(maximum.11), metadata={op_name="jit(log_softmax)/jit(main)/broadcast_in_dim[shape=(20, 192, 1) broadcast_dimensions=(0, np.int64(1))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  broadcast.13 = f64[20,192,1]{2,1,0} broadcast(reshape.12), dimensions={0,1,2}, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  reshape.14 = f64[20,192]{1,0} reshape(broadcast.13), metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  broadcast.15 = f64[20,192,2]{2,1,0} broadcast(reshape.14), dimensions={0,1}, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  subtract.16 = f64[20,192,2]{2,1,0} subtract(Arg_0.1, broadcast.15), metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  exponential.17 = f64[20,192,2]{2,1,0} exponential(subtract.16), metadata={op_name="jit(log_softmax)/jit(main)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  constant.4 = f64[] constant(0)
+  reduce.22 = f64[20,192]{1,0} reduce(exponential.17, constant.4), dimensions={2}, to_apply=region_1.18, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  reshape.23 = f64[20,192,1]{2,1,0} reshape(reduce.22), metadata={op_name="jit(log_softmax)/jit(main)/broadcast_in_dim[shape=(20, 192, 1) broadcast_dimensions=(0, np.int64(1))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  log.24 = f64[20,192,1]{2,1,0} log(reshape.23), metadata={op_name="jit(log_softmax)/jit(main)/log" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  broadcast.25 = f64[20,192,1]{2,1,0} broadcast(log.24), dimensions={0,1,2}, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  reshape.26 = f64[20,192]{1,0} reshape(broadcast.25), metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  broadcast.27 = f64[20,192,2]{2,1,0} broadcast(reshape.26), dimensions={0,1}, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  subtract.28 = f64[20,192,2]{2,1,0} subtract(subtract.16, broadcast.27), metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}
+  ROOT tuple.29 = (f64[20,192,2]{2,1,0}, f64[20,192,2]{2,1,0}, f64[20,192,1]{2,1,0}) tuple(subtract.28, exponential.17, reshape.23)
+} // main.30
+

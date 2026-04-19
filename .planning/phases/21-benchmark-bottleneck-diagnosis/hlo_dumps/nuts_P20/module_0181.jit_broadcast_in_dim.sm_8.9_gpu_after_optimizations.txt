@@ -1,0 +1,13 @@
+HloModule jit_broadcast_in_dim, is_scheduled=true, entry_computation_layout={(f64[192,1]{1,0})->f64[20,192,1]{2,1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="2374b155f06cf97f8482052a2ea84699"}
+
+fused_broadcast {
+  param_0.1 = f64[192,1]{1,0} parameter(0)
+  bitcast.9.1 = f64[192]{0} bitcast(param_0.1)
+  ROOT broadcast.3.1 = f64[20,192,1]{2,1,0} broadcast(bitcast.9.1), dimensions={1}, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(20, 192, 1) broadcast_dimensions=(1, 2)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=153}
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[192,1]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT loop_broadcast_fusion = f64[20,192,1]{2,1,0} fusion(Arg_0.1.0), kind=kLoop, calls=fused_broadcast, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(20, 192, 1) broadcast_dimensions=(1, 2)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=153}
+}
+

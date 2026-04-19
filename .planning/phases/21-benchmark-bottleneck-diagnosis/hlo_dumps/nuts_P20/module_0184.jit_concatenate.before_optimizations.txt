@@ -1,0 +1,8 @@
+HloModule jit_concatenate, entry_computation_layout={(f64[20,192,1]{2,1,0}, f64[20,192,1]{2,1,0})->f64[20,192,2]{2,1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY main.4 {
+  Arg_0.1 = f64[20,192,1]{2,1,0} parameter(0), metadata={op_name="args[0]"}
+  Arg_1.2 = f64[20,192,1]{2,1,0} parameter(1), metadata={op_name="args[1]"}
+  ROOT concatenate.3 = f64[20,192,2]{2,1,0} concatenate(Arg_0.1, Arg_1.2), dimensions={2}, metadata={op_name="jit(concatenate)/jit(main)/concatenate[dimension=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=153}
+}
+
