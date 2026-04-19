@@ -332,7 +332,7 @@ def test_compute_batch_waic_patrl_propagates_phenotype():
     from prl_hgf.analysis.bms import compute_batch_waic_patrl
 
     participants = ["P0", "P1", "P2"]
-    phenotypes = ["healthy", "anxious", "healthy"]
+    phenotypes = ["healthy", "high_anxiety", "healthy"]
 
     # Build sim_df with one row per participant (minimal; col set includes phenotype)
     sim_df = pd.DataFrame(
@@ -438,7 +438,7 @@ def test_compute_stratified_bms_returns_all_plus_per_phenotype():
     from prl_hgf.analysis.bms import compute_stratified_bms
 
     participants = [f"P{i}" for i in range(20)]
-    phenotypes = ["healthy"] * 10 + ["anxious"] * 10
+    phenotypes = ["healthy"] * 10 + ["high_anxiety"] * 10
     fit_df = _make_fit_df(
         participants, phenotypes, ["hgf_2level_patrl", "hgf_3level_patrl"], seed=7
     )
@@ -446,8 +446,8 @@ def test_compute_stratified_bms_returns_all_plus_per_phenotype():
     result = compute_stratified_bms(
         fit_df, ["hgf_2level_patrl", "hgf_3level_patrl"]
     )
-    assert set(result.keys()) == {"all", "healthy", "anxious"}, (
-        f"Expected keys {{'all', 'healthy', 'anxious'}}, got {set(result.keys())}"
+    assert set(result.keys()) == {"all", "healthy", "high_anxiety"}, (
+        f"Expected keys {{'all', 'healthy', 'high_anxiety'}}, got {set(result.keys())}"
     )
     # Each BMS result should have the standard keys
     for key, bms in result.items():
@@ -555,14 +555,14 @@ def test_export_peb_covariates_csv_columns(tmp_path: Path):
     df2 = pd.DataFrame(
         {
             "participant_id": ["P0", "P1", "P2"],
-            "phenotype": ["healthy", "anxious", "anxious"],
+            "phenotype": ["healthy", "high_anxiety", "high_anxiety"],
             "elpd_waic": [-100.0, -110.0, -120.0],
         }
     )
     df3 = pd.DataFrame(
         {
             "participant_id": ["P0", "P1", "P2"],
-            "phenotype": ["healthy", "anxious", "anxious"],
+            "phenotype": ["healthy", "high_anxiety", "high_anxiety"],
             "elpd_waic": [-95.0, -108.0, -118.0],
         }
     )
@@ -597,7 +597,7 @@ def test_export_peb_covariates_inner_join_alignment(tmp_path: Path):
     df3 = pd.DataFrame(
         {
             "participant_id": ["P0", "P1", "P99"],
-            "phenotype": ["healthy", "healthy", "anxious"],
+            "phenotype": ["healthy", "healthy", "high_anxiety"],
             "elpd_waic": [-95.0, -105.0, -200.0],
         }
     )
@@ -622,7 +622,7 @@ def test_export_peb_covariates_empty_intersection_raises(tmp_path: Path):
     df3 = pd.DataFrame(
         {
             "participant_id": ["P99"],
-            "phenotype": ["anxious"],
+            "phenotype": ["high_anxiety"],
             "elpd_waic": [-90.0],
         }
     )

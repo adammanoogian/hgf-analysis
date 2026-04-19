@@ -99,7 +99,7 @@ simulation:
       dhr_mean: -2.0                          # SC1 (H2A.1.2): healthy Δhr ~ N(-2, 0.5)
       dhr_sd:    0.5                          # SC1 (H2A.1.2)
       epsilon2_coupling_coef: 0.3             # placeholder: larger PE → more bradycardia (Klaassen 2024)  TODO:consumer-spec epsilon2_coupling_coef
-    reward_sensitive:
+    reward_susceptible:
       omega_2: {mean: -3.0, sd: 0.5}
       omega_3: {mean: -4.0, sd: 0.5}
       kappa:   {mean:  1.0, sd: 0.25}
@@ -110,8 +110,7 @@ simulation:
       dhr_mean: -2.0                          # inherited from healthy baseline (H2A.1.4); SC1 silent on reward-susceptible  TODO:consumer-spec dhr_mean
       dhr_sd:    0.5                          # inherited from healthy baseline (H2A.1.4); SC1 silent on reward-susceptible  TODO:consumer-spec dhr_sd
       epsilon2_coupling_coef: 0.3             # placeholder  TODO:consumer-spec epsilon2_coupling_coef
-    # 'anxious' key = SC1's HIGH-ANXIETY phenotype
-    anxious:
+    high_anxiety:
       omega_2: {mean: -2.0, sd: 0.5}
       omega_3: {mean: -4.0, sd: 0.5}
       kappa:   {mean:  1.0, sd: 0.25}
@@ -122,7 +121,7 @@ simulation:
       dhr_mean: -0.5                          # SC1 (H2A.1.2): high-anxiety Δhr ~ N(-0.5, 0.8); weak bradycardia (sympathetic overdrive)
       dhr_sd:    0.8                          # SC1 (H2A.1.2)
       epsilon2_coupling_coef: 0.3             # placeholder; coupling direction same as healthy; magnitude TBD  TODO:consumer-spec epsilon2_coupling_coef
-    anxious_reward_sensitive:
+    anxious_reward:
       omega_2: {mean: -2.0, sd: 0.5}
       omega_3: {mean: -4.0, sd: 0.5}
       kappa:   {mean:  1.0, sd: 0.25}

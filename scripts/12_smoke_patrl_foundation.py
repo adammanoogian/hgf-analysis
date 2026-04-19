@@ -85,7 +85,7 @@ logger = logging.getLogger(__name__)
 
 
 _VALID_PHENOTYPES = frozenset(
-    {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    {"healthy", "high_anxiety", "reward_susceptible", "anxious_reward"}
 )
 
 

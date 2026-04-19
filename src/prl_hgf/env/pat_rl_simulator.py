@@ -332,7 +332,7 @@ def simulate_patrl_cohort(
 
     # --- Per-phenotype SeedSequence spawn (SC5 Decision 20-05) ---
     # ss.spawn(len(phenotypes)) produces one child SeedSequence per phenotype.
-    # The spawn is ORDER-DEPENDENT: spawn(4) for ['healthy','anxious',...] gives
+    # The spawn is ORDER-DEPENDENT: spawn(4) for ['healthy','high_anxiety',...] gives
     # the same first child as spawn(1) for ['healthy'] — enabling the key
     # determinism property: subset request produces identical subset rows.
     ss = np.random.SeedSequence(master_seed)

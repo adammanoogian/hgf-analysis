@@ -28,7 +28,7 @@ _DEFAULT_PATRL_CONFIG_PATH = CONFIGS_DIR / "pat_rl.yaml"
 # Required phenotype keys (exactly the 4-cell 2x2 grid)
 # ---------------------------------------------------------------------------
 _REQUIRED_PHENOTYPE_KEYS: frozenset[str] = frozenset(
-    {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    {"healthy", "high_anxiety", "reward_susceptible", "anxious_reward"}
 )
 
 __all__ = [
@@ -507,8 +507,8 @@ class PATRLSimulationConfig:
         Master RNG seed for participant generation.
     phenotypes : dict[str, PhenotypeParams]
         Must contain exactly the four keys:
-        ``healthy``, ``anxious``, ``reward_sensitive``,
-        ``anxious_reward_sensitive``.
+        ``healthy``, ``high_anxiety``, ``reward_susceptible``,
+        ``anxious_reward``.
     """
 
     n_participants_per_phenotype: int

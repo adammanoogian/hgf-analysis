@@ -110,9 +110,9 @@ def test_load_default_config_round_trip(cfg: PATRLConfig) -> None:
     )
     expected_phenotypes = {
         "healthy",
-        "anxious",
-        "reward_sensitive",
-        "anxious_reward_sensitive",
+        "high_anxiety",
+        "reward_susceptible",
+        "anxious_reward",
     }
     assert set(cfg.simulation.phenotypes.keys()) == expected_phenotypes, (
         f"Expected phenotype keys {sorted(expected_phenotypes)}, "
@@ -219,14 +219,14 @@ def test_outcome_probs_must_sum_to_one(tmp_path: Path) -> None:
 def test_phenotype_keys_enforced(tmp_path: Path) -> None:
     """ValueError raised when phenotypes dict is missing a required key.
 
-    Drops 'anxious_reward_sensitive'; error message must mention the
+    Drops 'anxious_reward'; error message must mention the
     missing key.
     """
     raw = copy.deepcopy(_load_default_raw())
-    del raw["simulation"]["phenotypes"]["anxious_reward_sensitive"]
+    del raw["simulation"]["phenotypes"]["anxious_reward"]
     cfg_path = tmp_path / "pat_rl_missing_phenotype.yaml"
     cfg_path.write_text(yaml.safe_dump(raw))
-    with pytest.raises(ValueError, match="anxious_reward_sensitive"):
+    with pytest.raises(ValueError, match="anxious_reward"):
         load_pat_rl_config(cfg_path)
 
 
@@ -378,9 +378,9 @@ class TestPhase20ConfigExtensions:
         """
         expected_phenotypes = {
             "healthy",
-            "anxious",
-            "reward_sensitive",
-            "anxious_reward_sensitive",
+            "high_anxiety",
+            "reward_susceptible",
+            "anxious_reward",
         }
         assert set(cfg.simulation.phenotypes.keys()) == expected_phenotypes
         for name, ph in cfg.simulation.phenotypes.items():
@@ -405,23 +405,23 @@ class TestPhase20ConfigExtensions:
     def test_phenotype_b_means_match_sc1(self, cfg: PATRLConfig) -> None:
         """Phenotype b.mean values match H2A.1.2+H2A.1.4 consumer spec.
 
-        healthy: 0.0, reward_sensitive: +0.3, anxious: -0.3,
-        anxious_reward_sensitive: 0.0.
+        healthy: 0.0, reward_susceptible: +0.3, high_anxiety: -0.3,
+        anxious_reward: 0.0.
         """
         phs = cfg.simulation.phenotypes
         assert phs["healthy"].b.mean == pytest.approx(0.0), (
             f"Expected healthy.b.mean=0.0, got {phs['healthy'].b.mean}"
         )
-        assert phs["reward_sensitive"].b.mean == pytest.approx(0.3), (
-            f"Expected reward_sensitive.b.mean=0.3, "
-            f"got {phs['reward_sensitive'].b.mean}"
+        assert phs["reward_susceptible"].b.mean == pytest.approx(0.3), (
+            f"Expected reward_susceptible.b.mean=0.3, "
+            f"got {phs['reward_susceptible'].b.mean}"
         )
-        assert phs["anxious"].b.mean == pytest.approx(-0.3), (
-            f"Expected anxious.b.mean=-0.3, got {phs['anxious'].b.mean}"
+        assert phs["high_anxiety"].b.mean == pytest.approx(-0.3), (
+            f"Expected high_anxiety.b.mean=-0.3, got {phs['high_anxiety'].b.mean}"
         )
-        assert phs["anxious_reward_sensitive"].b.mean == pytest.approx(0.0), (
-            f"Expected anxious_reward_sensitive.b.mean=0.0, "
-            f"got {phs['anxious_reward_sensitive'].b.mean}"
+        assert phs["anxious_reward"].b.mean == pytest.approx(0.0), (
+            f"Expected anxious_reward.b.mean=0.0, "
+            f"got {phs['anxious_reward'].b.mean}"
         )
 
     # -----------------------------------------------------------------------

@@ -292,33 +292,33 @@ def test_simulate_patrl_cohort_epsilon2_coupled_dhr_deterministic() -> None:
 
 
 def test_simulate_patrl_cohort_dhr_differs_from_pure_phenotype() -> None:
-    """Healthy (dhr_mean=-2) and anxious (dhr_mean=-0.5) phenotypes produce different mean ΔHR.
+    """Healthy (dhr_mean=-2) and high_anxiety (dhr_mean=-0.5) phenotypes produce different mean ΔHR.
 
     Validates that the phenotype-specific Gaussian parameters actually
     propagate into the ΔHR column. After epsilon2 coupling and clipping,
     the healthy cohort should still have lower (more bradycardic) mean ΔHR
-    than the anxious cohort.
+    than the high_anxiety cohort.
 
     Phenotype values from configs/pat_rl.yaml:
       healthy: dhr_mean=-2.0, dhr_sd=0.5
-      anxious: dhr_mean=-0.5, dhr_sd=0.8
+      high_anxiety: dhr_mean=-0.5, dhr_sd=0.8
     """
     config = load_pat_rl_config()
     df_healthy, _, _ = simulate_patrl_cohort(
         n_participants=5, level=2, master_seed=42, config=config,
         phenotype_name="healthy",
     )
-    df_anxious, _, _ = simulate_patrl_cohort(
+    df_high_anxiety, _, _ = simulate_patrl_cohort(
         n_participants=5, level=2, master_seed=42, config=config,
-        phenotype_name="anxious",
+        phenotype_name="high_anxiety",
     )
 
     mean_dhr_healthy = float(df_healthy["delta_hr"].mean())
-    mean_dhr_anxious = float(df_anxious["delta_hr"].mean())
+    mean_dhr_high_anxiety = float(df_high_anxiety["delta_hr"].mean())
 
-    assert mean_dhr_healthy < mean_dhr_anxious, (
-        f"Expected healthy mean ΔHR ({mean_dhr_healthy:.3f}) < anxious mean "
-        f"ΔHR ({mean_dhr_anxious:.3f}). Phenotype effect not surviving."
+    assert mean_dhr_healthy < mean_dhr_high_anxiety, (
+        f"Expected healthy mean ΔHR ({mean_dhr_healthy:.3f}) < high_anxiety mean "
+        f"ΔHR ({mean_dhr_high_anxiety:.3f}). Phenotype effect not surviving."
     )
 
 
@@ -452,7 +452,7 @@ def test_simulate_patrl_cohort_multi_phenotype_default_all_four() -> None:
         f"Expected 12 unique participants (3 × 4); got {n_unique}"
     )
 
-    expected_phenotypes = {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    expected_phenotypes = {"healthy", "high_anxiety", "reward_susceptible", "anxious_reward"}
     actual_phenotypes = set(df["phenotype"].unique())
     assert actual_phenotypes == expected_phenotypes, (
         f"Expected all 4 phenotypes {expected_phenotypes}; got {actual_phenotypes}"
@@ -551,8 +551,8 @@ def test_simulate_patrl_cohort_pid_naming() -> None:
         f"Got:      {unique_pids}"
     )
 
-    # Verify P000..P002 are healthy, P003..P005 are reward_sensitive, etc.
-    # (order from YAML: healthy, reward_sensitive, anxious, anxious_reward_sensitive)
+    # Verify P000..P002 are healthy, P003..P005 are reward_susceptible, etc.
+    # (order from YAML: healthy, reward_susceptible, high_anxiety, anxious_reward)
     config_phenotypes = list(config.simulation.phenotypes.keys())
     for ph_idx, ph_name in enumerate(config_phenotypes):
         for local_i in range(3):
@@ -621,7 +621,7 @@ def test_simulate_patrl_cohort_full_160_scale() -> None:
         f"Expected 160 unique participants (40 × 4); got {n_unique}"
     )
 
-    expected_phenotypes = {"healthy", "anxious", "reward_sensitive", "anxious_reward_sensitive"}
+    expected_phenotypes = {"healthy", "high_anxiety", "reward_susceptible", "anxious_reward"}
     actual_phenotypes = set(df["phenotype"].unique())
     assert actual_phenotypes == expected_phenotypes, (
         f"Expected all 4 phenotypes; got {actual_phenotypes}"
