@@ -47,6 +47,11 @@ __all__ = [
     "run_group_bms",
     "run_stratified_bms",
     "plot_exceedance_probabilities",
+    # PAT-RL additions (Plans 20-06)
+    "compute_subject_waic_patrl",
+    "compute_batch_waic_patrl",
+    "compute_stratified_bms",
+    "export_peb_covariates",
 ]
 
 log = logging.getLogger(__name__)
@@ -554,3 +559,491 @@ def plot_exceedance_probabilities(
         log.info("Saved EP figure to %s", save_path)
 
     return fig
+
+
+# ---------------------------------------------------------------------------
+# PAT-RL WAIC bridge (Plan 20-06, Task 1)
+# ---------------------------------------------------------------------------
+
+
+def compute_subject_waic_patrl(
+    sim_df_sub: pd.DataFrame,
+    idata: az.InferenceData,
+    model_name: str,
+) -> float:
+    """Compute WAIC for one PAT-RL participant.
+
+    If *idata* already has a ``log_likelihood`` group (e.g. produced by a
+    future fit path that populates it during sampling), ``az.waic`` is called
+    directly.  Otherwise the PAT-RL JAX logp factory is re-evaluated over
+    every posterior draw and the result is injected into a copy of *idata*
+    before calling ``az.waic`` — mirroring the post-hoc pattern in
+    :func:`compute_subject_waic` for the pick_best_cue path.
+
+    Parameters
+    ----------
+    sim_df_sub : pandas.DataFrame
+        Trial-level rows for a single participant.  Must contain ``state``,
+        ``choice``, ``reward_mag``, ``shock_mag``, ``delta_hr``,
+        ``trial_idx``, ``outcome_time_s``.
+    idata : az.InferenceData
+        InferenceData with a ``posterior`` group.  Pseudo-draws from
+        ``build_idata_from_laplace`` (Plan 19-02) are accepted.
+    model_name : {"hgf_2level_patrl", "hgf_3level_patrl"}
+        PAT-RL HGF variant.
+
+    Returns
+    -------
+    float
+        ``elpd_waic`` (Expected Log Predictive Density); higher is better.
+
+    Notes
+    -----
+    When re-evaluating the logp, this function builds a *single-participant*
+    batched logp function (P=1) via
+    :func:`~prl_hgf.fitting.hierarchical_patrl.build_logp_fn_batched_patrl`
+    then iterates over ``(chain, draw)`` pairs.  The per-draw logp is a scalar
+    joint log-likelihood (not per-trial), so the injected ``log_likelihood``
+    DataArray has shape ``(n_chains, n_draws, 1)`` — ArviZ treats the trailing
+    dimension as the observation index.  For WAIC this is equivalent to
+    computing WAIC on the marginalised (joint) log-likelihood per draw, which
+    is standard for non-decomposable logp implementations.
+    """
+    import copy
+
+    # Fast path: log_likelihood already populated.
+    if hasattr(idata, "log_likelihood") and idata.log_likelihood is not None:
+        return float(az.waic(idata).elpd_waic)
+
+    # Slow path: re-evaluate JAX logp per posterior draw.
+    from prl_hgf.fitting.hierarchical_patrl import (
+        _build_session_scanner_patrl,
+        _make_single_logp_fn,
+    )
+
+    sub = sim_df_sub.sort_values("trial_idx").reset_index(drop=True)
+    n_trials = len(sub)
+
+    state_1d = sub["state"].to_numpy(dtype=np.float64).reshape(1, n_trials)
+    choices_1d = sub["choice"].to_numpy(dtype=np.float64).reshape(1, n_trials)
+    reward_1d = sub["reward_mag"].to_numpy(dtype=np.float64).reshape(1, n_trials)
+    shock_1d = sub["shock_mag"].to_numpy(dtype=np.float64).reshape(1, n_trials)
+    delta_hr_1d = sub["delta_hr"].to_numpy(dtype=np.float64).reshape(1, n_trials)
+    mask_1d = np.ones((1, n_trials), dtype=np.float64)
+
+    base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl(model_name)
+
+    import jax.numpy as jnp
+
+    single_logp = _make_single_logp_fn(
+        base_attrs, scan_fn, belief_idx, model_name, n_trials,
+        response_model="model_a",
+        delta_hr_jnp=jnp.asarray(delta_hr_1d[0]),
+    )
+
+    posterior = idata.posterior
+    n_chains = posterior.sizes["chain"]
+    n_draws = posterior.sizes["draw"]
+
+    loglike_vals = np.empty((n_chains, n_draws), dtype=float)
+
+    param_names = list(posterior.data_vars)
+
+    for chain_idx in range(n_chains):
+        for draw_idx in range(n_draws):
+            params: dict[str, float] = {}
+            for pname in param_names:
+                val = float(posterior[pname].values[chain_idx, draw_idx])
+                if pname == "log_beta":
+                    params["beta"] = float(np.exp(val))
+                else:
+                    params[pname] = val
+            lp = float(
+                single_logp(
+                    params,
+                    jnp.asarray(state_1d[0]),
+                    jnp.asarray(choices_1d[0]),
+                    jnp.asarray(reward_1d[0]),
+                    jnp.asarray(shock_1d[0]),
+                    jnp.asarray(mask_1d[0]),
+                    jnp.asarray(delta_hr_1d[0]),
+                )
+            )
+            loglike_vals[chain_idx, draw_idx] = lp
+
+    ll_da = xr.DataArray(
+        loglike_vals[:, :, np.newaxis],
+        dims=["chain", "draw", "loglike_dim_0"],
+        coords={
+            "chain": posterior.coords["chain"].values,
+            "draw": posterior.coords["draw"].values,
+        },
+    )
+
+    idata_copy = copy.deepcopy(idata)
+    idata_copy.add_groups({"log_likelihood": {"loglike": ll_da}})
+    return float(az.waic(idata_copy, var_name="loglike").elpd_waic)
+
+
+def compute_batch_waic_patrl(
+    sim_df: pd.DataFrame,
+    idata_dict: dict[str, dict[str, az.InferenceData]],
+    model_names: list[str] | None = None,
+    phenotype_col: str = "phenotype",
+) -> pd.DataFrame:
+    """Compute per-participant WAIC across PAT-RL models, propagating phenotype.
+
+    PAT-RL variant of :func:`compute_batch_waic`.  Keys on ``participant_id``
+    only (no group/session dimension) and propagates the ``phenotype`` column
+    from *sim_df* into the output — this is the bridge from Plan 20-04
+    (simulator phenotype tagging) to Plan 20-06 (:func:`compute_stratified_bms`).
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Trial-level data from
+        :func:`~prl_hgf.env.pat_rl_simulator.simulate_patrl_cohort`.
+        Must have ``participant_id`` and ``phenotype`` columns plus PAT-RL
+        trial columns (``state``, ``choice``, ``reward_mag``, ``shock_mag``,
+        ``delta_hr``).
+    idata_dict : dict[str, dict[str, az.InferenceData]]
+        Nested mapping ``idata_dict[model_name][participant_id]``.  Inner
+        keys are string participant identifiers.
+    model_names : list[str] or None
+        Defaults to ``['hgf_2level_patrl', 'hgf_3level_patrl']``.
+    phenotype_col : str, default "phenotype"
+        Column in *sim_df* that carries the phenotype label.  Use the
+        canonical ``PHENOTYPE_COLUMN_NAME`` constant from
+        :mod:`prl_hgf.env.pat_rl_config`.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Columns: ``participant_id``, ``phenotype``, ``model``,
+        ``elpd_waic``.  One row per ``(participant_id, model)`` pair.
+
+    Raises
+    ------
+    ValueError
+        If ``phenotype_col`` is absent from *sim_df*.
+
+    Notes
+    -----
+    Participants in *idata_dict* that are absent from *sim_df* receive
+    ``phenotype='unknown'`` rather than raising an error, so that partial
+    sim_df slices (e.g. a single-session subset) do not abort the full batch.
+
+    Per-participant WAIC failures (logp errors, shape mismatches) are caught,
+    logged at ERROR level, and skipped so that the remainder of the batch
+    completes.
+
+    References
+    ----------
+    Watanabe 2010. "Asymptotic equivalence of Bayes cross validation and
+    widely applicable information criterion."
+    """
+    if phenotype_col not in sim_df.columns:
+        raise ValueError(
+            f"compute_batch_waic_patrl: sim_df is missing the '{phenotype_col}' "
+            "column.  Add phenotype labels via simulate_patrl_cohort (Plan 20-04) "
+            "or supply a DataFrame that includes the phenotype column produced by "
+            "that function.  Expected column name controlled by "
+            "prl_hgf.env.pat_rl_config.PHENOTYPE_COLUMN_NAME."
+        )
+
+    if model_names is None:
+        model_names = ["hgf_2level_patrl", "hgf_3level_patrl"]
+
+    # Build participant_id → phenotype lookup from sim_df.
+    id_to_phen: dict[str, str] = (
+        sim_df[["participant_id", phenotype_col]]
+        .drop_duplicates("participant_id")
+        .set_index("participant_id")[phenotype_col]
+        .to_dict()
+    )
+
+    rows: list[dict] = []
+    for model in model_names:
+        idata_map = idata_dict.get(model, {})
+        for pid, idata in idata_map.items():
+            pid_str = str(pid)
+            sim_sub = sim_df[sim_df["participant_id"] == pid_str]
+            try:
+                elpd = compute_subject_waic_patrl(
+                    sim_sub.reset_index(drop=True),
+                    idata,
+                    model,
+                )
+            except Exception:
+                log.exception(
+                    "compute_batch_waic_patrl: WAIC failed for "
+                    "participant=%s model=%s — skipping",
+                    pid_str,
+                    model,
+                )
+                continue
+            rows.append(
+                {
+                    "participant_id": pid_str,
+                    phenotype_col: id_to_phen.get(pid_str, "unknown"),
+                    "model": model,
+                    "elpd_waic": elpd,
+                }
+            )
+
+    return pd.DataFrame(
+        rows,
+        columns=["participant_id", phenotype_col, "model", "elpd_waic"],
+    )
+
+
+# ---------------------------------------------------------------------------
+# PAT-RL phenotype-stratified BMS (Plan 20-06, Task 2)
+# ---------------------------------------------------------------------------
+
+
+def compute_stratified_bms(
+    fit_df: pd.DataFrame,
+    model_names: list[str],
+    phenotype_col: str = "phenotype",
+    evidence_col: str = "elpd_waic",
+) -> dict[str, dict]:
+    """PAT-RL phenotype-stratified Bayesian Model Selection.
+
+    Delegates to :func:`run_group_bms` per-phenotype and for the pooled
+    sample, returning a dict keyed by ``"all"`` plus each phenotype label.
+    This is the PAT-RL analog of :func:`run_stratified_bms` (which
+    stratifies by ``group`` for pick_best_cue).
+
+    Parameters
+    ----------
+    fit_df : pandas.DataFrame
+        Must have columns ``participant_id``, ``<phenotype_col>``,
+        ``model``, ``<evidence_col>``.  One row per
+        ``(participant_id, model)`` pair.  Typical source is
+        :func:`compute_batch_waic_patrl` with the ``phenotype`` column
+        already propagated from sim_df (Plan 20-04).
+    model_names : list[str]
+        Model names to include; determines column order in the per-subject
+        ELPD matrix.  For Phase 20 typically
+        ``["hgf_2level_patrl", "hgf_3level_patrl"]``.
+    phenotype_col : str, default "phenotype"
+        Column name for stratification.  Use the canonical
+        ``PHENOTYPE_COLUMN_NAME`` constant from
+        :mod:`prl_hgf.env.pat_rl_config`.
+    evidence_col : str, default "elpd_waic"
+        Column containing per-subject model evidence (higher = better).
+
+    Returns
+    -------
+    dict[str, dict]
+        Keys: ``"all"`` (pooled BMS across all phenotypes) plus every
+        unique value in ``fit_df[phenotype_col]``.  Values: dicts from
+        :func:`run_group_bms` with keys ``alpha``, ``exp_r``, ``xp``,
+        ``pxp``, ``bor``, ``model_names``, ``group_label``,
+        ``n_subjects``.
+
+    Raises
+    ------
+    ValueError
+        If required columns are missing or *model_names* is not a subset
+        of ``fit_df['model'].unique()``.
+
+    Notes
+    -----
+    Per-phenotype BMS with fewer than ~20 subjects has limited statistical
+    power — the function still runs but logs a warning (mirrors
+    :func:`run_stratified_bms` behaviour).
+
+    Parallel-stack invariant (Decision 109): this function coexists with
+    :func:`run_stratified_bms`; neither delegates to the other.  Both call
+    :func:`run_group_bms` internally.
+
+    References
+    ----------
+    Rigoux et al. 2014. "Bayesian model selection for group studies —
+    revisited." NeuroImage 84: 971-985.
+    """
+    required_cols = {"participant_id", phenotype_col, "model", evidence_col}
+    missing_cols = required_cols - set(fit_df.columns)
+    if missing_cols:
+        raise ValueError(
+            f"compute_stratified_bms: fit_df missing columns "
+            f"{sorted(missing_cols)}; got columns {sorted(fit_df.columns)}"
+        )
+
+    available_models = set(fit_df["model"].unique())
+    missing_models = set(model_names) - available_models
+    if missing_models:
+        raise ValueError(
+            f"compute_stratified_bms: model_names {sorted(missing_models)} "
+            f"not found in fit_df['model'].unique()={sorted(available_models)}"
+        )
+
+    def _build_matrix(df: pd.DataFrame) -> np.ndarray | None:
+        """Pivot to (n_subjects, n_models); return None if any model missing."""
+        pivot = df.pivot_table(
+            index="participant_id",
+            columns="model",
+            values=evidence_col,
+            aggfunc="mean",
+        )
+        missing = [m for m in model_names if m not in pivot.columns]
+        if missing:
+            log.warning(
+                "compute_stratified_bms: models %s missing from stratum — "
+                "cannot build ELPD matrix",
+                missing,
+            )
+            return None
+        pivot = pivot[model_names].dropna()
+        if len(pivot) == 0:
+            return None
+        return pivot.to_numpy(dtype=float)
+
+    results: dict[str, dict] = {}
+
+    # Pooled BMS across all phenotypes.
+    mat = _build_matrix(fit_df)
+    if mat is not None:
+        results["all"] = run_group_bms(mat, model_names, group_label="all")
+    else:
+        log.warning(
+            "compute_stratified_bms: could not build pooled ELPD matrix"
+        )
+
+    # Per-phenotype BMS.
+    for phen in sorted(fit_df[phenotype_col].unique()):
+        sub = fit_df[fit_df[phenotype_col] == phen]
+        mat = _build_matrix(sub)
+        if mat is None:
+            log.warning(
+                "compute_stratified_bms: could not build ELPD matrix for "
+                "phenotype=%s",
+                phen,
+            )
+            continue
+        n = len(mat)
+        if n < 20:
+            log.warning(
+                "compute_stratified_bms: per-phenotype BMS with N=%d has "
+                "limited power (exploratory) for phenotype=%s",
+                n,
+                phen,
+            )
+        results[phen] = run_group_bms(mat, model_names, group_label=phen)
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# PEB covariate export (Plan 20-06, Task 3)
+# ---------------------------------------------------------------------------
+
+
+def export_peb_covariates(
+    fit_df_2level: pd.DataFrame,
+    fit_df_3level: pd.DataFrame,
+    output_path: Path,
+    phenotype_col: str = "phenotype",
+    evidence_col: str = "elpd_waic",
+) -> pd.DataFrame:
+    """Export per-subject delta-evidence covariates for downstream PEB regression.
+
+    Computes per-subject ``delta_waic`` = elpd_waic(3-level) -
+    elpd_waic(2-level) and ``delta_f`` (approximated as ``delta_waic`` under
+    the WAIC ≈ -2·log-evidence relationship — see Notes).
+
+    Parameters
+    ----------
+    fit_df_2level : pandas.DataFrame
+        WAIC output for the 2-level PAT-RL model.  Must have columns
+        ``participant_id``, ``<phenotype_col>``, ``<evidence_col>``.
+        Typically produced by
+        ``compute_batch_waic_patrl(model_names=['hgf_2level_patrl'])``.
+    fit_df_3level : pandas.DataFrame
+        Same schema for the 3-level model.
+    output_path : pathlib.Path
+        Destination CSV.  Parent directory is created if missing.
+    phenotype_col : str, default "phenotype"
+        Column name to propagate into the output CSV.
+    evidence_col : str, default "elpd_waic"
+        Per-subject model evidence column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Columns: ``participant_id``, ``<phenotype_col>``, ``delta_waic``,
+        ``delta_f``.  One row per participant.  Also written to
+        *output_path* as CSV.
+
+    Raises
+    ------
+    ValueError
+        If required columns are missing or the participant_id sets of the
+        two DataFrames have no intersection.
+
+    Notes
+    -----
+    ``delta_f`` is an unscaled free-energy proxy.  Under the approximation
+    WAIC ≈ -2·log-evidence (Gelman et al. 2014), the log-evidence ratio
+    F_3level - F_2level ≈ delta_waic / 2 up to an unknown additive constant.
+    That constant cancels in per-subject contrasts used in PEB regression,
+    so this function exports ``delta_f = delta_waic`` (unscaled) and flags it
+    for the consumer to rescale if the downstream PEB implementation applies
+    a specific normalisation.  RESEARCH.md §12 Risk 6 notes that the exact
+    sign convention is downstream-consumer-dependent; if the PEB consumer
+    expects F_2level - F_3level, negate the ``delta_f`` column in the CSV
+    post-hoc.
+
+    References
+    ----------
+    Friston & Stephan 2007. "Free energy and the brain." Synthese 159.
+    Rigoux et al. 2014. "Bayesian model selection for group studies —
+    revisited." NeuroImage 84.
+    """
+    required = {"participant_id", phenotype_col, evidence_col}
+    for name, df in [
+        ("fit_df_2level", fit_df_2level),
+        ("fit_df_3level", fit_df_3level),
+    ]:
+        missing = required - set(df.columns)
+        if missing:
+            raise ValueError(
+                f"export_peb_covariates: {name} missing columns "
+                f"{sorted(missing)}"
+            )
+
+    df2 = fit_df_2level[["participant_id", phenotype_col, evidence_col]].rename(
+        columns={evidence_col: f"{evidence_col}_2level"}
+    )
+    df3 = fit_df_3level[["participant_id", phenotype_col, evidence_col]].rename(
+        columns={evidence_col: f"{evidence_col}_3level"}
+    )
+
+    merged = df2.merge(df3, on=["participant_id", phenotype_col], how="inner")
+    if len(merged) == 0:
+        raise ValueError(
+            "export_peb_covariates: no participants in common between "
+            "fit_df_2level and fit_df_3level (check participant_id + "
+            f"'{phenotype_col}' alignment)"
+        )
+
+    merged["delta_waic"] = (
+        merged[f"{evidence_col}_3level"] - merged[f"{evidence_col}_2level"]
+    )
+    # delta_f: unscaled proxy for free-energy difference (see Notes).
+    merged["delta_f"] = merged["delta_waic"]
+
+    out = merged[["participant_id", phenotype_col, "delta_waic", "delta_f"]].copy()
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(output_path, index=False)
+    log.info(
+        "export_peb_covariates: wrote %d rows to %s (phenotypes: %s)",
+        len(out),
+        output_path,
+        sorted(out[phenotype_col].unique()),
+    )
+    return out
