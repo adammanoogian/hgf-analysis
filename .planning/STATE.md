@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ## Current Position
 
-Phase: 20 (PAT-RL Scientific Completion) — Wave 2 complete
-Plan: 20-04 COMPLETE; Wave 2 (20-03/04) done; remaining Wave 3: 20-05/06/07/08
-Status: In progress — next action is 20-05 (cohort scale 40x4 + SeedSequence spawn)
-Last activity: 2026-04-18 — Completed 20-03 (Model D trial-varying omega, SC3 lambda recovery 5/5 pass); 4 task commits + push
+Phase: 20 (PAT-RL Scientific Completion) — Wave 3 in progress
+Plan: 20-08 COMPLETE; Wave 3: 20-05 in flight; 20-06/07 pending
+Status: In progress — 20-05 (cohort scale) and 20-08 (citation replacement) both landed; 20-06/07 remain
+Last activity: 2026-04-18 — Completed 20-08 (citation replacement, SC10 gate closed); 6 task commits + push
 
-[===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (4/8)
+[===========████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (6/8)
 
 ## Performance Metrics
 
@@ -162,6 +162,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | epsilon2_coupling_coef is POSITIVE in YAML; formula: ΔHR(t) = N(dhr_mean, dhr_sd) + coef * ε₂(t); positive coef + positive surprise ε₂ → ΔHR moves toward zero (less bradycardia); consistent with Klaassen 2024 | 20-04 |
 | Model D two-pass generative uses mean-omega approx: omega_eff_mean = omega_2_true + lam_true * mean(delta_hr) as scalar; exact per-trial injection deferred (tracked as followup TODO in 20-04-SUMMARY.md) | 20-04 |
 | M7 bridge: simulate_patrl_cohort(response_model='model_d', lam_true=...) kwarg pair closes Plan 20-03 λ-recovery loop; test_model_d_lambda_recovery_smoke_epsilon2_coupled (seed=404) added as sibling to 20-03's seed=42 test | 20-04 |
+| Retire pre-2020 citations; substitute Klaassen 2024 (Comms Bio) for PAT-RL | Consumer-spec phenotype priors (Plan 20-01) supersede Browning 2015/Daw 2006; user approved scope 2026-04-18; no fabricated Terburg/Hulsman/Ly/Roelofs refs | 20-08 |
 
 ### Pending Todos
 
@@ -200,11 +201,12 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 - Phase 17-02 complete (2026-04-15): BlackJAX smoke tests + SLURM updates — 4 new fast tests (logp, gradient, idata), VALID-02 blackjax convergence test, SLURM scripts updated for BlackJAX default
 - Phase 18 added (2026-04-17): PAT-RL Task Adaptation (the consumer study) — new binary-state approach/avoid task config, trial generator, response models A-D (including trial-varying omega), trajectory export for DCM bridge, and phenotype-stratified BMS. Source: GSD_prl_hgf.yaml. **Caveat**: Multiple YAML assumptions conflict with repo (config loader is task-specific, no `trial_sequence.py` exists, response model signature differs, Delta-HR plumbing absent, no phenotype framework). Integration notes captured inline in ROADMAP.md Phase 18 entry. Consider promoting to v1.3 the consumer study milestone before planning.
 - Phase 19 added (2026-04-18): VB-Laplace Fit Path (Tapas-Parity Validation) — implements `fit_vb_laplace_patrl.py` as a second, non-MCMC fit path alongside BlackJAX NUTS. Mirrors matlab tapas HGF toolbox (quasi-Newton MAP + Laplace covariance from numerical Hessian at the mode). Reuses `_build_patrl_log_posterior` from `hierarchical_patrl.py` without modification. ArviZ `InferenceData` output shape-compatible with the NUTS path so the existing Plan 18-05 exporters accept both. Unblocks PEB development immediately + gives a deterministic reference fit to validate cluster NUTS posteriors against. Source of record: `.planning/quick/004-.../VB_LAPLACE_FEASIBILITY.md` Option C. Explicitly implementation (not feasibility re-exploration).
+- Phase 21 added (2026-04-19): Benchmark Bottleneck Diagnosis — Graph Scope + SVI Probe + JIT Cache Forensics. Triggered by Phase 14 benchmark job 54899271 (cold 2197s / warm 1965s / 1.1x speedup / 8h walltime killed before `benchmark_batched.json` was written). **Purely diagnostic** phase — does not re-execute the Phase 14 production bench. Produces: (a) `benchmark-scope-memo.md` quantifying batched hierarchical PAT-RL logp size + FLOPs/draw against Stan/NumPyro 8-schools, Radon-hierarchical, BNNs, transformer/CNN forward passes; (b) `svi_vs_nuts_jit.json` isolating whether the bottleneck is the logp graph or the NUTS sampler by running `numpyro.infer.SVI` on the identical `_build_patrl_log_posterior` closure; (c) `cache_forensics.md` answering whether `.jax_cache_gpu` actually populates and whether Phase-1 N=2 and Phase-2 N=50 HLO hashes collide (STATE #106/107 traced-args vs closure path — PAT-RL uses closure via decision #119); (d) `jit_scaling_sweep.csv` with cold/warm (same-proc + next-proc) JIT timings at P ∈ {2, 5, 20, 50} in separate ≤30-min SLURM jobs; (e) `VERDICT.md` naming the single dominant bottleneck + concrete fix recommendation at PR level. **Anti-patterns banned**: bumping walltime, shrinking production cohort, patching `apply_decision_gate` thresholds before verdict. Sister to 14.1-03 (Phase 14.1-03 still owns the `benchmark_batched.json` write — Phase 21 only makes that run cheap and principled).
 - Phase 20 added (2026-04-18): PAT-RL Scientific Completion — Models B/C/D + Cohort Scale + Config-Correctness. Closes every remaining gap between prl_hgf's PAT-RL surface and the downstream sister-repo study hypotheses (consumer-side task spec; not tracked in this toolbox). Fixes `configs/pat_rl.yaml` contingencies/run-order/magnitudes/phenotype-priors to match consumer spec exactly (supersedes Phase 18 config); adds response bias `b` to Model A; implements Models B, C, D (incl. trial-varying ω scan body for D); adds phenotype-specific ε₂-coupled ΔHR generative model; scales cohort to 40×4=160; phenotype-stratified BMS with PEB Δ-evidence export; formal PRL-V1 (r≥0.7) + PRL-V2 (Cohen's d≥0.5) gates. **User architectural directives**: (a) NO new scripts — extend existing numbered scripts (`03_simulate_participants.py`, `04_fit_participants.py`, `05_run_validation.py`, `06_group_analysis.py`, `scripts/12_smoke_patrl_foundation.py`) via config-driven adaptation; (b) citations must be ≥2020, prefer Karin Roelofs' Nijmegen group (Klaassen 2021/2024, Terburg 2020+, Hulsman 2020+, Ly 2022+) — retire the Browning 2015 / Daw 2006 defaults from Phase 18 config; (c) config-driven only — every behavioural variant reachable via `configs/pat_rl.yaml` key, no hardcoded magic numbers, no new CLI flags that belong in YAML. (d) **Project-agnostic naming**: all new code, configs, docs, and commits use generic terminology ("PAT-RL task", "consumer study", "downstream sister-repo") — NO study codename references. Supersedes Phase 18 Option A deferrals.
 
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Completed 20-04 (ε₂-coupled ΔHR simulator + phenotype column + M7 bridge). 6 task commits pushed to main.
+Stopped at: Completed 20-08 (citation replacement — SC10 gate closed, docs/references.bib created, Browning/Daw retired). 6 task commits pushed to main.
 Resume file: None
-Next action: Execute 20-05 (cohort scale 40x4 + per-phenotype SeedSequence spawn). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
+Next action: Execute 20-06 (stratified BMS + PEB Δ-evidence export) and 20-07 (validation gates PRL-V1/V2). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
