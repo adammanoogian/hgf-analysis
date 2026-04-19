@@ -1,0 +1,20 @@
+Finished tracing + transforming convert_element_type for pjit in 0.000463247 sec
+Compiling convert_element_type with global shapes and types [ShapedArray(int64[])]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.133944511 sec
+Finished XLA compilation of jit(convert_element_type) in 0.691338778 sec
+Finished tracing + transforming bitwise_and for pjit in 0.000500917 sec
+Finished tracing + transforming _threefry_seed for pjit in 0.002888680 sec
+Compiling _threefry_seed with global shapes and types [ShapedArray(int64[])]. Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(_threefry_seed) in 0.015727758 sec
+Finished XLA compilation of jit(_threefry_seed) in 0.292557955 sec
+usage: 08_run_power_iteration.py [-h] --chunk-id CHUNK_ID --job-id JOB_ID
+                                 [--dry-run] [--benchmark] [--smoke-test]
+                                 [--fit-chains FIT_CHAINS]
+                                 [--fit-draws FIT_DRAWS] [--fit-tune FIT_TUNE]
+                                 [--sampler {pymc,numpyro,blackjax}]
+                                 [--output-dir OUTPUT_DIR] [--legacy]
+                                 [--enable-x64] [--p-scan P_SCAN]
+                                 [--p-scan-early-stop] [--vb-laplace-probe]
+                                 [--vb-laplace-subproc-only]
+                                 [--probe-p PROBE_P] [--diagnostic-mode]
+08_run_power_iteration.py: error: the following arguments are required: --chunk-id, --job-id
