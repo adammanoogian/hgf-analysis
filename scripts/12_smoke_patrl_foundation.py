@@ -705,6 +705,26 @@ def main() -> int:
             len(sim_df),
         )
 
+        # Phase 20: assert phenotype column is present (Plan 20-04).
+        assert "phenotype" in sim_df.columns, (
+            f"sim_df is missing the 'phenotype' column. "
+            f"Got columns: {list(sim_df.columns)}"
+        )
+        assert sim_df["phenotype"].notna().all(), (
+            "sim_df['phenotype'] contains NA values; expected all non-empty strings."
+        )
+        # Log per-phenotype participant counts.
+        phenotype_counts = (
+            sim_df.groupby("phenotype")["participant_id"].nunique()
+        )
+        for ptype, count in phenotype_counts.items():
+            logger.info(
+                "Phenotype '%s': %d participants (%d trial rows)",
+                ptype,
+                count,
+                int((sim_df["phenotype"] == ptype).sum()),
+            )
+
         # Collect per-participant choice arrays for export.
         choices_by_participant: dict[str, np.ndarray] = {}
         for pid in sorted(true_params.keys()):
@@ -717,12 +737,15 @@ def main() -> int:
             n_participants = len(true_params)
             n_trials_total = len(sim_df)
             n_trials_per = n_trials_total // n_participants if n_participants else 0
+            phenotypes_present = sorted(sim_df["phenotype"].unique().tolist())
             print()
             print("DRY-RUN COMPLETE")
             print(f"  fit_method:            {method}")
             print(f"  n_participants:        {n_participants}")
             print(f"  n_trials/participant:  {n_trials_per}")
             print(f"  total rows in sim_df:  {n_trials_total}")
+            print(f"  phenotypes:            {phenotypes_present}")
+            print(f"  phenotype_col present: {'phenotype' in sim_df.columns}")
             print(f"  elapsed:               {elapsed_dry:.2f} s")
             logger.info("PAT-RL foundation smoke DRY-RUN PASSED in %.2f s", elapsed_dry)
             return 0
