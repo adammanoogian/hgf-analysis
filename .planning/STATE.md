@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 PAT-RL Scientific Completion — Plans 20-01 through 20-06 + 20-08 COMPLETE; Wave 3: 20-07 pending
+**Current focus:** Phase 20 PAT-RL Scientific Completion — ALL PLANS COMPLETE (20-01 through 20-08). Pending gsd-verifier.
 
 ## Current Position
 
-Phase: 20 (PAT-RL Scientific Completion) — Wave 3 in progress
-Plan: 20-06 COMPLETE; remaining: 20-07
-Status: In progress — 20-06 (stratified BMS + PEB export) complete; 20-07 remains
-Last activity: 2026-04-19 — Completed 20-06 (stratified BMS + PEB Δ-evidence export); 2 task commits + push
+Phase: 20 (PAT-RL Scientific Completion) — ALL PLANS COMPLETE
+Plan: 20-07 COMPLETE (all 8/8 plans complete — 20-01 through 20-08)
+Status: Execution complete, pending gsd-verifier
+Last activity: 2026-04-19 — Completed 20-07 (PRL-V1/V2 validation gates + SC9/SC11 audits)
 
-[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 in progress (8/8 — only 20-07 remains)
+[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8)
 
 ## Performance Metrics
 
@@ -172,6 +172,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | compute_stratified_bms is new — run_stratified_bms preserved unchanged | Parallel-stack invariant per Decision 109; both call run_group_bms internally; neither delegates to the other | 20-06 |
 | delta_f sign convention: delta_f = delta_waic (unscaled proxy for free-energy difference) | Under WAIC ≈ -2·log-evidence, delta_f ≈ delta_waic/2 + constant; constant cancels in PEB contrasts; exact scaling is consumer-dependent (RESEARCH §12 Risk 6); confirm at manuscript-prep | 20-06 |
 | Phase 20 BMS/PEB uses Laplace-produced InferenceData as default input (fast-path via pre-populated log_likelihood) | Per user directive 2026-04-19; NUTS deferred to post-Phase-14-15; compute_subject_waic_patrl has slow-path fallback (JAX logp re-evaluation) for idatas without log_likelihood | 20-06 |
+| PRL-V2 axis mapping: Option A (2x2 factorial) — ANXIETY_HIGH={high_anxiety, anxious_reward}, ANXIETY_LOW={healthy, reward_susceptible}, REWARD_HIGH={reward_susceptible, anxious_reward}, REWARD_LOW={healthy, high_anxiety}; 80 agents per side; supplementary B-style pairwise as secondary output | User decision 2026-04-19; standard in anxiety×reward literature (Klaassen 2024); maximises power at 160 agents | 20-07 |
+| Default fit-method for PRL-V1 + PRL-V2: Laplace (NUTS deferred to post-Phase-14-15) | Laplace means agree with NUTS (Phase 19 OQ7 closure); over-wide β posterior does not affect PRL-V1/V2 gates which use posterior means | 20-07 |
+| SC9 / SC11 / Option A axis mask tests enforce Phase 20 invariants | test_sc9_no_new_scripts_audit asserts zero A-lines in git diff scripts/; test_sc11_phase_18_19_regression_suite_green runs full regression as subprocess; test_option_a_factorial_axis_masks_are_correct imports scripts/06 and asserts frozenset constants | 20-07 |
 
 ### Pending Todos
 
@@ -216,6 +219,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-19
-Stopped at: Completed 20-06 (stratified BMS + PEB Δ-evidence export). 2 task commits + 1 metadata commit pushed to main.
+Stopped at: Completed 20-07 (validation gates PRL-V1/V2). 4 task commits + 1 metadata commit pushed to main. Phase 20 execution complete.
 Resume file: None
-Next action: Execute 20-07 (validation gates PRL-V1/V2). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1) — still needed but lower priority than Phase 20 wave.
+Next action: gsd-verifier for Phase 20 (all 8 plans). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1). Followup: cluster 160-agent PRL-V1/V2 numeric run via `sbatch cluster/patrl_smoke.slurm`.
