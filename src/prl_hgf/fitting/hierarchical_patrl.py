@@ -23,10 +23,10 @@ Parallel-stack invariant
 ``hierarchical.py`` is NOT modified.  Its functions are imported and called
 unchanged.  PAT-RL fitting concerns live entirely in this module.
 
-Scope (Plan 20-02)
+Scope (Plan 20-03)
 ------------------
-Models A (with bias b), B (ΔHR additive bias), and C (ΔHR × value
-sensitivity).  Model D (trial-varying omega) is deferred to Plan 20-03.
+Models A (with bias b), B (ΔHR additive bias), C (ΔHR × value sensitivity),
+and D (trial-varying tonic volatility omega_eff(t) = omega_2 + lam * dHR(t)).
 
 Notes
 -----
@@ -196,10 +196,11 @@ def _make_single_logp_fn(
         Number of trials per participant.
     response_model : str, default "model_a"
         Response model name; dispatches which logp function is called after
-        the HGF scan.  One of ``"model_a"``, ``"model_b"``, ``"model_c"``.
+        the HGF scan.  One of ``"model_a"``, ``"model_b"``, ``"model_c"``,
+        ``"model_d"``.
     delta_hr_jnp : jnp.ndarray or None, default None
         Shape ``(P, n_trials)`` or ``None``.  When provided, the per-
-        participant row is indexed by vmap and forwarded to Models B/C.
+        participant row is indexed by vmap and forwarded to Models B/C/D.
         Must be ``None`` for Model A (not used).
 
     Returns
@@ -226,7 +227,7 @@ def _make_single_logp_fn(
             Scalar parameter values for this participant:
             ``omega_2`` (and ``omega_3``, ``kappa``, ``mu3_0`` for 3-level),
             ``beta``.  For Models B/C: also ``b``, ``gamma`` (and ``alpha``
-            for Model C).
+            for Model C).  For Model D: ``omega_2``, ``lam``, ``b``, ``beta``.
         state : jnp.ndarray
             Shape ``(n_trials,)`` int32 binary context states.
         choices : jnp.ndarray
@@ -239,13 +240,88 @@ def _make_single_logp_fn(
             Shape ``(n_trials,)`` bool trial mask.
         delta_hr_i : jnp.ndarray
             Shape ``(n_trials,)`` float64 per-trial ΔHR.  All-zeros for
-            Model A (not used in EV calculation).
+            Model A (not used in EV calculation).  Required for Models B/C/D.
 
         Returns
         -------
         jnp.ndarray
             Scalar log-likelihood.
         """
+        # Model D: trial-varying tonic_volatility scan body (Plan 20-03).
+        # omega_eff(t) = omega_2 + lam * dHR(t). Inject per-trial into
+        # attrs[belief_idx]["tonic_volatility"] inside the scan step (mirrors
+        # Decision 120 kappa-via-attrs pattern, but per-trial instead of once).
+        if response_model == "model_d":
+            # 1d) Start from base_attrs; inject 3-level params once (omega_3,
+            #     kappa, mu3_0 are NOT trial-varying — only omega_2 via lam).
+            attrs_d = {**base_attrs}
+            if is_3level:
+                attrs_d[_VOLATILITY_NODE] = {
+                    **attrs_d[_VOLATILITY_NODE],
+                    "tonic_volatility": params["omega_3"],
+                    "volatility_coupling_children": jnp.asarray([params["kappa"]]),
+                    "mean": params["mu3_0"],
+                }
+            # Do NOT inject omega_2 into belief_idx here — done per-trial below.
+
+            # 2d) Build scan inputs: state float64, time_steps float64, dHR float64.
+            values_d = state.astype(jnp.float64)[:, None]  # (T, 1)
+            observed_d = jnp.ones((n_trials,), dtype=jnp.int32)  # (T,)
+            time_steps_d = jnp.ones((n_trials,), dtype=jnp.float64)  # (T,)
+            # fp64 per Decision 118 — dtype cast happens here, before JAX trace.
+            dhr_trials = delta_hr_i.astype(jnp.float64)  # (T,)
+
+            # 3d) Tapas-style Layer-2 clamped scan with per-trial omega injection.
+            def _clamped_step_model_d(
+                carry: dict,
+                x: tuple,
+            ) -> tuple[dict, jnp.ndarray]:
+                val_i, obs_i, ts_i, dhr_i = x
+                # Recompute tonic_volatility per trial (Decision 120 extended).
+                omega_eff_i = params["omega_2"] + params["lam"] * dhr_i
+                attrs_i = {**carry}
+                attrs_i[belief_idx] = {
+                    **attrs_i[belief_idx],
+                    "tonic_volatility": omega_eff_i,
+                }
+                new_carry, _traj = scan_fn(
+                    attrs_i, ((val_i,), (obs_i,), ts_i, None)
+                )
+                # Layer-2 clamp: revert if |mu2| >= _MU_2_BOUND or non-finite.
+                new_mean = new_carry[belief_idx]["mean"]
+                is_stable = jnp.all(jnp.isfinite(new_mean)) & (
+                    jnp.abs(new_mean) < _MU_2_BOUND
+                )
+                safe_carry = jax.tree_util.tree_map(
+                    lambda n, o: jnp.where(is_stable, n, o),
+                    new_carry,
+                    carry,
+                )
+                return safe_carry, safe_carry[belief_idx]["mean"]
+
+            # 4d) Scan; collect mu2_traj — shape (T,).
+            _, mu2_traj = jax.lax.scan(
+                _clamped_step_model_d,
+                attrs_d,
+                (values_d, observed_d, time_steps_d, dhr_trials),
+            )
+
+            # 5d) Model D response = Model A response (ΔHR enters perception only;
+            #     no additional ΔHR term in the response model — see must_haves).
+            logp_per_trial = model_a_logp(
+                mu2_traj,
+                choices.astype(jnp.int32),
+                reward.astype(jnp.float64),
+                shock.astype(jnp.float64),
+                params["beta"],
+                params.get("b", 0.0),
+            )
+            return jnp.sum(jnp.where(mask, logp_per_trial, 0.0))
+
+        # -----------------------------------------------------------------------
+        # Models A/B/C: one-shot omega_2 injection before scan.
+        # -----------------------------------------------------------------------
+
         # 1) Inject omega_2 (and 3-level params) into a fresh copy of base_attrs.
         attrs = {**base_attrs}
         attrs[belief_idx] = {
@@ -336,10 +412,11 @@ def _make_single_logp_fn(
                 delta_hr_i.astype(jnp.float64),
             )
         else:
-            # model_d and beyond: raise at factory-build time (Python, not JAX).
+            # Unreachable: model_d is handled above; unknown models are rejected
+            # at build_logp_fn_batched_patrl / fit_batch_hierarchical_patrl.
             raise ValueError(
-                f"response_model={response_model!r} reached _single_logp dispatch. "
-                f"'model_d' lands in Plan 20-03."
+                f"response_model={response_model!r} reached A/B/C dispatch "
+                "but is not recognised. This is a bug."
             )
 
         # 6) Apply trial mask and sum.
@@ -386,11 +463,10 @@ def build_logp_fn_batched_patrl(
         PAT-RL HGF variant.
     response_model : str, default "model_a"
         Response function to use.  One of ``"model_a"``, ``"model_b"``,
-        ``"model_c"``.  ``"model_d"`` raises ``NotImplementedError``
-        (Plan 20-03 scope).
+        ``"model_c"``, ``"model_d"``.
     delta_hr_arr : numpy.ndarray or None, shape (P, n_trials), default None
         Per-participant, per-trial anticipatory ΔHR in bpm.  Required for
-        Models B and C.  When ``None``, a zeros array of shape
+        Models B, C, and D.  When ``None``, a zeros array of shape
         ``(P, n_trials)`` is used (backward-compatible with Model A).
 
     Returns
@@ -404,13 +480,7 @@ def build_logp_fn_batched_patrl(
     ------
     ValueError
         If ``model_name`` is not a recognised PAT-RL variant.
-    NotImplementedError
-        If ``response_model == "model_d"`` (Plan 20-03 scope).
     """
-    if response_model == "model_d":
-        raise NotImplementedError(
-            "response_model='model_d' (trial-varying omega) lands in Plan 20-03."
-        )
 
     base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl(model_name)
     n_trials = state_arr.shape[1]
@@ -439,6 +509,7 @@ def build_logp_fn_batched_patrl(
     _has_b = response_model in ("model_b", "model_c")
     _has_gamma = response_model in ("model_b", "model_c")
     _has_alpha = response_model == "model_c"
+    _is_model_d = response_model == "model_d"
 
     def logp_fn(params: dict[str, jnp.ndarray]) -> jnp.ndarray:
         """Compute batched log-likelihood summed across all participants.
@@ -449,13 +520,84 @@ def build_logp_fn_batched_patrl(
             Parameter dict.  Each value has shape ``(P,)``.  Required keys:
             ``omega_2``, ``beta``
             (plus ``omega_3``, ``kappa``, ``mu3_0`` for 3-level;
-            ``b`` for A+b/B/C; ``gamma`` for B/C; ``alpha`` for C).
+            ``b`` for A+b/B/C/D; ``gamma`` for B/C; ``alpha`` for C;
+            ``lam`` for D).
 
         Returns
         -------
         jnp.ndarray
             Scalar summed log-likelihood.
         """
+        # Model D: trial-varying omega_eff(t) = omega_2 + lam * dHR(t).
+        # Both 2-level and 3-level variants share the same vmap helper —
+        # the scan body branches on is_3level internally (via _single_logp
+        # which closes over is_3level at factory-build time).
+        if _is_model_d:
+            if is_3level:
+                def _call_single_d3(  # type: ignore[misc]
+                    omega_2_i: jnp.ndarray,
+                    omega_3_i: jnp.ndarray,
+                    kappa_i: jnp.ndarray,
+                    mu3_0_i: jnp.ndarray,
+                    beta_i: jnp.ndarray,
+                    b_i: jnp.ndarray,
+                    lam_i: jnp.ndarray,
+                    state_i: jnp.ndarray,
+                    choices_i: jnp.ndarray,
+                    reward_i: jnp.ndarray,
+                    shock_i: jnp.ndarray,
+                    mask_i: jnp.ndarray,
+                    dhr_i: jnp.ndarray,
+                ) -> Any:
+                    return _single_logp(  # type: ignore[return-value]
+                        {
+                            "omega_2": omega_2_i,
+                            "omega_3": omega_3_i,
+                            "kappa": kappa_i,
+                            "mu3_0": mu3_0_i,
+                            "beta": beta_i,
+                            "b": b_i,
+                            "lam": lam_i,
+                        },
+                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                    )
+
+                per_participant = jax.vmap(_call_single_d3)(
+                    params["omega_2"], params["omega_3"], params["kappa"],
+                    params["mu3_0"], params["beta"], params["b"], params["lam"],
+                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    delta_hr_jnp,
+                )
+            else:
+                def _call_single_d2(  # type: ignore[misc]
+                    omega_2_i: jnp.ndarray,
+                    beta_i: jnp.ndarray,
+                    b_i: jnp.ndarray,
+                    lam_i: jnp.ndarray,
+                    state_i: jnp.ndarray,
+                    choices_i: jnp.ndarray,
+                    reward_i: jnp.ndarray,
+                    shock_i: jnp.ndarray,
+                    mask_i: jnp.ndarray,
+                    dhr_i: jnp.ndarray,
+                ) -> Any:
+                    return _single_logp(  # type: ignore[return-value]
+                        {
+                            "omega_2": omega_2_i,
+                            "beta": beta_i,
+                            "b": b_i,
+                            "lam": lam_i,
+                        },
+                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                    )
+
+                per_participant = jax.vmap(_call_single_d2)(
+                    params["omega_2"], params["beta"], params["b"], params["lam"],
+                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    delta_hr_jnp,
+                )
+            return jnp.sum(per_participant)
+
         if is_3level:
             if _has_alpha:
                 def _call_single(  # type: ignore[misc]
@@ -864,6 +1006,7 @@ def _build_patrl_log_posterior(
         ``b`` is always sampled with prior N(b.mean, b.sd)).
         ``"model_b"`` additionally adds ``gamma``.
         ``"model_c"`` additionally adds ``alpha``.
+        ``"model_d"`` additionally adds ``lam`` (trial-varying omega coupling).
 
     Returns
     -------
@@ -876,6 +1019,7 @@ def _build_patrl_log_posterior(
     is_3level = model_name == "hgf_3level_patrl"
     _has_gamma = response_model in ("model_b", "model_c")
     _has_alpha = response_model == "model_c"
+    _has_lam = response_model == "model_d"
 
     # omega_2: Gaussian (unrestricted); in practice always negative
     _om2_mean = float(priors.omega_2.mean)
@@ -910,6 +1054,10 @@ def _build_patrl_log_posterior(
         _alpha_mean = float(priors.alpha.mean)
         _alpha_sd = float(priors.alpha.sd)
 
+    if _has_lam:
+        _lam_mean = float(priors.lam.mean)
+        _lam_sd = float(priors.lam.sd)
+
     def logdensity_fn(params: dict[str, jnp.ndarray]) -> Any:
         """Compute log-posterior = prior log-prob + log-likelihood.
 
@@ -921,6 +1069,7 @@ def _build_patrl_log_posterior(
             For 3-level: also ``omega_3``, ``kappa``, ``mu3_0``.
             For Model B/C: also ``gamma``.
             For Model C: also ``alpha``.
+            For Model D: also ``lam``.
 
         Returns
         -------
@@ -948,6 +1097,14 @@ def _build_patrl_log_posterior(
             alpha = params["alpha"]
             prior_lp = prior_lp + jnp.sum(
                 jss.norm.logpdf(alpha, loc=_alpha_mean, scale=_alpha_sd)
+            )
+        if _has_lam:
+            # Model D: lam is a linear ΔHR→omega coupling coefficient.
+            # Prior: Normal(lam.mean, lam.sd) — small sd because 1 bpm ΔHR
+            # should shift tonic_volatility by ~lam (i.e. ~0.1).
+            lam = params["lam"]
+            prior_lp = prior_lp + jnp.sum(
+                jss.norm.logpdf(lam, loc=_lam_mean, scale=_lam_sd)
             )
 
         if is_3level:
@@ -979,6 +1136,8 @@ def _build_patrl_log_posterior(
                 base_params["gamma"] = gamma
             if _has_alpha:
                 base_params["alpha"] = alpha
+            if _has_lam:
+                base_params["lam"] = lam
             likelihood_lp = logp_fn(base_params)
         else:
             base_params = {"omega_2": omega_2, "beta": beta, "b": b}
@@ -986,6 +1145,8 @@ def _build_patrl_log_posterior(
                 base_params["gamma"] = gamma
             if _has_alpha:
                 base_params["alpha"] = alpha
+            if _has_lam:
+                base_params["lam"] = lam
             likelihood_lp = logp_fn(base_params)
 
         return prior_lp + likelihood_lp
@@ -1066,11 +1227,10 @@ def fit_batch_hierarchical_patrl(
     not apply here.  This is acceptable for Phase 18 smoke runs; the
     traced-arg extension is planned for Phase 19.
     """
-    if response_model not in ("model_a", "model_b", "model_c"):
+    if response_model not in ("model_a", "model_b", "model_c", "model_d"):
         raise NotImplementedError(
             f"response_model={response_model!r}: supported are "
-            f"'model_a', 'model_b', 'model_c' (Plan 20-02). "
-            f"'model_d' lands in Plan 20-03."
+            f"'model_a', 'model_b', 'model_c', 'model_d'."
         )
 
     if model_name not in _PATRL_MODEL_NAMES:
@@ -1153,6 +1313,8 @@ def fit_batch_hierarchical_patrl(
         initial_position["gamma"] = jnp.full((n_participants,), priors.gamma.mean)
     if response_model == "model_c":
         initial_position["alpha"] = jnp.full((n_participants,), priors.alpha.mean)
+    if response_model == "model_d":
+        initial_position["lam"] = jnp.full((n_participants,), priors.lam.mean)
 
     # ------------------------------------------------------------------
     # 5. Run BlackJAX NUTS (reuse generic helper from hierarchical.py).
