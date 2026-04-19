@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 21 Wave 1 in progress — benchmark bottleneck diagnosis. Plans 21-01 + 21-02 COMPLETE: scope memo produced; harness re-instrumented with JAX_LOG_COMPILES + cache-stats parity + warmup_params-on-warm; new `--p-scan` and `--vb-laplace-probe` CLI probes landed with 7 passing unit tests locking CSV/JSON schemas for Waves 2-3 consumption.
+**Current focus:** Phase 21 Wave 2 complete — benchmark bottleneck diagnosis cluster probes. Plans 21-01 through 21-05 COMPLETE: scope memo, harness re-instrumentation, VB-Laplace probe, NUTS probe, and P-sweep cross-process chain all produced headline data. Waves 3 (21-06 cache forensics + 21-07 VERDICT synthesis) is the remaining work.
 
 ## Current Position
 
-Phase: 21 (Benchmark Bottleneck Diagnosis) — IN PROGRESS (Wave 1)
-Plan: 21-02 COMPLETE ✓ (2/7 plans); next is 21-03 (VB-Laplace cluster probe)
-Status: Wave 1 local desk work continues; harness instrumentation in scripts/08_run_power_iteration.py lands 2 new probe entry points + re-instrumented _run_benchmark; zero src/ changes; zero results/ changes; 7 CPU-only unit tests pass in ~22s.
-Last activity: 2026-04-19 — Completed plan 21-02: harness instrumentation (Patches A/B/C to _run_benchmark + --p-scan/--vb-laplace-probe helpers + tests/test_bench_harness_diagnostics.py with 7 tests).
+Phase: 21 (Benchmark Bottleneck Diagnosis) — Wave 2 complete (5/7 plans); Wave 3 in progress
+Plan: 21-05 COMPLETE ✓; next are 21-06 (cache forensics) + 21-07 (VERDICT synthesis)
+Status: Wave 2 cluster data collected, committed, and pushed. vb_laplace_vs_nuts_jit.json + jit_scaling_sweep.csv populated across P in {5, 20, 50} for both Laplace and NUTS paths. Wave 3 local desk work remains.
+Last activity: 2026-04-19 — Completed plans 21-03, 21-04, 21-05. Wave 2 cluster data produced: Laplace graph is shape-invariant (cold~42s at P=5,20); NUTS scales 3.5x from P=5 to P=20 (56.7s→195.4s); persistent on-disk cache gives ~0% speedup across process boundaries for NUTS at every P tested — Phase 14 1.1x "cache-paradox" reproduced at small scale.
 
-[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8); Phase 21 Wave 1 IN PROGRESS (2/7)
+[===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8); Phase 21 Wave 2 COMPLETE (5/7)
 
 ## Performance Metrics
 
@@ -182,6 +182,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Patch C (warmup_params on warm) landed — `fit_batch_hierarchical` already accepts `warmup_params` and returns `(idata, adapted_params)` when None | Signature verified at `src/prl_hgf/fitting/hierarchical.py:2012`; cold return tuple unpack + warm kwarg pass-through is a ~10-line edit with zero production-code churn; eliminates ~1100s NUTS warmup duplication that confounded job-54899271's 1.1x speedup observation | 21-02 |
 | B4 rename + per_call_wall_clock sibling field in vb_laplace_vs_nuts_jit.json | JAX_LOG_COMPILES emits event COUNTS (not timings); per-stage wall-clock would require harness-splitting which CONTEXT explicitly rejects; full-pipeline wall-clock from time.perf_counter wrappers around cold/warm/next-proc is the timing signal we CAN measure; 5-key schema with bottleneck_layer 7-value enum (`logp_graph \| lbfgs_loop \| hessian_graph \| nuts_kernel \| cache_key \| both \| undetermined`) locks downstream 21-07 reader contract | 21-02 |
 | --diagnostic-mode gate on _run_benchmark Patch A; probe entry points short-circuit before grid/chunk setup in main() | Production-default `--benchmark` keeps unchanged HLO (no JAX_LOG_COMPILES env pollution, no log-handler installation); probe invocations do not need the SBF grid (PAT-RL is their subject, not pick_best_cue); SLURM dispatch remains one-liner per probe | 21-02 |
+| Laplace graph is SHAPE-INVARIANT at the cohort axis: cold compile at P=5 (41.8s) ≈ cold compile at P=20 (42.09s) on M3 GPU | VB-Laplace's per-participant LBFGS + hessian path is traced once per shape class and reused across P; the outer loop over participants is Python-level not JAX-traced — contrast with NUTS which scales 3.5x from P=5 to P=20 (commit 313031b Laplace job 54901170) | 21-03 |
+| NUTS compile scales ~3.5x from P=5 (56.7s) to P=20 (195.4s), saturating at P=50 (229s): the sampler layer is the dominant shape-sensitive compile cost on top of the shape-invariant logp graph | Cross-sampler cache hits DO occur for the inner _single_logp scan body at matched keys; the scaling+cache-miss pathology localizes to the _run_vmap_chains._one_step outer scan (hierarchical.py:1144), NOT the logp graph (commit a3d991e NUTS job 54901802) | 21-04 |
+| Persistent on-disk cache provides ~0% speedup across process boundaries for NUTS at EVERY P in {5, 20, 50} — reproduces the Phase 14 1.1x "cache-paradox" at small scale | cold_jit_s ≈ next_proc_warm_s at every tested P (55.5s/55.5s at P=5; 245.7s/245.7s at P=20; 229s/229s at P=50); the closure-over-data hypothesis (STATE #106/107 / RESEARCH Risk #5) applies specifically to the `_one_step` outer scan's BlackJAX kernel-state closure (21-05 chain jobs 54901803-54901808) | 21-05 |
+| P=20 is a pathological shape for NUTS on the PAT-RL closure path: BOTH in-process tracing cache (1.09x speedup) AND cross-process persistent cache (1.00x speedup) fail; P=50 recovers to 2.49x in-process and 0.94x cross-process | Separate concern from the primary NUTS outer scan cache miss; 21-06 HLO-hash forensics can diff pscan_P20_cold vs pscan_P20_warm to determine whether the pathology is a stable HLO hash (XLA backend compile-time) or an unstable hash (another closure-over-data site) | 21-05 |
 
 ### Pending Todos
 
@@ -225,7 +229,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-19
-Stopped at: Completed 21-02-PLAN.md (benchmark harness instrumentation). `scripts/08_run_power_iteration.py` now sets JAX_LOG_COMPILES + tracks cache-delta around cold/warm + passes warmup_params on warm call in `_run_benchmark`; two new probe entry points `--p-scan N` and `--vb-laplace-probe --probe-p N` write locked-schema CSV/JSON under `.planning/phases/21-benchmark-bottleneck-diagnosis/`; `tests/test_bench_harness_diagnostics.py` has 7 CPU-only passing tests (~22s). Zero `src/` changes; zero `results/` changes; production `--benchmark` default unchanged.
+Last session: 2026-04-19 (Wave 2 cluster data complete + SUMMARY docs)
+Stopped at: Completed plans 21-03, 21-04, 21-05. Wave 2 cluster evidence assembled: vb_laplace_vs_nuts_jit.json (5 keys + nuts_per_p_scaling extension), jit_scaling_sweep.csv (8 rows at P=5/20/50 all status=completed), 10 raw JAX_LOG_COMPILES logs, 10 text-IR HLO dump directories. Key findings: Laplace shape-invariant, NUTS 3.5x shape-sensitive, persistent cache 0% cross-process at all P (Phase 14 1.1x paradox reproduced). Wave 2 SUMMARYs (21-03/21-04/21-05) committed locally as a single bundled docs commit. All cluster artifacts already on origin/main via per-job auto-push.
 Resume file: None
-Next action: Plan 21-03 (VB-Laplace cluster probe) — write SLURM script that invokes `python scripts/08_run_power_iteration.py --vb-laplace-probe --probe-p {5,20} --diagnostic-mode` on the cluster and collects the `vb_laplace_vs_nuts_jit.json` artifact. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) and 14.1-03 GPU benchmark.
+Next action: 21-06 cache forensics (HLO-hash diff across hlo_dumps/{laplace,nuts,pscan}_P*/ → cache_forensics.md) + 21-07 VERDICT synthesis. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) and 14.1-03 GPU benchmark — both deferred until Phase 21 VERDICT settles the persistent-cache-miss fix.
