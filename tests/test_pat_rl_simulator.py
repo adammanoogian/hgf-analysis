@@ -35,8 +35,9 @@ _N_TRIALS = 192  # from configs/pat_rl.yaml: n_trials: 192
 def test_simulate_patrl_cohort_shape_contract() -> None:
     """simulate_patrl_cohort returns (DataFrame, dict, dict) with correct shapes.
 
-    n_participants=3, level=2, 192 trials each -> 576 rows total.
-    true_params has 3 keys; trials_by_participant has 3 keys of 192 PATRLTrial.
+    Single-phenotype call (phenotypes=['healthy']): n_participants=3, level=2,
+    192 trials each -> 576 rows total.  true_params has 3 keys;
+    trials_by_participant has 3 keys of 192 PATRLTrial.
     """
     config = load_pat_rl_config()
     sim_df, true_params, trials_by_participant = simulate_patrl_cohort(
@@ -44,6 +45,7 @@ def test_simulate_patrl_cohort_shape_contract() -> None:
         level=2,
         master_seed=42,
         config=config,
+        phenotypes=["healthy"],
     )
 
     assert isinstance(sim_df, pd.DataFrame), (
@@ -82,10 +84,12 @@ def test_simulate_patrl_cohort_seed_determinism() -> None:
     """Same master_seed produces bit-for-bit identical cohort on two calls."""
     config = load_pat_rl_config()
     df1, params1, trials1 = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=42, config=config
+        n_participants=3, level=2, master_seed=42, config=config,
+        phenotypes=["healthy"],
     )
     df2, params2, trials2 = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=42, config=config
+        n_participants=3, level=2, master_seed=42, config=config,
+        phenotypes=["healthy"],
     )
 
     pd.testing.assert_frame_equal(df1, df2, check_exact=True)
@@ -110,10 +114,12 @@ def test_simulate_patrl_cohort_different_seeds_differ() -> None:
     """Different master_seeds produce different cohorts (choice column differs)."""
     config = load_pat_rl_config()
     df_42, _, _ = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=42, config=config
+        n_participants=3, level=2, master_seed=42, config=config,
+        phenotypes=["healthy"],
     )
     df_43, _, _ = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=43, config=config
+        n_participants=3, level=2, master_seed=43, config=config,
+        phenotypes=["healthy"],
     )
 
     choices_42 = df_42["choice"].to_numpy()
@@ -228,10 +234,16 @@ def test_run_hgf_forward_patrl_default_scalar_return_unchanged() -> None:
 
 
 def test_simulate_patrl_cohort_has_phenotype_column() -> None:
-    """sim_df contains a 'phenotype' column with non-empty strings for all rows."""
+    """sim_df contains a 'phenotype' column with non-empty strings for all rows.
+
+    Single-phenotype call (phenotypes=['healthy']): asserts exactly one phenotype
+    present.  Default call (phenotypes=None) returns all 4 — tested separately
+    by test_simulate_patrl_cohort_multi_phenotype_default_all_four.
+    """
     config = load_pat_rl_config()
     df, _, _ = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=42, config=config
+        n_participants=3, level=2, master_seed=42, config=config,
+        phenotypes=["healthy"],
     )
 
     assert "phenotype" in df.columns, (
@@ -242,7 +254,8 @@ def test_simulate_patrl_cohort_has_phenotype_column() -> None:
         f"got: {df['phenotype'].unique()}"
     )
     assert set(df["phenotype"].unique()) == {"healthy"}, (
-        f"Expected only 'healthy' phenotype by default; got {df['phenotype'].unique()}"
+        f"Expected only 'healthy' phenotype when phenotypes=['healthy']; "
+        f"got {df['phenotype'].unique()}"
     )
 
 
@@ -254,10 +267,12 @@ def test_simulate_patrl_cohort_epsilon2_coupled_dhr_deterministic() -> None:
     """
     config = load_pat_rl_config()
     df1, _, _ = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=99, config=config
+        n_participants=3, level=2, master_seed=99, config=config,
+        phenotypes=["healthy"],
     )
     df2, _, _ = simulate_patrl_cohort(
-        n_participants=3, level=2, master_seed=99, config=config
+        n_participants=3, level=2, master_seed=99, config=config,
+        phenotypes=["healthy"],
     )
 
     assert df1["delta_hr"].equals(df2["delta_hr"]), (
@@ -301,7 +316,8 @@ def test_simulate_patrl_cohort_dhr_within_bounds() -> None:
     """All delta_hr values must lie within config.task.delta_hr_stub.bounds after clipping."""
     config = load_pat_rl_config()
     df, _, _ = simulate_patrl_cohort(
-        n_participants=5, level=2, master_seed=7, config=config
+        n_participants=5, level=2, master_seed=7, config=config,
+        phenotypes=["healthy"],
     )
     lo, hi = config.task.delta_hr_stub.bounds
     assert (df["delta_hr"] >= lo).all(), (

@@ -9,6 +9,7 @@ master_seed. Seed-deterministic end-to-end.
 from __future__ import annotations
 
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -132,19 +133,22 @@ def run_hgf_forward_patrl(
 
 
 def simulate_patrl_cohort(
-    n_participants: int,
-    level: int,
-    master_seed: int,
-    config: PATRLConfig,
-    phenotype_name: str = "healthy",
+    n_participants: int | None = None,
+    level: int = 2,
+    master_seed: int | None = None,
+    config: PATRLConfig | None = None,
+    phenotypes: list[str] | None = None,
+    phenotype_name: str | None = None,
     response_model: str = "model_a",
     lam_true: float | None = None,
 ) -> tuple[pd.DataFrame, dict[str, dict[str, float]], dict[str, list[PATRLTrial]]]:
     """Simulate synthetic PAT-RL participants at known true parameters.
 
-    Draws true parameters from the specified phenotype distribution, runs an
-    HGF forward pass, and samples binary choices via the Model A (or Model D)
-    softmax.
+    Draws true parameters from each specified phenotype distribution, runs HGF
+    forward passes, and samples binary choices via the Model A (or Model D)
+    softmax.  When ``phenotypes=None`` (the default), all 4 phenotypes from
+    ``config.simulation.phenotypes`` are iterated, producing
+    ``n_participants * 4`` total agents.
 
     Phase 20 SC4: ΔHR is generated as a phenotype-specific, ε₂-coupled draw
     rather than reading the stub ΔHR baked into each ``PATRLTrial``::
@@ -155,6 +159,19 @@ def simulate_patrl_cohort(
     The Gaussian noise base is clipped to ``config.task.delta_hr_stub.bounds``
     after adding the ε₂ coupling term (Klaassen et al. 2024 Communications
     Biology, doi:10.1038/s42003-024-06267-6).
+
+    Phase 20 SC5 SeedSequence spawn tree (Decision 20-05)::
+
+        ss = SeedSequence(master_seed)
+        phenotype_seeds = ss.spawn(len(phenotypes))       # one SS per phenotype
+        child_seeds = phenotype_seeds[i].spawn(n_per)     # one SS per participant
+
+    The spawn order is determined by the *order of* ``phenotypes``.  When
+    ``phenotypes=['healthy']`` is called, the first child SeedSequence from
+    ``ss.spawn(1)`` is used for healthy — which is ALSO the first child from
+    ``ss.spawn(4)`` when all phenotypes are requested.  This guarantees that
+    healthy-phenotype participants are identical whether calling with
+    ``phenotypes=['healthy']`` or ``phenotypes=None``.
 
     Sign convention: ``phenotype.epsilon2_coupling_coef`` is *positive* in
     the YAML (e.g. 0.3). ε₂(t) = ``node_trajectories[0]['temp'][
@@ -185,18 +202,30 @@ def simulate_patrl_cohort(
 
     Parameters
     ----------
-    n_participants : int
-        Number of synthetic agents.
-    level : int
+    n_participants : int or None, default None
+        Number of synthetic agents PER PHENOTYPE.  If ``None``, uses
+        ``config.simulation.n_participants_per_phenotype`` (currently 40
+        after Plan 20-05).  The total cohort size is
+        ``n_participants * len(phenotypes)``.
+    level : int, default 2
         HGF level (2 or 3).
-    master_seed : int
-        Master RNG seed; spawns per-participant child seeds.
-    config : PATRLConfig
-        Loaded PAT-RL configuration.
-    phenotype_name : str, default 'healthy'
-        Which phenotype to draw parameters from. Must be a key in
-        ``config.simulation.phenotypes``. Default ``'healthy'`` preserves
-        Phase 18/19 behavior.
+    master_seed : int or None, default None
+        Master RNG seed.  If ``None``, uses
+        ``config.simulation.master_seed``.  The same ``master_seed``
+        always produces the same cohort (per-phenotype SeedSequence
+        spawn pattern).
+    config : PATRLConfig or None, default None
+        Loaded PAT-RL configuration.  If ``None``, a fresh config is
+        loaded via :func:`~prl_hgf.env.pat_rl_config.load_pat_rl_config`.
+    phenotypes : list[str] or None, default None
+        Phenotype names to iterate over.  If ``None``, all 4 phenotypes
+        from ``config.simulation.phenotypes`` are used in their YAML
+        insertion order.  Each name must be a key in
+        ``config.simulation.phenotypes``; unknown names raise ``ValueError``.
+    phenotype_name : str or None, default None
+        **Deprecated (Plan 20-04 legacy).** If given, treated as
+        ``phenotypes=[phenotype_name]`` and a ``DeprecationWarning`` is
+        emitted.  Mutually exclusive with ``phenotypes``.
     response_model : str, default 'model_a'
         Generative response model. Determines which HGF forward pass drives
         choices. Supported:
@@ -217,9 +246,13 @@ def simulate_patrl_cohort(
         :func:`~prl_hgf.fitting.hierarchical_patrl.fit_batch_hierarchical_patrl`.
         Includes a ``phenotype`` column (keyed via
         :data:`~prl_hgf.env.pat_rl_config.PHENOTYPE_COLUMN_NAME`).
+        Participant IDs are ``P000``...``P{N-1}`` where N is total agents
+        across all phenotypes.
     true_params : dict[str, dict[str, float]]
         Mapping from participant_id to dict of true parameter values.
         When ``response_model='model_d'``, each dict includes ``'lam'``.
+        All models include ``'b'`` (response bias true value drawn from
+        ``phenotype.b`` prior, Plan 20-02 SC1).
     trials_by_participant : dict[str, list[PATRLTrial]]
         Mapping from participant_id to list of
         :class:`~prl_hgf.env.pat_rl_sequence.PATRLTrial`.
@@ -227,11 +260,56 @@ def simulate_patrl_cohort(
     Raises
     ------
     ValueError
+        If ``phenotypes`` contains a name not in
+        ``config.simulation.phenotypes``.
+    ValueError
+        If ``phenotype_name`` and ``phenotypes`` are both specified.
+    ValueError
         If ``response_model='model_d'`` and ``lam_true`` is ``None``.
     ValueError
         If ``response_model`` is not ``'model_d'`` and ``lam_true`` is not
         ``None``.
     """
+    # --- Load config if not provided ---
+    if config is None:
+        from prl_hgf.env.pat_rl_config import load_pat_rl_config  # noqa: PLC0415
+
+        config = load_pat_rl_config()
+
+    # --- Legacy phenotype_name kwarg (Plan 20-04 backward compat) ---
+    if phenotype_name is not None and phenotypes is not None:
+        raise ValueError(
+            "simulate_patrl_cohort: specify either 'phenotypes' or the "
+            "deprecated 'phenotype_name', not both. "
+            f"Got phenotypes={phenotypes!r} and phenotype_name={phenotype_name!r}."
+        )
+    if phenotype_name is not None:
+        warnings.warn(
+            "simulate_patrl_cohort: 'phenotype_name' is deprecated. "
+            "Use phenotypes=[name] instead. "
+            f"Got phenotype_name={phenotype_name!r}.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        phenotypes = [phenotype_name]
+
+    # --- Resolve defaults ---
+    if master_seed is None:
+        master_seed = config.simulation.master_seed  # type: ignore[attr-defined]
+    if phenotypes is None:
+        phenotypes = list(config.simulation.phenotypes.keys())  # type: ignore[attr-defined]
+    if n_participants is None:
+        n_participants = config.simulation.n_participants_per_phenotype  # type: ignore[attr-defined]
+
+    # --- Validate phenotype names ---
+    available = set(config.simulation.phenotypes.keys())  # type: ignore[attr-defined]
+    unknown = [ph for ph in phenotypes if ph not in available]
+    if unknown:
+        raise ValueError(
+            f"simulate_patrl_cohort: unknown phenotype(s) {unknown!r}. "
+            f"Available phenotypes: {sorted(available)}"
+        )
+
     # --- Input validation: lam_true / response_model consistency ---
     if response_model == "model_d":
         if lam_true is None:
@@ -249,160 +327,184 @@ def simulate_patrl_cohort(
                 f"response models."
             )
 
-    phenotype = config.simulation.phenotypes[phenotype_name]  # type: ignore[attr-defined]
-
     # Bounds for ΔHR clipping (Phase 20 SC4 safety).
-    dhr_bounds = config.task.delta_hr_stub.bounds
+    dhr_bounds = config.task.delta_hr_stub.bounds  # type: ignore[attr-defined]
 
-    # Spawn n_participants independent child seeds from master.
+    # --- Per-phenotype SeedSequence spawn (SC5 Decision 20-05) ---
+    # ss.spawn(len(phenotypes)) produces one child SeedSequence per phenotype.
+    # The spawn is ORDER-DEPENDENT: spawn(4) for ['healthy','anxious',...] gives
+    # the same first child as spawn(1) for ['healthy'] — enabling the key
+    # determinism property: subset request produces identical subset rows.
     ss = np.random.SeedSequence(master_seed)
-    child_seeds = ss.spawn(n_participants)
+    phenotype_seeds = ss.spawn(len(phenotypes))
 
     all_rows: list[dict] = []
     true_params: dict[str, dict[str, float]] = {}
     trials_by_participant: dict[str, list[PATRLTrial]] = {}
+    global_pid_counter = 0  # P000...P{total-1} across all phenotypes
 
-    for i, child_ss in enumerate(child_seeds):
-        pid = f"P{i:03d}"
-        rng = np.random.default_rng(child_ss)
+    logger.info(
+        "simulate_patrl_cohort: %d phenotypes × %d agents = %d total",
+        len(phenotypes),
+        n_participants,
+        len(phenotypes) * n_participants,
+    )
 
-        # Sample true parameters from the phenotype distribution.
-        omega_2_true = float(rng.normal(phenotype.omega_2.mean, phenotype.omega_2.sd))
-        beta_true = float(
-            max(0.01, rng.normal(phenotype.beta.mean, phenotype.beta.sd))
-        )
+    for _ph_idx, (phenotype_name_curr, ph_ss) in enumerate(
+        zip(phenotypes, phenotype_seeds, strict=True)
+    ):
+        phenotype = config.simulation.phenotypes[phenotype_name_curr]  # type: ignore[attr-defined]
+        child_seeds = ph_ss.spawn(n_participants)
 
-        true_p: dict[str, float] = {"omega_2": omega_2_true, "beta": beta_true}
+        for _local_i, child_ss in enumerate(child_seeds):
+            pid = f"P{global_pid_counter:03d}"
+            global_pid_counter += 1
+            rng = np.random.default_rng(child_ss)
 
-        if level == 3:
-            omega_3_true = float(
-                rng.normal(phenotype.kappa.mean + 1e-3, max(0.01, phenotype.kappa.sd))
-                if phenotype.kappa.sd > 0
-                else phenotype.kappa.mean
+            # Sample true parameters from the phenotype distribution.
+            omega_2_true = float(rng.normal(phenotype.omega_2.mean, phenotype.omega_2.sd))
+            beta_true = float(
+                max(0.01, rng.normal(phenotype.beta.mean, phenotype.beta.sd))
             )
-            # Use omega_3 from config priors
-            omega_3_true = float(
-                rng.normal(
-                    config.fitting.priors.omega_3.mean,  # type: ignore[attr-defined]
-                    config.fitting.priors.omega_3.sd,  # type: ignore[attr-defined]
-                )
-            )
-            kappa_true = float(phenotype.kappa.mean)
-            mu3_0_true = float(phenotype.mu3_0.mean)
-            true_p["omega_3"] = omega_3_true
-            true_p["kappa"] = kappa_true
-            true_p["mu3_0"] = mu3_0_true
+            b_true = float(rng.normal(phenotype.b.mean, phenotype.b.sd))
 
-        if response_model == "model_d":
-            # Record lam in true_params for Plan 20-03 λ-recovery comparison.
-            assert lam_true is not None  # validated above; appeases mypy
-            true_p["lam"] = float(lam_true)
+            true_p: dict[str, float] = {
+                "omega_2": omega_2_true,
+                "beta": beta_true,
+                "b": b_true,
+            }
 
-        # Draw a trial seed for environment (separate from parameter RNG).
-        env_seed = int(rng.integers(0, 2**31))
-
-        # Generate trial sequence.
-        trials = generate_session_patrl(config, seed=env_seed)
-        n_trials = len(trials)
-        trials_by_participant[pid] = trials
-
-        # ------------------------------------------------------------------
-        # Phase 20 SC4: ε₂-coupled ΔHR generative model.
-        # Pass 1: HGF forward at omega_2_true to extract ε₂(t).
-        # ------------------------------------------------------------------
-        if level == 3:
-            mu2_traj, epsilon2_traj = run_hgf_forward_patrl(
-                trials,
-                omega_2_true,
-                level=3,
-                omega_3=omega_3_true,
-                kappa=kappa_true,
-                mu3_0=mu3_0_true,
-                return_epsilon2=True,
-            )
-        else:
-            mu2_traj, epsilon2_traj = run_hgf_forward_patrl(
-                trials, omega_2_true, level=2, return_epsilon2=True
-            )
-
-        # Generate ΔHR: N(dhr_mean, dhr_sd) + coef * ε₂(t), clipped.
-        dhr_rng = np.random.default_rng(int(rng.integers(0, 2**31)))
-        base_dhr = dhr_rng.normal(phenotype.dhr_mean, phenotype.dhr_sd, size=n_trials)
-        delta_hr = base_dhr + phenotype.epsilon2_coupling_coef * epsilon2_traj
-        delta_hr = np.clip(delta_hr, dhr_bounds[0], dhr_bounds[1])
-
-        # ------------------------------------------------------------------
-        # Pass 2 (Model D only): re-run HGF with trial-varying omega_eff(t).
-        # omega_eff(t) = omega_2_true + lam_true * delta_hr(t).
-        # The already-computed delta_hr is used here; no further ε₂ iteration.
-        # ------------------------------------------------------------------
-        if response_model == "model_d":
-            assert lam_true is not None
-            # Build trial list with per-trial omega modification injected
-            # via a per-trial omega_eff vector. We re-run the HGF once per
-            # participant using the mean omega_eff across trials as a
-            # scalar approximation for the initial forward pass belief
-            # trajectory; this is the standard simulator-side approximation
-            # (exact online injection requires custom pyhgf scan surgery,
-            # which is Plan 20-03's contribution on the fitting side).
-            # For simulation purposes we use the mean effective omega:
-            omega_eff_mean = float(omega_2_true + lam_true * float(np.mean(delta_hr)))
             if level == 3:
-                mu2_traj = run_hgf_forward_patrl(
+                # Use omega_3 from config fitting priors (consistent with Phase 18/19)
+                omega_3_true = float(
+                    rng.normal(
+                        config.fitting.priors.omega_3.mean,  # type: ignore[attr-defined]
+                        config.fitting.priors.omega_3.sd,  # type: ignore[attr-defined]
+                    )
+                )
+                kappa_true = float(phenotype.kappa.mean)
+                mu3_0_true = float(phenotype.mu3_0.mean)
+                true_p["omega_3"] = omega_3_true
+                true_p["kappa"] = kappa_true
+                true_p["mu3_0"] = mu3_0_true
+
+            if response_model == "model_d":
+                # Record lam in true_params for Plan 20-03 λ-recovery comparison.
+                assert lam_true is not None  # validated above; appeases mypy
+                true_p["lam"] = float(lam_true)
+
+            # Draw a trial seed for environment (separate from parameter RNG).
+            env_seed = int(rng.integers(0, 2**31))
+
+            # Generate trial sequence.
+            trials = generate_session_patrl(config, seed=env_seed)
+            n_trials = len(trials)
+            trials_by_participant[pid] = trials
+
+            # ------------------------------------------------------------------
+            # Phase 20 SC4: ε₂-coupled ΔHR generative model.
+            # Pass 1: HGF forward at omega_2_true to extract ε₂(t).
+            # ------------------------------------------------------------------
+            if level == 3:
+                mu2_traj, epsilon2_traj = run_hgf_forward_patrl(
                     trials,
-                    omega_eff_mean,
+                    omega_2_true,
                     level=3,
                     omega_3=omega_3_true,
                     kappa=kappa_true,
                     mu3_0=mu3_0_true,
+                    return_epsilon2=True,
                 )
             else:
-                mu2_traj = run_hgf_forward_patrl(
-                    trials, omega_eff_mean, level=2
+                mu2_traj, epsilon2_traj = run_hgf_forward_patrl(
+                    trials, omega_2_true, level=2, return_epsilon2=True
                 )
 
-        # Sample choices: approach=1, avoid=0 via softmax over [EV_avoid=0, EV_approach].
-        reward_mag = np.array([t.reward_mag for t in trials], dtype=np.float64)
-        shock_mag = np.array([t.shock_mag for t in trials], dtype=np.float64)
+            # Generate ΔHR: N(dhr_mean, dhr_sd) + coef * ε₂(t), clipped.
+            dhr_rng = np.random.default_rng(int(rng.integers(0, 2**31)))
+            base_dhr = dhr_rng.normal(
+                phenotype.dhr_mean, phenotype.dhr_sd, size=n_trials
+            )
+            delta_hr = base_dhr + phenotype.epsilon2_coupling_coef * epsilon2_traj
+            delta_hr = np.clip(delta_hr, dhr_bounds[0], dhr_bounds[1])
 
-        # Compute EV_approach using numpy (no JAX in simulation loop).
-        mu2_clip = np.clip(mu2_traj, -30.0, 30.0)
-        p_danger = 1.0 / (1.0 + np.exp(-mu2_clip))
-        ev_approach = (1.0 - p_danger) * reward_mag - p_danger * shock_mag
+            # ------------------------------------------------------------------
+            # Pass 2 (Model D only): re-run HGF with trial-varying omega_eff(t).
+            # omega_eff(t) = omega_2_true + lam_true * delta_hr(t).
+            # The already-computed delta_hr is used here; no further ε₂ iteration.
+            # ------------------------------------------------------------------
+            if response_model == "model_d":
+                assert lam_true is not None
+                # Mean-omega scalar approximation for the initial forward pass
+                # belief trajectory (exact per-trial injection is Plan 20-03's
+                # contribution on the fitting side).
+                omega_eff_mean = float(
+                    omega_2_true + lam_true * float(np.mean(delta_hr))
+                )
+                if level == 3:
+                    mu2_traj = run_hgf_forward_patrl(
+                        trials,
+                        omega_eff_mean,
+                        level=3,
+                        omega_3=omega_3_true,
+                        kappa=kappa_true,
+                        mu3_0=mu3_0_true,
+                    )
+                else:
+                    mu2_traj = run_hgf_forward_patrl(
+                        trials, omega_eff_mean, level=2
+                    )
 
-        # Softmax choice probabilities: p_approach = sigmoid(beta * ev_approach).
-        logit_approach = beta_true * ev_approach
-        p_approach = 1.0 / (1.0 + np.exp(-logit_approach))
+            # Sample choices: approach=1, avoid=0 via softmax over
+            # [EV_avoid=0, EV_approach].
+            reward_mag = np.array([t.reward_mag for t in trials], dtype=np.float64)
+            shock_mag = np.array([t.shock_mag for t in trials], dtype=np.float64)
 
-        choice_rng = np.random.default_rng(int(rng.integers(0, 2**31)))
-        choices = choice_rng.random(n_trials) < p_approach
-        choices_int = choices.astype(np.int32)
+            # Compute EV_approach using numpy (no JAX in simulation loop).
+            mu2_clip = np.clip(mu2_traj, -30.0, 30.0)
+            p_danger = 1.0 / (1.0 + np.exp(-mu2_clip))
+            ev_approach = (1.0 - p_danger) * reward_mag - p_danger * shock_mag
 
-        # Assemble rows (Phase 20: phenotype column + ε₂-coupled delta_hr).
-        for t_idx, trial in enumerate(trials):
-            all_rows.append(
-                {
-                    "participant_id": pid,
-                    PHENOTYPE_COLUMN_NAME: phenotype_name,
-                    "trial_idx": trial.trial_idx,
-                    "state": trial.state,
-                    "choice": int(choices_int[t_idx]),
-                    "reward_mag": trial.reward_mag,
-                    "shock_mag": trial.shock_mag,
-                    "delta_hr": float(delta_hr[t_idx]),
-                    "outcome_time_s": trial.outcome_time_s,
-                }
+            # Softmax choice probabilities: p_approach = sigmoid(beta * ev_approach).
+            logit_approach = beta_true * ev_approach
+            p_approach = 1.0 / (1.0 + np.exp(-logit_approach))
+
+            choice_rng = np.random.default_rng(int(rng.integers(0, 2**31)))
+            choices = choice_rng.random(n_trials) < p_approach
+            choices_int = choices.astype(np.int32)
+
+            # Assemble rows (Phase 20: phenotype column + ε₂-coupled delta_hr).
+            for t_idx, trial in enumerate(trials):
+                all_rows.append(
+                    {
+                        "participant_id": pid,
+                        PHENOTYPE_COLUMN_NAME: phenotype_name_curr,
+                        "trial_idx": trial.trial_idx,
+                        "state": trial.state,
+                        "choice": int(choices_int[t_idx]),
+                        "reward_mag": trial.reward_mag,
+                        "shock_mag": trial.shock_mag,
+                        "delta_hr": float(delta_hr[t_idx]),
+                        "outcome_time_s": trial.outcome_time_s,
+                    }
+                )
+
+            true_params[pid] = true_p
+            logger.info(
+                "Simulated participant %s (phenotype=%s): omega_2=%.3f  "
+                "beta=%.3f  b=%.3f  approach_rate=%.2f",
+                pid,
+                phenotype_name_curr,
+                omega_2_true,
+                beta_true,
+                b_true,
+                float(np.mean(choices_int)),
             )
 
-        true_params[pid] = true_p
         logger.info(
-            "Simulated participant %s (phenotype=%s): omega_2=%.3f  "
-            "beta=%.3f  approach_rate=%.2f",
-            pid,
-            phenotype_name,
-            omega_2_true,
-            beta_true,
-            float(np.mean(choices_int)),
+            "simulate_patrl_cohort: phenotype '%s' complete — %d agents",
+            phenotype_name_curr,
+            n_participants,
         )
 
     sim_df = pd.DataFrame(all_rows)
