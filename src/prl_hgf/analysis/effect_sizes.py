@@ -4,10 +4,14 @@ Provides Cohen's d and partial eta-squared for HGF parameter differences
 between the psilocybin intervention groups across sessions.  These accompany
 the Bayesian posterior contrasts produced by :mod:`prl_hgf.analysis.group`.
 
+Also provides :func:`cohens_d` — a standalone pooled-SD Cohen's d helper
+used by the PAT-RL PRL-V2 phenotype-separability gate (Plan 20-07).
+
 Effect size conventions
 -----------------------
-* Cohen's d — standardised mean difference (absolute value reported).
-  Computed via ``pingouin.compute_effsize`` with ``eftype="cohen"``.
+* Cohen's d — standardised mean difference.
+  Primary helper: ``pingouin.compute_effsize`` with ``eftype="cohen"``.
+  Standalone helper: :func:`cohens_d` (pooled SD; no pingouin dep).
 * Partial η² — estimated from Cohen's d via the relationship
   ``η² = d² / (d² + 4)`` for two independent groups (Cohen 1988).
 
@@ -19,10 +23,78 @@ from __future__ import annotations
 
 import logging
 
+import numpy as np
 import pandas as pd
 import pingouin as pg
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "cohens_d",
+    "compute_cohens_d",
+    "compute_effect_sizes_table",
+]
+
+
+def cohens_d(group_high: np.ndarray, group_low: np.ndarray) -> float:
+    """Compute Cohen's d via pooled standard deviation.
+
+    Standard two-sample Cohen's d (Cohen 1988):
+
+    .. math::
+
+        d = \\frac{\\bar{x}_\\text{high} - \\bar{x}_\\text{low}}{s_\\text{pooled}}
+
+    where
+
+    .. math::
+
+        s_\\text{pooled} = \\sqrt{
+            \\frac{(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2}{n_1 + n_2 - 2}
+        }
+
+    Parameters
+    ----------
+    group_high : numpy.ndarray
+        Values for the "high" condition (e.g. anxiety-high group).
+    group_low : numpy.ndarray
+        Values for the "low" condition (e.g. anxiety-low group).
+
+    Returns
+    -------
+    float
+        Cohen's d (signed; positive means group_high > group_low).
+
+    Raises
+    ------
+    ValueError
+        If either group has fewer than 2 observations.
+    """
+    a = np.asarray(group_high, dtype=float)
+    b = np.asarray(group_low, dtype=float)
+
+    na, nb = len(a), len(b)
+    if na < 2:
+        raise ValueError(
+            f"cohens_d: group_high has {na} observations; need at least 2. "
+            f"Expected at least 2, got {na}."
+        )
+    if nb < 2:
+        raise ValueError(
+            f"cohens_d: group_low has {nb} observations; need at least 2. "
+            f"Expected at least 2, got {nb}."
+        )
+
+    pooled_var = ((na - 1) * a.var(ddof=1) + (nb - 1) * b.var(ddof=1)) / (na + nb - 2)
+    pooled_sd = float(np.sqrt(pooled_var))
+
+    if pooled_sd == 0.0:
+        logger.warning(
+            "cohens_d: pooled SD is zero (all values identical). Returning 0.0."
+        )
+        return 0.0
+
+    return float((a.mean() - b.mean()) / pooled_sd)
 
 
 def compute_cohens_d(
