@@ -60,7 +60,7 @@ unset CUDA_VISIBLE_DEVICES
 
 # Persistent JAX compilation cache (CPU-specific path so we don't poison
 # cross-architecture with the GPU cache)
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_cpu/${SLURMD_NODENAME:-local}"
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_cpu/shared"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {

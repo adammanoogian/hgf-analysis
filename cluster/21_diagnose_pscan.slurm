@@ -25,10 +25,12 @@
 #     (distinct directories so 21-06 can diff cold-vs-warm HLO for the same P)
 #
 # Cross-job cache sharing:
-#   JAX_COMPILATION_CACHE_DIR path formula is IDENTICAL to
+#   JAX_COMPILATION_CACHE_DIR path is IDENTICAL to
 #   cluster/21_diagnose_laplace.slurm and cluster/21_diagnose_nuts.slurm so the
 #   warm role benefits from the persistent cache written by the prior cold job
-#   (which is the point of the cross-process measurement).
+#   (which is the point of the cross-process measurement). Shared path
+#   /scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared — Phase 21 VERDICT §c
+#   patch; ${SLURMD_NODENAME:-local} suffix dropped for cross-node cache reuse.
 #
 # Walltime: 00:30:00 per job (Phase 21 SC7). If P=50 cold exceeds walltime,
 # the job times out, no CSV row is written (or the row is marked infeasible by
@@ -149,12 +151,13 @@ echo ""
 
 # =============================================================================
 # JAX cache + diagnostic env vars (Phase 21)
-# IDENTICAL path formula to cluster/21_diagnose_laplace.slurm and
+# IDENTICAL path to cluster/21_diagnose_laplace.slurm and
 # cluster/21_diagnose_nuts.slurm so the warm role benefits from the persistent
 # cache written by the prior cold job — this is the whole point of the
-# cross-process measurement.
+# cross-process measurement. Shared across nodes via Lustre scratch (Phase 21
+# VERDICT §c patch — ${SLURMD_NODENAME:-local} suffix dropped).
 # =============================================================================
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {

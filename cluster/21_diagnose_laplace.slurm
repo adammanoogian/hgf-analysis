@@ -112,8 +112,9 @@ echo ""
 # JAX cache + diagnostic env vars (Phase 21)
 # Same JAX_COMPILATION_CACHE_DIR path as cluster/14_benchmark_gpu.slurm for
 # apples-to-apples cache-warming across the two probes.
+# Shared across nodes via Lustre scratch (Phase 21 VERDICT §c patch).
 # =============================================================================
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {

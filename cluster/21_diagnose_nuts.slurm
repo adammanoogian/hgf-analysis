@@ -31,8 +31,9 @@
 #
 # Cross-job cache sharing:
 #   The JAX_COMPILATION_CACHE_DIR is IDENTICAL to cluster/21_diagnose_laplace.slurm
-#   (same path formula: /scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}).
-#   If Laplace (21-03) ran first on the same node, the NUTS probe's first scan-body
+#   (shared path: /scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared — Phase 21
+#   VERDICT §c patch; ${SLURMD_NODENAME:-local} suffix dropped so cross-node reuse works).
+#   If Laplace (21-03) ran first on any node, the NUTS probe's first scan-body
 #   compile could land as a PERSISTENT CACHE HIT — evidence that the logp-graph HLO
 #   hash is stable across the Laplace→NUTS transition (plan 21-06 analyses this).
 #
@@ -130,8 +131,10 @@ echo ""
 # JAX cache + diagnostic env vars (Phase 21)
 # IDENTICAL path formula to cluster/21_diagnose_laplace.slurm so 21-06 scan-body
 # cache-reuse diffing has a shared persistent cache to analyze.
+# Shared across nodes via Lustre scratch (Phase 21 VERDICT §c patch — dropped
+# ${SLURMD_NODENAME:-local} suffix so cross-SLURM-job cache reuse works).
 # =============================================================================
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {

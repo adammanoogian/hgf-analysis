@@ -1056,23 +1056,35 @@ def _run_benchmark(
     print(f"  Chain method:    {chain_method_bench} (jit_model_args=True)")
 
     # --- Phase 1: JAX compilation cache test (BENCH-05) ---
+    # Phase 21 VERDICT §c secondary patch (14.1-07): the former N=2/group warm-up
+    # exercised a structurally different HLO scan body (hash 2f25aed94588c656,
+    # 4,771,952 B) from the Phase-2 N=max_n/group measurement (hash
+    # 62fbc95475cb0a32, 4,786,267 B; Jaccard 0.180 per 21-06 §c). The tracing
+    # cache could not bridge the shape gap so Phase 1 contributed compile time
+    # without accelerating Phase 2. Upgrading Phase 1 to production N means the
+    # in-process tracing cache hits cleanly and Phase 2 runs warm-JIT-only.
     print("\nPhase 1: JAX compilation cache test (BENCH-05)...")
-    print("  Building tiny cohort for JIT warm-up (N=2/group, 2 chains, 10 draws)...")
+    print(
+        "  Building production-shape cohort for JIT warm-up "
+        "(N=max(n_per_group_grid), args.fit_chains chains, "
+        "args.fit_tune tune / args.fit_draws draws)..."
+    )
 
     d_bench = power_config.effect_size_grid[0]
-    cfg_tiny = make_power_config(base_config, 2, d_bench, 99999)
-    sim_tiny = simulate_batch(cfg_tiny)
+    max_n_warm = max(power_config.n_per_group_grid)
+    cfg_warm = make_power_config(base_config, max_n_warm, d_bench, 99999)
+    sim_warm = simulate_batch(cfg_warm)
 
     t0 = time.perf_counter()
     # Cold call: returns (idata, adapted_params) when warmup_params is None
     # (Phase 21 Patch C: capture adapted params so the warm call can skip
     # window adaptation and we get a real cold-vs-warm comparison).
     _cold_return = fit_batch_hierarchical(
-        sim_tiny,
+        sim_warm,
         "hgf_3level",
-        n_chains=2,
-        n_draws=10,
-        n_tune=10,
+        n_chains=args.fit_chains,
+        n_draws=args.fit_draws,
+        n_tune=args.fit_tune,
         target_accept=0.9,
         random_seed=42,
         progressbar=False,
@@ -1110,11 +1122,11 @@ def _run_benchmark(
     # confound observed in job-54899271 (1.1x speedup was because both cold
     # and warm re-ran warmup, not because the XLA cache was missing).
     fit_batch_hierarchical(
-        sim_tiny,
+        sim_warm,
         "hgf_3level",
-        n_chains=2,
-        n_draws=10,
-        n_tune=10,
+        n_chains=args.fit_chains,
+        n_draws=args.fit_draws,
+        n_tune=args.fit_tune,
         target_accept=0.9,
         random_seed=43,
         progressbar=False,

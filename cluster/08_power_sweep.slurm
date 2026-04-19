@@ -119,9 +119,9 @@ check_cuda_compat || echo "WARNING: CUDA compatibility issue detected (non-fatal
 echo ""
 
 # =============================================================================
-# JAX Compilation Cache (node-specific to avoid cross-arch cache poisoning)
+# JAX Compilation Cache (shared across nodes via Lustre scratch; cross-SLURM-job persistence — Phase 21 VERDICT §c)
 # =============================================================================
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}"
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
