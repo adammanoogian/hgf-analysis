@@ -1,0 +1,176 @@
+BufferAssignment:
+allocation 0: size 147456, maybe-live-out:
+ value: <43 input_add_reduce_fusion{1} @0> (size=147456,offset=0): f64[24,1,4,192]{3,2,1,0}
+allocation 1: size 147456, parameter 3, shape |f64[24,4,192]| at ShapeIndex {}:
+ value: <38 Arg_3.4.0 @0> (size=147456,offset=0): f64[24,4,192]{2,1,0}
+allocation 2: size 147456, parameter 5, shape |f64[24,1,4,192]| at ShapeIndex {}:
+ value: <39 Arg_5.6.0 @0> (size=147456,offset=0): f64[24,1,4,192]{3,2,1,0}
+allocation 3: size 6144, maybe-live-out:
+ value: <37 input_multiply_reduce_fusion{1} @0> (size=6144,offset=0): f64[1,4,192]{2,1,0}
+allocation 4: size 6144, parameter 2, shape |f64[1,4,192]| at ShapeIndex {}:
+ value: <32 Arg_2.3.0 @0> (size=6144,offset=0): f64[1,4,192]{2,1,0}
+allocation 5: size 6144, parameter 0, shape |f64[4,192]| at ShapeIndex {}:
+ value: <33 Arg_0.1.0 @0> (size=6144,offset=0): f64[4,192]{1,0}
+allocation 6: size 768, maybe-live-out:
+ value: <42 input_add_reduce_fusion{0} @0> (size=768,offset=0): f64[24,4]{1,0}
+allocation 7: size 768, parameter 4, shape |f64[24,4,1]| at ShapeIndex {}:
+ value: <40 Arg_4.5.0 @0> (size=768,offset=0): f64[24,4,1]{2,1,0}
+allocation 8: size 32, maybe-live-out:
+ value: <36 input_multiply_reduce_fusion{0} @0> (size=32,offset=0): f64[4]{0}
+allocation 9: size 32, output shape is |(f64[1,4], f64[1,4,192], f64[24,1,4], f64[24,1,4,192])|, maybe-live-out:
+ value: <44 tuple.64.0{} @0> (size=32,offset=0): (f64[1,4]{1,0}, f64[1,4,192]{2,1,0}, f64[24,1,4]{2,1,0}, f64[24,1,4,192]{3,2,1,0})
+allocation 10: size 32, parameter 1, shape |f64[4,1]| at ShapeIndex {}:
+ value: <34 Arg_1.2.0 @0> (size=32,offset=0): f64[4,1]{1,0}
+allocation 11: size 8, thread-local:
+ value: <2 add.3 @0> (size=8,offset=0): f64[]
+allocation 12: size 8, thread-local:
+ value: <1 Arg_1.44 @0> (size=8,offset=0): f64[]
+allocation 13: size 8, thread-local:
+ value: <0 Arg_0.43 @0> (size=8,offset=0): f64[]
+allocation 14: size 144, preallocated-temp:
+ value: <35 input_multiply_reduce_fusion{} @0> (size=16,offset=128): (f64[4]{0}, f64[1,4,192]{2,1,0})
+ value: <41 input_add_reduce_fusion{} @0> (size=16,offset=0): (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0})
+
+Total bytes used: 462600 (451.8KiB)
+
+Used values:
+<0 Arg_0.43 @0>
+ positions:
+  Arg_0.43
+ uses:
+  add.3, operand 0
+ from instruction: %Arg_0.43 = f64[] parameter(0), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<1 Arg_1.44 @0>
+ positions:
+  Arg_1.44
+ uses:
+  add.3, operand 1
+ from instruction: %Arg_1.44 = f64[] parameter(1), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<2 add.3 @0>
+ positions:
+  add.3
+ uses:
+ from instruction: %add.3 = f64[] add(f64[] %Arg_0.43, f64[] %Arg_1.44), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<32 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+  input_multiply_reduce_fusion, operand 0
+  input_add_reduce_fusion, operand 1
+ from instruction: %Arg_2.3.0 = f64[1,4,192]{2,1,0} parameter(2)<33 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  input_add_reduce_fusion, operand 3
+  input_multiply_reduce_fusion, operand 1
+ from instruction: %Arg_0.1.0 = f64[4,192]{1,0} parameter(0)<34 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  input_add_reduce_fusion, operand 4
+  input_multiply_reduce_fusion, operand 2
+ from instruction: %Arg_1.2.0 = f64[4,1]{1,0} parameter(1)<35 input_multiply_reduce_fusion{} @0>
+ positions:
+  input_multiply_reduce_fusion {}
+ uses:
+  get-tuple-element.2, operand 0 {}
+  get-tuple-element.3, operand 0 {}
+ from instruction: %input_multiply_reduce_fusion = (f64[4]{0}, f64[1,4,192]{2,1,0}) fusion(f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<36 input_multiply_reduce_fusion{0} @0>
+ positions:
+  input_multiply_reduce_fusion {0}
+  tuple.64.0 {0}
+  bitcast.146.0
+  get-tuple-element.2
+ uses:
+  tuple.64.0, operand 0
+  bitcast.146.0, operand 0
+ from instruction: %input_multiply_reduce_fusion = (f64[4]{0}, f64[1,4,192]{2,1,0}) fusion(f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<37 input_multiply_reduce_fusion{1} @0>
+ positions:
+  input_multiply_reduce_fusion {1}
+  tuple.64.0 {1}
+  get-tuple-element.3
+ uses:
+  tuple.64.0, operand 1
+ from instruction: %input_multiply_reduce_fusion = (f64[4]{0}, f64[1,4,192]{2,1,0}) fusion(f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<38 Arg_3.4.0 @0>
+ positions:
+  Arg_3.4.0
+ uses:
+  input_add_reduce_fusion, operand 0
+ from instruction: %Arg_3.4.0 = f64[24,4,192]{2,1,0} parameter(3), metadata={op_name="jit(multiply)/jit(main)/broadcast_in_dim[shape=(24, 1, 4, 192) broadcast_dimensions=(0, np.int64(2), np.int64(3))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<39 Arg_5.6.0 @0>
+ positions:
+  Arg_5.6.0
+ uses:
+  input_add_reduce_fusion, operand 2
+ from instruction: %Arg_5.6.0 = f64[24,1,4,192]{3,2,1,0} parameter(5)<40 Arg_4.5.0 @0>
+ positions:
+  Arg_4.5.0
+ uses:
+  input_add_reduce_fusion, operand 5
+ from instruction: %Arg_4.5.0 = f64[24,4,1]{2,1,0} parameter(4)<41 input_add_reduce_fusion{} @0>
+ positions:
+  input_add_reduce_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+ from instruction: %input_add_reduce_fusion = (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0}) fusion(f64[24,4,192]{2,1,0} %Arg_3.4.0, f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[24,1,4,192]{3,2,1,0} %Arg_5.6.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0, /*index=5*/f64[24,4,1]{2,1,0} %Arg_4.5.0), kind=kInput, calls=%fused_add_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<42 input_add_reduce_fusion{0} @0>
+ positions:
+  input_add_reduce_fusion {0}
+  tuple.64.0 {2}
+  bitcast.148.0
+  get-tuple-element
+ uses:
+  tuple.64.0, operand 2
+  bitcast.148.0, operand 0
+ from instruction: %input_add_reduce_fusion = (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0}) fusion(f64[24,4,192]{2,1,0} %Arg_3.4.0, f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[24,1,4,192]{3,2,1,0} %Arg_5.6.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0, /*index=5*/f64[24,4,1]{2,1,0} %Arg_4.5.0), kind=kInput, calls=%fused_add_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<43 input_add_reduce_fusion{1} @0>
+ positions:
+  input_add_reduce_fusion {1}
+  tuple.64.0 {3}
+  get-tuple-element.1
+ uses:
+  tuple.64.0, operand 3
+ from instruction: %input_add_reduce_fusion = (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0}) fusion(f64[24,4,192]{2,1,0} %Arg_3.4.0, f64[1,4,192]{2,1,0} %Arg_2.3.0, f64[24,1,4,192]{3,2,1,0} %Arg_5.6.0, f64[4,192]{1,0} %Arg_0.1.0, f64[4,1]{1,0} %Arg_1.2.0, /*index=5*/f64[24,4,1]{2,1,0} %Arg_4.5.0), kind=kInput, calls=%fused_add_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<44 tuple.64.0{} @0>
+ positions:
+  tuple.64.0 {}
+ uses:
+ from instruction: %tuple.64.0 = (f64[1,4]{1,0}, f64[1,4,192]{2,1,0}, f64[24,1,4]{2,1,0}, f64[24,1,4,192]{3,2,1,0}) tuple(f64[1,4]{1,0} %bitcast.146.0, f64[1,4,192]{2,1,0} %get-tuple-element.3, f64[24,1,4]{2,1,0} %bitcast.148.0, f64[24,1,4,192]{3,2,1,0} %get-tuple-element.1)
+
+HloLiveRange (max 15):
+  InstructionSequence:
+    0:Arg_2.3.0
+    1:Arg_1.2.0
+    2:Arg_0.1.0
+    3:Arg_5.6.0
+    4:Arg_4.5.0
+    5:Arg_3.4.0
+    6:input_multiply_reduce_fusion
+    7:get-tuple-element.3
+    8:get-tuple-element.2
+    9:bitcast.146.0
+    10:input_add_reduce_fusion
+    11:get-tuple-element.1
+    12:get-tuple-element
+    13:bitcast.148.0
+    14:tuple.64.0
+  BufferLiveRange:
+    Arg_2.3.0{}:0-15
+    Arg_0.1.0{}:0-15
+    Arg_1.2.0{}:0-15
+    input_multiply_reduce_fusion{}:6-8
+    input_multiply_reduce_fusion{0}:6-15
+    input_multiply_reduce_fusion{1}:6-15
+    Arg_3.4.0{}:0-15
+    Arg_5.6.0{}:0-15
+    Arg_4.5.0{}:0-15
+    input_add_reduce_fusion{}:10-12
+    input_add_reduce_fusion{0}:10-15
+    input_add_reduce_fusion{1}:10-15
+    tuple.64.0{}:14-15
+  Live ranges at 14 (peak):
+    Arg_2.3.0: 6144 bytes
+    Arg_0.1.0: 6144 bytes
+    Arg_1.2.0: 32 bytes
+    input_multiply_reduce_fusion: 16 bytes
+    input_multiply_reduce_fusion: 16 bytes
+    Arg_3.4.0: 147456 bytes
+    Arg_5.6.0: 147456 bytes
+    Arg_4.5.0: 768 bytes
+    input_add_reduce_fusion: 16 bytes
+    input_add_reduce_fusion: 16 bytes
+    tuple.64.0: 32 bytes

@@ -1,7 +1,48 @@
 {
-  "per_stage_compile_events": {},
-  "per_call_wall_clock": {},
-  "per_p_scaling": {},
+  "per_stage_compile_events": {
+    "5": {
+      "lbfgs_n_events": 0,
+      "hessian_n_events": 0,
+      "total_n_events": 0,
+      "notes": "JAX_LOG_COMPILES emits event counts, not timings; per-stage wall-clock timing would require harness-splitting which CONTEXT explicitly rejects.  See per_call_wall_clock for full-pipeline wall-clock times."
+    },
+    "20": {
+      "lbfgs_n_events": 0,
+      "hessian_n_events": 0,
+      "total_n_events": 0,
+      "notes": "JAX_LOG_COMPILES emits event counts, not timings; per-stage wall-clock timing would require harness-splitting which CONTEXT explicitly rejects.  See per_call_wall_clock for full-pipeline wall-clock times."
+    }
+  },
+  "per_call_wall_clock": {
+    "5": {
+      "cold_s": 41.8,
+      "warm_s": 14.8,
+      "next_proc_s": 24.64
+    },
+    "20": {
+      "cold_s": 42.09,
+      "warm_s": 15.29,
+      "next_proc_s": 26.7
+    }
+  },
+  "per_p_scaling": {
+    "5": {
+      "total_s": 56.6,
+      "n_compile_events": 0,
+      "n_lbfgs_events": 0,
+      "n_hessian_events": 0,
+      "n_cache_hits": 39,
+      "n_cache_misses": 208
+    },
+    "20": {
+      "total_s": 57.38,
+      "n_compile_events": 0,
+      "n_lbfgs_events": 0,
+      "n_hessian_events": 0,
+      "n_cache_hits": 91,
+      "n_cache_misses": 172
+    }
+  },
   "bottleneck_verdict": {
     "bottleneck_layer": "undetermined",
     "evidence": "Filled by plan 21-07."

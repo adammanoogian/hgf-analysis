@@ -1,0 +1,53 @@
+HloModule jit_clip, is_scheduled=true, entry_computation_layout={(f64[192,20]{1,0}, f64[], f64[], f64[192,120,20]{2,1,0})->(f64[192,20]{1,0}, f64[192,20]{1,0}, f64[192,20]{1,0}, f64[120,192,20]{2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true,true,true}, frontend_attributes={fingerprint_before_lhs="93380e13042e78d7bc46c4fefdcd8ba5"}
+
+fused_multiply {
+  param_2.2 = f64[192,120,20]{2,1,0} parameter(2)
+  transpose.9.1 = f64[120,192,20]{2,1,0} transpose(param_2.2), dimensions={1,0,2}, metadata={op_name="jit(clip)/jit(main)/transpose[permutation=(1, 0, 2)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  param_1.3 = f64[192,20]{1,0} parameter(1)
+  broadcast.22.1 = f64[120,192,20]{2,1,0} broadcast(param_1.3), dimensions={1,2}, metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  multiply.4.1 = f64[120,192,20]{2,1,0} multiply(transpose.9.1, broadcast.22.1), metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  param_0.1 = f64[192,20]{1,0} parameter(0)
+  broadcast.24.1 = f64[120,192,20]{2,1,0} broadcast(param_0.1), dimensions={1,2}, metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  ROOT multiply.5.1 = f64[120,192,20]{2,1,0} multiply(multiply.4.1, broadcast.24.1), metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+} // fused_multiply
+
+fused_divide_minimum {
+  param_2.28 = f64[] parameter(2)
+  broadcast.17.4 = f64[192,20]{1,0} broadcast(param_2.28), dimensions={}, metadata={op_name="jit(clip)/jit(main)/max" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  param_1.37 = f64[192,20]{1,0} parameter(1)
+  maximum.1.3 = f64[192,20]{1,0} maximum(broadcast.17.4, param_1.37), metadata={op_name="jit(clip)/jit(main)/max" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  param_0.23 = f64[] parameter(0)
+  broadcast.16.2.clone.1 = f64[192,20]{1,0} broadcast(param_0.23), dimensions={}, metadata={op_name="jit(clip)/jit(main)/min" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  minimum.1.1.clone.1 = f64[192,20]{1,0} minimum(broadcast.16.2.clone.1, maximum.1.3), metadata={op_name="jit(clip)/jit(main)/min" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  compare.6.1 = pred[192,20]{1,0} compare(maximum.1.3, minimum.1.1.clone.1), direction=EQ, metadata={op_name="jit(clip)/jit(main)/eq" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  constant_9_2 = f64[] constant(1)
+  broadcast.18.clone.4 = f64[192,20]{1,0} broadcast(constant_9_2), dimensions={}
+  constant_7_1 = f64[] constant(0)
+  broadcast.19.clone.3 = f64[192,20]{1,0} broadcast(constant_7_1), dimensions={}
+  select.6.1 = f64[192,20]{1,0} select(compare.6.1, broadcast.18.clone.4, broadcast.19.clone.3), metadata={op_name="jit(clip)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  compare.7.1 = pred[192,20]{1,0} compare(broadcast.16.2.clone.1, minimum.1.1.clone.1), direction=EQ, metadata={op_name="jit(clip)/jit(main)/eq" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  constant_5_1 = f64[] constant(2)
+  broadcast.20.clone.3 = f64[192,20]{1,0} broadcast(constant_5_1), dimensions={}
+  select.7.1 = f64[192,20]{1,0} select(compare.7.1, broadcast.20.clone.3, broadcast.18.clone.4), metadata={op_name="jit(clip)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  divide.3.1 = f64[192,20]{1,0} divide(select.6.1, select.7.1), metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  compare.4.1.clone.1 = pred[192,20]{1,0} compare(param_1.37, maximum.1.3), direction=EQ, metadata={op_name="jit(clip)/jit(main)/eq" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  select.4.1.clone.1 = f64[192,20]{1,0} select(compare.4.1.clone.1, broadcast.18.clone.4, broadcast.19.clone.3), metadata={op_name="jit(clip)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  compare.5.1.clone.1 = pred[192,20]{1,0} compare(broadcast.17.4, maximum.1.3), direction=EQ, metadata={op_name="jit(clip)/jit(main)/eq" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  select.5.1.clone.1 = f64[192,20]{1,0} select(compare.5.1.clone.1, broadcast.20.clone.3, broadcast.18.clone.4), metadata={op_name="jit(clip)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  divide.2.1.clone.1 = f64[192,20]{1,0} divide(select.4.1.clone.1, select.5.1.clone.1), metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  ROOT tuple.1 = (f64[192,20]{1,0}, f64[192,20]{1,0}, f64[192,20]{1,0}) tuple(divide.3.1, minimum.1.1.clone.1, divide.2.1.clone.1)
+} // fused_divide_minimum
+
+ENTRY main.51 {
+  Arg_2.3.0 = f64[] parameter(2)
+  Arg_1.2.0 = f64[] parameter(1)
+  Arg_3.4.0 = f64[192,120,20]{2,1,0} parameter(3), metadata={op_name="jit(clip)/jit(main)/transpose[permutation=(1, 0, 2)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  Arg_0.1.0 = f64[192,20]{1,0} parameter(0)
+  loop_divide_minimum_fusion = (f64[192,20]{1,0}, f64[192,20]{1,0}, f64[192,20]{1,0}) fusion(Arg_2.3.0, Arg_0.1.0, Arg_1.2.0), kind=kLoop, calls=fused_divide_minimum, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  get-tuple-element.2 = f64[192,20]{1,0} get-tuple-element(loop_divide_minimum_fusion), index=2, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  get-tuple-element = f64[192,20]{1,0} get-tuple-element(loop_divide_minimum_fusion), index=0, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  get-tuple-element.1 = f64[192,20]{1,0} get-tuple-element(loop_divide_minimum_fusion), index=1, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  loop_multiply_fusion = f64[120,192,20]{2,1,0} fusion(get-tuple-element, get-tuple-element.2, Arg_3.4.0), kind=kLoop, calls=fused_multiply, metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}
+  ROOT tuple.50.0 = (f64[192,20]{1,0}, f64[192,20]{1,0}, f64[192,20]{1,0}, f64[120,192,20]{2,1,0}) tuple(get-tuple-element.1, get-tuple-element.2, get-tuple-element, loop_multiply_fusion)
+} // main.51
+

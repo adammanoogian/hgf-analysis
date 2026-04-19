@@ -1,0 +1,9 @@
+HloModule jit_div, entry_computation_layout={(f64[120,20]{1,0}, f64[])->f64[120,20]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}
+
+ENTRY main.5 {
+  Arg_0.1 = f64[120,20]{1,0} parameter(0), metadata={op_name="args[0]"}
+  Arg_1.2 = f64[] parameter(1), metadata={op_name="args[1]"}
+  broadcast.3 = f64[120,20]{1,0} broadcast(Arg_1.2), dimensions={}, metadata={op_name="jit(div)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  ROOT divide.4 = f64[120,20]{1,0} divide(Arg_0.1, broadcast.3), metadata={op_name="jit(div)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+}
+

@@ -1,0 +1,100 @@
+BufferAssignment:
+allocation 0: size 147456, maybe-live-out:
+ value: <20 input_slice_fusion{1} @0> (size=147456,offset=0): f64[18432]{0}
+allocation 1: size 147456, parameter 2, shape |f64[24,4,192]| at ShapeIndex {}:
+ value: <16 Arg_2.3.0 @0> (size=147456,offset=0): f64[24,4,192]{2,1,0}
+allocation 2: size 6144, maybe-live-out:
+ value: <19 input_slice_fusion{0} @0> (size=6144,offset=0): f64[768]{0}
+allocation 3: size 6144, parameter 0, shape |f64[4,192]| at ShapeIndex {}:
+ value: <14 Arg_0.1.0 @0> (size=6144,offset=0): f64[4,192]{1,0}
+allocation 4: size 768, parameter 3, shape |f64[24,4]| at ShapeIndex {}:
+ value: <17 Arg_3.4.0 @0> (size=768,offset=0): f64[24,4]{1,0}
+allocation 5: size 32, parameter 1, shape |f64[4]| at ShapeIndex {}:
+ value: <15 Arg_1.2.0 @0> (size=32,offset=0): f64[4]{0}
+allocation 6: size 16, output shape is |(f64[4,192], f64[24,4,192])|, maybe-live-out:
+ value: <21 tuple.15.0{} @0> (size=16,offset=0): (f64[4,192]{1,0}, f64[24,4,192]{2,1,0})
+allocation 7: size 16, preallocated-temp:
+ value: <18 input_slice_fusion{} @0> (size=16,offset=0): (f64[768]{0}, f64[18432]{0})
+
+Total bytes used: 308032 (300.8KiB)
+
+Used values:
+<14 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  input_slice_fusion, operand 0
+ from instruction: %Arg_0.1.0 = f64[4,192]{1,0} parameter(0)<15 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  input_slice_fusion, operand 1
+ from instruction: %Arg_1.2.0 = f64[4]{0} parameter(1)<16 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+  input_slice_fusion, operand 2
+ from instruction: %Arg_2.3.0 = f64[24,4,192]{2,1,0} parameter(2)<17 Arg_3.4.0 @0>
+ positions:
+  Arg_3.4.0
+ uses:
+  input_slice_fusion, operand 3
+ from instruction: %Arg_3.4.0 = f64[24,4]{1,0} parameter(3)<18 input_slice_fusion{} @0>
+ positions:
+  input_slice_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+ from instruction: %input_slice_fusion = (f64[768]{0}, f64[18432]{0}) fusion(f64[4,192]{1,0} %Arg_0.1.0, f64[4]{0} %Arg_1.2.0, f64[24,4,192]{2,1,0} %Arg_2.3.0, f64[24,4]{1,0} %Arg_3.4.0), kind=kInput, calls=%fused_slice, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<19 input_slice_fusion{0} @0>
+ positions:
+  input_slice_fusion {0}
+  tuple.15.0 {0}
+  get-tuple-element
+  bitcast.24
+ uses:
+  bitcast.24, operand 0
+  tuple.15.0, operand 0
+ from instruction: %input_slice_fusion = (f64[768]{0}, f64[18432]{0}) fusion(f64[4,192]{1,0} %Arg_0.1.0, f64[4]{0} %Arg_1.2.0, f64[24,4,192]{2,1,0} %Arg_2.3.0, f64[24,4]{1,0} %Arg_3.4.0), kind=kInput, calls=%fused_slice, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<20 input_slice_fusion{1} @0>
+ positions:
+  input_slice_fusion {1}
+  tuple.15.0 {1}
+  get-tuple-element.1
+  bitcast.25
+ uses:
+  bitcast.25, operand 0
+  tuple.15.0, operand 1
+ from instruction: %input_slice_fusion = (f64[768]{0}, f64[18432]{0}) fusion(f64[4,192]{1,0} %Arg_0.1.0, f64[4]{0} %Arg_1.2.0, f64[24,4,192]{2,1,0} %Arg_2.3.0, f64[24,4]{1,0} %Arg_3.4.0), kind=kInput, calls=%fused_slice, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<21 tuple.15.0{} @0>
+ positions:
+  tuple.15.0 {}
+ uses:
+ from instruction: %tuple.15.0 = (f64[4,192]{1,0}, f64[24,4,192]{2,1,0}) tuple(f64[4,192]{1,0} %bitcast.24, f64[24,4,192]{2,1,0} %bitcast.25)
+
+HloLiveRange (max 10):
+  InstructionSequence:
+    0:Arg_3.4.0
+    1:Arg_2.3.0
+    2:Arg_1.2.0
+    3:Arg_0.1.0
+    4:input_slice_fusion
+    5:get-tuple-element.1
+    6:get-tuple-element
+    7:bitcast.24
+    8:bitcast.25
+    9:tuple.15.0
+  BufferLiveRange:
+    Arg_0.1.0{}:0-10
+    Arg_1.2.0{}:0-10
+    Arg_2.3.0{}:0-10
+    Arg_3.4.0{}:0-10
+    input_slice_fusion{}:4-6
+    input_slice_fusion{0}:4-10
+    input_slice_fusion{1}:4-10
+    tuple.15.0{}:9-10
+  Live ranges at 4 (peak):
+    Arg_0.1.0: 6144 bytes
+    Arg_1.2.0: 32 bytes
+    Arg_2.3.0: 147456 bytes
+    Arg_3.4.0: 768 bytes
+    input_slice_fusion: 16 bytes
+    input_slice_fusion: 16 bytes
+    input_slice_fusion: 16 bytes

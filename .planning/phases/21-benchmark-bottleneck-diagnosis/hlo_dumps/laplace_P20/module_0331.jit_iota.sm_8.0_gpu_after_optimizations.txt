@@ -1,0 +1,10 @@
+HloModule jit_iota, is_scheduled=true, entry_computation_layout={()->s64[120,120]{1,0}}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="850e09c3619900436e3545632ee3b8be"}
+
+wrapped_iota_computation {
+  ROOT iota.3.1 = s64[120,120]{1,0} iota(), iota_dimension=0, metadata={op_name="jit(iota)/jit(main)/iota[dtype=int64 shape=(120, 120) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=388}
+}
+
+ENTRY main.3 {
+  ROOT wrapped_iota = s64[120,120]{1,0} fusion(), kind=kLoop, calls=wrapped_iota_computation, metadata={op_name="jit(iota)/jit(main)/iota[dtype=int64 shape=(120, 120) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=388}
+}
+

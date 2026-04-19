@@ -1,0 +1,112 @@
+BufferAssignment:
+allocation 0: size 3686400, maybe-live-out:
+ value: <17 wrapped_copy.1 @0> (size=3686400,offset=0): f64[120,1,20,192]{3,2,1,0}
+allocation 1: size 3686400, parameter 1, shape |f64[120,1,20,192]| at ShapeIndex {}:
+ value: <16 Arg_1.2.0 @0> (size=3686400,offset=0): f64[120,1,20,192]{3,2,1,0}
+allocation 2: size 30720, maybe-live-out:
+ value: <14 wrapped_copy @0> (size=30720,offset=0): f64[1,20,192]{2,1,0}
+allocation 3: size 30720, parameter 0, shape |f64[1,20,192]| at ShapeIndex {}:
+ value: <13 Arg_0.1.0 @0> (size=30720,offset=0): f64[1,20,192]{2,1,0}
+allocation 4: size 19200, maybe-live-out:
+ value: <18 input_reduce_fusion @0> (size=19200,offset=0): f64[120,20]{1,0}
+allocation 5: size 160, maybe-live-out:
+ value: <15 input_reduce_fusion.1 @0> (size=160,offset=0): f64[20]{0}
+allocation 6: size 32, output shape is |(f64[1,20,192], f64[1,20], f64[120,1,20,192], f64[120,1,20])|, maybe-live-out:
+ value: <19 tuple{} @0> (size=32,offset=0): (f64[1,20,192]{2,1,0}, f64[1,20]{1,0}, f64[120,1,20,192]{3,2,1,0}, f64[120,1,20]{2,1,0})
+allocation 7: size 8, thread-local:
+ value: <0 Arg_0.5 @0> (size=8,offset=0): f64[]
+allocation 8: size 8, thread-local:
+ value: <1 Arg_1.6 @0> (size=8,offset=0): f64[]
+allocation 9: size 8, thread-local:
+ value: <2 add.1 @0> (size=8,offset=0): f64[]
+
+Total bytes used: 7453656 (7.11MiB)
+
+Used values:
+<0 Arg_0.5 @0>
+ positions:
+  Arg_0.5
+ uses:
+  add.1, operand 0
+ from instruction: %Arg_0.5 = f64[] parameter(0), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<1 Arg_1.6 @0>
+ positions:
+  Arg_1.6
+ uses:
+  add.1, operand 1
+ from instruction: %Arg_1.6 = f64[] parameter(1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<2 add.1 @0>
+ positions:
+  add.1
+ uses:
+ from instruction: %add.1 = f64[] add(f64[] %Arg_0.5, f64[] %Arg_1.6), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<13 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  input_reduce_fusion.1, operand 0
+  wrapped_copy, operand 0
+ from instruction: %Arg_0.1.0 = f64[1,20,192]{2,1,0} parameter(0)<14 wrapped_copy @0>
+ positions:
+  wrapped_copy
+  tuple {0}
+ uses:
+  tuple, operand 0
+ from instruction: %wrapped_copy = f64[1,20,192]{2,1,0} fusion(f64[1,20,192]{2,1,0} %Arg_0.1.0), kind=kLoop, calls=%wrapped_copy_computation<15 input_reduce_fusion.1 @0>
+ positions:
+  input_reduce_fusion.1
+  bitcast.41.0
+  tuple {1}
+ uses:
+  bitcast.41.0, operand 0
+  tuple, operand 1
+ from instruction: %input_reduce_fusion.1 = f64[20]{0} fusion(f64[1,20,192]{2,1,0} %Arg_0.1.0), kind=kInput, calls=%fused_reduce.1, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<16 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  input_reduce_fusion, operand 0
+  wrapped_copy.1, operand 0
+ from instruction: %Arg_1.2.0 = f64[120,1,20,192]{3,2,1,0} parameter(1)<17 wrapped_copy.1 @0>
+ positions:
+  wrapped_copy.1
+  tuple {2}
+ uses:
+  tuple, operand 2
+ from instruction: %wrapped_copy.1 = f64[120,1,20,192]{3,2,1,0} fusion(f64[120,1,20,192]{3,2,1,0} %Arg_1.2.0), kind=kLoop, calls=%wrapped_copy_computation.1<18 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+  bitcast.43.0
+  tuple {3}
+ uses:
+  bitcast.43.0, operand 0
+  tuple, operand 3
+ from instruction: %input_reduce_fusion = f64[120,20]{1,0} fusion(f64[120,1,20,192]{3,2,1,0} %Arg_1.2.0), kind=kInput, calls=%fused_reduce, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<19 tuple{} @0>
+ positions:
+  tuple {}
+ uses:
+ from instruction: %tuple = (f64[1,20,192]{2,1,0}, f64[1,20]{1,0}, f64[120,1,20,192]{3,2,1,0}, f64[120,1,20]{2,1,0}) tuple(f64[1,20,192]{2,1,0} %wrapped_copy, f64[1,20]{1,0} %bitcast.41.0, f64[120,1,20,192]{3,2,1,0} %wrapped_copy.1, f64[120,1,20]{2,1,0} %bitcast.43.0)
+
+HloLiveRange (max 9):
+  InstructionSequence:
+    0:Arg_1.2.0
+    1:Arg_0.1.0
+    2:input_reduce_fusion.1
+    3:bitcast.41.0
+    4:input_reduce_fusion
+    5:bitcast.43.0
+    6:wrapped_copy
+    7:wrapped_copy.1
+    8:tuple
+  BufferLiveRange:
+    Arg_0.1.0{}:0-9
+    wrapped_copy{}:6-9
+    input_reduce_fusion.1{}:2-9
+    Arg_1.2.0{}:0-9
+    wrapped_copy.1{}:7-9
+    input_reduce_fusion{}:4-9
+    tuple{}:8-9
+  Live ranges at 8 (peak):
+    Arg_0.1.0: 30720 bytes
+    wrapped_copy: 30720 bytes
+    input_reduce_fusion.1: 160 bytes
+    Arg_1.2.0: 3686400 bytes
+    wrapped_copy.1: 3686400 bytes
+    input_reduce_fusion: 19200 bytes
+    tuple: 32 bytes

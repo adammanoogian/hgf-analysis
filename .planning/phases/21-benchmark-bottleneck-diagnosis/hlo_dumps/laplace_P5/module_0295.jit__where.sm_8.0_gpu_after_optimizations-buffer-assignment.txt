@@ -1,0 +1,50 @@
+BufferAssignment:
+allocation 0: size 32, output shape is |f64[4]|, maybe-live-out:
+ value: <8 loop_select_fusion @0> (size=32,offset=0): f64[4]{0}
+allocation 1: size 32, parameter 1, shape |f64[4]| at ShapeIndex {}:
+ value: <5 Arg_1.2.0 @0> (size=32,offset=0): f64[4]{0}
+allocation 2: size 32, parameter 2, shape |f64[4]| at ShapeIndex {}:
+ value: <6 Arg_2.3.0 @0> (size=32,offset=0): f64[4]{0}
+allocation 3: size 1, parameter 0, shape |pred[]| at ShapeIndex {}:
+ value: <7 Arg_0.1.0 @0> (size=1,offset=0): pred[]
+
+Total bytes used: 97 (97B)
+
+Used values:
+<5 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  loop_select_fusion, operand 0
+ from instruction: %Arg_1.2.0 = f64[4]{0} parameter(1), metadata={op_name="x"}<6 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+  loop_select_fusion, operand 1
+ from instruction: %Arg_2.3.0 = f64[4]{0} parameter(2), metadata={op_name="y"}<7 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  loop_select_fusion, operand 2
+ from instruction: %Arg_0.1.0 = pred[] parameter(0), metadata={op_name="condition"}<8 loop_select_fusion @0>
+ positions:
+  loop_select_fusion
+ uses:
+ from instruction: %loop_select_fusion = f64[4]{0} fusion(f64[4]{0} %Arg_1.2.0, f64[4]{0} %Arg_2.3.0, pred[] %Arg_0.1.0), kind=kLoop, calls=%fused_select, metadata={op_name="jit(_where)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=332}
+
+HloLiveRange (max 4):
+  InstructionSequence:
+    0:Arg_0.1.0
+    1:Arg_2.3.0
+    2:Arg_1.2.0
+    3:loop_select_fusion
+  BufferLiveRange:
+    Arg_1.2.0{}:0-4
+    Arg_2.3.0{}:0-4
+    Arg_0.1.0{}:0-4
+    loop_select_fusion{}:3-4
+  Live ranges at 3 (peak):
+    Arg_1.2.0: 32 bytes
+    Arg_2.3.0: 32 bytes
+    Arg_0.1.0: 1 bytes
+    loop_select_fusion: 32 bytes

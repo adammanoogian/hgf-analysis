@@ -1,0 +1,109 @@
+BufferAssignment:
+allocation 0: size 3686400, maybe-live-out:
+ value: <31 loop_add_multiply_fusion{0} @0> (size=3686400,offset=0): f64[120,192,20]{2,1,0}
+allocation 1: size 3686400, maybe-live-out:
+ value: <32 loop_add_multiply_fusion{1} @0> (size=3686400,offset=0): f64[120,192,20]{2,1,0}
+allocation 2: size 3686400, parameter 1, shape |f64[120,192,20]| at ShapeIndex {}:
+ value: <29 Arg_1.2.0 @0> (size=3686400,offset=0): f64[120,192,20]{2,1,0}
+allocation 3: size 30720, maybe-live-out:
+ value: <27 loop_divide_multiply_fusion{0} @0> (size=30720,offset=0): f64[192,20]{1,0}
+allocation 4: size 30720, maybe-live-out:
+ value: <28 loop_divide_multiply_fusion{1} @0> (size=30720,offset=0): f64[192,20]{1,0}
+allocation 5: size 30720, parameter 0, shape |f64[192,20]| at ShapeIndex {}:
+ value: <25 Arg_0.1.0 @0> (size=30720,offset=0): f64[192,20]{1,0}
+allocation 6: size 32, output shape is |(f64[192,20], f64[192,20], f64[120,192,20], f64[120,192,20])|, maybe-live-out:
+ value: <33 tuple.30.0{} @0> (size=32,offset=0): (f64[192,20]{1,0}, f64[192,20]{1,0}, f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0})
+allocation 7: size 144, preallocated-temp:
+ value: <26 loop_divide_multiply_fusion{} @0> (size=16,offset=0): (f64[192,20]{1,0}, f64[192,20]{1,0})
+ value: <30 loop_add_multiply_fusion{} @0> (size=16,offset=128): (f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0})
+
+Total bytes used: 11151536 (10.63MiB)
+
+Used values:
+<25 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  loop_divide_multiply_fusion, operand 0
+ from instruction: %Arg_0.1.0 = f64[192,20]{1,0} parameter(0)<26 loop_divide_multiply_fusion{} @0>
+ positions:
+  loop_divide_multiply_fusion {}
+ uses:
+  get-tuple-element.2, operand 0 {}
+  get-tuple-element.3, operand 0 {}
+ from instruction: %loop_divide_multiply_fusion = (f64[192,20]{1,0}, f64[192,20]{1,0}) fusion(f64[192,20]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<27 loop_divide_multiply_fusion{0} @0>
+ positions:
+  loop_divide_multiply_fusion {0}
+  tuple.30.0 {1}
+  get-tuple-element.2
+ uses:
+  loop_add_multiply_fusion, operand 2
+  tuple.30.0, operand 1
+ from instruction: %loop_divide_multiply_fusion = (f64[192,20]{1,0}, f64[192,20]{1,0}) fusion(f64[192,20]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<28 loop_divide_multiply_fusion{1} @0>
+ positions:
+  loop_divide_multiply_fusion {1}
+  tuple.30.0 {0}
+  get-tuple-element.3
+ uses:
+  tuple.30.0, operand 0
+  loop_add_multiply_fusion, operand 0
+ from instruction: %loop_divide_multiply_fusion = (f64[192,20]{1,0}, f64[192,20]{1,0}) fusion(f64[192,20]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<29 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  loop_add_multiply_fusion, operand 1
+ from instruction: %Arg_1.2.0 = f64[120,192,20]{2,1,0} parameter(1)<30 loop_add_multiply_fusion{} @0>
+ positions:
+  loop_add_multiply_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+ from instruction: %loop_add_multiply_fusion = (f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0}) fusion(f64[192,20]{1,0} %get-tuple-element.3, f64[120,192,20]{2,1,0} %Arg_1.2.0, f64[192,20]{1,0} %get-tuple-element.2), kind=kLoop, calls=%fused_add_multiply, metadata={op_name="jit(sigmoid)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<31 loop_add_multiply_fusion{0} @0>
+ positions:
+  loop_add_multiply_fusion {0}
+  tuple.30.0 {3}
+  get-tuple-element
+ uses:
+  tuple.30.0, operand 3
+ from instruction: %loop_add_multiply_fusion = (f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0}) fusion(f64[192,20]{1,0} %get-tuple-element.3, f64[120,192,20]{2,1,0} %Arg_1.2.0, f64[192,20]{1,0} %get-tuple-element.2), kind=kLoop, calls=%fused_add_multiply, metadata={op_name="jit(sigmoid)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<32 loop_add_multiply_fusion{1} @0>
+ positions:
+  loop_add_multiply_fusion {1}
+  tuple.30.0 {2}
+  get-tuple-element.1
+ uses:
+  tuple.30.0, operand 2
+ from instruction: %loop_add_multiply_fusion = (f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0}) fusion(f64[192,20]{1,0} %get-tuple-element.3, f64[120,192,20]{2,1,0} %Arg_1.2.0, f64[192,20]{1,0} %get-tuple-element.2), kind=kLoop, calls=%fused_add_multiply, metadata={op_name="jit(sigmoid)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<33 tuple.30.0{} @0>
+ positions:
+  tuple.30.0 {}
+ uses:
+ from instruction: %tuple.30.0 = (f64[192,20]{1,0}, f64[192,20]{1,0}, f64[120,192,20]{2,1,0}, f64[120,192,20]{2,1,0}) tuple(f64[192,20]{1,0} %get-tuple-element.3, f64[192,20]{1,0} %get-tuple-element.2, f64[120,192,20]{2,1,0} %get-tuple-element.1, f64[120,192,20]{2,1,0} %get-tuple-element)
+
+HloLiveRange (max 9):
+  InstructionSequence:
+    0:Arg_1.2.0
+    1:Arg_0.1.0
+    2:loop_divide_multiply_fusion
+    3:get-tuple-element.3
+    4:get-tuple-element.2
+    5:loop_add_multiply_fusion
+    6:get-tuple-element.1
+    7:get-tuple-element
+    8:tuple.30.0
+  BufferLiveRange:
+    Arg_0.1.0{}:0-9
+    loop_divide_multiply_fusion{}:2-4
+    loop_divide_multiply_fusion{0}:2-9
+    loop_divide_multiply_fusion{1}:2-9
+    Arg_1.2.0{}:0-9
+    loop_add_multiply_fusion{}:5-7
+    loop_add_multiply_fusion{0}:5-9
+    loop_add_multiply_fusion{1}:5-9
+    tuple.30.0{}:8-9
+  Live ranges at 8 (peak):
+    Arg_0.1.0: 30720 bytes
+    loop_divide_multiply_fusion: 16 bytes
+    loop_divide_multiply_fusion: 16 bytes
+    Arg_1.2.0: 3686400 bytes
+    loop_add_multiply_fusion: 16 bytes
+    loop_add_multiply_fusion: 16 bytes
+    tuple.30.0: 32 bytes

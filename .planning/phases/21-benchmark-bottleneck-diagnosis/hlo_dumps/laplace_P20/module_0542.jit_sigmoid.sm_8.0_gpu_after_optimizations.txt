@@ -1,0 +1,33 @@
+HloModule jit_sigmoid, is_scheduled=true, entry_computation_layout={(f64[192,20]{1,0}, f64[1,192,20]{2,1,0}, f64[120,192,20]{2,1,0}, f64[120,1,192,20]{3,2,1,0})->(f64[1,192,20]{2,1,0}, f64[120,1,192,20]{3,2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="8bc395284ce297f830d51ec3660b100a"}
+
+fused_add {
+  param_2.3 = f64[120,1,192,20]{3,2,1,0} parameter(2)
+  param_3.1 = f64[192,20]{1,0} parameter(3)
+  broadcast.6.1 = f64[120,1,192,20]{3,2,1,0} broadcast(param_3.1), dimensions={2,3}, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  multiply.5.1 = f64[120,1,192,20]{3,2,1,0} multiply(param_2.3, broadcast.6.1), metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  param_1.10 = f64[1,192,20]{2,1,0} parameter(1)
+  bitcast.45.5 = f64[192,20]{1,0} bitcast(param_1.10)
+  broadcast.7.5 = f64[120,192,20]{2,1,0} broadcast(bitcast.45.5), dimensions={1,2}, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  param_0.8 = f64[120,192,20]{2,1,0} parameter(0)
+  multiply.6.3 = f64[120,192,20]{2,1,0} multiply(broadcast.7.5, param_0.8), metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  bitcast.51.1 = f64[120,1,192,20]{3,2,1,0} bitcast(multiply.6.3)
+  ROOT add.1.1 = f64[120,1,192,20]{3,2,1,0} add(multiply.5.1, bitcast.51.1), metadata={op_name="jit(sigmoid)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+} // fused_add
+
+fused_multiply {
+  param_0.3 = f64[1,192,20]{2,1,0} parameter(0)
+  param_1.3 = f64[192,20]{1,0} parameter(1)
+  bitcast.34.1 = f64[1,192,20]{2,1,0} bitcast(param_1.3)
+  ROOT multiply.4.1 = f64[1,192,20]{2,1,0} multiply(param_0.3, bitcast.34.1), metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+}
+
+ENTRY main.20 {
+  Arg_1.2.0 = f64[1,192,20]{2,1,0} parameter(1)
+  Arg_0.1.0 = f64[192,20]{1,0} parameter(0)
+  Arg_3.4.0 = f64[120,1,192,20]{3,2,1,0} parameter(3)
+  Arg_2.3.0 = f64[120,192,20]{2,1,0} parameter(2), metadata={op_name="jit(sigmoid)/jit(main)/broadcast_in_dim[shape=(120, 1, 192, 20) broadcast_dimensions=(0, np.int64(2), np.int64(3))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  loop_multiply_fusion = f64[1,192,20]{2,1,0} fusion(Arg_1.2.0, Arg_0.1.0), kind=kLoop, calls=fused_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  loop_add_fusion = f64[120,1,192,20]{3,2,1,0} fusion(Arg_2.3.0, Arg_1.2.0, Arg_3.4.0, Arg_0.1.0), kind=kLoop, calls=fused_add, metadata={op_name="jit(sigmoid)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}
+  ROOT tuple.19.0 = (f64[1,192,20]{2,1,0}, f64[120,1,192,20]{3,2,1,0}) tuple(loop_multiply_fusion, loop_add_fusion)
+} // main.20
+

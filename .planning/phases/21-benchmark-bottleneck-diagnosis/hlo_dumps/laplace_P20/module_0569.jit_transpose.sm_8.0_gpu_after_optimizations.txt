@@ -1,0 +1,12 @@
+HloModule jit_transpose, is_scheduled=true, entry_computation_layout={(f64[120,192,1,20]{3,2,1,0})->f64[192,120,1,20]{3,2,1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="53077f461ee01197ea76c8976bc51c00"}
+
+wrapped_transpose_computation {
+  param_0 = f64[120,192,1,20]{3,2,1,0} parameter(0)
+  ROOT transpose.1.1 = f64[192,120,1,20]{3,2,1,0} transpose(param_0), dimensions={1,0,2,3}, metadata={op_name="args[0]"}
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[120,192,1,20]{3,2,1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT wrapped_transpose = f64[192,120,1,20]{3,2,1,0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_transpose_computation, metadata={op_name="args[0]"}
+}
+

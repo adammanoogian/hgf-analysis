@@ -1,0 +1,13 @@
+HloModule jit_broadcast_in_dim, is_scheduled=true, entry_computation_layout={(f64[1,20]{1,0})->f64[120,1,20]{2,1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="9e407ec8045c4345b125919da6ad63ea"}
+
+fused_broadcast {
+  param_0.1 = f64[1,20]{1,0} parameter(0)
+  bitcast.9.1 = f64[20]{0} bitcast(param_0.1)
+  ROOT broadcast.3.1 = f64[120,1,20]{2,1,0} broadcast(bitcast.9.1), dimensions={2}, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(120, 1, 20) broadcast_dimensions=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=378}
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[1,20]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT loop_broadcast_fusion = f64[120,1,20]{2,1,0} fusion(Arg_0.1.0), kind=kLoop, calls=fused_broadcast, metadata={op_name="jit(broadcast_in_dim)/jit(main)/broadcast_in_dim[shape=(120, 1, 20) broadcast_dimensions=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=378}
+}
+

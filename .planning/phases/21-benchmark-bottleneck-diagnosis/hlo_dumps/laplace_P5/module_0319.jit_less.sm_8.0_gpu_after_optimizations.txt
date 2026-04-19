@@ -1,0 +1,14 @@
+HloModule jit_less, is_scheduled=true, entry_computation_layout={(f64[], f64[])->pred[]}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="e7c4f7f38979652e9ae13537784f18d7"}
+
+wrapped_compare_computation {
+  param_0 = f64[] parameter(0)
+  param_1 = f64[] parameter(1)
+  ROOT compare.1.1 = pred[] compare(param_0, param_1), direction=LT, metadata={op_name="jit(less)/jit(main)/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=367}
+}
+
+ENTRY main.4 {
+  Arg_1.2.0 = f64[] parameter(1), metadata={op_name="y"}
+  Arg_0.1.0 = f64[] parameter(0), metadata={op_name="x"}
+  ROOT wrapped_compare = pred[] fusion(Arg_0.1.0, Arg_1.2.0), kind=kLoop, calls=wrapped_compare_computation, metadata={op_name="jit(less)/jit(main)/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=367}
+}
+

@@ -1,0 +1,14 @@
+HloModule jit_dynamic_slice, is_scheduled=true, entry_computation_layout={(f64[1,1]{1,0}, s64[], s64[])->f64[1,1]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="41aded4bf89735f2b977ea7f5d5659ac"}
+
+wrapped_copy_computation {
+  param_0 = f64[1,1]{1,0} parameter(0)
+  ROOT copy.1 = f64[1,1]{1,0} copy(param_0)
+}
+
+ENTRY main.5 {
+  Arg_2.3.0 = s64[] parameter(2), metadata={op_name="args[2]"}
+  Arg_1.2.0 = s64[] parameter(1), metadata={op_name="args[1]"}
+  Arg_0.1.0 = f64[1,1]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT wrapped_copy = f64[1,1]{1,0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_copy_computation
+}
+

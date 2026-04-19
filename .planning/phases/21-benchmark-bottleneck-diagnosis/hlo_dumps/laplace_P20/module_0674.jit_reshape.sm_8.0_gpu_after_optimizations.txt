@@ -1,0 +1,13 @@
+HloModule jit_reshape, is_scheduled=true, entry_computation_layout={(f64[120,1,120]{2,1,0})->f64[120,120]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="8e4d08e1e6323ec779ed77b84c2c3450"}
+
+wrapped_copy_computation {
+  param_0 = f64[120,120]{1,0} parameter(0)
+  ROOT copy.2 = f64[120,120]{1,0} copy(param_0)
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[120,1,120]{2,1,0} parameter(0), metadata={op_name="args[0]"}
+  bitcast.9 = f64[120,120]{1,0} bitcast(Arg_0.1.0), metadata={op_name="args[0]"}
+  ROOT wrapped_copy = f64[120,120]{1,0} fusion(bitcast.9), kind=kLoop, calls=wrapped_copy_computation
+}
+

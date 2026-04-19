@@ -1,0 +1,20 @@
+BufferAssignment:
+allocation 0: size 4608, output shape is |s64[24,24]|, maybe-live-out:
+ value: <1 wrapped_iota @0> (size=4608,offset=0): s64[24,24]{1,0}
+
+Total bytes used: 4608 (4.5KiB)
+
+Used values:
+<1 wrapped_iota @0>
+ positions:
+  wrapped_iota
+ uses:
+ from instruction: %wrapped_iota = s64[24,24]{1,0} fusion(), kind=kLoop, calls=%wrapped_iota_computation, metadata={op_name="jit(iota)/jit(main)/iota[dtype=int64 shape=(24, 24) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=388}
+
+HloLiveRange (max 1):
+  InstructionSequence:
+    0:wrapped_iota
+  BufferLiveRange:
+    wrapped_iota{}:0-1
+  Live ranges at 0 (peak):
+    wrapped_iota: 4608 bytes

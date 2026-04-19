@@ -1,0 +1,3 @@
+kCommandBuffer	
+kWhile        	
+kKernel       	, kernel = loop_add_fusion_41, launch dimensions = blocks: {1, 1, 1}, threads/block: {1, 1, 1}, cluster_dim = nullopt

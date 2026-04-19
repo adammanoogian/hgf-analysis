@@ -1,0 +1,120 @@
+BufferAssignment:
+allocation 0: size 147456, maybe-live-out:
+ value: <40 loop_multiply_fusion @0> (size=147456,offset=0): f64[24,192,4]{2,1,0}
+allocation 1: size 147456, parameter 3, shape |f64[192,24,4]| at ShapeIndex {}:
+ value: <39 Arg_3.4.0 @0> (size=147456,offset=0): f64[192,24,4]{2,1,0}
+allocation 2: size 6144, maybe-live-out:
+ value: <36 loop_divide_minimum_fusion{0} @0> (size=6144,offset=0): f64[192,4]{1,0}
+allocation 3: size 6144, maybe-live-out:
+ value: <37 loop_divide_minimum_fusion{1} @0> (size=6144,offset=0): f64[192,4]{1,0}
+allocation 4: size 6144, maybe-live-out:
+ value: <38 loop_divide_minimum_fusion{2} @0> (size=6144,offset=0): f64[192,4]{1,0}
+allocation 5: size 6144, parameter 0, shape |f64[192,4]| at ShapeIndex {}:
+ value: <33 Arg_0.1.0 @0> (size=6144,offset=0): f64[192,4]{1,0}
+allocation 6: size 32, output shape is |(f64[192,4], f64[192,4], f64[192,4], f64[24,192,4])|, maybe-live-out:
+ value: <41 tuple.50.0{} @0> (size=32,offset=0): (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}, f64[24,192,4]{2,1,0})
+allocation 7: size 8, parameter 1, shape |f64[]| at ShapeIndex {}:
+ value: <34 Arg_1.2.0 @0> (size=8,offset=0): f64[]
+allocation 8: size 8, parameter 2, shape |f64[]| at ShapeIndex {}:
+ value: <32 Arg_2.3.0 @0> (size=8,offset=0): f64[]
+allocation 9: size 24, preallocated-temp:
+ value: <35 loop_divide_minimum_fusion{} @0> (size=24,offset=0): (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0})
+
+Total bytes used: 319560 (312.1KiB)
+
+Used values:
+<32 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+  loop_divide_minimum_fusion, operand 0
+ from instruction: %Arg_2.3.0 = f64[] parameter(2)<33 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  loop_divide_minimum_fusion, operand 1
+ from instruction: %Arg_0.1.0 = f64[192,4]{1,0} parameter(0)<34 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  loop_divide_minimum_fusion, operand 2
+ from instruction: %Arg_1.2.0 = f64[] parameter(1)<35 loop_divide_minimum_fusion{} @0>
+ positions:
+  loop_divide_minimum_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+  get-tuple-element.2, operand 0 {}
+ from instruction: %loop_divide_minimum_fusion = (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}) fusion(f64[] %Arg_2.3.0, f64[192,4]{1,0} %Arg_0.1.0, f64[] %Arg_1.2.0), kind=kLoop, calls=%fused_divide_minimum, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<36 loop_divide_minimum_fusion{0} @0>
+ positions:
+  loop_divide_minimum_fusion {0}
+  tuple.50.0 {2}
+  get-tuple-element
+ uses:
+  loop_multiply_fusion, operand 0
+  tuple.50.0, operand 2
+ from instruction: %loop_divide_minimum_fusion = (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}) fusion(f64[] %Arg_2.3.0, f64[192,4]{1,0} %Arg_0.1.0, f64[] %Arg_1.2.0), kind=kLoop, calls=%fused_divide_minimum, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<37 loop_divide_minimum_fusion{1} @0>
+ positions:
+  loop_divide_minimum_fusion {1}
+  tuple.50.0 {0}
+  get-tuple-element.1
+ uses:
+  tuple.50.0, operand 0
+ from instruction: %loop_divide_minimum_fusion = (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}) fusion(f64[] %Arg_2.3.0, f64[192,4]{1,0} %Arg_0.1.0, f64[] %Arg_1.2.0), kind=kLoop, calls=%fused_divide_minimum, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<38 loop_divide_minimum_fusion{2} @0>
+ positions:
+  loop_divide_minimum_fusion {2}
+  tuple.50.0 {1}
+  get-tuple-element.2
+ uses:
+  loop_multiply_fusion, operand 1
+  tuple.50.0, operand 1
+ from instruction: %loop_divide_minimum_fusion = (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}) fusion(f64[] %Arg_2.3.0, f64[192,4]{1,0} %Arg_0.1.0, f64[] %Arg_1.2.0), kind=kLoop, calls=%fused_divide_minimum, metadata={op_name="jit(clip)/jit(main)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<39 Arg_3.4.0 @0>
+ positions:
+  Arg_3.4.0
+ uses:
+  loop_multiply_fusion, operand 2
+ from instruction: %Arg_3.4.0 = f64[192,24,4]{2,1,0} parameter(3), metadata={op_name="jit(clip)/jit(main)/transpose[permutation=(1, 0, 2)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<40 loop_multiply_fusion @0>
+ positions:
+  loop_multiply_fusion
+  tuple.50.0 {3}
+ uses:
+  tuple.50.0, operand 3
+ from instruction: %loop_multiply_fusion = f64[24,192,4]{2,1,0} fusion(f64[192,4]{1,0} %get-tuple-element, f64[192,4]{1,0} %get-tuple-element.2, f64[192,24,4]{2,1,0} %Arg_3.4.0), kind=kLoop, calls=%fused_multiply, metadata={op_name="jit(clip)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=87}<41 tuple.50.0{} @0>
+ positions:
+  tuple.50.0 {}
+ uses:
+ from instruction: %tuple.50.0 = (f64[192,4]{1,0}, f64[192,4]{1,0}, f64[192,4]{1,0}, f64[24,192,4]{2,1,0}) tuple(f64[192,4]{1,0} %get-tuple-element.1, f64[192,4]{1,0} %get-tuple-element.2, f64[192,4]{1,0} %get-tuple-element, f64[24,192,4]{2,1,0} %loop_multiply_fusion)
+
+HloLiveRange (max 10):
+  InstructionSequence:
+    0:Arg_2.3.0
+    1:Arg_1.2.0
+    2:Arg_3.4.0
+    3:Arg_0.1.0
+    4:loop_divide_minimum_fusion
+    5:get-tuple-element.2
+    6:get-tuple-element
+    7:get-tuple-element.1
+    8:loop_multiply_fusion
+    9:tuple.50.0
+  BufferLiveRange:
+    Arg_2.3.0{}:0-10
+    Arg_0.1.0{}:0-10
+    Arg_1.2.0{}:0-10
+    loop_divide_minimum_fusion{}:4-7
+    loop_divide_minimum_fusion{0}:4-10
+    loop_divide_minimum_fusion{1}:4-10
+    loop_divide_minimum_fusion{2}:4-10
+    Arg_3.4.0{}:0-10
+    loop_multiply_fusion{}:8-10
+    tuple.50.0{}:9-10
+  Live ranges at 9 (peak):
+    Arg_2.3.0: 8 bytes
+    Arg_0.1.0: 6144 bytes
+    Arg_1.2.0: 8 bytes
+    loop_divide_minimum_fusion: 24 bytes
+    loop_divide_minimum_fusion: 24 bytes
+    loop_divide_minimum_fusion: 24 bytes
+    Arg_3.4.0: 147456 bytes
+    loop_multiply_fusion: 147456 bytes
+    tuple.50.0: 32 bytes

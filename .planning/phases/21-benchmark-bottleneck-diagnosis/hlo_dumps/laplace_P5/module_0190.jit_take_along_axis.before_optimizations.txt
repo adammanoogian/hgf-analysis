@@ -1,0 +1,51 @@
+HloModule jit_take_along_axis, entry_computation_layout={(f64[4,192,2]{2,1,0}, s32[4,192,1]{2,1,0})->(f64[4,192,1]{2,1,0}, s32[4,192,1,3]{3,2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+region_0.37 {
+  Arg_0.38 = pred[] parameter(0), metadata={op_name="jit(take_along_axis)/jit(main)/reduce_and[axes=(3,)]"}
+  Arg_1.39 = pred[] parameter(1), metadata={op_name="jit(take_along_axis)/jit(main)/reduce_and[axes=(3,)]"}
+  ROOT and.40 = pred[] and(Arg_0.38, Arg_1.39), metadata={op_name="jit(take_along_axis)/jit(main)/reduce_and[axes=(3,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+}
+
+ENTRY main.45 {
+  iota.23 = s32[4]{0} iota(), iota_dimension=0, metadata={op_name="jit(take_along_axis)/jit(main)/iota[dtype=int32 shape=(4, 192, 1, 1) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  broadcast.24 = s32[4,192,1,1]{3,2,1,0} broadcast(iota.23), dimensions={0}, metadata={op_name="jit(take_along_axis)/jit(main)/iota[dtype=int32 shape=(4, 192, 1, 1) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  iota.16 = s32[192]{0} iota(), iota_dimension=0, metadata={op_name="jit(take_along_axis)/jit(main)/iota[dtype=int32 shape=(192, 1, 1) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  reshape.17 = s32[192,1,1]{2,1,0} reshape(iota.16), metadata={op_name="jit(take_along_axis)/jit(main)/iota[dtype=int32 shape=(192, 1, 1) dimension=0]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  broadcast.22 = s32[4,192,1,1]{3,2,1,0} broadcast(reshape.17), dimensions={1,2,3}, metadata={op_name="jit(take_along_axis)/jit(main)/broadcast_in_dim[shape=(4, 192, 1, 1) broadcast_dimensions=(1, 2, 3)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  Arg_1.2 = s32[4,192,1]{2,1,0} parameter(1)
+  constant.13 = s32[] constant(0)
+  broadcast.14 = s32[4,192,1]{2,1,0} broadcast(constant.13), dimensions={}
+  compare.18 = pred[4,192,1]{2,1,0} compare(Arg_1.2, broadcast.14), direction=LT, metadata={op_name="jit(take_along_axis)/jit(main)/lt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.11 = s32[] constant(2)
+  broadcast.12 = s32[4,192,1]{2,1,0} broadcast(constant.11), dimensions={}
+  add.19 = s32[4,192,1]{2,1,0} add(Arg_1.2, broadcast.12), metadata={op_name="jit(take_along_axis)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  select.20 = s32[4,192,1]{2,1,0} select(compare.18, add.19, Arg_1.2), metadata={op_name="jit(take_along_axis)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  reshape.21 = s32[4,192,1,1]{3,2,1,0} reshape(select.20), metadata={op_name="jit(take_along_axis)/jit(main)/reshape[new_sizes=(4, 192, 1, 1) dimensions=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  concatenate.25 = s32[4,192,1,3]{3,2,1,0} concatenate(broadcast.24, broadcast.22, reshape.21), dimensions={3}, metadata={op_name="jit(take_along_axis)/jit(main)/concatenate[dimension=3]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  convert.26 = s64[4,192,1,3]{3,2,1,0} convert(concatenate.25), metadata={op_name="jit(take_along_axis)/jit(main)/convert_element_type[new_dtype=int64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.5 = s64[] constant(0)
+  broadcast.6 = s64[4,192,1,3]{3,2,1,0} broadcast(constant.5), dimensions={}
+  compare.30 = pred[4,192,1,3]{3,2,1,0} compare(convert.26, broadcast.6), direction=GE, metadata={op_name="jit(take_along_axis)/jit(main)/ge" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.10 = s64[3]{0} constant({4, 192, 2})
+  constant.9 = s32[3,1]{1,0} constant({ {0}, {1}, {2} })
+  gather.27 = s64[3]{0} gather(constant.10, constant.9), offset_dims={}, collapsed_slice_dims={0}, start_index_map={0}, index_vector_dim=1, slice_sizes={1}, metadata={op_name="jit(take_along_axis)/jit(main)/gather[dimension_numbers=GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)) slice_sizes=(1,) unique_indices=False indices_are_sorted=False mode=GatherScatterMode.PROMISE_IN_BOUNDS fill_value=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.7 = s64[] constant(1)
+  broadcast.8 = s64[3]{0} broadcast(constant.7), dimensions={}
+  gather.28 = s64[3]{0} gather(broadcast.8, constant.9), offset_dims={}, collapsed_slice_dims={0}, start_index_map={0}, index_vector_dim=1, slice_sizes={1}, metadata={op_name="jit(take_along_axis)/jit(main)/gather[dimension_numbers=GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0,), start_index_map=(0,)) slice_sizes=(1,) unique_indices=False indices_are_sorted=False mode=GatherScatterMode.PROMISE_IN_BOUNDS fill_value=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  subtract.29 = s64[3]{0} subtract(gather.27, gather.28), metadata={op_name="jit(take_along_axis)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  reshape.31 = s64[1,1,1,3]{3,2,1,0} reshape(subtract.29), metadata={op_name="jit(take_along_axis)/jit(main)/broadcast_in_dim[shape=(1, 1, 1, 3) broadcast_dimensions=(3,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  broadcast.32 = s64[1,1,1,3]{3,2,1,0} broadcast(reshape.31), dimensions={0,1,2,3}, metadata={op_name="jit(take_along_axis)/jit(main)/le" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  reshape.33 = s64[1,3]{1,0} reshape(broadcast.32), metadata={op_name="jit(take_along_axis)/jit(main)/le" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  broadcast.34 = s64[4,192,1,3]{3,2,1,0} broadcast(reshape.33), dimensions={2,3}, metadata={op_name="jit(take_along_axis)/jit(main)/le" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  compare.35 = pred[4,192,1,3]{3,2,1,0} compare(convert.26, broadcast.34), direction=LE, metadata={op_name="jit(take_along_axis)/jit(main)/le" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  and.36 = pred[4,192,1,3]{3,2,1,0} and(compare.30, compare.35), metadata={op_name="jit(take_along_axis)/jit(main)/and" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.15 = pred[] constant(true)
+  reduce.41 = pred[4,192,1]{2,1,0} reduce(and.36, constant.15), dimensions={3}, to_apply=region_0.37, metadata={op_name="jit(take_along_axis)/jit(main)/reduce_and[axes=(3,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  Arg_0.1 = f64[4,192,2]{2,1,0} parameter(0)
+  gather.42 = f64[4,192,1]{2,1,0} gather(Arg_0.1, convert.26), offset_dims={}, collapsed_slice_dims={0,1,2}, start_index_map={0,1,2}, index_vector_dim=3, slice_sizes={1,1,1}, metadata={op_name="jit(take_along_axis)/jit(main)/gather[dimension_numbers=GatherDimensionNumbers(offset_dims=(), collapsed_slice_dims=(0, np.int64(1), np.int64(2)), start_index_map=(0, np.int64(1), np.int64(2))) slice_sizes=(1, 1, 1) unique_indices=False indices_are_sorted=False mode=GatherScatterMode.PROMISE_IN_BOUNDS fill_value=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  constant.3 = f64[] constant(nan)
+  broadcast.4 = f64[4,192,1]{2,1,0} broadcast(constant.3), dimensions={}
+  select.43 = f64[4,192,1]{2,1,0} select(reduce.41, gather.42, broadcast.4), metadata={op_name="jit(take_along_axis)/jit(main)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=159}
+  ROOT tuple.44 = (f64[4,192,1]{2,1,0}, s32[4,192,1,3]{3,2,1,0}) tuple(select.43, concatenate.25)
+} // main.45
+

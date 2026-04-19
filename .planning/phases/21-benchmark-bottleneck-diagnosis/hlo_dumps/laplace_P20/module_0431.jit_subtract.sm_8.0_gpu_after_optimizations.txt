@@ -1,0 +1,24 @@
+HloModule jit_subtract, is_scheduled=true, entry_computation_layout={(f64[20,192]{1,0}, f64[20,192]{1,0}, f64[120,20,192]{2,1,0}, f64[120,20,192]{2,1,0})->(f64[20,192]{1,0}, f64[120,20,192]{2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="72c8564a94cc2525689eaba31ac70b16"}
+
+wrapped_subtract_computation {
+  param_0 = f64[20,192]{1,0} parameter(0)
+  param_1 = f64[20,192]{1,0} parameter(1)
+  ROOT subtract.2.1 = f64[20,192]{1,0} subtract(param_0, param_1), metadata={op_name="jit(subtract)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=89}
+}
+
+wrapped_subtract_computation.1 {
+  param_0.1 = f64[120,20,192]{2,1,0} parameter(0)
+  param_1.1 = f64[120,20,192]{2,1,0} parameter(1)
+  ROOT subtract.3.1 = f64[120,20,192]{2,1,0} subtract(param_0.1, param_1.1), metadata={op_name="jit(subtract)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=89}
+}
+
+ENTRY main.8 {
+  Arg_3.4.0 = f64[120,20,192]{2,1,0} parameter(3)
+  Arg_2.3.0 = f64[120,20,192]{2,1,0} parameter(2)
+  Arg_1.2.0 = f64[20,192]{1,0} parameter(1)
+  Arg_0.1.0 = f64[20,192]{1,0} parameter(0)
+  wrapped_subtract = f64[20,192]{1,0} fusion(Arg_0.1.0, Arg_1.2.0), kind=kLoop, calls=wrapped_subtract_computation, metadata={op_name="jit(subtract)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=89}
+  wrapped_subtract.1 = f64[120,20,192]{2,1,0} fusion(Arg_2.3.0, Arg_3.4.0), kind=kLoop, calls=wrapped_subtract_computation.1, metadata={op_name="jit(subtract)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=89}
+  ROOT tuple.7.0 = (f64[20,192]{1,0}, f64[120,20,192]{2,1,0}) tuple(wrapped_subtract, wrapped_subtract.1)
+} // main.8
+

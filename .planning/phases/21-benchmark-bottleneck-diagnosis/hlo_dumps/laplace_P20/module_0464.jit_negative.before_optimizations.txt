@@ -1,0 +1,10 @@
+HloModule jit_negative, entry_computation_layout={(f64[], f64[120]{0})->(f64[], f64[120]{0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+ENTRY main.6 {
+  Arg_0.1 = f64[] parameter(0)
+  negate.3 = f64[] negate(Arg_0.1), metadata={op_name="jit(negative)/jit(main)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=300}
+  Arg_1.2 = f64[120]{0} parameter(1)
+  negate.4 = f64[120]{0} negate(Arg_1.2), metadata={op_name="jit(negative)/jit(main)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=300}
+  ROOT tuple.5 = (f64[], f64[120]{0}) tuple(negate.3, negate.4)
+}
+

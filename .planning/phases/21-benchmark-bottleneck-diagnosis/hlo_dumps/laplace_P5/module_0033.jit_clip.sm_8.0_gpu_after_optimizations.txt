@@ -1,0 +1,17 @@
+HloModule jit_clip, is_scheduled=true, entry_computation_layout={(f64[], f64[], f64[])->f64[]}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="5a4943c0ab87d726cd587ff96123a2b9"}
+
+fused_minimum {
+  param_0 = f64[] parameter(0)
+  param_1.1 = f64[] parameter(1)
+  param_2 = f64[] parameter(2)
+  maximum.1.1 = f64[] maximum(param_1.1, param_2), metadata={op_name="jit(clip)/jit(main)/max" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=270}
+  ROOT minimum.1.1 = f64[] minimum(param_0, maximum.1.1), metadata={op_name="jit(clip)/jit(main)/min" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=270}
+}
+
+ENTRY main.6 {
+  Arg_2.3.0 = f64[] parameter(2), metadata={op_name="max"}
+  Arg_1.2.0 = f64[] parameter(1), metadata={op_name="min"}
+  Arg_0.1.0 = f64[] parameter(0), metadata={op_name="arr"}
+  ROOT loop_minimum_fusion = f64[] fusion(Arg_2.3.0, Arg_1.2.0, Arg_0.1.0), kind=kLoop, calls=fused_minimum, metadata={op_name="jit(clip)/jit(main)/min" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=270}
+}
+

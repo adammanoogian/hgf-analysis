@@ -1,0 +1,44 @@
+HloModule jit_add, is_scheduled=true, entry_computation_layout={(f64[1,20,192]{2,1,0}, f64[120,1,20,192]{3,2,1,0})->(f64[1,20,192]{2,1,0}, f64[1,20]{1,0}, f64[120,1,20,192]{3,2,1,0}, f64[120,1,20]{2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true,true,true}, frontend_attributes={fingerprint_before_lhs="8c4c313f6a7769de5a7f786cbd1d77bc"}
+
+region_0.4 {
+  Arg_1.6 = f64[] parameter(1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  Arg_0.5 = f64[] parameter(0), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  ROOT add.1 = f64[] add(Arg_0.5, Arg_1.6), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+fused_reduce {
+  param_0.5 = f64[120,1,20,192]{3,2,1,0} parameter(0)
+  bitcast.42.1 = f64[120,20,192]{2,1,0} bitcast(param_0.5)
+  constant_3_2 = f64[] constant(0)
+  ROOT reduce.1.1 = f64[120,20]{1,0} reduce(bitcast.42.1, constant_3_2), dimensions={2}, to_apply=region_0.4, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+fused_reduce.1 {
+  param_0.4 = f64[1,20,192]{2,1,0} parameter(0)
+  bitcast.40.1 = f64[20,192]{1,0} bitcast(param_0.4)
+  constant_3_1 = f64[] constant(0)
+  ROOT reduce.3 = f64[20]{0} reduce(bitcast.40.1, constant_3_1), dimensions={1}, to_apply=region_0.4, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+wrapped_copy_computation {
+  param_0.6 = f64[1,20,192]{2,1,0} parameter(0)
+  ROOT copy.2 = f64[1,20,192]{2,1,0} copy(param_0.6)
+}
+
+wrapped_copy_computation.1 {
+  param_0.7 = f64[120,1,20,192]{3,2,1,0} parameter(0)
+  ROOT copy.3 = f64[120,1,20,192]{3,2,1,0} copy(param_0.7)
+}
+
+ENTRY main.27 {
+  Arg_1.2.0 = f64[120,1,20,192]{3,2,1,0} parameter(1)
+  Arg_0.1.0 = f64[1,20,192]{2,1,0} parameter(0)
+  input_reduce_fusion.1 = f64[20]{0} fusion(Arg_0.1.0), kind=kInput, calls=fused_reduce.1, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.41.0 = f64[1,20]{1,0} bitcast(input_reduce_fusion.1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  input_reduce_fusion = f64[120,20]{1,0} fusion(Arg_1.2.0), kind=kInput, calls=fused_reduce, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.43.0 = f64[120,1,20]{2,1,0} bitcast(input_reduce_fusion), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  wrapped_copy = f64[1,20,192]{2,1,0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_copy_computation
+  wrapped_copy.1 = f64[120,1,20,192]{3,2,1,0} fusion(Arg_1.2.0), kind=kLoop, calls=wrapped_copy_computation.1
+  ROOT tuple = (f64[1,20,192]{2,1,0}, f64[1,20]{1,0}, f64[120,1,20,192]{3,2,1,0}, f64[120,1,20]{2,1,0}) tuple(wrapped_copy, bitcast.41.0, wrapped_copy.1, bitcast.43.0)
+} // main.27
+

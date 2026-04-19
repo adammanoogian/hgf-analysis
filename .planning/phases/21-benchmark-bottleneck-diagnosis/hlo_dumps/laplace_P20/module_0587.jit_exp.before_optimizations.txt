@@ -1,0 +1,24 @@
+HloModule jit_exp, entry_computation_layout={(f64[20]{0}, f64[1,20]{1,0}, f64[120,20]{1,0}, f64[120,1,20]{2,1,0})->(f64[1,20]{1,0}, f64[120,1,20]{2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+ENTRY main.20 {
+  Arg_1.2 = f64[1,20]{1,0} parameter(1)
+  Arg_0.1 = f64[20]{0} parameter(0)
+  reshape.5 = f64[1,20]{1,0} reshape(Arg_0.1), metadata={op_name="jit(exp)/jit(main)/broadcast_in_dim[shape=(1, 20) broadcast_dimensions=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  multiply.7 = f64[1,20]{1,0} multiply(Arg_1.2, reshape.5), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  Arg_3.4 = f64[120,1,20]{2,1,0} parameter(3)
+  reshape.8 = f64[1,1,20]{2,1,0} reshape(Arg_0.1), metadata={op_name="jit(exp)/jit(main)/broadcast_in_dim[shape=(1, 1, 20) broadcast_dimensions=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.9 = f64[1,1,20]{2,1,0} broadcast(reshape.8), dimensions={0,1,2}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  reshape.10 = f64[1,20]{1,0} reshape(broadcast.9), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.11 = f64[120,1,20]{2,1,0} broadcast(reshape.10), dimensions={1,2}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  multiply.12 = f64[120,1,20]{2,1,0} multiply(Arg_3.4, broadcast.11), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  reshape.13 = f64[1,1,20]{2,1,0} reshape(Arg_1.2), metadata={op_name="jit(exp)/jit(main)/broadcast_in_dim[shape=(1, 1, 20) broadcast_dimensions=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.14 = f64[1,1,20]{2,1,0} broadcast(reshape.13), dimensions={0,1,2}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  reshape.15 = f64[1,20]{1,0} reshape(broadcast.14), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.16 = f64[120,1,20]{2,1,0} broadcast(reshape.15), dimensions={1,2}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  Arg_2.3 = f64[120,20]{1,0} parameter(2)
+  reshape.6 = f64[120,1,20]{2,1,0} reshape(Arg_2.3), metadata={op_name="jit(exp)/jit(main)/broadcast_in_dim[shape=(120, 1, 20) broadcast_dimensions=(0, np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  multiply.17 = f64[120,1,20]{2,1,0} multiply(broadcast.16, reshape.6), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  add.18 = f64[120,1,20]{2,1,0} add(multiply.12, multiply.17), metadata={op_name="jit(exp)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  ROOT tuple.19 = (f64[1,20]{1,0}, f64[120,1,20]{2,1,0}) tuple(multiply.7, add.18)
+} // main.20
+

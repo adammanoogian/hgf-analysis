@@ -1,0 +1,14 @@
+HloModule jit_exp, entry_computation_layout={(f64[20]{0}, f64[120,20]{1,0})->(f64[20]{0}, f64[120,20]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+ENTRY main.10 {
+  Arg_0.1 = f64[20]{0} parameter(0)
+  exponential.3 = f64[20]{0} exponential(Arg_0.1), metadata={op_name="jit(exp)/jit(main)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  Arg_1.2 = f64[120,20]{1,0} parameter(1)
+  reshape.4 = f64[1,20]{1,0} reshape(exponential.3), metadata={op_name="jit(exp)/jit(main)/broadcast_in_dim[shape=(1, 20) broadcast_dimensions=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.5 = f64[1,20]{1,0} broadcast(reshape.4), dimensions={0,1}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  reshape.6 = f64[20]{0} reshape(broadcast.5), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  broadcast.7 = f64[120,20]{1,0} broadcast(reshape.6), dimensions={1}, metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  multiply.8 = f64[120,20]{1,0} multiply(Arg_1.2, broadcast.7), metadata={op_name="jit(exp)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1087}
+  ROOT tuple.9 = (f64[20]{0}, f64[120,20]{1,0}) tuple(exponential.3, multiply.8)
+} // main.10
+

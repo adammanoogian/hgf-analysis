@@ -1,0 +1,82 @@
+BufferAssignment:
+allocation 0: size 3686400, maybe-live-out:
+ value: <13 loop_add_fusion @0> (size=3686400,offset=0): f64[120,20,192]{2,1,0}
+allocation 1: size 3686400, parameter 2, shape |f64[120,20,192]| at ShapeIndex {}:
+ value: <11 Arg_2.3.0 @0> (size=3686400,offset=0): f64[120,20,192]{2,1,0}
+allocation 2: size 30720, maybe-live-out:
+ value: <10 loop_add_fusion.1 @0> (size=30720,offset=0): f64[20,192]{1,0}
+allocation 3: size 30720, parameter 0, shape |f64[20,192]| at ShapeIndex {}:
+ value: <8 Arg_0.1.0 @0> (size=30720,offset=0): f64[20,192]{1,0}
+allocation 4: size 19200, parameter 3, shape |f64[120,20]| at ShapeIndex {}:
+ value: <12 Arg_3.4.0 @0> (size=19200,offset=0): f64[120,20]{1,0}
+allocation 5: size 160, parameter 1, shape |f64[20]| at ShapeIndex {}:
+ value: <9 Arg_1.2.0 @0> (size=160,offset=0): f64[20]{0}
+allocation 6: size 16, output shape is |(f64[20,192], f64[120,20,192])|, maybe-live-out:
+ value: <14 tuple.15.0{} @0> (size=16,offset=0): (f64[20,192]{1,0}, f64[120,20,192]{2,1,0})
+
+Total bytes used: 7453616 (7.11MiB)
+
+Used values:
+<8 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  loop_add_fusion.1, operand 0
+ from instruction: %Arg_0.1.0 = f64[20,192]{1,0} parameter(0)<9 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+ uses:
+  loop_add_fusion.1, operand 1
+ from instruction: %Arg_1.2.0 = f64[20]{0} parameter(1)<10 loop_add_fusion.1 @0>
+ positions:
+  loop_add_fusion.1
+  tuple.15.0 {0}
+ uses:
+  tuple.15.0, operand 0
+ from instruction: %loop_add_fusion.1 = f64[20,192]{1,0} fusion(f64[20,192]{1,0} %Arg_0.1.0, f64[20]{0} %Arg_1.2.0), kind=kLoop, calls=%fused_add.1, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<11 Arg_2.3.0 @0>
+ positions:
+  Arg_2.3.0
+ uses:
+  loop_add_fusion, operand 0
+ from instruction: %Arg_2.3.0 = f64[120,20,192]{2,1,0} parameter(2)<12 Arg_3.4.0 @0>
+ positions:
+  Arg_3.4.0
+ uses:
+  loop_add_fusion, operand 1
+ from instruction: %Arg_3.4.0 = f64[120,20]{1,0} parameter(3)<13 loop_add_fusion @0>
+ positions:
+  loop_add_fusion
+  tuple.15.0 {1}
+ uses:
+  tuple.15.0, operand 1
+ from instruction: %loop_add_fusion = f64[120,20,192]{2,1,0} fusion(f64[120,20,192]{2,1,0} %Arg_2.3.0, f64[120,20]{1,0} %Arg_3.4.0), kind=kLoop, calls=%fused_add, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}<14 tuple.15.0{} @0>
+ positions:
+  tuple.15.0 {}
+ uses:
+ from instruction: %tuple.15.0 = (f64[20,192]{1,0}, f64[120,20,192]{2,1,0}) tuple(f64[20,192]{1,0} %loop_add_fusion.1, f64[120,20,192]{2,1,0} %loop_add_fusion)
+
+HloLiveRange (max 7):
+  InstructionSequence:
+    0:Arg_3.4.0
+    1:Arg_2.3.0
+    2:Arg_1.2.0
+    3:Arg_0.1.0
+    4:loop_add_fusion.1
+    5:loop_add_fusion
+    6:tuple.15.0
+  BufferLiveRange:
+    Arg_0.1.0{}:0-7
+    Arg_1.2.0{}:0-7
+    loop_add_fusion.1{}:4-7
+    Arg_2.3.0{}:0-7
+    Arg_3.4.0{}:0-7
+    loop_add_fusion{}:5-7
+    tuple.15.0{}:6-7
+  Live ranges at 6 (peak):
+    Arg_0.1.0: 30720 bytes
+    Arg_1.2.0: 160 bytes
+    loop_add_fusion.1: 30720 bytes
+    Arg_2.3.0: 3686400 bytes
+    Arg_3.4.0: 19200 bytes
+    loop_add_fusion: 3686400 bytes
+    tuple.15.0: 16 bytes

@@ -1,0 +1,12 @@
+HloModule jit_iota, is_scheduled=true, entry_computation_layout={()->s64[1,1]{1,0}}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="c8fc5ff63cfd02d4c566769ca11862c0"}
+
+wrapped_copy_computation {
+  param_0 = s64[1,1]{1,0} parameter(0)
+  ROOT copy.1 = s64[1,1]{1,0} copy(param_0)
+}
+
+ENTRY main.2 {
+  constant_1_0 = s64[1,1]{1,0} constant({ {0} })
+  ROOT wrapped_copy = s64[1,1]{1,0} fusion(constant_1_0), kind=kLoop, calls=wrapped_copy_computation
+}
+

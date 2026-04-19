@@ -1,0 +1,31 @@
+HloModule jit__reduce_sum, is_scheduled=true, entry_computation_layout={(f64[20]{0}, f64[120,20]{1,0})->(f64[], f64[120]{0})}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true,true}, frontend_attributes={fingerprint_before_lhs="158ff9dc667bfdb729247a2094e0c816"}
+
+region_0.4 {
+  Arg_1.6 = f64[] parameter(1), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]"}
+  Arg_0.5 = f64[] parameter(0), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]"}
+  ROOT add.1 = f64[] add(Arg_0.5, Arg_1.6), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+}
+
+fused_slice {
+  param_0_0 = f64[20]{0} parameter(0)
+  constant_3_3 = f64[] constant(0)
+  reduce.8.2 = f64[] reduce(param_0_0, constant_3_3), dimensions={0}, to_apply=region_0.4, metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  reshape = f64[1]{0} reshape(reduce.8.2), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  param_1_0 = f64[120,20]{1,0} parameter(1)
+  reduce.13.2 = f64[120]{0} reduce(param_1_0, constant_3_3), dimensions={1}, to_apply=region_0.4, metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  concatenate = f64[121]{0} concatenate(reshape, reduce.13.2), dimensions={0}
+  slice = f64[1]{0} slice(concatenate), slice={[0:1]}
+  slice.1 = f64[120]{0} slice(concatenate), slice={[1:121]}
+  ROOT tuple = (f64[1]{0}, f64[120]{0}) tuple(slice, slice.1), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+} // fused_slice
+
+ENTRY main.15 {
+  Arg_1.2.0 = f64[120,20]{1,0} parameter(1)
+  Arg_0.1.0 = f64[20]{0} parameter(0)
+  input_slice_fusion = (f64[1]{0}, f64[120]{0}) fusion(Arg_0.1.0, Arg_1.2.0), kind=kInput, calls=fused_slice, metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  get-tuple-element = f64[1]{0} get-tuple-element(input_slice_fusion), index=0
+  bitcast.32 = f64[] bitcast(get-tuple-element), metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  get-tuple-element.1 = f64[120]{0} get-tuple-element(input_slice_fusion), index=1, metadata={op_name="jit(_reduce_sum)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
+  ROOT tuple.14.0 = (f64[], f64[120]{0}) tuple(bitcast.32, get-tuple-element.1)
+} // main.15
+

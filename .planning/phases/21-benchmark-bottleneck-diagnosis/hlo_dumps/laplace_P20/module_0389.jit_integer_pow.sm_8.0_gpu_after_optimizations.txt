@@ -1,0 +1,12 @@
+HloModule jit_integer_pow, is_scheduled=true, entry_computation_layout={(f64[20]{0})->f64[20]{0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="dba6eee30728aeb78919f0ccd03c7fe3"}
+
+fused_broadcast {
+  constant_0_1 = f64[] constant(1)
+  ROOT broadcast.2.1 = f64[20]{0} broadcast(constant_0_1), dimensions={}
+}
+
+ENTRY main.7 {
+  Arg_0.1.0 = f64[20]{0} parameter(0), metadata={op_name="args[0]"}
+  ROOT loop_broadcast_fusion = f64[20]{0} fusion(), kind=kLoop, calls=fused_broadcast
+}
+

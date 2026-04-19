@@ -1,0 +1,242 @@
+BufferAssignment:
+allocation 0: size 294912, maybe-live-out:
+ value: <46 input_multiply_reduce_fusion{1} @0> (size=294912,offset=0): f64[24,4,192,2]{3,2,1,0}
+allocation 1: size 294912, maybe-live-out:
+ value: <47 loop_subtract_fusion @0> (size=294912,offset=0): f64[24,4,192,2]{3,2,1,0}
+allocation 2: size 294912, parameter 1, shape |f64[24,4,192,2]| at ShapeIndex {}:
+ value: <50 Arg_1.2.0 @0> (size=294912,offset=0): f64[24,4,192,2]{3,2,1,0}
+allocation 3: size 147456, maybe-live-out:
+ value: <39 input_reduce_fusion @0> (size=6144,offset=0): f64[4,192]{1,0}
+ value: <45 input_multiply_reduce_fusion{0} @0> (size=147456,offset=0): f64[24,4,192]{2,1,0}
+allocation 4: size 12288, maybe-live-out:
+ value: <42 input_exponential_reduce_fusion{1} @0> (size=12288,offset=0): f64[4,192,2]{2,1,0}
+allocation 5: size 12288, maybe-live-out:
+ value: <43 loop_subtract_fusion.1 @0> (size=12288,offset=0): f64[4,192,2]{2,1,0}
+allocation 6: size 12288, parameter 0, shape |f64[4,192,2]| at ShapeIndex {}:
+ value: <49 Arg_0.1.0 @0> (size=12288,offset=0): f64[4,192,2]{2,1,0}
+allocation 7: size 6144, maybe-live-out:
+ value: <41 input_exponential_reduce_fusion{0} @0> (size=6144,offset=0): f64[4,192]{1,0}
+allocation 8: size 48, output shape is |(f64[4,192,2], f64[4,192,2], f64[4,192,1], f64[24,4,192,2], f64[24,4,192,2], /*index=5*/f64[24,4,192,1])|, maybe-live-out:
+ value: <51 tuple.50.0{} @0> (size=48,offset=0): (f64[4,192,2]{2,1,0}, f64[4,192,2]{2,1,0}, f64[4,192,1]{2,1,0}, f64[24,4,192,2]{3,2,1,0}, f64[24,4,192,2]{3,2,1,0}, /*index=5*/f64[24,4,192,1]{3,2,1,0})
+allocation 9: size 8, thread-local:
+ value: <2 maximum.1 @0> (size=8,offset=0): f64[]
+allocation 10: size 8, thread-local:
+ value: <1 Arg_1.9 @0> (size=8,offset=0): f64[]
+allocation 11: size 8, thread-local:
+ value: <0 Arg_0.8 @0> (size=8,offset=0): f64[]
+allocation 12: size 8, thread-local:
+ value: <6 Arg_0.25 @0> (size=8,offset=0): f64[]
+allocation 13: size 8, thread-local:
+ value: <7 Arg_1.26 @0> (size=8,offset=0): f64[]
+allocation 14: size 8, thread-local:
+ value: <8 add.1 @0> (size=8,offset=0): f64[]
+allocation 15: size 304, preallocated-temp:
+ value: <40 input_exponential_reduce_fusion{} @0> (size=16,offset=128): (f64[4,192]{1,0}, f64[4,192,2]{2,1,0})
+ value: <44 input_multiply_reduce_fusion{} @0> (size=16,offset=0): (f64[24,4,192]{2,1,0}, f64[24,4,192,2]{3,2,1,0})
+ value: <48 tuple.2{} @0> (size=48,offset=256): (f64[4,192,2]{2,1,0}, f64[4,192,1]{2,1,0}, f64[4,192,2]{2,1,0}, f64[24,4,192,2]{3,2,1,0}, f64[24,4,192,1]{3,2,1,0}, /*index=5*/f64[24,4,192,2]{3,2,1,0})
+
+Total bytes used: 1075600 (1.03MiB)
+
+Used values:
+<0 Arg_0.8 @0>
+ positions:
+  Arg_0.8
+ uses:
+  maximum.1, operand 0
+ from instruction: %Arg_0.8 = f64[] parameter(0), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]"}<1 Arg_1.9 @0>
+ positions:
+  Arg_1.9
+ uses:
+  maximum.1, operand 1
+ from instruction: %Arg_1.9 = f64[] parameter(1), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]"}<2 maximum.1 @0>
+ positions:
+  maximum.1
+ uses:
+ from instruction: %maximum.1 = f64[] maximum(f64[] %Arg_0.8, f64[] %Arg_1.9), metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<6 Arg_0.25 @0>
+ positions:
+  Arg_0.25
+ uses:
+  add.1, operand 0
+ from instruction: %Arg_0.25 = f64[] parameter(0), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<7 Arg_1.26 @0>
+ positions:
+  Arg_1.26
+ uses:
+  add.1, operand 1
+ from instruction: %Arg_1.26 = f64[] parameter(1), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}<8 add.1 @0>
+ positions:
+  add.1
+ uses:
+ from instruction: %add.1 = f64[] add(f64[] %Arg_0.25, f64[] %Arg_1.26), metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<39 input_reduce_fusion @0>
+ positions:
+  input_reduce_fusion
+ uses:
+  input_exponential_reduce_fusion, operand 1
+  loop_subtract_fusion.1, operand 1
+ from instruction: %input_reduce_fusion = f64[4,192]{1,0} fusion(f64[4,192,2]{2,1,0} %p), kind=kInput, calls=%fused_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_max[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<40 input_exponential_reduce_fusion{} @0>
+ positions:
+  input_exponential_reduce_fusion {}
+ uses:
+  get-tuple-element.2, operand 0 {}
+  get-tuple-element.3, operand 0 {}
+ from instruction: %input_exponential_reduce_fusion = (f64[4,192]{1,0}, f64[4,192,2]{2,1,0}) fusion(f64[4,192,2]{2,1,0} %p, f64[4,192]{1,0} %input_reduce_fusion), kind=kInput, calls=%fused_exponential_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<41 input_exponential_reduce_fusion{0} @0>
+ positions:
+  input_exponential_reduce_fusion {0}
+  tuple.50.0 {2}
+  call {1}
+  get-tuple-element.9
+  get-tuple-element.2
+  bitcast.89.0
+  tuple.2 {1}
+ uses:
+  tuple.50.0, operand 2
+  bitcast.89.0, operand 0
+  loop_subtract_fusion.1, operand 2
+  loop_subtract_fusion, operand 1
+  tuple.2, operand 1
+ from instruction: %input_exponential_reduce_fusion = (f64[4,192]{1,0}, f64[4,192,2]{2,1,0}) fusion(f64[4,192,2]{2,1,0} %p, f64[4,192]{1,0} %input_reduce_fusion), kind=kInput, calls=%fused_exponential_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<42 input_exponential_reduce_fusion{1} @0>
+ positions:
+  input_exponential_reduce_fusion {1}
+  tuple.50.0 {1}
+  call {0}
+  get-tuple-element.8
+  get-tuple-element.3
+  tuple.2 {0}
+ uses:
+  tuple.50.0, operand 1
+  input_multiply_reduce_fusion, operand 1
+  tuple.2, operand 0
+ from instruction: %input_exponential_reduce_fusion = (f64[4,192]{1,0}, f64[4,192,2]{2,1,0}) fusion(f64[4,192,2]{2,1,0} %p, f64[4,192]{1,0} %input_reduce_fusion), kind=kInput, calls=%fused_exponential_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<43 loop_subtract_fusion.1 @0>
+ positions:
+  loop_subtract_fusion.1
+  tuple.50.0 {0}
+  call {2}
+  get-tuple-element.10
+  tuple.2 {2}
+ uses:
+  tuple.2, operand 2
+  tuple.50.0, operand 0
+ from instruction: %loop_subtract_fusion.1 = f64[4,192,2]{2,1,0} fusion(f64[4,192,2]{2,1,0} %p, f64[4,192]{1,0} %input_reduce_fusion, f64[4,192]{1,0} %get-tuple-element.2), kind=kLoop, calls=%fused_subtract.1, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<44 input_multiply_reduce_fusion{} @0>
+ positions:
+  input_multiply_reduce_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+ from instruction: %input_multiply_reduce_fusion = (f64[24,4,192]{2,1,0}, f64[24,4,192,2]{3,2,1,0}) fusion(f64[24,4,192,2]{3,2,1,0} %p.1, f64[4,192,2]{2,1,0} %get-tuple-element.3), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<45 input_multiply_reduce_fusion{0} @0>
+ positions:
+  input_multiply_reduce_fusion {0}
+  tuple.50.0 {5}
+  call {4}
+  get-tuple-element.12
+  get-tuple-element
+  bitcast.112.0
+  tuple.2 {4}
+ uses:
+  tuple.50.0, operand 5
+  bitcast.112.0, operand 0
+  loop_subtract_fusion, operand 2
+  tuple.2, operand 4
+ from instruction: %input_multiply_reduce_fusion = (f64[24,4,192]{2,1,0}, f64[24,4,192,2]{3,2,1,0}) fusion(f64[24,4,192,2]{3,2,1,0} %p.1, f64[4,192,2]{2,1,0} %get-tuple-element.3), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<46 input_multiply_reduce_fusion{1} @0>
+ positions:
+  input_multiply_reduce_fusion {1}
+  tuple.50.0 {4}
+  call {3}
+  get-tuple-element.11
+  get-tuple-element.1
+  tuple.2 {3}
+ uses:
+  tuple.50.0, operand 4
+  tuple.2, operand 3
+ from instruction: %input_multiply_reduce_fusion = (f64[24,4,192]{2,1,0}, f64[24,4,192,2]{3,2,1,0}) fusion(f64[24,4,192,2]{3,2,1,0} %p.1, f64[4,192,2]{2,1,0} %get-tuple-element.3), kind=kInput, calls=%fused_multiply_reduce, metadata={op_name="jit(log_softmax)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<47 loop_subtract_fusion @0>
+ positions:
+  loop_subtract_fusion
+  tuple.50.0 {3}
+  call {5}
+  get-tuple-element.13
+  tuple.2 {5}
+ uses:
+  tuple.2, operand 5
+  tuple.50.0, operand 3
+ from instruction: %loop_subtract_fusion = f64[24,4,192,2]{3,2,1,0} fusion(f64[24,4,192,2]{3,2,1,0} %p.1, f64[4,192]{1,0} %get-tuple-element.2, f64[24,4,192]{2,1,0} %get-tuple-element), kind=kLoop, calls=%fused_subtract, metadata={op_name="jit(log_softmax)/jit(main)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=157}<48 tuple.2{} @0>
+ positions:
+  tuple.2 {}
+  call {}
+ uses:
+  get-tuple-element.8, operand 0 {}
+  get-tuple-element.9, operand 0 {}
+  get-tuple-element.10, operand 0 {}
+  get-tuple-element.11, operand 0 {}
+  get-tuple-element.12, operand 0 {}
+  get-tuple-element.13, operand 0 {}
+ from instruction: %tuple.2 = (f64[4,192,2]{2,1,0}, f64[4,192,1]{2,1,0}, f64[4,192,2]{2,1,0}, f64[24,4,192,2]{3,2,1,0}, f64[24,4,192,1]{3,2,1,0}, /*index=5*/f64[24,4,192,2]{3,2,1,0}) tuple(f64[4,192,2]{2,1,0} %get-tuple-element.3, f64[4,192,1]{2,1,0} %bitcast.89.0, f64[4,192,2]{2,1,0} %loop_subtract_fusion.1, f64[24,4,192,2]{3,2,1,0} %get-tuple-element.1, f64[24,4,192,1]{3,2,1,0} %bitcast.112.0, /*index=5*/f64[24,4,192,2]{3,2,1,0} %loop_subtract_fusion)<49 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+  p
+ uses:
+  call, operand 0
+  input_reduce_fusion, operand 0
+  input_exponential_reduce_fusion, operand 0
+  loop_subtract_fusion.1, operand 0
+ from instruction: %Arg_0.1.0 = f64[4,192,2]{2,1,0} parameter(0)<50 Arg_1.2.0 @0>
+ positions:
+  Arg_1.2.0
+  p.1
+ uses:
+  call, operand 1
+  input_multiply_reduce_fusion, operand 0
+  loop_subtract_fusion, operand 0
+ from instruction: %Arg_1.2.0 = f64[24,4,192,2]{3,2,1,0} parameter(1)<51 tuple.50.0{} @0>
+ positions:
+  tuple.50.0 {}
+ uses:
+ from instruction: %tuple.50.0 = (f64[4,192,2]{2,1,0}, f64[4,192,2]{2,1,0}, f64[4,192,1]{2,1,0}, f64[24,4,192,2]{3,2,1,0}, f64[24,4,192,2]{3,2,1,0}, /*index=5*/f64[24,4,192,1]{3,2,1,0}) tuple(f64[4,192,2]{2,1,0} %get-tuple-element.10, f64[4,192,2]{2,1,0} %get-tuple-element.8, f64[4,192,1]{2,1,0} %get-tuple-element.9, f64[24,4,192,2]{3,2,1,0} %get-tuple-element.13, f64[24,4,192,2]{3,2,1,0} %get-tuple-element.11, /*index=5*/f64[24,4,192,1]{3,2,1,0} %get-tuple-element.12)
+
+HloLiveRange (max 24):
+  InstructionSequence:
+    0:Arg_0.1.0
+    1:Arg_1.2.0
+    2:p
+    3:p.1
+    4:input_reduce_fusion
+    5:input_exponential_reduce_fusion
+    6:get-tuple-element.2
+    7:get-tuple-element.3
+    8:bitcast.89.0
+    9:loop_subtract_fusion.1
+    10:input_multiply_reduce_fusion
+    11:get-tuple-element
+    12:get-tuple-element.1
+    13:bitcast.112.0
+    14:loop_subtract_fusion
+    15:tuple.2
+    16:call
+    17:get-tuple-element.8
+    18:get-tuple-element.9
+    19:get-tuple-element.10
+    20:get-tuple-element.11
+    21:get-tuple-element.12
+    22:get-tuple-element.13
+    23:tuple.50.0
+  BufferLiveRange:
+    input_reduce_fusion{}:4-9
+    input_exponential_reduce_fusion{}:5-7
+    input_exponential_reduce_fusion{0}:5-24
+    input_exponential_reduce_fusion{1}:5-24
+    loop_subtract_fusion.1{}:9-24
+    input_multiply_reduce_fusion{}:10-12
+    input_multiply_reduce_fusion{0}:10-24
+    input_multiply_reduce_fusion{1}:10-24
+    loop_subtract_fusion{}:14-24
+    tuple.2{}:15-22
+    Arg_0.1.0{}:0-24
+    Arg_1.2.0{}:0-24
+    tuple.50.0{}:23-24
+  Live ranges at 23 (peak):
+    input_exponential_reduce_fusion: 16 bytes
+    input_exponential_reduce_fusion: 16 bytes
+    loop_subtract_fusion.1: 12288 bytes
+    input_multiply_reduce_fusion: 16 bytes
+    input_multiply_reduce_fusion: 16 bytes
+    loop_subtract_fusion: 294912 bytes
+    Arg_0.1.0: 12288 bytes
+    Arg_1.2.0: 294912 bytes
+    tuple.50.0: 48 bytes

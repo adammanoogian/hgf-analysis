@@ -1,0 +1,69 @@
+HloModule jit_multiply, is_scheduled=true, entry_computation_layout={(f64[4,192]{1,0}, f64[4,1]{1,0}, f64[1,4,192]{2,1,0}, f64[24,4,192]{2,1,0}, f64[24,4,1]{2,1,0}, /*index=5*/f64[24,1,4,192]{3,2,1,0})->(f64[1,4]{1,0}, f64[1,4,192]{2,1,0}, f64[24,1,4]{2,1,0}, f64[24,1,4,192]{3,2,1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true,true,true}, frontend_attributes={fingerprint_before_lhs="8059eed25fbd053e6f6887f6a3b2062d"}
+
+region_0.42 {
+  Arg_1.44 = f64[] parameter(1), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  Arg_0.43 = f64[] parameter(0), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]"}
+  ROOT add.3 = f64[] add(Arg_0.43, Arg_1.44), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+fused_add_reduce {
+  param_2.17 = f64[24,1,4,192]{3,2,1,0} parameter(2)
+  param_3.14 = f64[4,192]{1,0} parameter(3)
+  broadcast.21.3 = f64[24,1,4,192]{3,2,1,0} broadcast(param_3.14), dimensions={2,3}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  multiply.9.3 = f64[24,1,4,192]{3,2,1,0} multiply(param_2.17, broadcast.21.3), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  param_1.36 = f64[1,4,192]{2,1,0} parameter(1)
+  bitcast.105.12 = f64[4,192]{1,0} bitcast(param_1.36)
+  broadcast.22.7 = f64[24,4,192]{2,1,0} broadcast(bitcast.105.12), dimensions={1,2}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  param_0.38 = f64[24,4,192]{2,1,0} parameter(0)
+  multiply.10.5 = f64[24,4,192]{2,1,0} multiply(broadcast.22.7, param_0.38), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.111.3 = f64[24,1,4,192]{3,2,1,0} bitcast(multiply.10.5)
+  add.4.3 = f64[24,1,4,192]{3,2,1,0} add(multiply.9.3, bitcast.111.3), metadata={op_name="jit(multiply)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.147.1 = f64[24,4,192]{2,1,0} bitcast(add.4.3)
+  constant_7_2 = f64[] constant(0)
+  reduce.1.1 = f64[24,4]{1,0} reduce(bitcast.147.1, constant_7_2), dimensions={2}, to_apply=region_0.42, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  param_5.6 = f64[24,4,1]{2,1,0} parameter(5)
+  bitcast.120.3.clone.1 = f64[24,4]{1,0} bitcast(param_5.6)
+  broadcast.24.3.clone.1 = f64[24,1,4,192]{3,2,1,0} broadcast(bitcast.120.3.clone.1), dimensions={0,2}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  broadcast.26.5.clone.1 = f64[24,1,4,192]{3,2,1,0} broadcast(bitcast.105.12), dimensions={2,3}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  multiply.11.3.clone.1 = f64[24,1,4,192]{3,2,1,0} multiply(broadcast.24.3.clone.1, broadcast.26.5.clone.1), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  param_4.3 = f64[4,1]{1,0} parameter(4)
+  bitcast.91.6.clone.1 = f64[4]{0} bitcast(param_4.3)
+  broadcast.27.5.clone.1 = f64[24,1,4,192]{3,2,1,0} broadcast(bitcast.91.6.clone.1), dimensions={2}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  multiply.12.3.clone.1 = f64[24,1,4,192]{3,2,1,0} multiply(broadcast.27.5.clone.1, param_2.17), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  add.5.1.clone.1 = f64[24,1,4,192]{3,2,1,0} add(multiply.11.3.clone.1, multiply.12.3.clone.1), metadata={op_name="jit(multiply)/jit(main)/add_any" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  ROOT tuple = (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0}) tuple(reduce.1.1, add.5.1.clone.1)
+} // fused_add_reduce
+
+fused_multiply_reduce {
+  param_0.37 = f64[1,4,192]{2,1,0} parameter(0)
+  param_1.35 = f64[4,192]{1,0} parameter(1)
+  bitcast.83.3 = f64[1,4,192]{2,1,0} bitcast(param_1.35)
+  multiply.7.3 = f64[1,4,192]{2,1,0} multiply(param_0.37, bitcast.83.3), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.145.1 = f64[4,192]{1,0} bitcast(multiply.7.3)
+  constant_7_1 = f64[] constant(0)
+  reduce.3 = f64[4]{0} reduce(bitcast.145.1, constant_7_1), dimensions={1}, to_apply=region_0.42, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  param_2.20 = f64[4,1]{1,0} parameter(2)
+  bitcast.91.8.clone.1 = f64[4]{0} bitcast(param_2.20)
+  broadcast.19.3.clone.1 = f64[1,4,192]{2,1,0} broadcast(bitcast.91.8.clone.1), dimensions={1}, metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  multiply.8.1.clone.1 = f64[1,4,192]{2,1,0} multiply(broadcast.19.3.clone.1, param_0.37), metadata={op_name="jit(multiply)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  ROOT tuple.1 = (f64[4]{0}, f64[1,4,192]{2,1,0}) tuple(reduce.3, multiply.8.1.clone.1)
+} // fused_multiply_reduce
+
+ENTRY main.65 {
+  Arg_2.3.0 = f64[1,4,192]{2,1,0} parameter(2)
+  Arg_1.2.0 = f64[4,1]{1,0} parameter(1)
+  Arg_0.1.0 = f64[4,192]{1,0} parameter(0)
+  Arg_5.6.0 = f64[24,1,4,192]{3,2,1,0} parameter(5)
+  Arg_4.5.0 = f64[24,4,1]{2,1,0} parameter(4)
+  Arg_3.4.0 = f64[24,4,192]{2,1,0} parameter(3), metadata={op_name="jit(multiply)/jit(main)/broadcast_in_dim[shape=(24, 1, 4, 192) broadcast_dimensions=(0, np.int64(2), np.int64(3))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  input_multiply_reduce_fusion = (f64[4]{0}, f64[1,4,192]{2,1,0}) fusion(Arg_2.3.0, Arg_0.1.0, Arg_1.2.0), kind=kInput, calls=fused_multiply_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  get-tuple-element.3 = f64[1,4,192]{2,1,0} get-tuple-element(input_multiply_reduce_fusion), index=1, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  get-tuple-element.2 = f64[4]{0} get-tuple-element(input_multiply_reduce_fusion), index=0, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.146.0 = f64[1,4]{1,0} bitcast(get-tuple-element.2), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(2),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  input_add_reduce_fusion = (f64[24,4]{1,0}, f64[24,1,4,192]{3,2,1,0}) fusion(Arg_3.4.0, Arg_2.3.0, Arg_5.6.0, Arg_0.1.0, Arg_1.2.0, /*index=5*/Arg_4.5.0), kind=kInput, calls=fused_add_reduce, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  get-tuple-element.1 = f64[24,1,4,192]{3,2,1,0} get-tuple-element(input_add_reduce_fusion), index=1, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  get-tuple-element = f64[24,4]{1,0} get-tuple-element(input_add_reduce_fusion), index=0, metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  bitcast.148.0 = f64[24,1,4]{2,1,0} bitcast(get-tuple-element), metadata={op_name="jit(multiply)/jit(main)/reduce_sum[axes=(np.int64(3),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  ROOT tuple.64.0 = (f64[1,4]{1,0}, f64[1,4,192]{2,1,0}, f64[24,1,4]{2,1,0}, f64[24,1,4,192]{3,2,1,0}) tuple(bitcast.146.0, get-tuple-element.3, bitcast.148.0, get-tuple-element.1)
+} // main.65
+
