@@ -1,0 +1,23 @@
+HloModule jit_add, entry_computation_layout={(f64[4,192]{1,0})->(f64[4,192]{1,0}, f64[4]{0})}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+region_0.3 {
+  Arg_0.4 = f64[] parameter(0), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]"}
+  Arg_1.5 = f64[] parameter(1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]"}
+  ROOT add.6 = f64[] add(Arg_0.4, Arg_1.5), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+region_1.9 {
+  Arg_0.10 = f64[] parameter(0), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(1),)]"}
+  Arg_1.11 = f64[] parameter(1), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(1),)]"}
+  ROOT add.12 = f64[] add(Arg_0.10, Arg_1.11), metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+ENTRY main.15 {
+  Arg_0.1 = f64[4,192]{1,0} parameter(0)
+  constant.2 = f64[] constant(0)
+  reduce.7 = f64[4]{0} reduce(Arg_0.1, constant.2), dimensions={1}, to_apply=region_0.3, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(1,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  reshape.8 = f64[4,1]{1,0} reshape(reduce.7), metadata={op_name="jit(add)/jit(main)/reshape[new_sizes=(4, 1) dimensions=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  reduce.13 = f64[4]{0} reduce(reshape.8, constant.2), dimensions={1}, to_apply=region_1.9, metadata={op_name="jit(add)/jit(main)/reduce_sum[axes=(np.int64(1),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  ROOT tuple.14 = (f64[4,192]{1,0}, f64[4]{0}) tuple(Arg_0.1, reduce.13)
+} // main.15
+

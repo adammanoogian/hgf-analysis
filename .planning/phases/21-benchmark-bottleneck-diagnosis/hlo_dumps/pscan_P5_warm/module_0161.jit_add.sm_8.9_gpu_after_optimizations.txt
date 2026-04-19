@@ -1,0 +1,15 @@
+HloModule jit_add, is_scheduled=true, entry_computation_layout={(f64[4,192]{1,0}, f64[4]{0})->f64[4,192]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="819e55a603ba2428432007eed8ff2518"}
+
+fused_add {
+  param_0 = f64[4,192]{1,0} parameter(0)
+  param_1.1 = f64[4]{0} parameter(1)
+  broadcast.2.1 = f64[4,192]{1,0} broadcast(param_1.1), dimensions={0}, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+  ROOT add.1.1 = f64[4,192]{1,0} add(param_0, broadcast.2.1), metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+
+ENTRY main.8 {
+  Arg_1.2.0 = f64[4]{0} parameter(1)
+  Arg_0.1.0 = f64[4,192]{1,0} parameter(0)
+  ROOT loop_add_fusion = f64[4,192]{1,0} fusion(Arg_0.1.0, Arg_1.2.0), kind=kLoop, calls=fused_add, metadata={op_name="jit(add)/jit(main)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=154}
+}
+

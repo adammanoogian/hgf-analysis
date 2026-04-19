@@ -1,0 +1,695 @@
+HloModule jit_scan, is_scheduled=true, entry_computation_layout={(f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[1]{0}, f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1]{0}, /*index=35*/f64[1,1]{1,0}, s64[1]{0}, f64[1]{0})->(f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[1]{0}, f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1]{0}, /*index=35*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, s64[1]{0}, /*index=40*/f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, /*index=45*/f64[1]{0}, f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=50*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=55*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=60*/f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=65*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1,1]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true}, allow_spmd_sharding_propagation_to_output={true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true}, frontend_attributes={fingerprint_before_lhs="49a6eea3879e554907c30a701af72cce"}
+
+fused_divide {
+  constant_6_1 = f64[] constant(1)
+  param_4.7 = f64[] parameter(4)
+  divide.75.1 = f64[] divide(constant_6_1, param_4.7), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_0.13 = f64[] parameter(0)
+  param_1.21 = f64[] parameter(1)
+  param_3.11 = f64[1]{0} parameter(3)
+  bitcast.619.11 = f64[] bitcast(param_3.11)
+  param_2.17 = f64[] parameter(2)
+  multiply.173.11 = f64[] multiply(bitcast.619.11, param_2.17), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.71.9 = f64[] add(param_1.21, multiply.173.11), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  exponential.21.7 = f64[] exponential(add.71.9), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.174.5 = f64[] multiply(param_0.13, exponential.21.7), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.72.3 = f64[] add(divide.75.1, multiply.174.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT divide.76.1 = f64[] divide(constant_6_1, add.72.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+} // fused_divide
+
+region_2.175 {
+  arg_tuple.176.0 = (f64[], f64[], f64[], f64[1]{0}, f64[]) parameter(0)
+  get-tuple-element.181.0 = f64[] get-tuple-element(arg_tuple.176.0), index=4
+  get-tuple-element.180.0 = f64[1]{0} get-tuple-element(arg_tuple.176.0), index=3
+  get-tuple-element.179.0 = f64[] get-tuple-element(arg_tuple.176.0), index=2
+  get-tuple-element.178.0 = f64[] get-tuple-element(arg_tuple.176.0), index=1
+  get-tuple-element.177.0 = f64[] get-tuple-element(arg_tuple.176.0), index=0
+  loop_divide_fusion = f64[] fusion(get-tuple-element.177.0, get-tuple-element.179.0, get-tuple-element.181.0, get-tuple-element.180.0, get-tuple-element.178.0), kind=kLoop, calls=fused_divide, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.66 = (f64[]) tuple(loop_divide_fusion)
+} // region_2.175
+
+fused_select {
+  param_0.25 = f64[] parameter(0)
+  param_3.21 = f64[1]{0} parameter(3)
+  multiply.175.3 = f64[1]{0} multiply(param_3.21, param_3.21), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.634.7 = f64[] bitcast(multiply.175.3)
+  param_2.31 = f64[] parameter(2)
+  multiply.176.7 = f64[] multiply(bitcast.634.7, param_2.31), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_1.38 = s64[] parameter(1)
+  convert.38.3 = f64[] convert(param_1.38), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.177.5 = f64[] multiply(multiply.176.7, convert.38.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.73.3 = f64[] add(param_0.25, multiply.177.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_8_1 = f64[] constant(1e-128)
+  compare.29.1 = pred[] compare(add.73.3, constant_8_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_9_1 = f64[] constant(nan)
+  ROOT select.20.1 = f64[] select(compare.29.1, add.73.3, constant_9_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_select
+
+region_3.205 {
+  arg_tuple.206.0 = (f64[], s64[], f64[], f64[1]{0}) parameter(0)
+  get-tuple-element.210.0 = f64[1]{0} get-tuple-element(arg_tuple.206.0), index=3, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/squeeze[dimensions=(0,)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.209.0 = f64[] get-tuple-element(arg_tuple.206.0), index=2
+  get-tuple-element.208.0 = s64[] get-tuple-element(arg_tuple.206.0), index=1
+  get-tuple-element.207.0 = f64[] get-tuple-element(arg_tuple.206.0), index=0
+  loop_select_fusion = f64[] fusion(get-tuple-element.209.0, get-tuple-element.208.0, get-tuple-element.207.0, get-tuple-element.210.0), kind=kLoop, calls=fused_select, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.67 = (f64[]) tuple(loop_select_fusion)
+} // region_3.205
+
+fused_divide.1 {
+  constant_13_1 = f64[] constant(1)
+  param_2.35 = f64[] parameter(2)
+  divide.77.1 = f64[] divide(constant_13_1, param_2.35), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_0.27 = f64[] parameter(0)
+  param_1.42 = f64[] parameter(1)
+  exponential.22.1 = f64[] exponential(param_1.42), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.178.1 = f64[] multiply(param_0.27, exponential.22.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.74.1 = f64[] add(divide.77.1, multiply.178.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT divide.78.1 = f64[] divide(constant_13_1, add.74.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+} // fused_divide.1
+
+region_5.315 {
+  arg_tuple.316.0 = (f64[], f64[], f64[]) parameter(0)
+  get-tuple-element.319.0 = f64[] get-tuple-element(arg_tuple.316.0), index=2
+  get-tuple-element.318.0 = f64[] get-tuple-element(arg_tuple.316.0), index=1
+  get-tuple-element.317.0 = f64[] get-tuple-element(arg_tuple.316.0), index=0
+  loop_divide_fusion.1 = f64[] fusion(get-tuple-element.317.0, get-tuple-element.319.0, get-tuple-element.318.0), kind=kLoop, calls=fused_divide.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_0_fun/jit(precision_update_missing_values)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.68 = (f64[]) tuple(loop_divide_fusion.1)
+} // region_5.315
+
+fused_select.1 {
+  param_0.53 = f64[] parameter(0)
+  param_4.32 = f64[1]{0} parameter(4)
+  bitcast.666.20 = f64[] bitcast(param_4.32)
+  param_3.47 = f64[] parameter(3)
+  multiply.179.5 = f64[] multiply(bitcast.666.20, param_3.47), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.180.3 = f64[] multiply(multiply.179.5, multiply.179.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_14_1 = f64[] constant(0.5)
+  multiply.181.3 = f64[] multiply(multiply.180.3, constant_14_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_2.61 = f64[] parameter(2)
+  multiply.182.3 = f64[] multiply(multiply.180.3, param_2.61), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.75.3 = f64[] add(multiply.181.3, multiply.182.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.183.15 = f64[] multiply(bitcast.666.20, bitcast.666.20), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.184.13 = f64[] multiply(multiply.183.15, constant_14_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.185.11 = f64[] multiply(multiply.184.13, param_3.47), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.186.9 = f64[] multiply(multiply.185.11, param_2.61), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  subtract.23.7 = f64[] subtract(add.75.3, multiply.186.9), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_1.74 = s64[] parameter(1)
+  convert.39.3 = f64[] convert(param_1.74), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.187.5 = f64[] multiply(subtract.23.7, convert.39.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.76.3 = f64[] add(param_0.53, multiply.187.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_15_1 = f64[] constant(1e-128)
+  compare.30.1 = pred[] compare(add.76.3, constant_15_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond/branch_1_fun/jit(precision_update)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_16_1 = f64[] constant(nan)
+  ROOT select.21.1 = f64[] select(compare.30.1, add.76.3, constant_16_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+} // fused_select.1
+
+region_6.353 {
+  arg_tuple.354.0 = (s64[], f64[], f64[], f64[], f64[1]{0}) parameter(0)
+  get-tuple-element.359.0 = f64[1]{0} get-tuple-element(arg_tuple.354.0), index=4
+  get-tuple-element.358.0 = f64[] get-tuple-element(arg_tuple.354.0), index=3
+  get-tuple-element.357.0 = f64[] get-tuple-element(arg_tuple.354.0), index=2
+  get-tuple-element.356.0 = f64[] get-tuple-element(arg_tuple.354.0), index=1
+  get-tuple-element.355.0 = s64[] get-tuple-element(arg_tuple.354.0), index=0
+  loop_select_fusion.1 = f64[] fusion(get-tuple-element.358.0, get-tuple-element.355.0, get-tuple-element.357.0, get-tuple-element.356.0, get-tuple-element.359.0), kind=kLoop, calls=fused_select.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  ROOT tuple.69 = (f64[]) tuple(loop_select_fusion.1)
+} // region_6.353
+
+fused_add_divide_multiply_subtract {
+  param_6.39 = f64[] parameter(6)
+  param_7.29 = f64[] parameter(7)
+  multiply.204.1.clone.1 = f64[] multiply(param_6.39, param_7.29), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_3.111 = f64[1]{0} parameter(3)
+  bitcast.935.6.clone.1 = f64[] bitcast(param_3.111)
+  param_5.54 = f64[] parameter(5)
+  multiply.205.3.clone.1 = f64[] multiply(bitcast.935.6.clone.1, param_5.54), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.84.1.clone.1 = f64[] add(multiply.204.1.clone.1, multiply.205.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_0.146 = f64[1]{0} parameter(0)
+  bitcast.906.9 = f64[] bitcast(param_0.146)
+  param_11.8 = f64[] parameter(11)
+  param_12.5 = f64[1]{0} parameter(12)
+  bitcast.777.11.clone.1 = f64[] bitcast(param_12.5)
+  multiply.192.11.clone.1 = f64[] multiply(bitcast.777.11.clone.1, param_7.29), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.79.9.clone.1 = f64[] add(param_11.8, multiply.192.11.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  exponential.24.7.clone.1 = f64[] exponential(add.79.9.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.193.5.clone.1 = f64[] multiply(bitcast.935.6.clone.1, exponential.24.7.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_79_3_clone_1 = f64[] constant(1e-128)
+  compare.31.2.clone.1 = pred[] compare(multiply.193.5.clone.1, constant_79_3_clone_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_81_1_clone_1 = f64[] constant(nan)
+  select.22.1.clone.1 = f64[] select(compare.31.2.clone.1, multiply.193.5.clone.1, constant_81_1_clone_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_8.25 = f64[] parameter(8)
+  multiply.199.1.clone.1 = f64[] multiply(select.22.1.clone.1, param_8.25), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.207.9 = f64[] multiply(bitcast.906.9, multiply.199.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_77_8 = f64[] constant(1)
+  param_10.10 = f64[] parameter(10)
+  add.80.3.clone.1 = f64[] add(param_10.10, select.22.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_9.14 = f64[] parameter(9)
+  multiply.200.1.clone.1 = f64[] multiply(add.80.3.clone.1, param_9.14)
+  divide.85.1.clone.1 = f64[] divide(constant_77_8, multiply.200.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_volatility_prediction_error)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_13.5 = f64[] parameter(13)
+  param_16.16 = f64[1]{0} parameter(16)
+  bitcast.795.7.clone.1 = f64[] bitcast(param_16.16)
+  param_15.14 = f64[] parameter(15)
+  multiply.194.7.clone.1 = f64[] multiply(bitcast.795.7.clone.1, param_15.14), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.84.5.clone.1 = f64[] divide(multiply.194.7.clone.1, param_9.14), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_18.3 = f64[1,1]{1,0} parameter(18)
+  bitcast.739.5.clone.1 = f64[] bitcast(param_18.3)
+  param_17.6 = f64[] parameter(17)
+  subtract.25.5.clone.1 = f64[] subtract(bitcast.739.5.clone.1, param_17.6), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_14.11 = s64[1]{0} parameter(14)
+  bitcast.820.5.clone.1 = s64[] bitcast(param_14.11)
+  convert.40.5.clone.1 = f64[] convert(bitcast.820.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.191.3.clone.1 = f64[] multiply(subtract.25.5.clone.1, convert.40.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.80.1.clone.1 = f64[] divide(multiply.191.3.clone.1, param_15.14), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction_error)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.195.1.clone.1 = f64[] multiply(divide.80.1.clone.1, convert.40.5.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.196.3.clone.1 = f64[] multiply(divide.84.5.clone.1, multiply.195.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.81.1.clone.1 = f64[] add(param_13.5, multiply.196.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  subtract.26.1 = f64[] subtract(add.81.1.clone.1, param_13.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_value_prediction_error)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.202.1.clone.1 = f64[] multiply(subtract.26.1, subtract.26.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_volatility_prediction_error)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.203.1.clone.1 = f64[] multiply(param_8.25, multiply.202.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_volatility_prediction_error)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.82.1.clone.1 = f64[] add(divide.85.1.clone.1, multiply.203.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_volatility_prediction_error)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_92_1_clone_1 = f64[] constant(-1)
+  add.83.1.clone.1 = f64[] add(add.82.1.clone.1, constant_92_1_clone_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction_error)/jit(continuous_node_volatility_prediction_error)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.208.7 = f64[] multiply(multiply.207.9, add.83.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_4.72 = f64[] parameter(4)
+  divide.86.1.clone.1 = f64[] divide(constant_77_8, param_4.72), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_2.148 = f64[] parameter(2)
+  exponential.25.3.clone.1 = f64[] exponential(param_2.148), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.206.3.clone.1 = f64[] multiply(bitcast.935.6.clone.1, exponential.25.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  compare.33.1.clone.1 = pred[] compare(multiply.206.3.clone.1, constant_79_3_clone_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  select.23.2.clone.1 = f64[] select(compare.33.1.clone.1, multiply.206.3.clone.1, constant_81_1_clone_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.85.1.clone.1 = f64[] add(divide.86.1.clone.1, select.23.2.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.87.1.clone.1 = f64[] divide(constant_77_8, add.85.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_89_1 = f64[] constant(2)
+  multiply.209.1 = f64[] multiply(divide.87.1.clone.1, constant_89_1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.88.1 = f64[] divide(constant_77_8, multiply.209.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.210.5 = f64[] multiply(multiply.208.7, divide.88.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_1.197 = s64[] parameter(1)
+  convert.42.1 = f64[] convert(param_1.197), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/convert_element_type[new_dtype=float64 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.211.3 = f64[] multiply(multiply.210.5, convert.42.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.86.1 = f64[] add(add.84.1.clone.1, multiply.211.3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.63 = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) tuple(add.86.1, divide.87.1.clone.1, divide.86.1.clone.1, add.84.1.clone.1, add.83.1.clone.1, /*index=5*/subtract.26.1, multiply.199.1.clone.1, add.81.1.clone.1, divide.80.1.clone.1)
+} // fused_add_divide_multiply_subtract
+
+fused_multiply {
+  param_2.143 = f64[1]{0} parameter(2)
+  bitcast.935.12 = f64[] bitcast(param_2.143)
+  param_1.192 = f64[] parameter(1)
+  exponential.25.5 = f64[] exponential(param_1.192), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.206.5 = f64[] multiply(bitcast.935.12, exponential.25.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_79_1 = f64[] constant(1e-128)
+  compare.33.2 = pred[] compare(multiply.206.5, constant_79_1), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_81_3 = f64[] constant(nan)
+  select.23.1 = f64[] select(compare.33.2, multiply.206.5, constant_81_3), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  param_0.123 = f64[] parameter(0)
+  multiply.212.1 = f64[] multiply(select.23.1, param_0.123), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1068.1 = f64[1]{0} bitcast(multiply.212.1)
+  copy.57 = f64[1]{0} copy(bitcast.1068.1)
+  ROOT tuple.71 = (f64[], f64[1]{0}) tuple(multiply.212.1, copy.57)
+} // fused_multiply
+
+copy_horizontally_fused_computation.2 {
+  param_0_0.2 = f64[] parameter(0)
+  copy.69 = f64[] copy(param_0_0.2)
+  param_1_0.2 = f64[] parameter(1)
+  copy.70 = f64[] copy(param_1_0.2)
+  param_2_0 = f64[] parameter(2)
+  copy.71 = f64[] copy(param_2_0)
+  ROOT tuple.75 = (f64[], f64[], f64[]) tuple(copy.69, copy.70, copy.71)
+} // copy_horizontally_fused_computation.2
+
+copy_horizontally_fused_computation.4 {
+  param_0_0.4 = f64[1]{0} parameter(0)
+  copy.81 = f64[1]{0} copy(param_0_0.4)
+  param_1_0.4 = f64[1]{0} parameter(1)
+  copy.82 = f64[1]{0} copy(param_1_0.4)
+  param_2_0.1 = f64[1]{0} parameter(2)
+  copy.83 = f64[1]{0} copy(param_2_0.1)
+  copy.84 = f64[1]{0} copy(param_1_0.4)
+  param_3.114 = f64[1]{0} parameter(3)
+  copy.85 = f64[1]{0} copy(param_3.114)
+  ROOT tuple.77 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) tuple(copy.81, copy.82, copy.83, copy.84, copy.85)
+} // copy_horizontally_fused_computation.4
+
+copy_horizontally_fused_computation.5 {
+  param_0_0.5 = f64[1]{0} parameter(0)
+  copy.97 = f64[1]{0} copy(param_0_0.5)
+  param_1_0.5 = f64[1]{0} parameter(1)
+  copy.98 = f64[1]{0} copy(param_1_0.5)
+  param_2_0.2 = f64[1]{0} parameter(2)
+  copy.99 = f64[1]{0} copy(param_2_0.2)
+  param_3_0.1 = f64[1]{0} parameter(3)
+  copy.100 = f64[1]{0} copy(param_3_0.1)
+  param_4_0.1 = f64[1]{0} parameter(4)
+  copy.101 = f64[1]{0} copy(param_4_0.1)
+  param_5_0 = f64[1]{0} parameter(5)
+  copy.102 = f64[1]{0} copy(param_5_0)
+  param_6_0 = f64[1]{0} parameter(6)
+  copy.103 = f64[1]{0} copy(param_6_0)
+  param_7_0 = f64[1]{0} parameter(7)
+  copy.104 = f64[1]{0} copy(param_7_0)
+  param_8_0 = f64[1]{0} parameter(8)
+  copy.105 = f64[1]{0} copy(param_8_0)
+  param_9_0 = f64[1]{0} parameter(9)
+  copy.106 = f64[1]{0} copy(param_9_0)
+  param_10_0 = f64[1]{0} parameter(10)
+  copy.107 = f64[1]{0} copy(param_10_0)
+  ROOT tuple.78 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) tuple(copy.97, copy.98, copy.99, copy.100, copy.101, /*index=5*/copy.102, copy.103, copy.104, copy.105, copy.106, /*index=10*/copy.107)
+} // copy_horizontally_fused_computation.5
+
+copy_horizontally_fused_computation.7 {
+  param_0_0.7 = f64[1]{0} parameter(0)
+  copy.122 = f64[1]{0} copy(param_0_0.7)
+  param_1_0.7 = f64[1]{0} parameter(1)
+  copy.123 = f64[1]{0} copy(param_1_0.7)
+  param_2_0.3 = f64[1]{0} parameter(2)
+  copy.124 = f64[1]{0} copy(param_2_0.3)
+  param_3_0.2 = f64[1]{0} parameter(3)
+  copy.125 = f64[1]{0} copy(param_3_0.2)
+  param_4_0.2 = f64[1]{0} parameter(4)
+  copy.126 = f64[1]{0} copy(param_4_0.2)
+  param_5_0.1 = f64[1]{0} parameter(5)
+  copy.127 = f64[1]{0} copy(param_5_0.1)
+  param_6_0.1 = f64[1]{0} parameter(6)
+  copy.128 = f64[1]{0} copy(param_6_0.1)
+  param_7_0.1 = f64[1]{0} parameter(7)
+  copy.129 = f64[1]{0} copy(param_7_0.1)
+  param_8_0.1 = f64[1]{0} parameter(8)
+  copy.130 = f64[1]{0} copy(param_8_0.1)
+  param_9_0.1 = f64[1]{0} parameter(9)
+  copy.131 = f64[1]{0} copy(param_9_0.1)
+  ROOT tuple.80 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) tuple(copy.122, copy.123, copy.124, copy.125, copy.126, /*index=5*/copy.127, copy.128, copy.129, copy.130, copy.131)
+} // copy_horizontally_fused_computation.7
+
+wrapped_copy_computation.10 {
+  param_0.202 = f64[1]{0} parameter(0)
+  ROOT copy.148 = f64[1]{0} copy(param_0.202)
+}
+
+wrapped_copy_computation.11 {
+  param_0.203 = s64[1]{0} parameter(0)
+  ROOT copy.149 = s64[1]{0} copy(param_0.203)
+}
+
+fused_convert {
+  param_0.124 = s64[1]{0} parameter(0)
+  constant_41_1 = s64[1]{0} constant({0})
+  compare.32.1 = pred[1]{0} compare(param_0.124, constant_41_1), direction=NE, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=bool weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.804.1 = pred[] bitcast(compare.32.1)
+  ROOT convert.41.1 = s32[] convert(bitcast.804.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+}
+
+wrapped_copy_computation.9 {
+  param_0.201 = f64[1]{0} parameter(0)
+  ROOT copy.147 = f64[1]{0} copy(param_0.201)
+}
+
+wrapped_copy_computation.8 {
+  param_0.200 = f64[] parameter(0)
+  ROOT copy.146 = f64[] copy(param_0.200)
+}
+
+wrapped_copy_computation.7 {
+  param_0.199 = f64[] parameter(0)
+  ROOT copy.145 = f64[] copy(param_0.199)
+}
+
+wrapped_copy_computation.6 {
+  param_0.198 = f64[] parameter(0)
+  ROOT copy.144 = f64[] copy(param_0.198)
+}
+
+wrapped_copy_computation.5 {
+  param_0.197 = f64[1]{0} parameter(0)
+  ROOT copy.143 = f64[1]{0} copy(param_0.197)
+}
+
+wrapped_copy_computation.4 {
+  param_0.196 = f64[1]{0} parameter(0)
+  ROOT copy.142 = f64[1]{0} copy(param_0.196)
+}
+
+wrapped_copy_computation.3 {
+  param_0.195 = f64[] parameter(0)
+  ROOT copy.141 = f64[] copy(param_0.195)
+}
+
+wrapped_copy_computation.2 {
+  param_0.194 = f64[] parameter(0)
+  ROOT copy.140 = f64[] copy(param_0.194)
+}
+
+wrapped_copy_computation.1 {
+  param_0.193 = s64[] parameter(0)
+  ROOT copy.139 = s64[] copy(param_0.193)
+}
+
+fused_convert.1 {
+  param_0.121 = s64[] parameter(0)
+  constant_39_1 = s64[] constant(0)
+  compare.34.1 = pred[] compare(param_0.121, constant_39_1), direction=NE, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=bool weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT convert.43.1 = s32[] convert(compare.34.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+}
+
+wrapped_copy_computation {
+  param_0.192 = f64[] parameter(0)
+  ROOT copy.138 = f64[] copy(param_0.192)
+}
+
+copy_horizontally_fused_computation.1 {
+  param_0_0.1 = s64[1]{0} parameter(0)
+  copy.64 = s64[1]{0} copy(param_0_0.1)
+  param_1_0.1 = s64[1]{0} parameter(1)
+  copy.65 = s64[1]{0} copy(param_1_0.1)
+  ROOT tuple.74 = (s64[1]{0}, s64[1]{0}) tuple(copy.64, copy.65)
+}
+
+fused_divide.2 {
+  constant_77_4 = f64[] constant(1)
+  param_4.74 = f64[] parameter(4)
+  divide.82.1.clone.1 = f64[] divide(constant_77_4, param_4.74), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_3.112 = f64[1]{0} parameter(3)
+  bitcast.935.14 = f64[] bitcast(param_3.112)
+  param_0.147 = f64[] parameter(0)
+  param_2.149 = f64[1]{0} parameter(2)
+  bitcast.777.9 = f64[] bitcast(param_2.149)
+  param_1.198 = f64[] parameter(1)
+  multiply.192.9 = f64[] multiply(bitcast.777.9, param_1.198), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.79.7 = f64[] add(param_0.147, multiply.192.9), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  exponential.24.5 = f64[] exponential(add.79.7), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.193.3 = f64[] multiply(bitcast.935.14, exponential.24.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_79_4 = f64[] constant(1e-128)
+  compare.31.6 = pred[] compare(multiply.193.3, constant_79_4), direction=GT, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/gt" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  constant_81_2 = f64[] constant(nan)
+  select.22.6 = f64[] select(compare.31.6, multiply.193.3, constant_81_2), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/jit(_where)/select_n" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/env/pat_rl_simulator.py" source_line=92}
+  add.80.5 = f64[] add(divide.82.1.clone.1, select.22.6), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.83.1 = f64[] divide(constant_77_4, add.80.5), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.62 = (f64[], f64[]) tuple(divide.83.1, divide.82.1.clone.1)
+} // fused_divide.2
+
+copy_horizontally_fused_computation.6 {
+  param_0_0.6 = f64[1,1]{1,0} parameter(0)
+  copy.110 = f64[1,1]{1,0} copy(param_0_0.6)
+  param_1_0.6 = f64[1,1]{1,0} parameter(1)
+  copy.111 = f64[1,1]{1,0} copy(param_1_0.6)
+  ROOT tuple.79 = (f64[1,1]{1,0}, f64[1,1]{1,0}) tuple(copy.110, copy.111)
+}
+
+copy_horizontally_fused_computation {
+  param_0_0 = s64[] parameter(0)
+  copy.60 = s64[] copy(param_0_0)
+  param_1_0 = s64[] parameter(1)
+  copy.61 = s64[] copy(param_1_0)
+  ROOT tuple.73 = (s64[], s64[]) tuple(copy.60, copy.61)
+}
+
+copy_horizontally_fused_computation.3 {
+  param_0_0.3 = f64[] parameter(0)
+  copy.74 = f64[] copy(param_0_0.3)
+  param_1_0.3 = f64[] parameter(1)
+  copy.75 = f64[] copy(param_1_0.3)
+  ROOT tuple.76 = (f64[], f64[]) tuple(copy.74, copy.75)
+}
+
+copy_horizontally_fused_computation.8 {
+  param_0_0.8 = f64[1]{0} parameter(0)
+  copy.135 = f64[1]{0} copy(param_0_0.8)
+  param_1_0.8 = f64[1,1]{1,0} parameter(1)
+  copy.136 = f64[1,1]{1,0} copy(param_1_0.8)
+  reshape.99 = f64[1]{0} reshape(copy.136)
+  param_2_0.4 = f64[1,1]{1,0} parameter(2)
+  copy.137 = f64[1,1]{1,0} copy(param_2_0.4)
+  reshape.100 = f64[1]{0} reshape(copy.137)
+  concatenate = f64[3]{0} concatenate(copy.135, reshape.99, reshape.100), dimensions={0}
+  slice = f64[1]{0} slice(concatenate), slice={[0:1]}
+  slice.1 = f64[1]{0} slice(concatenate), slice={[1:2]}
+  slice.2 = f64[1]{0} slice(concatenate), slice={[2:3]}
+  ROOT tuple.81 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) tuple(slice, slice.1, slice.2)
+} // copy_horizontally_fused_computation.8
+
+fused_add_divide_multiply {
+  constant_77_2 = f64[] constant(1)
+  param_2.152 = f64[] parameter(2)
+  param_3.113 = f64[] parameter(3)
+  multiply.188.1.clone.1 = f64[] multiply(param_2.152, param_3.113), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  param_1.206 = f64[1]{0} parameter(1)
+  bitcast.935.8.clone.1 = f64[] bitcast(param_1.206)
+  param_0.151 = f64[] parameter(0)
+  multiply.189.3.clone.1 = f64[] multiply(bitcast.935.8.clone.1, param_0.151), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.77.1.clone.1 = f64[] add(multiply.188.1.clone.1, multiply.189.3.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_mean)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  negate.7.1.clone.1 = f64[] negate(add.77.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  exponential.23.1.clone.1 = f64[] exponential(negate.7.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/exp" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  add.78.1.clone.1 = f64[] add(exponential.23.1.clone.1, constant_77_2), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  divide.79.1.clone.1 = f64[] divide(constant_77_2, add.78.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  subtract.24.1 = f64[] subtract(constant_77_2, divide.79.1.clone.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/sub" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  multiply.190.1 = f64[] multiply(divide.79.1.clone.1, subtract.24.1), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.65 = (f64[], f64[], f64[]) tuple(multiply.190.1, divide.79.1.clone.1, add.77.1.clone.1)
+} // fused_add_divide_multiply
+
+command_buffer {
+  p = f64[1]{0} parameter(0)
+  p.1 = s64[1]{0} parameter(1)
+  p.2 = f64[1,1]{1,0} parameter(2)
+  p.3 = f64[1]{0} parameter(3)
+  p.4 = f64[] parameter(4)
+  p.5 = f64[] parameter(5)
+  p.6 = f64[] parameter(6)
+  p.7 = f64[] parameter(7)
+  p.8 = s64[] parameter(8)
+  p.9 = f64[] parameter(9)
+  p.10 = f64[1]{0} parameter(10)
+  p.11 = f64[1]{0} parameter(11)
+  p.12 = f64[] parameter(12)
+  p.13 = f64[] parameter(13)
+  p.14 = s64[] parameter(14)
+  p.15 = f64[] parameter(15)
+  p.16 = f64[1]{0} parameter(16)
+  p.17 = f64[] parameter(17)
+  p.18 = f64[] parameter(18)
+  p.19 = f64[] parameter(19)
+  p.20 = f64[] parameter(20)
+  wrapped_copy.10 = f64[1]{0} fusion(p), kind=kLoop, calls=wrapped_copy_computation.10
+  bitcast.935.0 = f64[] bitcast(p)
+  bitcast.820.0 = s64[] bitcast(p.1)
+  wrapped_copy.11 = s64[1]{0} fusion(p.1), kind=kLoop, calls=wrapped_copy_computation.11
+  loop_convert_fusion = s32[] fusion(p.1), kind=kLoop, calls=fused_convert, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.972.0 = f64[1]{0} bitcast(p.2)
+  bitcast.739.0 = f64[] bitcast(p.2)
+  wrapped_copy.9 = f64[1]{0} fusion(p.3), kind=kLoop, calls=wrapped_copy_computation.9
+  bitcast.1088.0 = f64[1,1]{1,0} bitcast(p.3)
+  bitcast.1084.0 = f64[1]{0} bitcast(p.4)
+  wrapped_copy.8 = f64[] fusion(p.4), kind=kLoop, calls=wrapped_copy_computation.8
+  wrapped_copy.7 = f64[] fusion(p.5), kind=kLoop, calls=wrapped_copy_computation.7
+  bitcast.1080.0 = f64[1]{0} bitcast(p.5)
+  bitcast.1076.0 = f64[1]{0} bitcast(p.6)
+  bitcast.1072.0 = f64[1]{0} bitcast(p.7)
+  bitcast.1056.0 = s64[1]{0} bitcast(p.8)
+  wrapped_copy.6 = f64[] fusion(p.9), kind=kLoop, calls=wrapped_copy_computation.6
+  bitcast.1040.0 = f64[1]{0} bitcast(p.9)
+  wrapped_copy.5 = f64[1]{0} fusion(p.10), kind=kLoop, calls=wrapped_copy_computation.5
+  bitcast.1036.0 = f64[1,1]{1,0} bitcast(p.10)
+  wrapped_copy.4 = f64[1]{0} fusion(p.11), kind=kLoop, calls=wrapped_copy_computation.4
+  bitcast.1032.0 = f64[1,1]{1,0} bitcast(p.11)
+  bitcast.1028.0 = f64[1]{0} bitcast(p.12)
+  wrapped_copy.3 = f64[] fusion(p.12), kind=kLoop, calls=wrapped_copy_computation.3
+  wrapped_copy.2 = f64[] fusion(p.13), kind=kLoop, calls=wrapped_copy_computation.2
+  bitcast.1024.0 = f64[1]{0} bitcast(p.13)
+  wrapped_copy.1 = s64[] fusion(p.14), kind=kLoop, calls=wrapped_copy_computation.1
+  bitcast.1000.0 = s64[1]{0} bitcast(p.14)
+  loop_convert_fusion.1 = s32[] fusion(p.14), kind=kLoop, calls=fused_convert.1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/convert_element_type[new_dtype=int32 weak_type=False sharding=None]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  wrapped_copy = f64[] fusion(p.15), kind=kLoop, calls=wrapped_copy_computation
+  bitcast.984.0 = f64[1]{0} bitcast(p.15)
+  bitcast.980.0 = f64[1,1]{1,0} bitcast(p.16)
+  tuple.52.0 = (f64[], f64[], f64[]) tuple(bitcast.935.0, p.17, p.4), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  copy_fusion.1 = (s64[1]{0}, s64[1]{0}) fusion(bitcast.1000.0, bitcast.1056.0), kind=kLoop, calls=copy_horizontally_fused_computation.1
+  get-tuple-element.214 = s64[1]{0} get-tuple-element(copy_fusion.1), index=1
+  get-tuple-element.213 = s64[1]{0} get-tuple-element(copy_fusion.1), index=0
+  loop_divide_fusion.2 = (f64[], f64[]) fusion(p.12, p.18, p.10, p, p.19), kind=kLoop, calls=fused_divide.2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.144 = f64[] get-tuple-element(loop_divide_fusion.2), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1008.0 = f64[1]{0} bitcast(get-tuple-element.144)
+  get-tuple-element.140 = f64[] get-tuple-element(loop_divide_fusion.2), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/div" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.992.0 = f64[1]{0} bitcast(get-tuple-element.140)
+  copy_fusion.6 = (f64[1,1]{1,0}, f64[1,1]{1,0}) fusion(bitcast.1032.0, bitcast.1036.0), kind=kLoop, calls=copy_horizontally_fused_computation.6
+  get-tuple-element.237 = f64[1,1]{1,0} get-tuple-element(copy_fusion.6), index=1
+  bitcast.1187 = f64[1,1]{1,0} bitcast(get-tuple-element.237)
+  get-tuple-element.236 = f64[1,1]{1,0} get-tuple-element(copy_fusion.6), index=0
+  bitcast.1186 = f64[1,1]{1,0} bitcast(get-tuple-element.236)
+  copy_fusion = (s64[], s64[]) fusion(bitcast.820.0, p.8), kind=kLoop, calls=copy_horizontally_fused_computation
+  get-tuple-element.212 = s64[] get-tuple-element(copy_fusion), index=1
+  bitcast.1180 = s64[] bitcast(get-tuple-element.212)
+  get-tuple-element.211 = s64[] get-tuple-element(copy_fusion), index=0
+  bitcast.1179 = s64[] bitcast(get-tuple-element.211)
+  copy_fusion.3 = (f64[], f64[]) fusion(p.7, p.6), kind=kLoop, calls=copy_horizontally_fused_computation.3
+  get-tuple-element.219 = f64[] get-tuple-element(copy_fusion.3), index=1
+  bitcast.1185 = f64[] bitcast(get-tuple-element.219)
+  get-tuple-element.218 = f64[] get-tuple-element(copy_fusion.3), index=0
+  bitcast.1184 = f64[] bitcast(get-tuple-element.218)
+  tuple.50.0 = (f64[], f64[], f64[], f64[1]{0}, f64[]) tuple(bitcast.935.0, p.19, p.12, p.10, p.18), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  copy_fusion.8 = (f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(p.16, bitcast.980.0, bitcast.1088.0), kind=kInput, calls=copy_horizontally_fused_computation.8
+  get-tuple-element.250 = f64[1]{0} get-tuple-element(copy_fusion.8), index=2
+  bitcast.1189 = f64[1,1]{1,0} bitcast(get-tuple-element.250)
+  get-tuple-element.249 = f64[1]{0} get-tuple-element(copy_fusion.8), index=1
+  bitcast.1188 = f64[1,1]{1,0} bitcast(get-tuple-element.249)
+  get-tuple-element.248 = f64[1]{0} get-tuple-element(copy_fusion.8), index=0
+  loop_add_divide_multiply_fusion = (f64[], f64[], f64[]) fusion(p.13, p, p.15, p.20), kind=kLoop, calls=fused_add_divide_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  ROOT tuple.82 = (f64[1]{0}, f64[], s64[], s64[1]{0}, s32[], /*index=5*/f64[1]{0}, f64[], f64[1]{0}, f64[1]{0}, f64[], /*index=10*/f64[], f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=15*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=20*/f64[], f64[1]{0}, s64[], s32[], f64[], /*index=25*/f64[1]{0}, (f64[], f64[], f64[]), s64[1]{0}, s64[1]{0}, f64[], /*index=30*/f64[1]{0}, f64[], f64[1]{0}, f64[1,1]{1,0}, f64[1,1]{1,0}, /*index=35*/s64[], s64[], f64[], f64[], (f64[], f64[], f64[], f64[1]{0}, f64[]), /*index=40*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, (f64[], f64[], f64[])) tuple(wrapped_copy.10, bitcast.935.0, bitcast.820.0, wrapped_copy.11, loop_convert_fusion, /*index=5*/bitcast.972.0, bitcast.739.0, wrapped_copy.9, bitcast.1084.0, wrapped_copy.8, /*index=10*/wrapped_copy.7, bitcast.1080.0, bitcast.1076.0, bitcast.1072.0, wrapped_copy.6, /*index=15*/bitcast.1040.0, wrapped_copy.5, wrapped_copy.4, bitcast.1028.0, wrapped_copy.3, /*index=20*/wrapped_copy.2, bitcast.1024.0, wrapped_copy.1, loop_convert_fusion.1, wrapped_copy, /*index=25*/bitcast.984.0, tuple.52.0, get-tuple-element.214, get-tuple-element.213, get-tuple-element.144, /*index=30*/bitcast.1008.0, get-tuple-element.140, bitcast.992.0, bitcast.1187, bitcast.1186, /*index=35*/bitcast.1180, bitcast.1179, bitcast.1185, bitcast.1184, tuple.50.0, /*index=40*/bitcast.1189, bitcast.1188, get-tuple-element.248, loop_add_divide_multiply_fusion)
+} // command_buffer
+
+ENTRY main.1009 {
+  Arg_37.38.0 = f64[1]{0} parameter(37), metadata={op_name="args[37]"}
+  Arg_36.37.0 = s64[1]{0} parameter(36), metadata={op_name="args[36]"}
+  Arg_35.36.0 = f64[1,1]{1,0} parameter(35), metadata={op_name="args[35]"}
+  Arg_34.35.0 = f64[1]{0} parameter(34), metadata={op_name="args[34]"}
+  Arg_33.34.0 = f64[] parameter(33), metadata={op_name="args[33]"}
+  Arg_32.33.0 = f64[] parameter(32), metadata={op_name="args[32]"}
+  Arg_31.32.0 = f64[] parameter(31), metadata={op_name="args[31]"}
+  Arg_30.31.0 = f64[] parameter(30), metadata={op_name="args[30]"}
+  Arg_29.30.0 = f64[] parameter(29), metadata={op_name="args[29]"}
+  Arg_28.29.0 = f64[] parameter(28), metadata={op_name="args[28]"}
+  Arg_27.28.0 = f64[] parameter(27), metadata={op_name="args[27]"}
+  Arg_26.27.0 = s64[] parameter(26), metadata={op_name="args[26]"}
+  Arg_25.26.0 = f64[] parameter(25), metadata={op_name="args[25]"}
+  Arg_24.25.0 = f64[] parameter(24), metadata={op_name="args[24]"}
+  Arg_23.24.0 = f64[] parameter(23), metadata={op_name="args[23]"}
+  Arg_22.23.0 = f64[] parameter(22), metadata={op_name="args[22]"}
+  Arg_21.22.0 = f64[1]{0} parameter(21), metadata={op_name="args[21]"}
+  Arg_20.21.0 = f64[1]{0} parameter(20), metadata={op_name="args[20]"}
+  Arg_19.20.0 = f64[] parameter(19), metadata={op_name="args[19]"}
+  Arg_18.19.0 = f64[] parameter(18), metadata={op_name="args[18]"}
+  Arg_17.18.0 = f64[] parameter(17), metadata={op_name="args[17]"}
+  Arg_16.17.0 = f64[] parameter(16), metadata={op_name="args[16]"}
+  Arg_15.16.0 = f64[] parameter(15), metadata={op_name="args[15]"}
+  Arg_14.15.0 = f64[] parameter(14), metadata={op_name="args[14]"}
+  Arg_13.14.0 = f64[] parameter(13), metadata={op_name="args[13]"}
+  Arg_12.13.0 = s64[] parameter(12), metadata={op_name="args[12]"}
+  Arg_11.12.0 = f64[] parameter(11), metadata={op_name="args[11]"}
+  Arg_10.11.0 = f64[] parameter(10), metadata={op_name="args[10]"}
+  Arg_9.10.0 = f64[] parameter(9), metadata={op_name="args[9]"}
+  Arg_8.9.0 = f64[] parameter(8), metadata={op_name="args[8]"}
+  Arg_7.8.0 = f64[1]{0} parameter(7), metadata={op_name="args[7]"}
+  Arg_6.7.0 = f64[] parameter(6), metadata={op_name="args[6]"}
+  Arg_5.6.0 = f64[] parameter(5), metadata={op_name="args[5]"}
+  Arg_4.5.0 = s64[] parameter(4), metadata={op_name="args[4]"}
+  Arg_3.4.0 = f64[] parameter(3), metadata={op_name="args[3]"}
+  Arg_2.3.0 = f64[] parameter(2), metadata={op_name="args[2]"}
+  Arg_1.2.0 = f64[] parameter(1), metadata={op_name="args[1]"}
+  Arg_0.1.0 = f64[] parameter(0), metadata={op_name="args[0]"}
+  call.1 = (f64[1]{0}, f64[], s64[], s64[1]{0}, s32[], /*index=5*/f64[1]{0}, f64[], f64[1]{0}, f64[1]{0}, f64[], /*index=10*/f64[], f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=15*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[], /*index=20*/f64[], f64[1]{0}, s64[], s32[], f64[], /*index=25*/f64[1]{0}, (f64[], f64[], f64[]), s64[1]{0}, s64[1]{0}, f64[], /*index=30*/f64[1]{0}, f64[], f64[1]{0}, f64[1,1]{1,0}, f64[1,1]{1,0}, /*index=35*/s64[], s64[], f64[], f64[], (f64[], f64[], f64[], f64[1]{0}, f64[]), /*index=40*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, (f64[], f64[], f64[])) call(Arg_37.38.0, Arg_36.37.0, Arg_35.36.0, Arg_34.35.0, Arg_33.34.0, /*index=5*/Arg_32.33.0, Arg_31.32.0, Arg_30.31.0, Arg_26.27.0, Arg_22.23.0, /*index=10*/Arg_21.22.0, Arg_20.21.0, Arg_19.20.0, Arg_18.19.0, Arg_12.13.0, /*index=15*/Arg_8.9.0, Arg_7.8.0, Arg_27.28.0, Arg_25.26.0, Arg_13.14.0, /*index=20*/Arg_11.12.0), to_apply=command_buffer
+  get-tuple-element.264 = f64[1]{0} get-tuple-element(call.1), index=0
+  get-tuple-element.265 = f64[] get-tuple-element(call.1), index=1
+  get-tuple-element.266 = s64[] get-tuple-element(call.1), index=2
+  get-tuple-element.267 = s64[1]{0} get-tuple-element(call.1), index=3
+  get-tuple-element.268 = s32[] get-tuple-element(call.1), index=4
+  get-tuple-element.269 = f64[1]{0} get-tuple-element(call.1), index=5
+  get-tuple-element.270 = f64[] get-tuple-element(call.1), index=6
+  get-tuple-element.271 = f64[1]{0} get-tuple-element(call.1), index=7
+  get-tuple-element.272 = f64[1]{0} get-tuple-element(call.1), index=8
+  get-tuple-element.273 = f64[] get-tuple-element(call.1), index=9
+  get-tuple-element.274 = f64[] get-tuple-element(call.1), index=10
+  get-tuple-element.275 = f64[1]{0} get-tuple-element(call.1), index=11
+  get-tuple-element.276 = f64[1]{0} get-tuple-element(call.1), index=12
+  get-tuple-element.277 = f64[1]{0} get-tuple-element(call.1), index=13
+  get-tuple-element.278 = f64[] get-tuple-element(call.1), index=14
+  get-tuple-element.279 = f64[1]{0} get-tuple-element(call.1), index=15
+  get-tuple-element.280 = f64[1]{0} get-tuple-element(call.1), index=16
+  get-tuple-element.281 = f64[1]{0} get-tuple-element(call.1), index=17
+  get-tuple-element.282 = f64[1]{0} get-tuple-element(call.1), index=18
+  get-tuple-element.283 = f64[] get-tuple-element(call.1), index=19
+  get-tuple-element.284 = f64[] get-tuple-element(call.1), index=20
+  get-tuple-element.285 = f64[1]{0} get-tuple-element(call.1), index=21
+  get-tuple-element.286 = s64[] get-tuple-element(call.1), index=22
+  get-tuple-element.287 = s32[] get-tuple-element(call.1), index=23
+  get-tuple-element.288 = f64[] get-tuple-element(call.1), index=24
+  get-tuple-element.289 = f64[1]{0} get-tuple-element(call.1), index=25
+  get-tuple-element.290 = (f64[], f64[], f64[]) get-tuple-element(call.1), index=26
+  get-tuple-element.291 = s64[1]{0} get-tuple-element(call.1), index=27
+  get-tuple-element.292 = s64[1]{0} get-tuple-element(call.1), index=28
+  get-tuple-element.293 = f64[] get-tuple-element(call.1), index=29
+  get-tuple-element.294 = f64[1]{0} get-tuple-element(call.1), index=30
+  get-tuple-element.295 = f64[] get-tuple-element(call.1), index=31
+  get-tuple-element.296 = f64[1]{0} get-tuple-element(call.1), index=32
+  get-tuple-element.297 = f64[1,1]{1,0} get-tuple-element(call.1), index=33
+  get-tuple-element.298 = f64[1,1]{1,0} get-tuple-element(call.1), index=34
+  get-tuple-element.299 = s64[] get-tuple-element(call.1), index=35
+  get-tuple-element.300 = s64[] get-tuple-element(call.1), index=36
+  get-tuple-element.301 = f64[] get-tuple-element(call.1), index=37
+  get-tuple-element.302 = f64[] get-tuple-element(call.1), index=38
+  get-tuple-element.303 = (f64[], f64[], f64[], f64[1]{0}, f64[]) get-tuple-element(call.1), index=39
+  get-tuple-element.304 = f64[1,1]{1,0} get-tuple-element(call.1), index=40
+  get-tuple-element.305 = f64[1,1]{1,0} get-tuple-element(call.1), index=41
+  get-tuple-element.306 = f64[1]{0} get-tuple-element(call.1), index=42
+  get-tuple-element.307 = (f64[], f64[], f64[]) get-tuple-element(call.1), index=43
+  get-tuple-element.139 = f64[] get-tuple-element(get-tuple-element.307), index=2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.988.0 = f64[1]{0} bitcast(get-tuple-element.139)
+  get-tuple-element.129 = f64[] get-tuple-element(get-tuple-element.307), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.964.0 = f64[1]{0} bitcast(get-tuple-element.129)
+  get-tuple-element.133 = f64[] get-tuple-element(get-tuple-element.307), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(binary_state_node_prediction)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.968.0 = f64[1]{0} bitcast(get-tuple-element.133)
+  tuple.51.0 = (f64[], s64[], f64[], f64[1]{0}) tuple(get-tuple-element.133, get-tuple-element.266, get-tuple-element.295, Arg_20.21.0), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  conditional.6.clone.1.0 = (f64[]) conditional(get-tuple-element.268, get-tuple-element.303, tuple.51.0), branch_computations={region_2.175, region_3.205}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.143 = f64[] get-tuple-element(conditional.6.clone.1.0), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1004.0 = f64[1]{0} bitcast(get-tuple-element.143)
+  copy_fusion.2 = (f64[], f64[], f64[]) fusion(get-tuple-element.265, get-tuple-element.270, get-tuple-element.133), kind=kLoop, calls=copy_horizontally_fused_computation.2
+  get-tuple-element.217 = f64[] get-tuple-element(copy_fusion.2), index=2
+  bitcast.1183 = f64[] bitcast(get-tuple-element.217)
+  get-tuple-element.216 = f64[] get-tuple-element(copy_fusion.2), index=1
+  bitcast.1182 = f64[] bitcast(get-tuple-element.216)
+  get-tuple-element.215 = f64[] get-tuple-element(copy_fusion.2), index=0
+  bitcast.1181 = f64[] bitcast(get-tuple-element.215)
+  loop_add_divide_multiply_subtract_fusion = (f64[], f64[], f64[], f64[], f64[], /*index=5*/f64[], f64[], f64[], f64[]) fusion(Arg_34.35.0, Arg_12.13.0, Arg_33.34.0, Arg_37.38.0, Arg_27.28.0, /*index=5*/Arg_32.33.0, Arg_22.23.0, Arg_25.26.0, get-tuple-element.295, get-tuple-element.143, /*index=10*/get-tuple-element.293, Arg_19.20.0, Arg_21.22.0, get-tuple-element.139, Arg_36.37.0, /*index=15*/get-tuple-element.133, Arg_20.21.0, get-tuple-element.129, Arg_35.36.0), kind=kLoop, calls=fused_add_divide_multiply_subtract, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.136 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=8, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.976.0 = f64[1]{0} bitcast(get-tuple-element.136)
+  get-tuple-element.141 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=7, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.996.0 = f64[1]{0} bitcast(get-tuple-element.141)
+  get-tuple-element.145 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=6, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1012.0 = f64[1]{0} bitcast(get-tuple-element.145)
+  get-tuple-element.146 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=5, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1016.0 = f64[1]{0} bitcast(get-tuple-element.146)
+  get-tuple-element.147 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=4, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1020.0 = f64[1]{0} bitcast(get-tuple-element.147)
+  get-tuple-element.153 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=3, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1044.0 = f64[1]{0} bitcast(get-tuple-element.153)
+  get-tuple-element.158 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=2, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1064.0 = f64[1]{0} bitcast(get-tuple-element.158)
+  get-tuple-element.154 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=1, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1048.0 = f64[1]{0} bitcast(get-tuple-element.154)
+  get-tuple-element.155 = f64[] get-tuple-element(loop_add_divide_multiply_subtract_fusion), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_mean_continuous_node)/add" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1052.0 = f64[1]{0} bitcast(get-tuple-element.155)
+  loop_multiply_fusion = (f64[], f64[1]{0}) fusion(get-tuple-element.154, Arg_33.34.0, Arg_37.38.0), kind=kLoop, calls=fused_multiply, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_prediction)/jit(predict_precision)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.205 = f64[] get-tuple-element(loop_multiply_fusion), index=0
+  get-tuple-element.206 = f64[1]{0} get-tuple-element(loop_multiply_fusion), index=1
+  tuple.53.0 = (s64[], f64[], f64[], f64[], f64[1]{0}) tuple(Arg_12.13.0, get-tuple-element.145, get-tuple-element.147, get-tuple-element.154, Arg_34.35.0), metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  conditional.7.clone.1.0 = (f64[]) conditional(get-tuple-element.287, get-tuple-element.290, tuple.53.0), branch_computations={region_5.315, region_6.353}, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  get-tuple-element.157 = f64[] get-tuple-element(conditional.7.clone.1.0), index=0, metadata={op_name="jit(scan)/jit(main)/while/body/jit(beliefs_propagation)/jit(continuous_node_posterior_update_ehgf)/jit(posterior_update_precision_continuous_node)/cond" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=160}
+  bitcast.1060.0 = f64[1]{0} bitcast(get-tuple-element.157)
+  copy_fusion.4 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(bitcast.964.0, bitcast.968.0, get-tuple-element.269, bitcast.976.0), kind=kLoop, calls=copy_horizontally_fused_computation.4
+  get-tuple-element.224 = f64[1]{0} get-tuple-element(copy_fusion.4), index=4
+  get-tuple-element.223 = f64[1]{0} get-tuple-element(copy_fusion.4), index=3
+  get-tuple-element.222 = f64[1]{0} get-tuple-element(copy_fusion.4), index=2
+  get-tuple-element.221 = f64[1]{0} get-tuple-element(copy_fusion.4), index=1
+  get-tuple-element.220 = f64[1]{0} get-tuple-element(copy_fusion.4), index=0
+  copy_fusion.7 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}) fusion(get-tuple-element.279, bitcast.1044.0, bitcast.1048.0, bitcast.1052.0, bitcast.1060.0, /*index=5*/bitcast.1064.0, get-tuple-element.277, get-tuple-element.276, get-tuple-element.275, get-tuple-element.272), kind=kLoop, calls=copy_horizontally_fused_computation.7
+  get-tuple-element.247 = f64[1]{0} get-tuple-element(copy_fusion.7), index=9
+  get-tuple-element.246 = f64[1]{0} get-tuple-element(copy_fusion.7), index=8
+  get-tuple-element.245 = f64[1]{0} get-tuple-element(copy_fusion.7), index=7
+  get-tuple-element.244 = f64[1]{0} get-tuple-element(copy_fusion.7), index=6
+  get-tuple-element.243 = f64[1]{0} get-tuple-element(copy_fusion.7), index=5
+  get-tuple-element.242 = f64[1]{0} get-tuple-element(copy_fusion.7), index=4
+  get-tuple-element.241 = f64[1]{0} get-tuple-element(copy_fusion.7), index=3
+  get-tuple-element.240 = f64[1]{0} get-tuple-element(copy_fusion.7), index=2
+  get-tuple-element.239 = f64[1]{0} get-tuple-element(copy_fusion.7), index=1
+  get-tuple-element.238 = f64[1]{0} get-tuple-element(copy_fusion.7), index=0
+  copy_fusion.5 = (f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=5*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=10*/f64[1]{0}) fusion(get-tuple-element.289, bitcast.988.0, get-tuple-element.296, bitcast.996.0, bitcast.1004.0, /*index=5*/get-tuple-element.294, bitcast.1012.0, bitcast.1016.0, bitcast.1020.0, get-tuple-element.285, /*index=10*/get-tuple-element.282), kind=kLoop, calls=copy_horizontally_fused_computation.5
+  get-tuple-element.235 = f64[1]{0} get-tuple-element(copy_fusion.5), index=10
+  get-tuple-element.234 = f64[1]{0} get-tuple-element(copy_fusion.5), index=9
+  get-tuple-element.233 = f64[1]{0} get-tuple-element(copy_fusion.5), index=8
+  get-tuple-element.232 = f64[1]{0} get-tuple-element(copy_fusion.5), index=7
+  get-tuple-element.231 = f64[1]{0} get-tuple-element(copy_fusion.5), index=6
+  get-tuple-element.230 = f64[1]{0} get-tuple-element(copy_fusion.5), index=5
+  get-tuple-element.229 = f64[1]{0} get-tuple-element(copy_fusion.5), index=4
+  get-tuple-element.228 = f64[1]{0} get-tuple-element(copy_fusion.5), index=3
+  get-tuple-element.227 = f64[1]{0} get-tuple-element(copy_fusion.5), index=2
+  get-tuple-element.226 = f64[1]{0} get-tuple-element(copy_fusion.5), index=1
+  get-tuple-element.225 = f64[1]{0} get-tuple-element(copy_fusion.5), index=0
+  ROOT tuple.70 = (f64[], f64[], f64[], f64[], s64[], /*index=5*/f64[], f64[], f64[1]{0}, f64[], f64[], /*index=10*/f64[], f64[], s64[], f64[], f64[], /*index=15*/f64[], f64[], f64[], f64[], f64[], /*index=20*/f64[1]{0}, f64[1]{0}, f64[], f64[], f64[], /*index=25*/f64[], s64[], f64[], f64[], f64[], /*index=30*/f64[], f64[], f64[], f64[], f64[1]{0}, /*index=35*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, s64[1]{0}, /*index=40*/f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, /*index=45*/f64[1]{0}, f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=50*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=55*/f64[1,1]{1,0}, f64[1,1]{1,0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=60*/f64[1]{0}, s64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, /*index=65*/f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1]{0}, f64[1,1]{1,0}) tuple(bitcast.1181, get-tuple-element.129, get-tuple-element.133, bitcast.1182, get-tuple-element.300, /*index=5*/bitcast.1183, get-tuple-element.136, get-tuple-element.306, get-tuple-element.288, get-tuple-element.139, /*index=10*/get-tuple-element.295, get-tuple-element.141, get-tuple-element.286, get-tuple-element.143, get-tuple-element.293, /*index=15*/get-tuple-element.145, get-tuple-element.146, get-tuple-element.147, get-tuple-element.284, get-tuple-element.283, /*index=20*/get-tuple-element.281, get-tuple-element.280, get-tuple-element.278, get-tuple-element.153, get-tuple-element.154, /*index=25*/get-tuple-element.155, get-tuple-element.299, get-tuple-element.157, get-tuple-element.158, get-tuple-element.205, /*index=30*/get-tuple-element.302, get-tuple-element.301, get-tuple-element.274, get-tuple-element.273, get-tuple-element.271, /*index=35*/get-tuple-element.264, get-tuple-element.220, get-tuple-element.221, get-tuple-element.222, get-tuple-element.267, /*index=40*/get-tuple-element.223, get-tuple-element.224, get-tuple-element.305, get-tuple-element.225, get-tuple-element.226, /*index=45*/get-tuple-element.227, get-tuple-element.228, get-tuple-element.292, get-tuple-element.229, get-tuple-element.230, /*index=50*/get-tuple-element.231, get-tuple-element.232, get-tuple-element.233, get-tuple-element.234, get-tuple-element.235, /*index=55*/get-tuple-element.298, get-tuple-element.297, get-tuple-element.238, get-tuple-element.239, get-tuple-element.240, /*index=60*/get-tuple-element.241, get-tuple-element.291, get-tuple-element.242, get-tuple-element.243, get-tuple-element.206, /*index=65*/get-tuple-element.244, get-tuple-element.245, get-tuple-element.246, get-tuple-element.247, get-tuple-element.304)
+} // main.1009
+
