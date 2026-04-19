@@ -14,11 +14,12 @@ likelihood vmap-summed — see research Q3); Phase 19/20 computes the dense
 representation for simplicity. Block-structured ``jax.vmap(jax.hessian(
 per_subject_logp))`` is a Phase 20+ optimization for cohorts >200.
 
-Supported response models (Plan 20-02)
----------------------------------------
+Supported response models (Plans 20-02 and 20-03)
+---------------------------------------------------
 * ``model_a``: omega_2, log_beta, b
 * ``model_b``: omega_2, log_beta, b, gamma
 * ``model_c``: omega_2, log_beta, b, gamma, alpha
+* ``model_d``: omega_2, log_beta, b, lam  (trial-varying tonic volatility)
 
 3-level variants add: omega_3, kappa, mu3_0 (between log_beta and b).
 
@@ -49,9 +50,11 @@ from prl_hgf.fitting.laplace_idata import (
     _PARAM_ORDER_2LEVEL,
     _PARAM_ORDER_2LEVEL_B,
     _PARAM_ORDER_2LEVEL_C,
+    _PARAM_ORDER_2LEVEL_D,
     _PARAM_ORDER_3LEVEL,
     _PARAM_ORDER_3LEVEL_B,
     _PARAM_ORDER_3LEVEL_C,
+    _PARAM_ORDER_3LEVEL_D,
     build_idata_from_laplace,
 )
 
@@ -142,8 +145,9 @@ def fit_vb_laplace_patrl(
     model_name : str
         ``'hgf_2level_patrl'`` or ``'hgf_3level_patrl'``.
     response_model : str, default 'model_a'
-        Only ``'model_a'`` is supported in Phase 19. Other values raise
-        NotImplementedError (Phase 20+ scope).
+        One of ``'model_a'``, ``'model_b'``, ``'model_c'``, ``'model_d'``.
+        Model D adds a ``lam`` parameter for trial-varying tonic volatility
+        ``omega_eff(t) = omega_2 + lam * dHR(t)`` (Plan 20-03).
     config : PATRLConfig, optional
         Analysis config. Defaults to ``load_pat_rl_config()``.
     n_pseudo_draws : int, default 1000
@@ -175,7 +179,7 @@ def fit_vb_laplace_patrl(
     Raises
     ------
     NotImplementedError
-        If ``response_model != 'model_a'``.
+        If ``response_model`` is not one of the four supported values.
     ValueError
         If ``model_name`` is not a recognised PAT-RL variant.
     RuntimeError
@@ -185,10 +189,10 @@ def fit_vb_laplace_patrl(
     # ------------------------------------------------------------------
     # 1. Validate inputs
     # ------------------------------------------------------------------
-    if response_model not in ("model_a", "model_b", "model_c"):
+    if response_model not in ("model_a", "model_b", "model_c", "model_d"):
         raise NotImplementedError(
             f"response_model={response_model!r}: supported are "
-            f"'model_a', 'model_b', 'model_c'. 'model_d' lands in Plan 20-03."
+            f"'model_a', 'model_b', 'model_c', 'model_d'."
         )
     if model_name not in ("hgf_2level_patrl", "hgf_3level_patrl"):
         raise ValueError(
@@ -227,12 +231,15 @@ def fit_vb_laplace_patrl(
     # 3. Determine parameter order + initial position at prior means
     # ------------------------------------------------------------------
     # Select canonical parameter order based on (model_name, response_model).
-    # Order: omega_2, log_beta [, omega_3, kappa, mu3_0 if 3-level], b [, gamma if B/C] [, alpha if C]
+    # Order: omega_2, log_beta [, omega_3, kappa, mu3_0 if 3-level],
+    #        b [, gamma if B/C] [, alpha if C] [, lam if D]
     if model_name == "hgf_2level_patrl":
         if response_model == "model_c":
             param_order = _PARAM_ORDER_2LEVEL_C
         elif response_model == "model_b":
             param_order = _PARAM_ORDER_2LEVEL_B
+        elif response_model == "model_d":
+            param_order = _PARAM_ORDER_2LEVEL_D
         else:
             param_order = _PARAM_ORDER_2LEVEL
     else:  # hgf_3level_patrl
@@ -240,6 +247,8 @@ def fit_vb_laplace_patrl(
             param_order = _PARAM_ORDER_3LEVEL_C
         elif response_model == "model_b":
             param_order = _PARAM_ORDER_3LEVEL_B
+        elif response_model == "model_d":
+            param_order = _PARAM_ORDER_3LEVEL_D
         else:
             param_order = _PARAM_ORDER_3LEVEL
 
@@ -272,6 +281,8 @@ def fit_vb_laplace_patrl(
         init_arrays["gamma"] = jnp.full((P,), prior.gamma.mean)
     if response_model == "model_c":
         init_arrays["alpha"] = jnp.full((P,), prior.alpha.mean)
+    if response_model == "model_d":
+        init_arrays["lam"] = jnp.full((P,), prior.lam.mean)
 
     # Build init_position dict preserving param_order (dict-insertion order
     # MUST match ravel_pytree expectation — research Q10).

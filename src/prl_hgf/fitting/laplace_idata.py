@@ -26,14 +26,26 @@ from typing import Any, cast
 import arviz as az
 import numpy as np
 
-__all__ = ["build_idata_from_laplace"]
+__all__ = [
+    "build_idata_from_laplace",
+    "_PARAM_ORDER_2LEVEL",
+    "_PARAM_ORDER_3LEVEL",
+    "_PARAM_ORDER_2LEVEL_B",
+    "_PARAM_ORDER_2LEVEL_C",
+    "_PARAM_ORDER_3LEVEL_B",
+    "_PARAM_ORDER_3LEVEL_C",
+    "_PARAM_ORDER_2LEVEL_D",
+    "_PARAM_ORDER_3LEVEL_D",
+    "_VALID_PARAM_ORDERS",
+]
 
 # ---------------------------------------------------------------------------
 # Canonical parameter orders (module-level constants)
 # ---------------------------------------------------------------------------
 
-# Phase 19 (Model A only)
-_PARAM_ORDER_2LEVEL: tuple[str, ...] = ("omega_2", "log_beta")
+# Phase 19 / Plan 20-02 (Model A): b is always sampled (logdensity_fn always
+# accesses params["b"] — confirmed in hierarchical_patrl.py line ~933).
+_PARAM_ORDER_2LEVEL: tuple[str, ...] = ("omega_2", "log_beta", "b")
 _PARAM_ORDER_3LEVEL: tuple[str, ...] = (
     "omega_2",
     "log_beta",
@@ -73,6 +85,20 @@ _PARAM_ORDER_3LEVEL_C: tuple[str, ...] = (
     "alpha",
 )
 
+# Plan 20-03 (Model D): trial-varying tonic volatility via lam * dHR(t).
+# lam follows b (last parameter; convention mirrors Models B/C where the
+# new ΔHR coupling coefficient comes after the shared bias b).
+_PARAM_ORDER_2LEVEL_D: tuple[str, ...] = ("omega_2", "log_beta", "b", "lam")
+_PARAM_ORDER_3LEVEL_D: tuple[str, ...] = (
+    "omega_2",
+    "log_beta",
+    "omega_3",
+    "kappa",
+    "mu3_0",
+    "b",
+    "lam",
+)
+
 _VALID_PARAM_ORDERS: tuple[tuple[str, ...], ...] = (
     _PARAM_ORDER_2LEVEL,
     _PARAM_ORDER_3LEVEL,
@@ -80,6 +106,8 @@ _VALID_PARAM_ORDERS: tuple[tuple[str, ...], ...] = (
     _PARAM_ORDER_2LEVEL_C,
     _PARAM_ORDER_3LEVEL_B,
     _PARAM_ORDER_3LEVEL_C,
+    _PARAM_ORDER_2LEVEL_D,
+    _PARAM_ORDER_3LEVEL_D,
 )
 
 
@@ -111,8 +139,11 @@ def build_idata_from_laplace(
         ``param_names`` in insertion order: columns
         ``[i*P : (i+1)*P]`` belong to ``param_names[i]``.
     param_names : tuple[str, ...]
-        Canonical parameter order.  Must be ``_PARAM_ORDER_2LEVEL`` or
-        ``_PARAM_ORDER_3LEVEL``.
+        Canonical parameter order.  Must be one of:
+        ``_PARAM_ORDER_2LEVEL``, ``_PARAM_ORDER_3LEVEL``,
+        ``_PARAM_ORDER_2LEVEL_B``, ``_PARAM_ORDER_3LEVEL_B``,
+        ``_PARAM_ORDER_2LEVEL_C``, ``_PARAM_ORDER_3LEVEL_C``,
+        ``_PARAM_ORDER_2LEVEL_D``, ``_PARAM_ORDER_3LEVEL_D``.
     participant_ids : list[str]
         Participant identifiers, length P.
     n_pseudo_draws : int, default 1000
