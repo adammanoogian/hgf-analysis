@@ -1,0 +1,5 @@
+contrast_type,param,hi,lo,d,n_hi,n_lo
+factorial,omega_2,ANXIETY_HIGH,ANXIETY_LOW,1.628977041345219,80,80
+factorial,beta,REWARD_HIGH,REWARD_LOW,2.3353086922860653,80,80
+pairwise,omega_2,high_anxiety,healthy,1.701106019114546,40,40
+pairwise,beta,reward_susceptible,healthy,2.209852059383947,40,40

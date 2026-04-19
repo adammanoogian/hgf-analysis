@@ -1,0 +1,8 @@
+level,parameter,r,n,gate
+2level,beta,0.8313651846818875,160,PASS
+2level,omega_2,0.9352461320201544,160,PASS
+3level,beta,-0.07594300765307689,151,FAIL
+3level,kappa,,160,FAIL
+3level,mu3_0,-0.014067050327396543,160,exploratory
+3level,omega_2,-0.011482366692342925,160,FAIL
+3level,omega_3,-0.02942001705667943,160,exploratory
