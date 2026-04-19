@@ -1,0 +1,64 @@
+BufferAssignment:
+allocation 0: size 73728, maybe-live-out:
+ value: <12 loop_divide_multiply_fusion{0} @0> (size=73728,offset=0): f64[192,48]{1,0}
+allocation 1: size 73728, maybe-live-out:
+ value: <13 loop_divide_multiply_fusion{1} @0> (size=73728,offset=0): f64[192,48]{1,0}
+allocation 2: size 73728, parameter 0, shape |f64[192,48]| at ShapeIndex {}:
+ value: <10 Arg_0.1.0 @0> (size=73728,offset=0): f64[192,48]{1,0}
+allocation 3: size 16, output shape is |(f64[192,48], f64[192,48])|, maybe-live-out:
+ value: <14 tuple.10.0{} @0> (size=16,offset=0): (f64[192,48]{1,0}, f64[192,48]{1,0})
+allocation 4: size 16, preallocated-temp:
+ value: <11 loop_divide_multiply_fusion{} @0> (size=16,offset=0): (f64[192,48]{1,0}, f64[192,48]{1,0})
+
+Total bytes used: 221216 (216.0KiB)
+
+Used values:
+<10 Arg_0.1.0 @0>
+ positions:
+  Arg_0.1.0
+ uses:
+  loop_divide_multiply_fusion, operand 0
+ from instruction: %Arg_0.1.0 = f64[192,48]{1,0} parameter(0)<11 loop_divide_multiply_fusion{} @0>
+ positions:
+  loop_divide_multiply_fusion {}
+ uses:
+  get-tuple-element, operand 0 {}
+  get-tuple-element.1, operand 0 {}
+ from instruction: %loop_divide_multiply_fusion = (f64[192,48]{1,0}, f64[192,48]{1,0}) fusion(f64[192,48]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<12 loop_divide_multiply_fusion{0} @0>
+ positions:
+  loop_divide_multiply_fusion {0}
+  tuple.10.0 {1}
+  get-tuple-element
+ uses:
+  tuple.10.0, operand 1
+ from instruction: %loop_divide_multiply_fusion = (f64[192,48]{1,0}, f64[192,48]{1,0}) fusion(f64[192,48]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<13 loop_divide_multiply_fusion{1} @0>
+ positions:
+  loop_divide_multiply_fusion {1}
+  tuple.10.0 {0}
+  get-tuple-element.1
+ uses:
+  tuple.10.0, operand 0
+ from instruction: %loop_divide_multiply_fusion = (f64[192,48]{1,0}, f64[192,48]{1,0}) fusion(f64[192,48]{1,0} %Arg_0.1.0), kind=kLoop, calls=%fused_divide_multiply, metadata={op_name="jit(sigmoid)/jit(main)/mul" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=88}<14 tuple.10.0{} @0>
+ positions:
+  tuple.10.0 {}
+ uses:
+ from instruction: %tuple.10.0 = (f64[192,48]{1,0}, f64[192,48]{1,0}) tuple(f64[192,48]{1,0} %get-tuple-element.1, f64[192,48]{1,0} %get-tuple-element)
+
+HloLiveRange (max 5):
+  InstructionSequence:
+    0:Arg_0.1.0
+    1:loop_divide_multiply_fusion
+    2:get-tuple-element.1
+    3:get-tuple-element
+    4:tuple.10.0
+  BufferLiveRange:
+    Arg_0.1.0{}:0-5
+    loop_divide_multiply_fusion{}:1-3
+    loop_divide_multiply_fusion{0}:1-5
+    loop_divide_multiply_fusion{1}:1-5
+    tuple.10.0{}:4-5
+  Live ranges at 4 (peak):
+    Arg_0.1.0: 73728 bytes
+    loop_divide_multiply_fusion: 16 bytes
+    loop_divide_multiply_fusion: 16 bytes
+    tuple.10.0: 16 bytes

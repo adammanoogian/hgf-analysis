@@ -1,0 +1,8 @@
+HloModule jit_subtract, entry_computation_layout={(f64[48,192]{1,0})->(f64[48,192]{1,0}, f64[48,192]{1,0})}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true,true}
+
+ENTRY main.4 {
+  Arg_0.1 = f64[48,192]{1,0} parameter(0)
+  negate.2 = f64[48,192]{1,0} negate(Arg_0.1), metadata={op_name="jit(subtract)/jit(main)/neg" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/models/response_patrl.py" source_line=89}
+  ROOT tuple.3 = (f64[48,192]{1,0}, f64[48,192]{1,0}) tuple(Arg_0.1, negate.2)
+}
+

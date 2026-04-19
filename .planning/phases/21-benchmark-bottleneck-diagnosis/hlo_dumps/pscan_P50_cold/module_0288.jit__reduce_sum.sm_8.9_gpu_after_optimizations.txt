@@ -1,0 +1,12 @@
+HloModule jit__reduce_sum, is_scheduled=true, entry_computation_layout={(f64[48]{0})->f64[48,192]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="2493476a055c6e7f3548d47a47235b37"}
+
+wrapped_broadcast_computation {
+  param_0 = f64[48]{0} parameter(0)
+  ROOT broadcast.1.1 = f64[48,192]{1,0} broadcast(param_0), dimensions={0}, metadata={op_name="jit(_reduce_sum)/jit(main)/broadcast_in_dim[shape=(48, 192) broadcast_dimensions=(np.int64(0),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+}
+
+ENTRY main.3 {
+  Arg_0.1.0 = f64[48]{0} parameter(0)
+  ROOT wrapped_broadcast = f64[48,192]{1,0} fusion(Arg_0.1.0), kind=kLoop, calls=wrapped_broadcast_computation, metadata={op_name="jit(_reduce_sum)/jit(main)/broadcast_in_dim[shape=(48, 192) broadcast_dimensions=(np.int64(0),)]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
+}
+
