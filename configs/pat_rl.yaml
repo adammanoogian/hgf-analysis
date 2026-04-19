@@ -82,7 +82,7 @@ task:
 # beta: higher = more reward-driven.
 # ---------------------------------------------------------------------------
 simulation:
-  n_participants_per_phenotype: 8   # 4 phenotypes x 8 = 32 for V1/V2; Plan 20-05 raises to 40
+  n_participants_per_phenotype: 40   # SC5: 4 phenotypes × 40 = 160 agents for PRL-V1/V2 formal gates (Phase 20-07)
   master_seed: 5678
 
   # Phenotype 2x2 grid (anxiety x reward_sensitivity).
