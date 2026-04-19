@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 20 PAT-RL Scientific Completion — ALL PLANS COMPLETE (20-01 through 20-08). Pending gsd-verifier.
+**Current focus:** Phase 20 COMPLETE — verifier found 1 silent-runtime gap (YAML phenotype keys vs script axis masks), closed inline via commit 96b40b1. Gate logic wired; 160-agent numeric run is cluster-deferred.
 
 ## Current Position
 
-Phase: 20 (PAT-RL Scientific Completion) — ALL PLANS COMPLETE
-Plan: 20-07 COMPLETE (all 8/8 plans complete — 20-01 through 20-08)
-Status: Execution complete, pending gsd-verifier
-Last activity: 2026-04-19 — Completed 20-07 (PRL-V1/V2 validation gates + SC9/SC11 audits)
+Phase: 20 (PAT-RL Scientific Completion) — COMPLETE ✓ (verified 2026-04-19)
+Plan: all 8/8 plans complete (20-01 through 20-08) + 1 gap-closure commit
+Status: Verified 10/11 must_haves + gap closed; cluster numeric gates deferred to SLURM run
+Last activity: 2026-04-19 — Closed SC8 phenotype naming gap via rename migration (25 files aligned on sister-repo spec: healthy/high_anxiety/reward_susceptible/anxious_reward)
 
 [===========██████████��█████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (1/6); Phase 20 COMPLETE (8/8)
 
@@ -219,6 +219,6 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 ## Session Continuity
 
 Last session: 2026-04-19
-Stopped at: Completed 20-07 (validation gates PRL-V1/V2). 4 task commits + 1 metadata commit pushed to main. Phase 20 execution complete.
+Stopped at: Phase 20 fully closed. Verifier passed 10/11 must_haves; 1 gap (SC8 phenotype-key misalignment between YAML and scripts/06 axis masks) closed inline via commit 96b40b1 migrating 25 files onto sister-repo spec naming. 111/116 tests pass, 5 skipped (blackjax), 0 fail.
 Resume file: None
-Next action: gsd-verifier for Phase 20 (all 8 plans). Also pending: `sbatch cluster/14_benchmark_gpu.slurm` on M3 (14.1-03 Task 1). Followup: cluster 160-agent PRL-V1/V2 numeric run via `sbatch cluster/patrl_smoke.slurm`.
+Next action: Cluster 160-agent PRL-V1/V2 numeric runs — `sbatch cluster/patrl_smoke.slurm` with `scripts/05_run_validation.py --task=patrl --fit-method=laplace` + `scripts/06_group_analysis.py --task=patrl --analysis=phenotype_separability`. Per user directive 2026-04-19, default fit_method is Laplace; NUTS feasibility revisit gated on Phase 14-15 GPU benchmarks. Also pending: `sbatch cluster/14_benchmark_gpu.slurm` for 14.1-03 (standalone — not a v1.2 blocker).

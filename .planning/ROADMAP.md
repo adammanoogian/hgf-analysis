@@ -309,14 +309,15 @@ Plans:
 **Plans**: 8 plans
 
 Plans:
-- [ ] 20-01-config-delta-and-loader-PLAN.md — correct `configs/pat_rl.yaml` to consumer spec (contingencies SVVS, magnitudes [1,3], 4-phenotype priors + new b/dhr_*/epsilon2_coupling_coef fields) and extend `env/pat_rl_config.py` loader (ContingencyConfig.avoid + PhenotypeParams + FittingPriorConfig.b/gamma/alpha/lam + PHENOTYPE_COLUMN_NAME)
-- [ ] 20-02-model-a-bias-and-models-b-c-PLAN.md — add bias `b` kwarg to `model_a_logp` (default 0.0, backwards compatible), implement `model_b_logp` and `model_c_logp`, dispatch in both fit paths (hierarchical + Laplace), thread `delta_hr_arr` into the batched logp, 5-agent Laplace smoke for A+b/B/C
-- [ ] 20-03-model-d-trial-varying-omega-PLAN.md — implement Model D `_clamped_step_model_d` mirroring Phase 18-04 kappa-via-attrs pattern (per-trial `omega_eff(t) = omega + lam·dHR(t)`), preserve Layer-2 clamp and fp64 invariants, shared `_run_patrl_scan` helper, 5-agent λ-recovery smoke within 0.3 of truth (SC3)
-- [ ] 20-04-epsilon2-coupled-dhr-simulator-PLAN.md — extend `run_hgf_forward_patrl` with `return_epsilon2` kwarg, replace stub ΔHR with ε₂-coupled generative model in `simulate_patrl_cohort`, add canonical `phenotype` column to sim_df (SC4; unblocks Plans 20-05 and 20-06)
-- [ ] 20-05-cohort-scale-40x4-PLAN.md — bump `n_participants_per_phenotype` to 40, add multi-phenotype loop with per-phenotype SeedSequence spawn (4 × 40 = 160 deterministic agents), update SLURM smoke defaults (PRL_PATRL_SMOKE_N=40 PRL_PATRL_SMOKE_PHENOTYPES=all), prove determinism across phenotype subsets (SC5)
-- [ ] 20-06-stratified-bms-peb-export-PLAN.md — implement `compute_stratified_bms(fit_df, phenotype_col='phenotype')` and `export_peb_covariates(fit_df_2level, fit_df_3level, output_path)` in `analysis/bms.py`, preserve existing `run_stratified_bms` per Decision 109 parallel-stack invariant (SC6)
-- [ ] 20-07-validation-gates-prl-v1-v2-PLAN.md — extend `scripts/05_run_validation.py` with `--task=patrl` + PRL-V1 r≥0.7 gate (ω₂/κ/β primary; ω₃/μ₃⁰ exploratory), extend `scripts/06_group_analysis.py` with `--analysis=phenotype_separability` + PRL-V2 Cohen's d≥0.5 and |cor|<0.5 gates, add `compute_batch_waic_patrl` to bridge sim_df phenotype → fit_df phenotype (SC7, SC8, SC9)
-- [ ] 20-08-citation-replacement-PLAN.md — retire Browning 2015 / Daw 2006 / Schönberg 2007 references across configs + docstrings + .planning/ docs; replace with Klaassen 2021/2024 Roelofs-group citations; create `docs/references.bib` with BibTeX; audit gate at Task 2 checkpoint (SC10)
+- [x] 20-01-config-delta-and-loader-PLAN.md — configs/pat_rl.yaml + env/pat_rl_config.py loader (SC1)
+- [x] 20-02-model-a-bias-and-models-b-c-PLAN.md — model_a_logp bias `b` + model_b/c_logp + dispatch in both fit paths (SC2 partial)
+- [x] 20-03-model-d-trial-varying-omega-PLAN.md — Model D scan body + 5/5 λ-recovery PASS (SC2, SC3)
+- [x] 20-04-epsilon2-coupled-dhr-simulator-PLAN.md — return_epsilon2 kwarg + ε₂-coupled ΔHR + phenotype column (SC4)
+- [x] 20-05-cohort-scale-40x4-PLAN.md — n_per_phenotype=40 + multi-phenotype SeedSequence spawn + determinism (SC5)
+- [x] 20-06-stratified-bms-peb-export-PLAN.md — compute_batch_waic_patrl + compute_stratified_bms + export_peb_covariates (SC6)
+- [x] 20-07-validation-gates-prl-v1-v2-PLAN.md — scripts/05 + scripts/06 gate logic + SC9/SC11 audit tests (SC7, SC8, SC9)
+- [x] 20-08-citation-replacement-PLAN.md — docs/references.bib + Klaassen 2024 backfills + old-ref retirement (SC10)
+- [x] **Gap-closure commit 96b40b1**: phenotype-key rename to match sister-repo spec (verifier-caught silent SC8 runtime bug)
 
 
 **Sources of record**:
@@ -403,5 +404,5 @@ Plans:
 | 17 - BlackJAX NUTS Sampler | v1.2 | 2/2 | Complete | 2026-04-15 |
 | 18 - PAT-RL Task Adaptation (the consumer study) | v1.2 | 6/6 | Complete (Option A scope) | 2026-04-18 |
 | 19 - VB-Laplace Fit Path (Tapas-Parity) | v1.2 | 5/5 | Complete | 2026-04-18 |
-| 20 - PAT-RL Scientific Completion | v1.2 | 0/8 | Planned | -- |
+| 20 - PAT-RL Scientific Completion | v1.2 | 8/8 | Complete (gate logic wired; 160-agent numeric run cluster-deferred) | 2026-04-19 |
 | 21 - Benchmark Bottleneck Diagnosis | v1.2 | 0/0 | Planned | -- |
