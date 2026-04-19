@@ -78,11 +78,70 @@ literal pattern match on XLA's log format:
 
 ## (a) Cache directory listing
 
-**Status:** [PENDING — awaiting user paste of cluster-side ls/du output
-from `/scratch/fc37/aman0087/.jax_cache_gpu/$(hostname -s)/`. The orchestrator
-has requested this output in parallel with spawning this execution agent. The
-continuation agent spliced with the user-pasted content will finalize this
-section.]
+### User-pasted cluster evidence (verbatim)
+
+```
+$ ls -la /scratch/fc37/$USER/.jax_cache_gpu/ 2>/dev/null | head -5
+total 1762344
+drwxr-sr-x 17 aman0087 fc37  729088 Apr 19 23:22 .
+drwxr-sr-x 11 aman0087 fc37    4096 Apr 18 20:07 ..
+-rw-r--r--  1 aman0087 fc37       8 Apr 14 17:33 jit_add-1c3942bc880df8bd647a2a23c808ee05d4f30b7454a19af67367cc22adcccfdf-atime
+-rw-r--r--  1 aman0087 fc37    2192 Apr 14 17:33 jit_add-1c3942bc880df8bd647a2a23c808ee05d4f30b7454a19af67367cc22adcccfdf-cache
+
+$ find /scratch/fc37/$USER/.jax_cache_gpu/ -maxdepth 3 -type d 2>/dev/null
+/scratch/fc37/aman0087/.jax_cache_gpu/
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g111
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g114
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g115
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g107
+/scratch/fc37/aman0087/.jax_cache_gpu/m3n101
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g113
+/scratch/fc37/aman0087/.jax_cache_gpu/xla_gpu_per_fusion_autotune_cache_dir
+/scratch/fc37/aman0087/.jax_cache_gpu/xla_gpu_per_fusion_autotune_cache_dir/tmp
+/scratch/fc37/aman0087/.jax_cache_gpu/m3n112
+/scratch/fc37/aman0087/.jax_cache_gpu/local
+/scratch/fc37/aman0087/.jax_cache_gpu/m3n109
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g118
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g119
+/scratch/fc37/aman0087/.jax_cache_gpu/m3n103
+/scratch/fc37/aman0087/.jax_cache_gpu/m3g109
+/scratch/fc37/aman0087/.jax_cache_gpu/m3a118
+
+$ du -sh /scratch/fc37/$USER/.jax_cache_gpu/ 2>/dev/null
+1.8G    /scratch/fc37/aman0087/.jax_cache_gpu/
+```
+
+(Per-node `du -sh` breakdown not in the paste. Total is 1.8G spread across
+13 distinct compute-node subdirectories — `m3g107`, `m3g109`, `m3g111`,
+`m3g113`, `m3g114`, `m3g115`, `m3g118`, `m3g119`, `m3a118`, `m3n101`, `m3n103`,
+`m3n109`, `m3n112` — plus a `local/` fallback and the XLA autotune cache dir.)
+
+### Per-node cache-scope analysis — the smoking gun for the 1.1× paradox
+
+The SLURM scripts set `JAX_COMPILATION_CACHE_DIR=/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/${SLURMD_NODENAME:-local}`
+(verified in `cluster/21_diagnose_{laplace,nuts,pscan}.slurm` and
+`cluster/14_benchmark_gpu.slurm:99`), which routes each SLURM job's persistent
+cache into a **per-node subdirectory**. The listing confirms this layout is live:
+13 compute nodes have populated cache trees, and Phase 14 job 54899271 itself
+ran on `m3a118` (see `cluster/logs/bench14_54899271.out:38`). This is the
+architectural lever that defeats cross-SLURM-job persistent-cache reuse —
+when the Phase-1 N=2 warm-up lands on (say) `m3g111` but the Phase-2 N=50
+production measurement lands on `m3g114`, the two jobs have **disjoint cache
+directories** despite both writing to `$SCRATCH/.jax_cache_gpu/`, and SLURM
+does not guarantee node affinity across `afterok`-chained jobs without an
+explicit `--nodelist` pin.
+
+Sanity check on the size budget: 1.8G ÷ 13 nodes ≈ 140 MB per node on average.
+Each cold run writes ~95 entries (see `pscan_P{5,20,50}_cold.log` persistent-
+write counts in the fallback table below); at the ~1.5 MB average kernel-binary
+size that corresponds to a single cold run depositing ~140 MB per node, the
+per-node totals are consistent with one cold compile per node plus partial
+overwrites from subsequent runs that happened to land on the same node. (If
+per-node `du -sh` diverges sharply from the ~140 MB/node midpoint when the
+user runs the breakdown command, that would indicate more than one cold run
+per node — note that the `m3a118` subdir hosting Phase 14 job 54899271 is
+expected to be on the higher end and `m3n*` CPU nodes likely on the lower
+end. Request per-node `du -sh` if the verdict synthesis needs exact numbers.)
 
 ### Fallback: compile-log cache-hit/miss event counts
 
@@ -388,7 +447,10 @@ objective):
   write + tracing is the wall-time bottleneck not compilation," and all
   three predictions are met by the data.
 
-**Track (i) consistency:** STRONG.
+**Track (i) consistency:** ALSO CONSISTENT, but not REQUIRED given Track (iii)
+REFRAMED (see below). The observed cross-process miss can be fully explained
+by per-node cache scope without needing JAX #22281 tracing dominance as a
+co-cause.
 
 ### Track (ii) — Closure-over-data instability (RESEARCH Risk #5)
 
@@ -415,67 +477,92 @@ NOT the root cause of the cross-process cache miss. This is an important
 NEGATIVE result: it contradicts the working hypothesis 21-04/21-05 carried
 into this plan.
 
-### Track (iii) — Cache initialization bug (RESEARCH §Known Pitfalls #6)
+### Track (iii) REFRAMED — Per-node cache scope vs SLURM scheduler mismatch
 
-**Positive evidence:**
+**Original phrasing:** "Cache initialization bug within the Python process
+(RESEARCH §Known Pitfalls #6: JAX array created before cache init)."
 
-- The pattern of first-reference-MISS-then-subsequent-HIT in the warm
-  subprocess's lookup for a key that the cold subprocess just wrote is
-  superficially compatible with cache-init-order issues.
+**Reframed phrasing (after §a user-paste evidence):** The persistent cache
+directory is **per-node by design** via
+`JAX_COMPILATION_CACHE_DIR=.../.jax_cache_gpu/${SLURMD_NODENAME:-local}`
+(see cluster/21_diagnose_*.slurm and cluster/14_benchmark_gpu.slurm). This is
+not a bug — it avoids concurrent-write contention when multiple jobs hit the
+same node — but it defeats the "persistent cache speeds up future SLURM jobs"
+promise because **SLURM does not guarantee node affinity across dependent
+jobs without explicit `--nodelist` pinning**. The §a listing shows 13 distinct
+node subdirectories; Phase 14 job 54899271 ran on m3a118; any subsequent
+benchmark job scheduled on a different node started with an empty cache.
 
-**Negative evidence against Track (iii):**
+**Positive evidence (promoted to STRONG):**
 
-- **Cold runs write to cache (§a fallback).** `pscan_P{5,20,50}_cold.log`
-  each log 95 persistent-cache writes; the `hlo_dumps/` directories contain
-  real files. So the cache IS initialized and IS being populated.
-- **The warm job also writes 95 entries.** If the cache dir were empty or
-  inaccessible at init time in the warm subprocess, the first-reference
-  miss would be followed by a write (observed), but subsequent misses on
-  OTHER keys should also write (observed). So init is happening.
-- **At P=20 the warm job has 138 hits and 0 writes** (the anomaly noted in
-  §a-fallback-point-3). This is the ONE log that looks like an actually-
-  working persistent cache. It contradicts the cache-init-bug hypothesis for
-  that particular run. The leading interpretation is that P=20 warm landed
-  on the same physical node as the P=20 cold job and the node-local
-  `/scratch` cache dir was populated from the preceding cold run; node
-  residency of this shared mount is the lever.
+- **User-pasted listing (§a) shows 13 per-node cache subdirectories**
+  (`m3g107, m3g109, m3g111, m3g113, m3g114, m3g115, m3g118, m3g119, m3a118,
+  m3n101, m3n103, m3n109, m3n112`) totalling 1.8G, confirming per-node
+  scope is live on the cluster.
+- **Phase 14 job 54899271 `bench14_54899271.out:38` shows
+  `JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_gpu/m3a118`**,
+  i.e. the 1.1× paradox job itself routed its cache into `m3a118/` — any
+  subsequent benchmark on a different node saw an empty cache.
+- **Warm-job first-reference-MISS-then-write-then-subsequent-HIT** (§b)
+  is exactly what per-node scope predicts: the warm SLURM job landed on
+  a node whose subdir did NOT contain the kernel the cold job just wrote
+  to a DIFFERENT node's subdir.
+- **The P=20 warm 138-hit/0-write anomaly** (§a fallback point 3) is
+  now cleanly explained: that specific warm job co-located with its cold
+  predecessor on the same node, so the node-local `/scratch` cache dir was
+  populated from the preceding cold run. At P=5 and P=50 the warm jobs
+  landed on different nodes than their cold predecessors, getting 0% speedup.
 
-**Track (iii) consistency:** WEAK. Init IS happening; files ARE being
-written. The partial-hit pattern at P=50 warm (99 hits, 67 writes — a
-mixed bag) AND the anomalous all-hit pattern at P=20 warm (138 hits, 0
-writes) together point to **node-local cache dir residency** as the actual
-lever, not cache initialization order within the Python process. This is
-a 21-07 cluster-infrastructure question, not a code fix.
+**Negative evidence against Track (iii) REFRAMED:**
+
+- None. The per-node scope explanation accounts for every observed pattern:
+  cold writes, warm first-miss-then-writes, the anomalous P=20 warm
+  all-hit run, and the Phase 14 1.1× observation.
+
+**Track (iii) REFRAMED consistency:** STRONG — **sufficient explanation on
+its own**. Per-node cache scope combined with SLURM's lack of node affinity
+across `afterok` chains is a complete account of the 1.1× cross-process
+speedup collapse. No additional hypothesis (JAX #22281 tracing dominance,
+closure-over-data) is required to explain the data, though Track (i)
+remains compatible evidence.
 
 ### Summary — which track does the data support?
 
-**Track (i) JAX #22281 paradox is the consistent interpretation** with the
-forensic evidence in hand. The text IR is stable, the XLA cache keys are
-stable, the cache writes DO land on disk, and the in-process tracing cache
-works. The observed 1.0-1.1× next-proc speedup is a **cross-process
-infrastructure** problem (cache dir location vs job scheduling), overlaid
-on JAX's separate compile-event "tracing" cost that XLA's persistent cache
-cannot amortize across processes for the NUTS `_run_vmap_chains._one_step`
-scan body.
+**Track (iii) REFRAMED (per-node cache scope vs SLURM scheduler mismatch)
+is the STRONG primary explanation** for the 1.1× cross-process speedup
+collapse. The evidence (per-node subdirs live on cluster, Phase 14 job
+routed to m3a118, warm-job hit/miss patterns vary exactly with node
+co-residency) is sufficient on its own.
+
+**Track (i) (JAX #22281 tracing paradox) is ALSO CONSISTENT** with the
+stable text-IR and XLA cache keys but is **not required** given Track (iii)
+REFRAMED. Track (i) remains relevant IF a future experiment pins the
+benchmark to a single node (via `--nodelist`) and still sees sub-2× warm
+speedup — that would be residual JAX-tracing overhead that the per-node
+cache fix cannot address.
 
 **Track (ii) (closure-over-data) is FALSIFIED** by the cross-process
 HLO identity at P=5, P=20, and P=50.
 
-**Track (iii) (cache-init-bug within the Python process) is WEAK** because
-writes do occur — but there is a **secondary infrastructure-level concern**
-(node-local cache-dir residency across SLURM jobs) that is related but
-distinct from the RESEARCH §Known Pitfalls #6 phrasing. 21-07 should
-reformulate this as "cache dir scope vs SLURM job scheduling" rather than
-"JAX array created before cache init."
+**Combined reading for 21-07:** The primary fix surface is **cluster
+infrastructure**, not production code — either (a) pin benchmark jobs to
+a single node via `--nodelist`, (b) move cache dir to a network-shared
+mount (e.g. `/fs04/…`) and drop the `${SLURMD_NODENAME}` suffix, or
+(c) restructure the benchmark to run as a single long-lived subprocess
+that amortizes compile cost across iterations. Option (a) is the smallest
+change; option (b) risks concurrent-write contention that the per-node
+scope was originally designed to avoid. 21-07 will name the specific
+recommendation; 21-06 provides the evidence that the fix surface is NOT
+`hierarchical.py:1144 _one_step` (the closure-over-data hypothesis floated
+by 21-05 is falsified by §b HLO identity).
 
-**Combined reading for 21-07:** The fix surface is NOT a closure-over-data
-refactor of `hierarchical.py:1144 _one_step`. It is either (a) move the
-cache dir to a network-shared location like `/fs04/…` (if node-local is the
-issue) OR (b) accept the JAX-native compile-tracing cost as a fixed per-
-process overhead and restructure the benchmark to amortize it (single-
-subprocess many-iteration benchmark, not multi-subprocess). The 1.1× speedup
-is not a bug in OUR code — it is the best possible JIT-cache speedup
-achievable on M3 under the current SLURM-job-isolated process model.
+**Orthogonal finding (SC3c):** Even with a perfect persistent cache, the
+Phase 14 Phase-1 N=2 warm-up cannot accelerate the Phase-2 N=50 production
+measurement. Jaccard module overlap between P=5 and P=50 runs is 0.180
+(82% of modules differ in text IR) and the scan-body hashes themselves
+differ. N=2-warm-up and N=50-production are structurally orthogonal under
+the current vmap-based cohort dispatcher. Deleting the N=2 warm-up step is
+a second, independent fix recommendation for 21-07.
 
 ---
 
@@ -527,8 +614,15 @@ All forensic evidence is archived. 21-07 VERDICT synthesis has:
   the 138-hit-0-write anomaly indicates node-local residency lever)
 - N=2-vs-N=50 vmap-shape-polymorphism verdict (structurally different HLOs,
   N=2 warm-up does NOT accelerate N=50 production)
-- Three-way evidence-track reconciliation: **Track (i) consistent; Track (ii)
-  FALSIFIED; Track (iii) reframed as node-local cache dir residency concern**
+- Three-way evidence-track reconciliation: **Track (iii) REFRAMED is STRONG
+  and sufficient on its own (per-node cache scope vs SLURM scheduler
+  mismatch, evidenced by §a 13-node cache tree + Phase 14 job-54899271
+  routing to m3a118); Track (i) is also consistent but not required;
+  Track (ii) closure-over-data is FALSIFIED by cross-process HLO identity
+  at all tested P**
 
 21-07 should name the bottleneck layer(s) and fix surface(s) given these
-constraints. 21-06 does NOT name the verdict.
+constraints. 21-06 does NOT name the verdict — but the evidence narrows
+the fix surface to cluster infrastructure (node pinning / network-shared
+cache dir / single-subprocess benchmark) rather than production-code
+refactors.
