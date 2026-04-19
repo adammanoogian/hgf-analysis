@@ -67,11 +67,11 @@ mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
 }
 
 # Pre-warm ArviZ daily-warning file to defeat import-time race (14.1-07 follow-up)
-# arviz/__init__.py:36 _atomic_write_text calls tmp.replace(path); when multiple
-# SLURM jobs launch near-simultaneously on the same $HOME mount, one job's
-# tmp file is gone before its replace() fires → FileNotFoundError crashes import.
+# arviz/__init__.py _warn_once_per_day() skips _atomic_write_text ONLY IF the
+# stamp file already contains today's ISO date. Writing today's date here makes
+# the racey tmp.replace(path) code path unreachable under parallel SLURM launches.
 mkdir -p "$HOME/.cache/arviz"
-touch "$HOME/.cache/arviz/daily_warning"
+date +%Y-%m-%d > "$HOME/.cache/arviz/daily_warning"
 
 # Log compilations (goes to stderr)
 export JAX_LOG_COMPILES=1
