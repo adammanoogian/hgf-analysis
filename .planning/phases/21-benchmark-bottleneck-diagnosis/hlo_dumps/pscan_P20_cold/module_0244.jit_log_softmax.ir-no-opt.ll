@@ -83,7 +83,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %19 = bitcast <2 x i32> %18 to i64
   %20 = bitcast i64 %19 to double
   store double %20, ptr %result_from_other_lane, align 8
-  call void @region_0_6_55bc0a454220_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer4)
+  call void @region_0_6_55cf0b301620_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer4)
   %21 = load double, ptr %return_buffer4, align 8
   store double %21, ptr %partial_reduction_result, align 8
   %22 = udiv i32 %thread.id.2, 32
@@ -107,10 +107,10 @@ x_in_tile-true:                                   ; preds = %loop2.loop_body
   %34 = udiv i32 %33, 20
   %35 = mul nuw nsw i32 %24, 1
   %36 = add nuw nsw i32 0, %35
-  %param_0.10 = getelementptr inbounds [20 x [192 x [2 x double]]], ptr %arg0, i32 0, i32 %33, i32 %32, i32 %28
-  %param_0.102 = load double, ptr %param_0.10, align 8, !invariant.load !11
-  store double %param_0.102, ptr %reduction_input_address, align 8
-  call void @region_0_6_55bc0a454220_39acfdde3893eeca(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
+  %param_0.11 = getelementptr inbounds [20 x [192 x [2 x double]]], ptr %arg0, i32 0, i32 %33, i32 %32, i32 %28
+  %param_0.112 = load double, ptr %param_0.11, align 8, !invariant.load !11
+  store double %param_0.112, ptr %reduction_input_address, align 8
+  call void @region_0_6_55cf0b301620_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
   %37 = load double, ptr %return_buffer, align 8
   store double %37, ptr %partial_reduction_result, align 8
   br label %x_in_tile-after
@@ -146,7 +146,7 @@ declare noundef i32 @llvm.nvvm.read.ptx.sreg.tid.x() #0
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
 declare noundef i32 @llvm.nvvm.read.ptx.sreg.ctaid.x() #0
 
-define internal void @region_0_6_55bc0a454220_39acfdde3893eeca(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
+define internal void @region_0_6_55cf0b301620_ef1f79cdc80b66ea(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
 entry:
   %2 = alloca double, align 8
   %Arg_0.7 = load double, ptr %0, align 8

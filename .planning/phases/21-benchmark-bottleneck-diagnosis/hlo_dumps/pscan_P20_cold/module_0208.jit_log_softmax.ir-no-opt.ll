@@ -84,7 +84,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %19 = bitcast <2 x i32> %18 to i64
   %20 = bitcast i64 %19 to double
   store double %20, ptr %result_from_other_lane, align 8
-  call void @region_0_6_55bc099b1810_4e88a044455851a(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer4)
+  call void @region_0_6_55cf0a82c3d0_210fa919a45a99b2(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer4)
   %21 = load double, ptr %return_buffer4, align 8
   store double %21, ptr %partial_reduction_result, align 8
   %22 = udiv i32 %thread.id.2, 32
@@ -111,7 +111,7 @@ x_in_tile-true:                                   ; preds = %loop2.loop_body
   %param_0.15 = getelementptr inbounds [20 x [192 x [2 x double]]], ptr %arg0, i32 0, i32 %33, i32 %32, i32 %28
   %param_0.152 = load double, ptr %param_0.15, align 8, !invariant.load !13
   store double %param_0.152, ptr %reduction_input_address, align 8
-  call void @region_0_6_55bc099b1810_4e88a044455851a(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
+  call void @region_0_6_55cf0a82c3d0_210fa919a45a99b2(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
   %37 = load double, ptr %return_buffer, align 8
   store double %37, ptr %partial_reduction_result, align 8
   br label %x_in_tile-after
@@ -146,7 +146,7 @@ declare noundef i32 @llvm.nvvm.read.ptx.sreg.tid.x() #0
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
 declare noundef i32 @llvm.nvvm.read.ptx.sreg.ctaid.x() #0
 
-define internal void @region_0_6_55bc099b1810_4e88a044455851a(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
+define internal void @region_0_6_55cf0a82c3d0_210fa919a45a99b2(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
 entry:
   %2 = alloca double, align 8
   %Arg_0.7 = load double, ptr %0, align 8
@@ -244,7 +244,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %19 = bitcast <2 x i32> %18 to i64
   %20 = bitcast i64 %19 to double
   store double %20, ptr %result_from_other_lane, align 8
-  call void @region_1_18_55bc099b1da0_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer10)
+  call void @region_1_18_55cf0a8efc20_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer10)
   %21 = load double, ptr %return_buffer10, align 8
   store double %21, ptr %partial_reduction_result, align 8
   %22 = udiv i32 %thread.id.2, 32
@@ -275,7 +275,7 @@ x_in_tile-true:                                   ; preds = %loop2.loop_body
   %subtract.2.3.clone.1 = fsub double %param_0.172, %param_1.143
   %37 = call double @__nv_exp(double %subtract.2.3.clone.1)
   store double %37, ptr %reduction_input_address, align 8
-  call void @region_1_18_55bc099b1da0_39acfdde3893eeca(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
+  call void @region_1_18_55cf0a8efc20_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
   %38 = load double, ptr %return_buffer, align 8
   store double %38, ptr %partial_reduction_result, align 8
   %39 = mul nuw nsw i32 %26, 1
@@ -332,7 +332,7 @@ reduction_write_output-true:                      ; preds = %thread_in_bounds-tr
 ; Function Attrs: nounwind memory(none)
 declare double @__nv_exp(double) #2
 
-define internal void @region_1_18_55bc099b1da0_39acfdde3893eeca(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
+define internal void @region_1_18_55cf0a8efc20_ef1f79cdc80b66ea(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
 entry:
   %2 = alloca double, align 8
   %Arg_0.19 = load double, ptr %0, align 8

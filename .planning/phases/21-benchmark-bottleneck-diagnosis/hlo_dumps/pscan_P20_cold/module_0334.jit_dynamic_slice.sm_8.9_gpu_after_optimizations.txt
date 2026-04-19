@@ -1,0 +1,16 @@
+HloModule jit_dynamic_slice, is_scheduled=true, entry_computation_layout={(u32[2,2]{1,0}, s64[], s64[])->u32[1,2]{1,0}}, allow_spmd_sharding_propagation_to_parameters={true,true,true}, allow_spmd_sharding_propagation_to_output={true}, frontend_attributes={fingerprint_before_lhs="b4a68c647c3fa286731ff2c7747d36d6"}
+
+fused_dynamic_slice {
+  param_0 = u32[2,2]{1,0} parameter(0)
+  param_1 = s64[] parameter(1)
+  constant_2 = s64[] constant(0), metadata={op_name="args[1]"}
+  ROOT dynamic-slice.2.1 = u32[1,2]{1,0} dynamic-slice(param_0, param_1, constant_2), dynamic_slice_sizes={1,2}, metadata={op_name="jit(dynamic_slice)/jit(main)/dynamic_slice[slice_sizes=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1151}
+}
+
+ENTRY main.5 {
+  Arg_2.3.0 = s64[] parameter(2), metadata={op_name="args[2]"}
+  Arg_1.2.0 = s64[] parameter(1), metadata={op_name="args[1]"}
+  Arg_0.1.0 = u32[2,2]{1,0} parameter(0), metadata={op_name="args[0]"}
+  ROOT loop_dynamic_slice_fusion = u32[1,2]{1,0} fusion(Arg_0.1.0, Arg_1.2.0), kind=kLoop, calls=fused_dynamic_slice, metadata={op_name="jit(dynamic_slice)/jit(main)/dynamic_slice[slice_sizes=(np.int64(1), np.int64(2))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical.py" source_line=1151}
+}
+

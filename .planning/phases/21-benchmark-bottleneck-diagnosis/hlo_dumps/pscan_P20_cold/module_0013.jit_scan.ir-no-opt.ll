@@ -201,8 +201,8 @@ loop_convert_dynamic_slice_fusion.in_bounds-true: ; preds = %entry
   %14 = icmp sge i32 0, %13
   %15 = select i1 %14, i32 0, i32 %13
   %16 = icmp sle i32 191, %15
-  %dynamic-slice.8.8.start_idx0 = select i1 %16, i32 191, i32 %15
-  %17 = add i32 %dynamic-slice.8.8.start_idx0, %3
+  %dynamic-slice.8.10.start_idx0 = select i1 %16, i32 191, i32 %15
+  %17 = add i32 %dynamic-slice.8.10.start_idx0, %3
   %18 = getelementptr inbounds [192 x i64], ptr %arg0, i32 0, i32 %17
   %19 = load i64, ptr %18, align 8, !invariant.load !38
   %20 = insertvalue { i64, i32 } undef, i64 %19, 0
@@ -210,8 +210,8 @@ loop_convert_dynamic_slice_fusion.in_bounds-true: ; preds = %entry
   %22 = icmp sge i32 0, %21
   %23 = select i1 %22, i32 0, i32 %21
   %24 = icmp sle i32 191, %23
-  %dynamic-slice.8.8.start_idx01 = select i1 %24, i32 191, i32 %23
-  %25 = add i32 %dynamic-slice.8.8.start_idx01, 0
+  %dynamic-slice.8.10.start_idx01 = select i1 %24, i32 191, i32 %23
+  %25 = add i32 %dynamic-slice.8.10.start_idx01, 0
   %26 = getelementptr inbounds [192 x i64], ptr %arg0, i32 0, i32 %25
   %27 = load i64, ptr %26, align 8, !invariant.load !38
   %constant_41_1_clone_1 = load i64, ptr @3, align 8
@@ -283,9 +283,9 @@ loop_add_divide_dynamic_slice_multiply_fusion.in_bounds-true: ; preds = %entry
   %27 = load double, ptr %arg5, align 8, !invariant.load !38
   %28 = call double @__nv_exp(double %27)
   %multiply.73.5.clone.1 = fmul double %20, %28
-  %constant_39_1_clone_1_clone_1 = load double, ptr @10, align 8
-  %compare.20.3.clone.1 = fcmp ogt double %multiply.73.5.clone.1, %constant_39_1_clone_1_clone_1
-  %29 = zext i1 %compare.20.3.clone.1 to i8
+  %constant_39_2_clone_1_clone_1 = load double, ptr @10, align 8
+  %compare.20.2.clone.1 = fcmp ogt double %multiply.73.5.clone.1, %constant_39_2_clone_1_clone_1
+  %29 = zext i1 %compare.20.2.clone.1 to i8
   %constant_40_1_clone_1_clone_1 = load double, ptr @9, align 8
   %30 = trunc i8 %29 to i1
   %31 = select i1 %30, double %multiply.73.5.clone.1, double %constant_40_1_clone_1_clone_1
@@ -375,10 +375,10 @@ loop_select_fusion.in_bounds-true:                ; preds = %entry
   %8 = getelementptr double, ptr %arg3, i32 %linear_index
   %9 = getelementptr inbounds double, ptr %8, i32 0
   %10 = load double, ptr %9, align 8, !invariant.load !38
-  %multiply.66.1 = fmul double %7, %10
-  %11 = load double, ptr %arg1, align 8, !invariant.load !38
-  %multiply.67.7 = fmul double %multiply.66.1, %11
-  %12 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %multiply.66.3 = fmul double %7, %10
+  %11 = load double, ptr %arg2, align 8, !invariant.load !38
+  %multiply.67.7 = fmul double %multiply.66.3, %11
+  %12 = load i64, ptr %arg1, align 8, !invariant.load !38
   %13 = sitofp i64 %12 to double
   %multiply.68.5 = fmul double %multiply.67.7, %13
   %add.32.3 = fadd double %4, %multiply.68.5
@@ -447,8 +447,8 @@ loop_add_divide_dynamic_slice_fusion.in_bounds-true: ; preds = %entry
   %32 = icmp sge i32 0, %31
   %33 = select i1 %32, i32 0, i32 %31
   %34 = icmp sle i32 191, %33
-  %dynamic-slice.8.7.clone.1.start_idx0 = select i1 %34, i32 191, i32 %33
-  %35 = add i32 %dynamic-slice.8.7.clone.1.start_idx0, 0
+  %dynamic-slice.8.9.clone.1.start_idx0 = select i1 %34, i32 191, i32 %33
+  %35 = add i32 %dynamic-slice.8.9.clone.1.start_idx0, 0
   %36 = getelementptr inbounds [192 x i64], ptr %arg4, i32 0, i32 %35
   %37 = load i64, ptr %36, align 8, !invariant.load !38
   %38 = sitofp i64 %37 to double
@@ -474,16 +474,16 @@ loop_add_divide_dynamic_slice_fusion.in_bounds-true: ; preds = %entry
 
 define void @loop_dynamic_update_slice_fusion_9(ptr noalias align 128 dereferenceable(1536) %arg0, ptr noalias align 128 dereferenceable(8) %arg1, ptr noalias align 128 dereferenceable(8) %arg2) {
 entry:
-  %param_2.148 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.143 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_19 = load i64, ptr @17, align 8
-  %0 = icmp slt i64 %param_2.148, %constant_37_19
+  %0 = icmp slt i64 %param_2.143, %constant_37_19
   %1 = zext i1 %0 to i8
-  %param_2.1481 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1431 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_18 = load i64, ptr @16, align 8
-  %2 = add i64 %param_2.1481, %constant_36_18
-  %param_2.1482 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %2 = add i64 %param_2.1431, %constant_36_18
+  %param_2.1432 = load i64, ptr %arg2, align 8, !invariant.load !38
   %3 = trunc i8 %1 to i1
-  %4 = select i1 %3, i64 %2, i64 %param_2.1482
+  %4 = select i1 %3, i64 %2, i64 %param_2.1432
   %5 = icmp sge i64 0, %4
   %6 = select i1 %5, i64 0, i64 %4
   %7 = icmp sle i64 191, %6
@@ -506,9 +506,9 @@ dynamic-update-slice.51.1.in_bounds-after:        ; preds = %dynamic-update-slic
 
 dynamic-update-slice.51.1.in_bounds-true:         ; preds = %entry
   %14 = add i64 %8, %12
-  %param_1.160 = load double, ptr %arg1, align 8, !invariant.load !38
+  %param_1.159 = load double, ptr %arg1, align 8, !invariant.load !38
   %15 = getelementptr inbounds [192 x double], ptr %arg0, i64 0, i64 %14
-  store double %param_1.160, ptr %15, align 8
+  store double %param_1.159, ptr %15, align 8
   br label %dynamic-update-slice.51.1.in_bounds-after
 }
 
@@ -555,25 +555,25 @@ dynamic-update-slice.60.1.in_bounds-true:         ; preds = %entry
   %20 = add i64 %8, %18
   %21 = add i64 %12, %17
   %22 = getelementptr double, ptr %arg1, i64 %linear_index
-  %param_1.180 = getelementptr inbounds double, ptr %22, i64 0
-  %param_1.1804 = load double, ptr %param_1.180, align 8, !invariant.load !38
+  %param_1.181 = getelementptr inbounds double, ptr %22, i64 0
+  %param_1.1814 = load double, ptr %param_1.181, align 8, !invariant.load !38
   %23 = getelementptr inbounds [192 x [1 x double]], ptr %arg0, i64 0, i64 %20, i64 0
-  store double %param_1.1804, ptr %23, align 8
+  store double %param_1.1814, ptr %23, align 8
   br label %dynamic-update-slice.60.1.in_bounds-after
 }
 
 define void @loop_dynamic_update_slice_fusion_1(ptr noalias align 128 dereferenceable(1536) %arg0, ptr noalias align 16 dereferenceable(8) %arg1, ptr noalias align 128 dereferenceable(8) %arg2) {
 entry:
-  %param_2.103 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.98 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_8 = load i64, ptr @21, align 8
-  %0 = icmp slt i64 %param_2.103, %constant_37_8
+  %0 = icmp slt i64 %param_2.98, %constant_37_8
   %1 = zext i1 %0 to i8
-  %param_2.1031 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.981 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_3 = load i64, ptr @20, align 8
-  %2 = add i64 %param_2.1031, %constant_36_3
-  %param_2.1032 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %2 = add i64 %param_2.981, %constant_36_3
+  %param_2.982 = load i64, ptr %arg2, align 8, !invariant.load !38
   %3 = trunc i8 %1 to i1
-  %4 = select i1 %3, i64 %2, i64 %param_2.1032
+  %4 = select i1 %3, i64 %2, i64 %param_2.982
   %5 = icmp sge i64 0, %4
   %6 = select i1 %5, i64 0, i64 %4
   %7 = icmp sle i64 191, %6
@@ -596,24 +596,24 @@ dynamic-update-slice.59.1.in_bounds-after:        ; preds = %dynamic-update-slic
 
 dynamic-update-slice.59.1.in_bounds-true:         ; preds = %entry
   %14 = add i64 %8, %12
-  %param_1.125 = load double, ptr %arg1, align 8, !invariant.load !38
+  %param_1.124 = load double, ptr %arg1, align 8, !invariant.load !38
   %15 = getelementptr inbounds [192 x double], ptr %arg0, i64 0, i64 %14
-  store double %param_1.125, ptr %15, align 8
+  store double %param_1.124, ptr %15, align 8
   br label %dynamic-update-slice.59.1.in_bounds-after
 }
 
 define void @loop_dynamic_update_slice_fusion_8(ptr noalias align 128 dereferenceable(1536) %arg0, ptr noalias align 16 dereferenceable(8) %arg1, ptr noalias align 128 dereferenceable(8) %arg2) {
 entry:
-  %param_2.151 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.146 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_20 = load i64, ptr @23, align 8
-  %0 = icmp slt i64 %param_2.151, %constant_37_20
+  %0 = icmp slt i64 %param_2.146, %constant_37_20
   %1 = zext i1 %0 to i8
-  %param_2.1511 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1461 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_19 = load i64, ptr @22, align 8
-  %2 = add i64 %param_2.1511, %constant_36_19
-  %param_2.1512 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %2 = add i64 %param_2.1461, %constant_36_19
+  %param_2.1462 = load i64, ptr %arg2, align 8, !invariant.load !38
   %3 = trunc i8 %1 to i1
-  %4 = select i1 %3, i64 %2, i64 %param_2.1512
+  %4 = select i1 %3, i64 %2, i64 %param_2.1462
   %5 = icmp sge i64 0, %4
   %6 = select i1 %5, i64 0, i64 %4
   %7 = icmp sle i64 191, %6
@@ -636,24 +636,24 @@ dynamic-update-slice.52.1.in_bounds-after:        ; preds = %dynamic-update-slic
 
 dynamic-update-slice.52.1.in_bounds-true:         ; preds = %entry
   %14 = add i64 %8, %12
-  %param_1.162 = load i64, ptr %arg1, align 8, !invariant.load !38
+  %param_1.161 = load i64, ptr %arg1, align 8, !invariant.load !38
   %15 = getelementptr inbounds [192 x i64], ptr %arg0, i64 0, i64 %14
-  store i64 %param_1.162, ptr %15, align 8
+  store i64 %param_1.161, ptr %15, align 8
   br label %dynamic-update-slice.52.1.in_bounds-after
 }
 
 define void @loop_dynamic_update_slice_fusion_18(ptr noalias align 128 dereferenceable(1536) %arg0, ptr noalias align 16 dereferenceable(1536) %arg1, ptr noalias align 128 dereferenceable(8) %arg2) {
 entry:
-  %param_2.129 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.124 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_14 = load i64, ptr @25, align 8
-  %0 = icmp slt i64 %param_2.129, %constant_37_14
+  %0 = icmp slt i64 %param_2.124, %constant_37_14
   %1 = zext i1 %0 to i8
-  %param_2.1291 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1241 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_11 = load i64, ptr @24, align 8
-  %2 = add i64 %param_2.1291, %constant_36_11
-  %param_2.1292 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %2 = add i64 %param_2.1241, %constant_36_11
+  %param_2.1242 = load i64, ptr %arg2, align 8, !invariant.load !38
   %3 = trunc i8 %1 to i1
-  %4 = select i1 %3, i64 %2, i64 %param_2.1292
+  %4 = select i1 %3, i64 %2, i64 %param_2.1242
   %5 = icmp sge i64 0, %4
   %6 = select i1 %5, i64 0, i64 %4
   %7 = icmp sle i64 191, %6
@@ -676,25 +676,25 @@ dynamic-update-slice.45.1.in_bounds-after:        ; preds = %dynamic-update-slic
 
 dynamic-update-slice.45.1.in_bounds-true:         ; preds = %entry
   %14 = add i64 %8, %12
-  %param_2.1293 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1243 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_144 = load i64, ptr @25, align 8
-  %15 = icmp slt i64 %param_2.1293, %constant_37_144
+  %15 = icmp slt i64 %param_2.1243, %constant_37_144
   %16 = zext i1 %15 to i8
-  %param_2.1295 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1245 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_116 = load i64, ptr @24, align 8
-  %17 = add i64 %param_2.1295, %constant_36_116
-  %param_2.1297 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %17 = add i64 %param_2.1245, %constant_36_116
+  %param_2.1247 = load i64, ptr %arg2, align 8, !invariant.load !38
   %18 = trunc i8 %16 to i1
-  %19 = select i1 %18, i64 %17, i64 %param_2.1297
+  %19 = select i1 %18, i64 %17, i64 %param_2.1247
   %20 = icmp sge i64 0, %19
   %21 = select i1 %20, i64 0, i64 %19
   %22 = icmp sle i64 191, %21
   %dynamic-slice.8.2.start_idx0 = select i1 %22, i64 191, i64 %21
   %23 = add i64 %dynamic-slice.8.2.start_idx0, %12
-  %param_1.146 = getelementptr inbounds [192 x i64], ptr %arg1, i64 0, i64 %23
-  %param_1.1468 = load i64, ptr %param_1.146, align 8, !invariant.load !38
+  %param_1.145 = getelementptr inbounds [192 x i64], ptr %arg1, i64 0, i64 %23
+  %param_1.1458 = load i64, ptr %param_1.145, align 8, !invariant.load !38
   %24 = getelementptr inbounds [192 x i64], ptr %arg0, i64 0, i64 %14
-  store i64 %param_1.1468, ptr %24, align 8
+  store i64 %param_1.1458, ptr %24, align 8
   br label %dynamic-update-slice.45.1.in_bounds-after
 }
 
@@ -753,25 +753,25 @@ dynamic-update-slice.44.1.in_bounds-true:         ; preds = %entry
   %dynamic-slice.7.1.start_idx1 = select i1 %25, i64 0, i64 %24
   %26 = add i64 %dynamic-slice.7.1.start_idx0, %12
   %27 = add i64 %dynamic-slice.7.1.start_idx1, 0
-  %param_1.144 = getelementptr inbounds [192 x [1 x double]], ptr %arg1, i64 0, i64 %26, i64 0
-  %param_1.1449 = load double, ptr %param_1.144, align 8, !invariant.load !38
+  %param_1.143 = getelementptr inbounds [192 x [1 x double]], ptr %arg1, i64 0, i64 %26, i64 0
+  %param_1.1439 = load double, ptr %param_1.143, align 8, !invariant.load !38
   %28 = getelementptr inbounds [192 x double], ptr %arg0, i64 0, i64 %14
-  store double %param_1.1449, ptr %28, align 8
+  store double %param_1.1439, ptr %28, align 8
   br label %dynamic-update-slice.44.1.in_bounds-after
 }
 
 define void @loop_dynamic_update_slice_fusion_19(ptr noalias align 128 dereferenceable(1536) %arg0, ptr noalias align 16 dereferenceable(1536) %arg1, ptr noalias align 128 dereferenceable(8) %arg2) {
 entry:
-  %param_2.118 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.113 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_11 = load i64, ptr @29, align 8
-  %0 = icmp slt i64 %param_2.118, %constant_37_11
+  %0 = icmp slt i64 %param_2.113, %constant_37_11
   %1 = zext i1 %0 to i8
-  %param_2.1181 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1131 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_7 = load i64, ptr @28, align 8
-  %2 = add i64 %param_2.1181, %constant_36_7
-  %param_2.1182 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %2 = add i64 %param_2.1131, %constant_36_7
+  %param_2.1132 = load i64, ptr %arg2, align 8, !invariant.load !38
   %3 = trunc i8 %1 to i1
-  %4 = select i1 %3, i64 %2, i64 %param_2.1182
+  %4 = select i1 %3, i64 %2, i64 %param_2.1132
   %5 = icmp sge i64 0, %4
   %6 = select i1 %5, i64 0, i64 %4
   %7 = icmp sle i64 191, %6
@@ -794,25 +794,25 @@ dynamic-update-slice.41.1.in_bounds-after:        ; preds = %dynamic-update-slic
 
 dynamic-update-slice.41.1.in_bounds-true:         ; preds = %entry
   %14 = add i64 %8, %12
-  %param_2.1183 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1133 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_37_114 = load i64, ptr @29, align 8
-  %15 = icmp slt i64 %param_2.1183, %constant_37_114
+  %15 = icmp slt i64 %param_2.1133, %constant_37_114
   %16 = zext i1 %15 to i8
-  %param_2.1185 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %param_2.1135 = load i64, ptr %arg2, align 8, !invariant.load !38
   %constant_36_76 = load i64, ptr @28, align 8
-  %17 = add i64 %param_2.1185, %constant_36_76
-  %param_2.1187 = load i64, ptr %arg2, align 8, !invariant.load !38
+  %17 = add i64 %param_2.1135, %constant_36_76
+  %param_2.1137 = load i64, ptr %arg2, align 8, !invariant.load !38
   %18 = trunc i8 %16 to i1
-  %19 = select i1 %18, i64 %17, i64 %param_2.1187
+  %19 = select i1 %18, i64 %17, i64 %param_2.1137
   %20 = icmp sge i64 0, %19
   %21 = select i1 %20, i64 0, i64 %19
   %22 = icmp sle i64 191, %21
   %dynamic-slice.6.1.start_idx0 = select i1 %22, i64 191, i64 %21
   %23 = add i64 %dynamic-slice.6.1.start_idx0, %12
-  %param_1.138 = getelementptr inbounds [192 x double], ptr %arg1, i64 0, i64 %23
-  %param_1.1388 = load double, ptr %param_1.138, align 8, !invariant.load !38
+  %param_1.137 = getelementptr inbounds [192 x double], ptr %arg1, i64 0, i64 %23
+  %param_1.1378 = load double, ptr %param_1.137, align 8, !invariant.load !38
   %24 = getelementptr inbounds [192 x double], ptr %arg0, i64 0, i64 %14
-  store double %param_1.1388, ptr %24, align 8
+  store double %param_1.1378, ptr %24, align 8
   br label %dynamic-update-slice.41.1.in_bounds-after
 }
 

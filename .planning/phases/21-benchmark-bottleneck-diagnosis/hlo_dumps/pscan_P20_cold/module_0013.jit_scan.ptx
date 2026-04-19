@@ -3,7 +3,7 @@
 //
 
 .version 8.3
-.target sm_80
+.target sm_89
 .address_size 64
 
 	// .globl	input_slice_fusion
@@ -455,9 +455,9 @@ $L__BB5_3:
 	ld.global.nc.f64 	%fd1, [%rd10];
 	ld.global.nc.f64 	%fd2, [%rd6];
 	mul.rn.f64 	%fd3, %fd2, %fd2;
-	ld.global.nc.f64 	%fd4, [%rd9];
+	ld.global.nc.f64 	%fd4, [%rd8];
 	mul.rn.f64 	%fd5, %fd3, %fd4;
-	ld.global.nc.u64 	%rd11, [%rd8];
+	ld.global.nc.u64 	%rd11, [%rd9];
 	cvt.rn.f64.s64 	%fd6, %rd11;
 	mul.rn.f64 	%fd7, %fd5, %fd6;
 	add.rn.f64 	%fd8, %fd1, %fd7;

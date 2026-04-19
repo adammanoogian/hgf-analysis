@@ -3,7 +3,7 @@
 //
 
 .version 8.3
-.target sm_80
+.target sm_89
 .address_size 64
 
 	// .globl	wrapped_broadcast

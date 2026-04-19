@@ -7,3 +7,4 @@ P,cold_jit_s,same_proc_warm_s,next_proc_warm_s,draws_per_s,vram_peak_mb,status
 20,258.59,236.89,245.70,0.0844,453.0,completed
 50,228.99,91.93,229.00,0.2176,473.0,completed
 20,245.72,233.09,245.70,0.0858,449.0,completed
+20,195.36,178.17,,0.1123,465.0,completed

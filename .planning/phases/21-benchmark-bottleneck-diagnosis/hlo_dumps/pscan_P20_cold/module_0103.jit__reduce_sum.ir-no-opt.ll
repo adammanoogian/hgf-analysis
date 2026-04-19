@@ -42,7 +42,7 @@ reduce.7.1.inner.loop_body.reduction_dim.0:       ; preds = %reduce.7.1.inner.lo
   %7 = load double, ptr %6, align 8, !invariant.load !3
   store double %5, ptr %parameter_buffer, align 8
   store double %7, ptr %parameter_buffer1, align 8
-  call void @region_0_3_55bc06021760_39acfdde3893eeca(ptr %parameter_buffer, ptr %parameter_buffer1, ptr %return_buffer)
+  call void @region_0_3_55cf0700d430_ef1f79cdc80b66ea(ptr %parameter_buffer, ptr %parameter_buffer1, ptr %return_buffer)
   %8 = load double, ptr %return_buffer, align 8
   store double %8, ptr %accumulator_0, align 8
   %invar.inc = add nuw nsw i32 %reduce.7.1.inner.indvar.reduction_dim.0, 1
@@ -64,7 +64,7 @@ declare noundef i32 @llvm.nvvm.read.ptx.sreg.tid.x() #0
 ; Function Attrs: nocallback nofree nosync nounwind willreturn memory(inaccessiblemem: write)
 declare void @llvm.assume(i1 noundef) #1
 
-define internal void @region_0_3_55bc06021760_39acfdde3893eeca(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
+define internal void @region_0_3_55cf0700d430_ef1f79cdc80b66ea(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
 entry:
   %2 = alloca double, align 8
   %Arg_0.4 = load double, ptr %0, align 8

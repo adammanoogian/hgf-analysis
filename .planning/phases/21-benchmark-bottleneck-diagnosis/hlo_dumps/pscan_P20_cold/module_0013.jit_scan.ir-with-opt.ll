@@ -230,8 +230,8 @@ __nv_exp.exit8:                                   ; preds = %__nv_exp.exit, %__i
   %subtract.11.1 = fsub double 1.000000e+00, %divide.37.1.clone.1
   %multiply.71.1 = fmul double %divide.37.1.clone.1, %subtract.11.1
   %multiply.73.5.clone.1 = fmul double %11, %z.2.i7
-  %compare.20.3.clone.1 = fcmp ogt double %multiply.73.5.clone.1, 1.000000e-128
-  %91 = select i1 %compare.20.3.clone.1, double %multiply.73.5.clone.1, double 0x7FF8000000000000
+  %compare.20.2.clone.1 = fcmp ogt double %multiply.73.5.clone.1, 1.000000e-128
+  %91 = select i1 %compare.20.2.clone.1, double %multiply.73.5.clone.1, double 0x7FF8000000000000
   %92 = load double, ptr addrspace(1) %arg621, align 128, !invariant.load !40
   %divide.39.1.clone.1.clone.1 = fdiv double 1.000000e+00, %92
   %add.37.1.clone.1.clone.1 = fadd double %divide.39.1.clone.1.clone.1, %91
@@ -322,10 +322,10 @@ entry:
   %arg01 = addrspacecast ptr %arg0 to ptr addrspace(1)
   %0 = load double, ptr addrspace(1) %arg01, align 128, !invariant.load !40
   %1 = load double, ptr addrspace(1) %arg37, align 16, !invariant.load !40
-  %multiply.66.1 = fmul double %1, %1
-  %2 = load double, ptr addrspace(1) %arg13, align 128, !invariant.load !40
-  %multiply.67.7 = fmul double %multiply.66.1, %2
-  %3 = load i64, ptr addrspace(1) %arg25, align 128, !invariant.load !40
+  %multiply.66.3 = fmul double %1, %1
+  %2 = load double, ptr addrspace(1) %arg25, align 128, !invariant.load !40
+  %multiply.67.7 = fmul double %multiply.66.3, %2
+  %3 = load i64, ptr addrspace(1) %arg13, align 128, !invariant.load !40
   %4 = sitofp i64 %3 to double
   %multiply.68.5 = fmul double %multiply.67.7, %4
   %add.32.3 = fadd double %0, %multiply.68.5
@@ -387,15 +387,15 @@ entry:
   %arg27 = addrspacecast ptr %arg2 to ptr addrspace(1)
   %arg15 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg03 = addrspacecast ptr %arg0 to ptr addrspace(1)
-  %param_2.148 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
-  %0 = icmp slt i64 %param_2.148, 0
-  %1 = add i64 %param_2.148, 192
-  %2 = select i1 %0, i64 %1, i64 %param_2.148
+  %param_2.143 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
+  %0 = icmp slt i64 %param_2.143, 0
+  %1 = add i64 %param_2.143, 192
+  %2 = select i1 %0, i64 %1, i64 %param_2.143
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.160 = load double, ptr addrspace(1) %arg15, align 128, !invariant.load !40
+  %param_1.159 = load double, ptr addrspace(1) %arg15, align 128, !invariant.load !40
   %5 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg03, i64 0, i64 %4
-  store double %param_1.160, ptr addrspace(1) %5, align 8
+  store double %param_1.159, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -411,9 +411,9 @@ entry:
   %2 = select i1 %0, i64 %1, i64 %param_2.177
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.1804 = load double, ptr addrspace(1) %arg17, align 16, !invariant.load !40
+  %param_1.1814 = load double, ptr addrspace(1) %arg17, align 16, !invariant.load !40
   %5 = getelementptr inbounds [192 x [1 x double]], ptr addrspace(1) %arg05, i64 0, i64 %4, i64 0
-  store double %param_1.1804, ptr addrspace(1) %5, align 8
+  store double %param_1.1814, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -423,15 +423,15 @@ entry:
   %arg27 = addrspacecast ptr %arg2 to ptr addrspace(1)
   %arg15 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg03 = addrspacecast ptr %arg0 to ptr addrspace(1)
-  %param_2.103 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
-  %0 = icmp slt i64 %param_2.103, 0
-  %1 = add i64 %param_2.103, 192
-  %2 = select i1 %0, i64 %1, i64 %param_2.103
+  %param_2.98 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
+  %0 = icmp slt i64 %param_2.98, 0
+  %1 = add i64 %param_2.98, 192
+  %2 = select i1 %0, i64 %1, i64 %param_2.98
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.125 = load double, ptr addrspace(1) %arg15, align 16, !invariant.load !40
+  %param_1.124 = load double, ptr addrspace(1) %arg15, align 16, !invariant.load !40
   %5 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg03, i64 0, i64 %4
-  store double %param_1.125, ptr addrspace(1) %5, align 8
+  store double %param_1.124, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -441,15 +441,15 @@ entry:
   %arg27 = addrspacecast ptr %arg2 to ptr addrspace(1)
   %arg15 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg03 = addrspacecast ptr %arg0 to ptr addrspace(1)
-  %param_2.151 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
-  %0 = icmp slt i64 %param_2.151, 0
-  %1 = add i64 %param_2.151, 192
-  %2 = select i1 %0, i64 %1, i64 %param_2.151
+  %param_2.146 = load i64, ptr addrspace(1) %arg27, align 128, !invariant.load !40
+  %0 = icmp slt i64 %param_2.146, 0
+  %1 = add i64 %param_2.146, 192
+  %2 = select i1 %0, i64 %1, i64 %param_2.146
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.162 = load i64, ptr addrspace(1) %arg15, align 16, !invariant.load !40
+  %param_1.161 = load i64, ptr addrspace(1) %arg15, align 16, !invariant.load !40
   %5 = getelementptr inbounds [192 x i64], ptr addrspace(1) %arg03, i64 0, i64 %4
-  store i64 %param_1.162, ptr addrspace(1) %5, align 8
+  store i64 %param_1.161, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -459,16 +459,16 @@ entry:
   %arg213 = addrspacecast ptr %arg2 to ptr addrspace(1)
   %arg111 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg09 = addrspacecast ptr %arg0 to ptr addrspace(1)
-  %param_2.129 = load i64, ptr addrspace(1) %arg213, align 128, !invariant.load !40
-  %0 = icmp slt i64 %param_2.129, 0
-  %1 = add i64 %param_2.129, 192
-  %2 = select i1 %0, i64 %1, i64 %param_2.129
+  %param_2.124 = load i64, ptr addrspace(1) %arg213, align 128, !invariant.load !40
+  %0 = icmp slt i64 %param_2.124, 0
+  %1 = add i64 %param_2.124, 192
+  %2 = select i1 %0, i64 %1, i64 %param_2.124
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.146 = getelementptr inbounds [192 x i64], ptr addrspace(1) %arg111, i64 0, i64 %4
-  %param_1.1468 = load i64, ptr addrspace(1) %param_1.146, align 8, !invariant.load !40
+  %param_1.145 = getelementptr inbounds [192 x i64], ptr addrspace(1) %arg111, i64 0, i64 %4
+  %param_1.1458 = load i64, ptr addrspace(1) %param_1.145, align 8, !invariant.load !40
   %5 = getelementptr inbounds [192 x i64], ptr addrspace(1) %arg09, i64 0, i64 %4
-  store i64 %param_1.1468, ptr addrspace(1) %5, align 8
+  store i64 %param_1.1458, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -484,10 +484,10 @@ entry:
   %2 = select i1 %0, i64 %1, i64 %param_2.179
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.144 = getelementptr inbounds [192 x [1 x double]], ptr addrspace(1) %arg112, i64 0, i64 %4, i64 0
-  %param_1.1449 = load double, ptr addrspace(1) %param_1.144, align 8, !invariant.load !40
+  %param_1.143 = getelementptr inbounds [192 x [1 x double]], ptr addrspace(1) %arg112, i64 0, i64 %4, i64 0
+  %param_1.1439 = load double, ptr addrspace(1) %param_1.143, align 8, !invariant.load !40
   %5 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg010, i64 0, i64 %4
-  store double %param_1.1449, ptr addrspace(1) %5, align 8
+  store double %param_1.1439, ptr addrspace(1) %5, align 8
   ret void
 }
 
@@ -497,16 +497,16 @@ entry:
   %arg213 = addrspacecast ptr %arg2 to ptr addrspace(1)
   %arg111 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg09 = addrspacecast ptr %arg0 to ptr addrspace(1)
-  %param_2.118 = load i64, ptr addrspace(1) %arg213, align 128, !invariant.load !40
-  %0 = icmp slt i64 %param_2.118, 0
-  %1 = add i64 %param_2.118, 192
-  %2 = select i1 %0, i64 %1, i64 %param_2.118
+  %param_2.113 = load i64, ptr addrspace(1) %arg213, align 128, !invariant.load !40
+  %0 = icmp slt i64 %param_2.113, 0
+  %1 = add i64 %param_2.113, 192
+  %2 = select i1 %0, i64 %1, i64 %param_2.113
   %3 = tail call i64 @llvm.smax.i64(i64 %2, i64 0)
   %4 = tail call i64 @llvm.umin.i64(i64 %3, i64 191)
-  %param_1.138 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg111, i64 0, i64 %4
-  %param_1.1388 = load double, ptr addrspace(1) %param_1.138, align 8, !invariant.load !40
+  %param_1.137 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg111, i64 0, i64 %4
+  %param_1.1378 = load double, ptr addrspace(1) %param_1.137, align 8, !invariant.load !40
   %5 = getelementptr inbounds [192 x double], ptr addrspace(1) %arg09, i64 0, i64 %4
-  store double %param_1.1388, ptr addrspace(1) %5, align 8
+  store double %param_1.1378, ptr addrspace(1) %5, align 8
   ret void
 }
 

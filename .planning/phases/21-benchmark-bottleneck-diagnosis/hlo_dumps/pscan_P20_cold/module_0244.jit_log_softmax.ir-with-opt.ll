@@ -20,9 +20,9 @@ entry:
   %4 = udiv i16 %.lhs.trunc, 192
   %5 = zext nneg i16 %4 to i64
   %6 = zext nneg i16 %3 to i64
-  %param_0.10 = getelementptr inbounds [20 x [192 x [2 x double]]], ptr addrspace(1) %arg019, i64 0, i64 %5, i64 %6, i64 %1
-  %param_0.102 = load double, ptr addrspace(1) %param_0.10, align 8, !invariant.load !7
-  %add.2.i = fadd double %param_0.102, 0.000000e+00
+  %param_0.11 = getelementptr inbounds [20 x [192 x [2 x double]]], ptr addrspace(1) %arg019, i64 0, i64 %5, i64 %6, i64 %1
+  %param_0.112 = load double, ptr addrspace(1) %param_0.11, align 8, !invariant.load !7
+  %add.2.i = fadd double %param_0.112, 0.000000e+00
   %7 = bitcast double %add.2.i to <2 x i32>
   %8 = extractelement <2 x i32> %7, i64 0
   %9 = tail call i32 @llvm.nvvm.shfl.sync.down.i32(i32 -1, i32 %8, i32 1, i32 31)

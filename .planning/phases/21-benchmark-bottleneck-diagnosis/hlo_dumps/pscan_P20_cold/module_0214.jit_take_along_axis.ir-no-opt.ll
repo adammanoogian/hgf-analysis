@@ -160,7 +160,7 @@ reduce.4.inner.loop_body.reduction_dim.2:         ; preds = %reduce.4.inner.loop
   %20 = and i8 %15, %19
   store i8 %10, ptr %parameter_buffer, align 1
   store i8 %20, ptr %parameter_buffer1, align 1
-  call void @region_0_37_55bc09c05760_723b3d06758a8497(ptr %parameter_buffer, ptr %parameter_buffer1, ptr %return_buffer)
+  call void @region_0_37_55cf0ab40680_2d8809ed2d0a0cf9(ptr %parameter_buffer, ptr %parameter_buffer1, ptr %return_buffer)
   %21 = load i8, ptr %return_buffer, align 1
   store i8 %21, ptr %accumulator_0, align 1
   %invar.inc = add nuw nsw i32 %reduce.4.inner.indvar.reduction_dim.2, 1
@@ -230,7 +230,7 @@ reduce.4.inner.loop_exit.reduction_dim.2:         ; preds = %reduce.4.inner.loop
   br label %loop_select_fusion.in_bounds-after
 }
 
-define internal void @region_0_37_55bc09c05760_723b3d06758a8497(ptr dereferenceable(1) %0, ptr dereferenceable(1) %1, ptr dereferenceable(1) %output_arg) {
+define internal void @region_0_37_55cf0ab40680_2d8809ed2d0a0cf9(ptr dereferenceable(1) %0, ptr dereferenceable(1) %1, ptr dereferenceable(1) %output_arg) {
 entry:
   %2 = alloca i8, align 1
   %Arg_0.38 = load i8, ptr %0, align 1

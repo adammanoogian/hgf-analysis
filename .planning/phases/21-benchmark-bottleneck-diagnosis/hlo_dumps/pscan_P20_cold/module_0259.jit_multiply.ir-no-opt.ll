@@ -89,7 +89,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %21 = bitcast <2 x i32> %20 to i64
   %22 = bitcast i64 %21 to double
   store double %22, ptr %result_from_other_lane, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer32)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane, ptr %return_buffer32)
   %23 = load double, ptr %return_buffer32, align 8
   store double %23, ptr %partial_reduction_result, align 8
   %partial_reduction_result34 = load double, ptr %partial_reduction_result, align 8
@@ -104,7 +104,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %32 = bitcast <2 x i32> %31 to i64
   %33 = bitcast i64 %32 to double
   store double %33, ptr %result_from_other_lane33, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane33, ptr %return_buffer35)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane33, ptr %return_buffer35)
   %34 = load double, ptr %return_buffer35, align 8
   store double %34, ptr %partial_reduction_result, align 8
   %partial_reduction_result37 = load double, ptr %partial_reduction_result, align 8
@@ -119,7 +119,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %43 = bitcast <2 x i32> %42 to i64
   %44 = bitcast i64 %43 to double
   store double %44, ptr %result_from_other_lane36, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane36, ptr %return_buffer38)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane36, ptr %return_buffer38)
   %45 = load double, ptr %return_buffer38, align 8
   store double %45, ptr %partial_reduction_result, align 8
   %partial_reduction_result40 = load double, ptr %partial_reduction_result, align 8
@@ -134,7 +134,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %54 = bitcast <2 x i32> %53 to i64
   %55 = bitcast i64 %54 to double
   store double %55, ptr %result_from_other_lane39, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane39, ptr %return_buffer41)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane39, ptr %return_buffer41)
   %56 = load double, ptr %return_buffer41, align 8
   store double %56, ptr %partial_reduction_result, align 8
   %partial_reduction_result43 = load double, ptr %partial_reduction_result, align 8
@@ -149,7 +149,7 @@ loop1.loop_exit:                                  ; preds = %loop1.loop_header
   %65 = bitcast <2 x i32> %64 to i64
   %66 = bitcast i64 %65 to double
   store double %66, ptr %result_from_other_lane42, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %result_from_other_lane42, ptr %return_buffer44)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %result_from_other_lane42, ptr %return_buffer44)
   %67 = load double, ptr %return_buffer44, align 8
   store double %67, ptr %partial_reduction_result, align 8
   %68 = udiv i32 %thread.id.2, 32
@@ -203,7 +203,7 @@ loop3.loop_body:                                  ; preds = %loop3.loop_header
   %param_1.54 = load double, ptr %param_1.5, align 8, !invariant.load !7
   %multiply.2.1 = fmul double %param_0.73, %param_1.54
   store double %multiply.2.1, ptr %reduction_input_address, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer)
   %87 = load double, ptr %return_buffer, align 8
   store double %87, ptr %partial_reduction_result, align 8
   %88 = mul nuw nsw i32 %76, 1
@@ -295,7 +295,7 @@ loop3.loop_body16:                                ; preds = %loop3.loop_header15
   %param_1.523 = load double, ptr %param_1.522, align 8, !invariant.load !7
   %multiply.2.124 = fmul double %param_0.721, %param_1.523
   store double %multiply.2.124, ptr %reduction_input_address, align 8
-  call void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer25)
+  call void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr %partial_reduction_result, ptr %reduction_input_address, ptr %return_buffer25)
   %127 = load double, ptr %return_buffer25, align 8
   store double %127, ptr %partial_reduction_result, align 8
   %128 = mul nuw nsw i32 %116, 1
@@ -378,7 +378,7 @@ declare noundef i32 @llvm.nvvm.read.ptx.sreg.tid.x() #0
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
 declare noundef i32 @llvm.nvvm.read.ptx.sreg.ctaid.x() #0
 
-define internal void @region_0_10_55bc0a920780_39acfdde3893eeca(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
+define internal void @region_0_10_55cf0b854570_ef1f79cdc80b66ea(ptr dereferenceable(8) %0, ptr dereferenceable(8) %1, ptr dereferenceable(8) %output_arg) {
 entry:
   %2 = alloca double, align 8
   %Arg_0.11 = load double, ptr %0, align 8

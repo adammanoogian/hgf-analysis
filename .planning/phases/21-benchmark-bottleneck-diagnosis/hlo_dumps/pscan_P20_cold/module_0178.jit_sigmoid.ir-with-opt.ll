@@ -72,8 +72,8 @@ __internal_fast_icmp_abs_lt.exit.i:               ; preds = %loop_divide_multipl
 
 __nv_exp.exit:                                    ; preds = %loop_divide_multiply_fusion.in_bounds-true, %__internal_fast_icmp_abs_lt.exit.i, %36
   %z.2.i = phi double [ %28, %loop_divide_multiply_fusion.in_bounds-true ], [ %45, %36 ], [ %z.0.i, %__internal_fast_icmp_abs_lt.exit.i ]
-  %add.1.1.clone.1 = fadd double %z.2.i, 1.000000e+00
-  %divide.1.1.clone.1 = fdiv double 1.000000e+00, %add.1.1.clone.1
+  %add.1.3.clone.1 = fadd double %z.2.i, 1.000000e+00
+  %divide.1.1.clone.1 = fdiv double 1.000000e+00, %add.1.3.clone.1
   %subtract.1.1 = fsub double 1.000000e+00, %divide.1.1.clone.1
   %multiply.1.1 = fmul double %divide.1.1.clone.1, %subtract.1.1
   %46 = getelementptr double, ptr addrspace(1) %arg13, i64 %4

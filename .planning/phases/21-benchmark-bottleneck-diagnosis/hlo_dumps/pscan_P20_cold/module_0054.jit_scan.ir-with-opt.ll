@@ -45,12 +45,12 @@ entry:
   %2 = load double, ptr addrspace(1) %arg02, align 16, !invariant.load !25
   %3 = load double, ptr addrspace(1) %arg26, align 16, !invariant.load !25
   %4 = load double, ptr addrspace(1) %arg14, align 16, !invariant.load !25
-  %multiply.192.13 = fmul double %3, %4
-  %add.79.11 = fadd double %2, %multiply.192.13
-  %5 = tail call double @llvm.fma.f64(double %add.79.11, double 0x3FF71547652B82FE, double 0x4338000000000000)
+  %multiply.192.9 = fmul double %3, %4
+  %add.79.7 = fadd double %2, %multiply.192.9
+  %5 = tail call double @llvm.fma.f64(double %add.79.7, double 0x3FF71547652B82FE, double 0x4338000000000000)
   %6 = tail call i32 @llvm.nvvm.d2i.lo(double %5) #4
   %7 = tail call double @llvm.nvvm.add.rn.d(double %5, double 0xC338000000000000) #4
-  %8 = tail call double @llvm.fma.f64(double %7, double 0xBFE62E42FEFA39EF, double %add.79.11)
+  %8 = tail call double @llvm.fma.f64(double %7, double 0xBFE62E42FEFA39EF, double %add.79.7)
   %9 = tail call double @llvm.fma.f64(double %7, double 0xBC7ABC9E3B39803F, double %8)
   %10 = tail call double @llvm.fma.f64(double %9, double 0x3E5ADE1569CE2BDF, double 0x3E928AF3FCA213EA)
   %11 = tail call double @llvm.fma.f64(double %10, double %9, double 0x3EC71DEE62401315)
@@ -68,15 +68,15 @@ entry:
   %23 = shl i32 %6, 20
   %24 = add i32 %22, %23
   %25 = tail call double @llvm.nvvm.lohi.i2d(i32 %21, i32 %24) #4
-  %26 = tail call i32 @llvm.nvvm.d2i.hi(double %add.79.11) #4
+  %26 = tail call i32 @llvm.nvvm.d2i.hi(double %add.79.7) #4
   %27 = bitcast i32 %26 to float
   %28 = tail call float @llvm.nvvm.fabs.f(float %27) #4
   %29 = fcmp olt float %28, 0x4010C46560000000
   br i1 %29, label %__nv_exp.exit, label %__internal_fast_icmp_abs_lt.exit.i
 
 __internal_fast_icmp_abs_lt.exit.i:               ; preds = %entry
-  %30 = fcmp olt double %add.79.11, 0.000000e+00
-  %31 = fadd double %add.79.11, 0x7FF0000000000000
+  %30 = fcmp olt double %add.79.7, 0.000000e+00
+  %31 = fadd double %add.79.7, 0x7FF0000000000000
   %z.0.i = select i1 %30, double 0.000000e+00, double %31
   %32 = fcmp olt float %28, 0x4010E90000000000
   br i1 %32, label %33, label %__nv_exp.exit
@@ -96,11 +96,11 @@ __internal_fast_icmp_abs_lt.exit.i:               ; preds = %entry
 __nv_exp.exit:                                    ; preds = %entry, %__internal_fast_icmp_abs_lt.exit.i, %33
   %z.2.i = phi double [ %25, %entry ], [ %42, %33 ], [ %z.0.i, %__internal_fast_icmp_abs_lt.exit.i ]
   %divide.82.1.clone.1 = fdiv double 1.000000e+00, %0
-  %multiply.193.7 = fmul double %1, %z.2.i
-  %compare.31.5 = fcmp ogt double %multiply.193.7, 1.000000e-128
-  %43 = select i1 %compare.31.5, double %multiply.193.7, double 0x7FF8000000000000
-  %add.80.2 = fadd double %divide.82.1.clone.1, %43
-  %divide.83.1 = fdiv double 1.000000e+00, %add.80.2
+  %multiply.193.3 = fmul double %1, %z.2.i
+  %compare.31.6 = fcmp ogt double %multiply.193.3, 1.000000e-128
+  %43 = select i1 %compare.31.6, double %multiply.193.3, double 0x7FF8000000000000
+  %add.80.5 = fadd double %divide.82.1.clone.1, %43
+  %divide.83.1 = fdiv double 1.000000e+00, %add.80.5
   store double %divide.83.1, ptr addrspace(1) %arg512, align 128
   store double %divide.82.1.clone.1, ptr addrspace(1) %arg614, align 128
   ret void
@@ -291,7 +291,7 @@ __nv_exp.exit:                                    ; preds = %entry, %__internal_
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: readwrite)
-define void @loop_select_fusion(ptr noalias nocapture readonly align 128 dereferenceable(8) %arg0, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg1, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg2, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg3, ptr noalias nocapture writeonly align 128 dereferenceable(8) %arg4) local_unnamed_addr #0 {
+define void @loop_select_fusion(ptr noalias nocapture readonly align 128 dereferenceable(8) %arg0, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg1, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg2, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg3, ptr noalias nocapture writeonly align 128 dereferenceable(8) %arg4) local_unnamed_addr #0 {
 entry:
   %arg49 = addrspacecast ptr %arg4 to ptr addrspace(1)
   %arg37 = addrspacecast ptr %arg3 to ptr addrspace(1)
@@ -300,10 +300,10 @@ entry:
   %arg01 = addrspacecast ptr %arg0 to ptr addrspace(1)
   %0 = load double, ptr addrspace(1) %arg01, align 128, !invariant.load !25
   %1 = load double, ptr addrspace(1) %arg37, align 16, !invariant.load !25
-  %multiply.175.1 = fmul double %1, %1
-  %2 = load double, ptr addrspace(1) %arg13, align 128, !invariant.load !25
-  %multiply.176.7 = fmul double %multiply.175.1, %2
-  %3 = load i64, ptr addrspace(1) %arg25, align 16, !invariant.load !25
+  %multiply.175.3 = fmul double %1, %1
+  %2 = load double, ptr addrspace(1) %arg25, align 128, !invariant.load !25
+  %multiply.176.7 = fmul double %multiply.175.3, %2
+  %3 = load i64, ptr addrspace(1) %arg13, align 16, !invariant.load !25
   %4 = sitofp i64 %3 to double
   %multiply.177.5 = fmul double %multiply.176.7, %4
   %add.73.3 = fadd double %0, %multiply.177.5
@@ -462,12 +462,12 @@ __nv_exp.exit9:                                   ; preds = %__nv_exp.exit, %__i
   %z.2.i8 = phi double [ %76, %__nv_exp.exit ], [ %93, %84 ], [ %z.0.i7, %__internal_fast_icmp_abs_lt.exit.i6 ]
   %divide.86.1.clone.1 = fdiv double 1.000000e+00, %54
   %multiply.193.5.clone.1 = fmul double %2, %z.2.i
-  %compare.31.3.clone.1 = fcmp ogt double %multiply.193.5.clone.1, 1.000000e-128
-  %94 = select i1 %compare.31.3.clone.1, double %multiply.193.5.clone.1, double 0x7FF8000000000000
+  %compare.31.2.clone.1 = fcmp ogt double %multiply.193.5.clone.1, 1.000000e-128
+  %94 = select i1 %compare.31.2.clone.1, double %multiply.193.5.clone.1, double 0x7FF8000000000000
   %multiply.199.1.clone.1 = fmul double %45, %94
   %multiply.207.9 = fmul double %4, %multiply.199.1.clone.1
-  %add.80.1.clone.1 = fadd double %46, %94
-  %multiply.200.1.clone.1 = fmul double %47, %add.80.1.clone.1
+  %add.80.3.clone.1 = fadd double %46, %94
+  %multiply.200.1.clone.1 = fmul double %47, %add.80.3.clone.1
   %divide.85.1.clone.1 = fdiv double 1.000000e+00, %multiply.200.1.clone.1
   %multiply.194.7.clone.1 = fmul double %49, %50
   %divide.84.5.clone.1 = fdiv double %multiply.194.7.clone.1, %47
@@ -487,9 +487,9 @@ __nv_exp.exit9:                                   ; preds = %__nv_exp.exit, %__i
   %multiply.204.1.clone.1 = fmul double %0, %1
   %multiply.205.3.clone.1 = fmul double %2, %3
   %add.84.1.clone.1 = fadd double %multiply.204.1.clone.1, %multiply.205.3.clone.1
-  %multiply.206.7.clone.1 = fmul double %2, %z.2.i8
-  %compare.33.5.clone.1 = fcmp ogt double %multiply.206.7.clone.1, 1.000000e-128
-  %96 = select i1 %compare.33.5.clone.1, double %multiply.206.7.clone.1, double 0x7FF8000000000000
+  %multiply.206.3.clone.1 = fmul double %2, %z.2.i8
+  %compare.33.1.clone.1 = fcmp ogt double %multiply.206.3.clone.1, 1.000000e-128
+  %96 = select i1 %compare.33.1.clone.1, double %multiply.206.3.clone.1, double 0x7FF8000000000000
   %add.85.1.clone.1 = fadd double %divide.86.1.clone.1, %96
   %divide.87.1.clone.1 = fdiv double 1.000000e+00, %add.85.1.clone.1
   %multiply.209.1 = fmul double %divide.87.1.clone.1, 2.000000e+00
@@ -570,8 +570,8 @@ __internal_fast_icmp_abs_lt.exit.i:               ; preds = %entry
 __nv_exp.exit:                                    ; preds = %entry, %__internal_fast_icmp_abs_lt.exit.i, %30
   %z.2.i = phi double [ %22, %entry ], [ %39, %30 ], [ %z.0.i, %__internal_fast_icmp_abs_lt.exit.i ]
   %multiply.206.5 = fmul double %0, %z.2.i
-  %compare.33.3 = fcmp ogt double %multiply.206.5, 1.000000e-128
-  %40 = select i1 %compare.33.3, double %multiply.206.5, double 0x7FF8000000000000
+  %compare.33.2 = fcmp ogt double %multiply.206.5, 1.000000e-128
+  %40 = select i1 %compare.33.2, double %multiply.206.5, double 0x7FF8000000000000
   %41 = load double, ptr addrspace(1) %arg01, align 128, !invariant.load !25
   %multiply.212.1 = fmul double %41, %40
   store double %multiply.212.1, ptr addrspace(1) %arg37, align 128
@@ -646,7 +646,7 @@ __nv_exp.exit:                                    ; preds = %entry, %__internal_
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: readwrite)
-define void @loop_select_fusion_1(ptr noalias nocapture readonly align 128 dereferenceable(8) %arg0, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg1, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg2, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg3, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg4, ptr noalias nocapture writeonly align 128 dereferenceable(8) %arg5) local_unnamed_addr #0 {
+define void @loop_select_fusion_1(ptr noalias nocapture readonly align 128 dereferenceable(8) %arg0, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg1, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg2, ptr noalias nocapture readonly align 128 dereferenceable(8) %arg3, ptr noalias nocapture readonly align 16 dereferenceable(8) %arg4, ptr noalias nocapture writeonly align 128 dereferenceable(8) %arg5) local_unnamed_addr #0 {
 entry:
   %arg512 = addrspacecast ptr %arg5 to ptr addrspace(1)
   %arg410 = addrspacecast ptr %arg4 to ptr addrspace(1)
@@ -655,20 +655,20 @@ entry:
   %arg14 = addrspacecast ptr %arg1 to ptr addrspace(1)
   %arg02 = addrspacecast ptr %arg0 to ptr addrspace(1)
   %0 = load double, ptr addrspace(1) %arg02, align 128, !invariant.load !25
-  %1 = load double, ptr addrspace(1) %arg38, align 16, !invariant.load !25
-  %2 = load double, ptr addrspace(1) %arg26, align 128, !invariant.load !25
-  %multiply.179.3 = fmul double %1, %2
-  %multiply.180.1 = fmul double %multiply.179.3, %multiply.179.3
-  %multiply.181.1 = fmul double %multiply.180.1, 5.000000e-01
-  %3 = load double, ptr addrspace(1) %arg14, align 128, !invariant.load !25
-  %multiply.182.1 = fmul double %3, %multiply.180.1
-  %add.75.1 = fadd double %multiply.181.1, %multiply.182.1
+  %1 = load double, ptr addrspace(1) %arg410, align 16, !invariant.load !25
+  %2 = load double, ptr addrspace(1) %arg38, align 128, !invariant.load !25
+  %multiply.179.5 = fmul double %1, %2
+  %multiply.180.3 = fmul double %multiply.179.5, %multiply.179.5
+  %multiply.181.3 = fmul double %multiply.180.3, 5.000000e-01
+  %3 = load double, ptr addrspace(1) %arg26, align 128, !invariant.load !25
+  %multiply.182.3 = fmul double %3, %multiply.180.3
+  %add.75.3 = fadd double %multiply.181.3, %multiply.182.3
   %multiply.183.15 = fmul double %1, %1
   %multiply.184.13 = fmul double %multiply.183.15, 5.000000e-01
   %multiply.185.11 = fmul double %2, %multiply.184.13
   %multiply.186.9 = fmul double %3, %multiply.185.11
-  %subtract.23.7 = fsub double %add.75.1, %multiply.186.9
-  %4 = load i64, ptr addrspace(1) %arg410, align 16, !invariant.load !25
+  %subtract.23.7 = fsub double %add.75.3, %multiply.186.9
+  %4 = load i64, ptr addrspace(1) %arg14, align 16, !invariant.load !25
   %5 = sitofp i64 %4 to double
   %multiply.187.5 = fmul double %subtract.23.7, %5
   %add.76.3 = fadd double %0, %multiply.187.5
