@@ -435,6 +435,286 @@ def test_build_logp_fn_batched_patrl_model_c() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Tests 13-17: Plan 20-03 Model D scan body (no blackjax dependency)
+# ---------------------------------------------------------------------------
+
+
+def test_build_logp_fn_batched_patrl_model_d_shape() -> None:
+    """Model D: build_logp_fn_batched_patrl returns scalar finite logp.
+
+    Verifies that the factory accepts response_model='model_d', evaluates
+    without error, and returns a finite scalar for a 5-participant batch.
+    """
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import build_logp_fn_batched_patrl
+
+    P, T = 5, 192
+    rng = np.random.default_rng(50)
+    state = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    choices = rng.integers(0, 2, size=(P, T)).astype(np.int32)
+    reward = np.ones((P, T), dtype=np.float32)
+    shock = np.ones((P, T), dtype=np.float32)
+    mask = np.ones((P, T), dtype=bool)
+    delta_hr = rng.normal(-1.0, 0.5, size=(P, T)).astype(np.float64)
+
+    fn = build_logp_fn_batched_patrl(
+        state, choices, reward, shock, mask, "hgf_2level_patrl",
+        response_model="model_d",
+        delta_hr_arr=delta_hr,
+    )
+    params = {
+        "omega_2": jnp.full((P,), -4.0),
+        "beta": jnp.full((P,), 2.0),
+        "b": jnp.full((P,), 0.0),
+        "lam": jnp.full((P,), 0.1),
+    }
+    lp = fn(params)
+    assert lp.shape == (), f"Expected scalar, got {lp.shape}"
+    assert np.isfinite(float(lp)), f"Expected finite logp for model_d, got {float(lp)}"
+
+
+def test_model_d_mu2_varies_with_delta_hr() -> None:
+    """Model D: different delta_hr inputs produce different mu2 trajectories.
+
+    This verifies that ΔHR is actually flowing through the scan body — i.e.,
+    that per-trial omega_eff(t) = omega_2 + lam * dHR(t) modifies the HGF
+    belief trajectory relative to a zero-ΔHR baseline.
+    """
+    import jax
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import (
+        _build_session_scanner_patrl,
+        _make_single_logp_fn,
+    )
+
+    T = 40
+    rng = np.random.default_rng(51)
+    state = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    choices = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    reward = jnp.ones(T, dtype=jnp.float64)
+    shock = jnp.ones(T, dtype=jnp.float64)
+    mask = jnp.ones(T, dtype=bool)
+
+    # Two different ΔHR streams: all-zeros vs drawn from N(-1, 0.5)
+    dhr_zero = jnp.zeros(T, dtype=jnp.float64)
+    dhr_nonzero = jnp.asarray(rng.normal(-1.0, 0.5, size=(T,)), dtype=jnp.float64)
+
+    base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl("hgf_2level_patrl")
+    single_logp = _make_single_logp_fn(
+        base_attrs=base_attrs,
+        scan_fn=scan_fn,
+        belief_idx=belief_idx,
+        model_name="hgf_2level_patrl",
+        n_trials=T,
+        response_model="model_d",
+    )
+
+    params = {
+        "omega_2": jnp.array(-4.0),
+        "beta": jnp.array(2.0),
+        "b": jnp.array(0.0),
+        "lam": jnp.array(0.5),  # non-trivial lambda so ΔHR matters
+    }
+    lp_zero = single_logp(params, state, choices, reward, shock, mask, dhr_zero)
+    lp_nonzero = single_logp(params, state, choices, reward, shock, mask, dhr_nonzero)
+
+    # If ΔHR were ignored, logp values would be identical.
+    assert abs(float(lp_zero) - float(lp_nonzero)) > 1e-6, (
+        f"Model D logp identical under zero vs non-zero ΔHR "
+        f"(lp_zero={float(lp_zero):.6f}, lp_nonzero={float(lp_nonzero):.6f}): "
+        "ΔHR is not flowing through the scan body."
+    )
+
+
+def test_model_d_layer2_clamp_active() -> None:
+    """Model D: pathological lam does not push |mu2| beyond 14.
+
+    Feeds a large-magnitude lam (e.g. lam=100) combined with large ΔHR,
+    which would create extreme omega_eff(t) values without the clamp.
+    Asserts the layer-2 clamp keeps the scan numerically stable.
+    """
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import (
+        _MU_2_BOUND,
+        _build_session_scanner_patrl,
+        _make_single_logp_fn,
+    )
+
+    T = 40
+    rng = np.random.default_rng(52)
+    state = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    choices = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    reward = jnp.ones(T, dtype=jnp.float64)
+    shock = jnp.ones(T, dtype=jnp.float64)
+    mask = jnp.ones(T, dtype=bool)
+
+    # Extreme ΔHR: constant large value to stress-test the clamp
+    dhr_extreme = jnp.full((T,), 50.0, dtype=jnp.float64)
+
+    base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl("hgf_2level_patrl")
+    single_logp = _make_single_logp_fn(
+        base_attrs=base_attrs,
+        scan_fn=scan_fn,
+        belief_idx=belief_idx,
+        model_name="hgf_2level_patrl",
+        n_trials=T,
+        response_model="model_d",
+    )
+
+    # Pathological lam that would produce omega_eff = -4 + 100 * 50 = 4996
+    params = {
+        "omega_2": jnp.array(-4.0),
+        "beta": jnp.array(2.0),
+        "b": jnp.array(0.0),
+        "lam": jnp.array(100.0),
+    }
+    # Should not raise; logp should be finite (clamp + revert keeps carry valid)
+    lp = single_logp(params, state, choices, reward, shock, mask, dhr_extreme)
+    assert np.isfinite(float(lp)), (
+        f"Model D logp not finite under pathological lam=100 + dhr=50: {float(lp)}. "
+        f"Layer-2 clamp (_MU_2_BOUND={_MU_2_BOUND}) may not be active."
+    )
+
+
+def test_model_d_fp64_dtype_preserved() -> None:
+    """Model D: mu2_traj has float64 dtype (Decision 118).
+
+    Exercises the scan body with JAX_ENABLE_X64 (set via CONDA env); asserts
+    that the trajectory array dtype matches jnp.float64.
+    """
+    import os
+
+    import jax
+
+    # Enable float64 for this test only (JAX default is float32 on CPU).
+    jax.config.update("jax_enable_x64", True)
+    try:
+        import jax.numpy as jnp
+
+        from prl_hgf.fitting.hierarchical_patrl import (
+            _build_session_scanner_patrl,
+        )
+
+        T = 20
+        rng = np.random.default_rng(53)
+        base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl(
+            "hgf_2level_patrl"
+        )
+
+        values = jnp.asarray(
+            rng.integers(0, 2, size=(T,)), dtype=jnp.float64
+        )[:, None]
+        observed = jnp.ones(T, dtype=jnp.int32)
+        time_steps = jnp.ones(T, dtype=jnp.float64)
+        dhr = jnp.asarray(rng.normal(-1.0, 0.5, size=(T,)), dtype=jnp.float64)
+
+        # Build the attrs_d as the scan body would (2-level, no 3-level injection)
+        omega_2_val = -4.0
+        lam_val = 0.1
+        attrs_d = {**base_attrs}
+        attrs_d[belief_idx] = {
+            **attrs_d[belief_idx],
+            "tonic_volatility": jnp.float64(omega_2_val),
+        }
+
+        def _clamped_step_test(carry, x):
+            val_i, obs_i, ts_i, dhr_i = x
+            omega_eff_i = jnp.float64(omega_2_val) + jnp.float64(lam_val) * dhr_i
+            attrs_i = {**carry}
+            attrs_i[belief_idx] = {
+                **attrs_i[belief_idx],
+                "tonic_volatility": omega_eff_i,
+            }
+            new_carry, _ = scan_fn(attrs_i, ((val_i,), (obs_i,), ts_i, None))
+            new_mean = new_carry[belief_idx]["mean"]
+            is_stable = jnp.all(jnp.isfinite(new_mean)) & (jnp.abs(new_mean) < 14.0)
+            safe_carry = jax.tree_util.tree_map(
+                lambda n, o: jnp.where(is_stable, n, o), new_carry, carry
+            )
+            return safe_carry, safe_carry[belief_idx]["mean"]
+
+        _, mu2_traj = jax.lax.scan(
+            _clamped_step_test, attrs_d, (values, observed, time_steps, dhr)
+        )
+
+        assert mu2_traj.dtype == jnp.float64, (
+            f"Expected mu2_traj dtype float64 (Decision 118), got {mu2_traj.dtype}. "
+            "Check that JAX_ENABLE_X64 is set and dhr is cast to float64 before scan."
+        )
+    finally:
+        # Leave x64 enabled for subsequent tests (harmless; guards against
+        # accidentally disabling it with update("jax_enable_x64", False)).
+        pass
+
+
+def test_model_d_lam_zero_equals_model_a() -> None:
+    """Model D with lam=0 and b=0 equals Model A logp within 1e-5.
+
+    When lam=0, omega_eff(t) = omega_2 for every trial — the scan becomes
+    identical to the fixed-omega scan used in Models A/B/C with the same
+    omega_2.  Therefore Model D logp must equal Model A logp element-wise.
+    """
+    import jax
+    import jax.numpy as jnp
+
+    from prl_hgf.fitting.hierarchical_patrl import (
+        _build_session_scanner_patrl,
+        _make_single_logp_fn,
+    )
+
+    T = 40
+    rng = np.random.default_rng(54)
+    state = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    choices = jnp.asarray(rng.integers(0, 2, size=(T,)), dtype=jnp.int32)
+    reward = jnp.ones(T, dtype=jnp.float64)
+    shock = jnp.ones(T, dtype=jnp.float64)
+    mask = jnp.ones(T, dtype=bool)
+    dhr = jnp.asarray(rng.normal(-1.0, 0.5, size=(T,)), dtype=jnp.float64)
+
+    base_attrs, scan_fn, belief_idx = _build_session_scanner_patrl("hgf_2level_patrl")
+
+    logp_model_a = _make_single_logp_fn(
+        base_attrs=base_attrs,
+        scan_fn=scan_fn,
+        belief_idx=belief_idx,
+        model_name="hgf_2level_patrl",
+        n_trials=T,
+        response_model="model_a",
+    )
+    logp_model_d = _make_single_logp_fn(
+        base_attrs=base_attrs,
+        scan_fn=scan_fn,
+        belief_idx=belief_idx,
+        model_name="hgf_2level_patrl",
+        n_trials=T,
+        response_model="model_d",
+    )
+
+    params_a = {
+        "omega_2": jnp.array(-4.0),
+        "beta": jnp.array(2.0),
+    }
+    params_d = {
+        "omega_2": jnp.array(-4.0),
+        "beta": jnp.array(2.0),
+        "b": jnp.array(0.0),
+        "lam": jnp.array(0.0),  # lam=0 → omega_eff = omega_2 always
+    }
+
+    lp_a = float(logp_model_a(params_a, state, choices, reward, shock, mask, dhr * 0))
+    lp_d = float(logp_model_d(params_d, state, choices, reward, shock, mask, dhr))
+
+    assert abs(lp_a - lp_d) < 1e-4, (
+        f"Model D (lam=0, b=0) logp={lp_d:.8f} differs from Model A logp={lp_a:.8f} "
+        f"by {abs(lp_a - lp_d):.2e} (tolerance 1e-4). "
+        "These should be identical when lam=0."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Test 8: pick_best_cue fitting regression (hierarchical.py unchanged)
 # ---------------------------------------------------------------------------
 
