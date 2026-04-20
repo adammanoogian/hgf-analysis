@@ -166,10 +166,11 @@ Plans:
 Gap-closure (14.1): code complete post-verification, operational gaps remain (cluster runs never executed; sampler drift post-Phase 17)
 - [x] 14.1-01-PLAN.md — SLURM auto-push + SAMPLER env var on cluster/14_benchmark_gpu.slurm (completed 2026-04-18)
 - [~] 14.1-02-PLAN.md — ~~Triage in-flight numpyro benchmark~~ SUPERSEDED 2026-04-18 by 14.1-03 (numpyro run was erroneous; no artifact to preserve)
-- [ ] 14.1-03-PLAN.md — Submit BlackJAX benchmark on M3 for Phase 15 production sampler gate (sole benchmark-execution gap-closure)
+- [ ] 14.1-03-PLAN.md — Submit BlackJAX benchmark on M3 for Phase 15 production sampler gate (sole benchmark-execution gap-closure) (prerequisite 14.1-07 satisfied 2026-04-20)
 - [ ] 14.1-04-PLAN.md — VALID-03 CPU vs GPU run (auto-push patch + submit + compare verdict)
 - [ ] 14.1-05-PLAN.md — Cross-chunk JIT cache persistence test (BENCH-05 human-verify #2)
 - [ ] 14.1-06-PLAN.md — Phase 14 re-verification; flip VERIFICATION.md status; unblock Phase 15
+- [x] 14.1-07-PLAN.md — Node-pin gap closure (active_strategy=shared-dir, next_proc/cold @ P=50 = 1.04× with gate miscalibration caveat — mechanism confirmed 10/10 cross-node hits; Phase 14.1-03 unblocked, completed 2026-04-20)
 
 ### Phase 15: Production Run + Results
 
