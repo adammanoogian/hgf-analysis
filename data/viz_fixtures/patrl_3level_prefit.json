@@ -1,0 +1,62 @@
+{
+  "task": "pat_rl",
+  "model": "hgf_3level_patrl",
+  "source_pyhgf_version": "0.2.8",
+  "n_nodes": 3,
+  "input_idxs": [0],
+  "nodes": [
+    {
+      "idx": 0,
+      "kind": "binary-state",
+      "level": 1,
+      "role": "input",
+      "branch_idx": 0,
+      "value_parents": [1],
+      "volatility_parents": [],
+      "value_children": [],
+      "volatility_children": [],
+      "visual": {
+        "shape": "square",
+        "level_band": "L1"
+      }
+    },
+    {
+      "idx": 1,
+      "kind": "continuous-state",
+      "level": 2,
+      "role": "value",
+      "branch_idx": 0,
+      "value_parents": [],
+      "volatility_parents": [2],
+      "value_children": [0],
+      "volatility_children": [],
+      "visual": {
+        "shape": "circle",
+        "level_band": "L2"
+      }
+    },
+    {
+      "idx": 2,
+      "kind": "continuous-state",
+      "level": 3,
+      "role": "volatility",
+      "branch_idx": 0,
+      "value_parents": [],
+      "volatility_parents": [],
+      "value_children": [],
+      "volatility_children": [1],
+      "visual": {
+        "shape": "hexagon",
+        "level_band": "L3"
+      }
+    }
+  ],
+  "parameters": {
+    "omega_2": {"symbol": "ω₂", "prior": {"distribution": "normal", "mean": -4.0, "sd": 2.0}},
+    "omega_3": {"symbol": "ω₃", "prior": {"distribution": "normal", "mean": -6.0, "sd": 2.0}},
+    "kappa":   {"symbol": "κ",       "prior": {"distribution": "truncated_normal", "mean": 1.0, "sd": 0.5, "lower": 0.0, "upper": 2.0}},
+    "beta":    {"symbol": "β",       "prior": {"distribution": "truncated_normal", "mean": 4.0, "sd": 3.0, "lower": 0.0, "upper": 20.0}},
+    "mu3_0":   {"symbol": "μ₃⁰", "prior": {"distribution": "normal", "mean": 1.0, "sd": 1.0}},
+    "b":       {"symbol": "b",            "prior": {"distribution": "normal", "mean": 0.0, "sd": 1.0}}
+  }
+}

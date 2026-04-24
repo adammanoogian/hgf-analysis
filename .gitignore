@@ -3,7 +3,9 @@ output/
 figures/
 
 # Data (not committed - too large / sensitive)
-data/
+data/*
+# ...but viz_fixtures/ ships schema-round-trip inputs (Phase 22+) -- commit them
+!data/viz_fixtures/
 
 # Python
 __pycache__/
