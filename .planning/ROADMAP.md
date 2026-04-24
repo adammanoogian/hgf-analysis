@@ -446,10 +446,13 @@ integration tests instantiate real pyhgf Network objects), P13 (handoff first-pa
 P14 (single schema format — JSON only for HTML injection; no parallel YAML schema),
 P15 (new deps verified in ds_env), P16 (role from adjacency structure)
 **Effort**: 1-2 dev days
-**Plans**: TBD (run `/gsd:plan-phase 22` to break down)
+**Plans**: 4 plans in 4 waves
 
 Plans:
-- [ ] TBD
+- [ ] 22-01-PLAN.md — REPL verify pyhgf Network API + inspector.py BFS + HANDOFF doc first-pass
+- [ ] 22-02-PLAN.md — roles.py adjacency-only infer_role + BFS level/branch helpers
+- [ ] 22-03-PLAN.md — schema.py frozen NetworkSpec + dual coord-name + PAT-RL 3-level fixture JSON
+- [ ] 22-04-PLAN.md — tests: inspector canary, roles coverage, schema round-trip + Laplace suppression
 
 ### Phase 23: Export + Template Promotion
 
