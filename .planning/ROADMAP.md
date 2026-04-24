@@ -449,10 +449,12 @@ P15 (new deps verified in ds_env), P16 (role from adjacency structure)
 **Plans**: 4 plans in 4 waves
 
 Plans:
-- [ ] 22-01-PLAN.md — REPL verify pyhgf Network API + inspector.py BFS + HANDOFF doc first-pass
-- [ ] 22-02-PLAN.md — roles.py adjacency-only infer_role + BFS level/branch helpers
-- [ ] 22-03-PLAN.md — schema.py frozen NetworkSpec + dual coord-name + PAT-RL 3-level fixture JSON
-- [ ] 22-04-PLAN.md — tests: inspector canary, roles coverage, schema round-trip + Laplace suppression
+- [x] 22-01-PLAN.md — REPL verify pyhgf Network API + inspector.py BFS + HANDOFF doc first-pass
+- [x] 22-02-PLAN.md — roles.py adjacency-only infer_role + BFS level/branch helpers
+- [x] 22-03-PLAN.md — schema.py frozen NetworkSpec + dual coord-name + PAT-RL 3-level fixture JSON
+- [x] 22-04-PLAN.md — tests: inspector canary, roles coverage, schema round-trip + Laplace suppression
+
+**Status: 4/4 Complete 2026-04-24**
 
 ### Phase 23: Export + Template Promotion
 
