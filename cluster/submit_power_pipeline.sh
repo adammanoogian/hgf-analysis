@@ -16,12 +16,12 @@
 #
 # Quick start on M3 (first time):
 #   cd /scratch/fc37/$USER
-#   git clone git@github.com:adammanoogian/psilocybin-prl-analyses.git
-#   cd psilocybin-prl-analyses
+#   git clone git@github.com:adammanoogian/hgf-analysis.git
+#   cd hgf-analysis
 #   bash cluster/submit_power_pipeline.sh --setup --benchmark
 #
 # Subsequent sessions:
-#   cd /scratch/fc37/$USER/psilocybin-prl-analyses
+#   cd /scratch/fc37/$USER/hgf-analysis
 #   bash cluster/submit_power_pipeline.sh --setup --benchmark  # pull + benchmark
 # =============================================================================
 

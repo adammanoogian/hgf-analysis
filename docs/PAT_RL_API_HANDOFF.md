@@ -1,6 +1,6 @@
 # PAT-RL Public API Handoff for dcm_hgf_mixed_models (downstream sister-toolbox) v2
 
-**Source repo:** `psilocybin_prl_analyses` (this repo)
+**Source repo:** `hgf-analysis` (this repo)
 **Consumer repo:** `dcm_hgf_mixed_models` (downstream sister-toolbox) — v2 Sister-Toolbox Integration
 **Supersedes:** `dcm_hgf_mixed_models/.planning/research/SISTER_API_PRL_HGF.md` (written before Phases 18-19; documents the older pick_best_cue surface)
 **As of:** 2026-04-18 (Phase 18 cluster-smoke-validated; Phase 19 code-complete)

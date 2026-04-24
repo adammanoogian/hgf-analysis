@@ -1,7 +1,7 @@
 # PAT-RL Phase 20 Handoff for `dcm_hgf_mixed_models` (sister-repo consumer)
 
-**Source repo:** `psilocybin_prl_analyses` (import: `prl_hgf`)
-**Consumer repo:** `dcm_hgf_mixed_models` (siblings via `pip install -e ../psilocybin_prl_analyses`)
+**Source repo:** `hgf-analysis` (import: `prl_hgf`)
+**Consumer repo:** `dcm_hgf_mixed_models` (siblings via `pip install -e ../hgf-analysis`)
 **Phase 20 status:** 8/8 plans complete, verified with 1 gap closed inline (2026-04-19)
 **Supersedes for Phase 20+:** augments (does NOT replace) `docs/PAT_RL_API_HANDOFF.md` — the older handoff still describes the stable Phase 18/19 baseline; this doc describes what changed and what's newly available
 
