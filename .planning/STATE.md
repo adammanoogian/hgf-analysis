@@ -5,19 +5,26 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Validated simulation-to-inference pipeline for HGF models on PRL pick_best_cue data.
-**Current focus:** Phase 14.1-07 COMPLETE (2026-04-20) — node-pin gap closure. Active strategy: `shared-dir` (JAX_COMPILATION_CACHE_DIR routed to Lustre /shared subdir; cross-node cache reuse confirmed 10/10 at P=50). Phase 14.1-03 UNBLOCKED — `sbatch cluster/14_benchmark_gpu.slurm` ready to run. See `.planning/phases/14-integration-gpu-benchmark/14.1-07-SUMMARY.md`.
+**Current focus:** v1.3 OPEN (2026-04-24) — Generic HGF Viewer (Scaffold + Handoff). Defining requirements. v1.2 parallel cluster-bound: Phase 14.1-03 benchmark resubmission pending after M3 `pip install -e .` re-sync (stale editable install caused job 54934145 to fail with `ModuleNotFoundError: prl_hgf`); Phase 15 production run deferred until benchmark closes.
 
 ## Current Position
 
-Phase: 21 (Benchmark Bottleneck Diagnosis) — COMPLETE
-Plan: 21-07 COMPLETE (all 7/7 plans complete — 21-01 through 21-07)
-Status: VERDICT.md published; follow-up plan 14.1-07 unblocks 14.1-03. ROADMAP + CONTEXT synced (state-space-only baselines SC1; vb_laplace_vs_nuts_jit.json + 7-value enum + VB-Laplace probe SC2; P ∈ {5, 20, 50} + status column SC4). vb_laplace_vs_nuts_jit.json bottleneck_verdict.bottleneck_layer filled with 'cache_key'; hlo_op_counts populated from 21-01 scope memo.
-Last activity: 2026-04-19 — Published VERDICT.md naming `cache_key` (per-node cache scope vs SLURM scheduler mismatch) as dominant bottleneck.
-14.1-07a COMPLETE (2026-04-19) — Nine SLURM scripts patched from /${SLURMD_NODENAME:-local} to /shared; Phase-1 warm-up upgraded N=2→N=max(n_per_group_grid); atomic commit 6b7e6ed on origin/main. M3 ready for git pull + 14.1-07b pscan verification.
-14.1-07b COMPLETE (2026-04-20) — Diagnostic P-sweep chain (6 SLURM jobs, P ∈ {5, 20, 50}) confirmed cross-node XLA persistent-cache reuse (10/10 hits, m3g111 cold → m3g108 warm). Active strategy: shared-dir. Task 3 (nodelist-fallback) SKIPPED on mechanism evidence. VERIFICATION.md (commit 05545b9) written.
-14.1-07c COMPLETE (2026-04-20) — 14.1-07-SUMMARY.md consolidated; STATE.md + ROADMAP.md updated; phase closed. Phase 14.1-03 unblocked: `sbatch cluster/14_benchmark_gpu.slurm`.
+### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-[===========██████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (3/6 + 14.1-07 complete) — 14.1-03 next; Phase 20 COMPLETE (8/8); Phase 21 COMPLETE (7/7)
+Phase: Not started (defining requirements)
+Plan: —
+Status: v1.3 opened 2026-04-24. Scope C: spec + config + scaffold. Template: `figures/patrl_hgf_model.html` (most recent); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Rough phase shape 22-24 (subject to roadmap).
+Last activity: 2026-04-24 — milestone opened; PROJECT.md + STATE.md updated.
+
+### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
+
+Phase: 21 (Benchmark Bottleneck Diagnosis) — COMPLETE; Phase 14.1-03 pending resubmission
+Status: Phase 21 VERDICT.md published (bottleneck=`cache_key`); 14.1-07 node-pin gap closure complete (active strategy: shared-dir; 10/10 cross-node XLA cache reuse confirmed at P=50). 14.1-03 benchmark submitted 2026-04-24 (job 54934145) but FAILED at 15s with `ModuleNotFoundError: prl_hgf` — stale `pip install -e .` in M3 `ds_env` pointing at pre-rename path. Fix: re-run `pip install -e .` on M3 from repo root, then resubmit `sbatch cluster/14_benchmark_gpu.slurm`. Phase 15 production run deferred until benchmark closes.
+14.1-07a COMPLETE (2026-04-19) — Nine SLURM scripts patched /shared; Phase-1 warm-up N=max(grid).
+14.1-07b COMPLETE (2026-04-20) — P-sweep chain confirmed cross-node persistent-cache reuse (10/10 hits).
+14.1-07c COMPLETE (2026-04-20) — Phase closed; 14.1-03 unblocked.
+
+[===========██████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (3/6 + 14.1-07 complete) — 14.1-03 next; Phase 20 COMPLETE (8/8); Phase 21 COMPLETE (7/7); v1.3 milestone opened (phases 22+, TBD via roadmap)
 
 ## Performance Metrics
 
@@ -240,7 +247,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-20 (Phase 14.1-07 COMPLETE — node-pin gap closure)
-Stopped at: Completed plan 14.1-07c. 14.1-07-SUMMARY.md consolidated both sub-plans (14.1-07a infrastructure patch + 14.1-07b diagnostic verification). Active strategy: shared-dir (10/10 cross-node XLA cache hits confirmed at P=50; gate FAIL at 1.04× vs ≥ 3.0× target is gate miscalibration, not mechanism failure). STATE.md + ROADMAP.md updated. Phase 14.1-03 unblocked.
+Last session: 2026-04-24 (v1.3 milestone opened — Generic HGF Viewer)
+Stopped at: PROJECT.md + STATE.md updated for v1.3 parallel milestone. Next workflow step: research decision (research vs skip), then REQUIREMENTS.md, then ROADMAP.md.
 Resume file: None
-Next action: Run `sbatch cluster/14_benchmark_gpu.slurm` (Plan 14.1-03 executor) to produce `results/power/benchmark_batched.json`. Still pending: Cluster 160-agent PRL-V1/V2 numeric runs (`sbatch cluster/patrl_smoke.slurm` with Laplace default) — deferred until Phase 14.1 benchmark closes so production partition/walltime is known.
+Next action (v1.3): Continue `/gsd:new-milestone` flow — research decision → requirements → roadmap.
+Next action (v1.2, cluster): On M3, run `pip install -e .` in `ds_env` to resync editable install after repo rename, then `sbatch cluster/14_benchmark_gpu.slurm` to rerun Phase 14.1-03 benchmark (prior job 54934145 failed with `ModuleNotFoundError: prl_hgf`). Cluster 160-agent PRL-V1/V2 runs remain deferred until benchmark closes.

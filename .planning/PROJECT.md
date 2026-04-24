@@ -66,7 +66,7 @@ Softmax over three cue beliefs with beta (inverse temperature) and zeta (stickin
 
 ### Active
 
-#### Current Milestone: v1.2 Hierarchical GPU Fitting
+#### Current Milestone: v1.2 Hierarchical GPU Fitting (cluster-bound, in progress)
 
 **Goal:** Refactor the v1.1 power analysis fitting pipeline to a batched hierarchical architecture so GPU acceleration actually works — amortizing NUTS launch overhead across all participants in one `sample_numpyro_nuts` call. Finish the v1.1 production run on real compute.
 
@@ -79,6 +79,28 @@ Softmax over three cue beliefs with beta (inverse temperature) and zeta (stickin
 - Complete v1.1 production run: `power_master.csv`, 4-panel figure, `recommendation.md` populated with real data
 
 **Why v1.2 exists:** The v1.1 benchmark on an L40S showed ~1.5s per NUTS sample due to per-participant sequential fitting causing 5000 small CPU↔GPU dispatches per fit. That projected to ~18,000 GPU-hours for the full sweep — infeasible. The fix is architectural: batch all participants through one vmapped logp so the launch overhead is amortized.
+
+**v1.2 outstanding (as of v1.3 opening, 2026-04-24):** Phase 14.1-03 benchmark (cluster-bound); Phase 15 production run (deferred until benchmark closes).
+
+#### Current Milestone: v1.3 Generic HGF Viewer — Scaffold + Handoff (local, parallel)
+
+**Goal:** Ship a config-driven HGF viewer scaffold (`src/prl_hgf/viz/`) that reads real pyhgf internals, runs pre- and post-fit, and is paired with a standalone PAT-RL 3-level example config and a completed handoff doc. Full rendering polish deferred to v1.4+.
+
+**Target features:**
+- `src/prl_hgf/viz/` module scaffold: `inspector.py` (reads `network.attributes[idx]`, `.edges[idx].volatility_parents`, `.input_idxs`), `roles.py` (level + role inference), `schema.py` (fitted-params ArviZ wrapper), `export.py` (`export_viz_html()` via regex injection)
+- Generic HTML template: promote `figures/patrl_hgf_model.html` → `figures/hgf_viewer.html` with parameterized injection slots; PAT-RL-specific branding removed
+- Standalone PAT-RL 3-level example config (JSON) with full phenotype definitions and parameter descriptions
+- Evolved `docs/HANDOFF_pyhgf_plot_network_extension.md` with runtime-verified pyhgf internals, ArviZ schema + coord conventions (Decision 131), regex-injection spec, follow-up implementation checklist
+- Pre-fit path (config-only rendering) + post-fit path (ArviZ posterior overlay hook)
+- Structural tests in `tests/viz/` for inspector round-trip, role inference edge cases, export scaffold
+
+**Why v1.3 is parallel:** v1.2's remaining work is cluster-bound and latency-dominated; viewer work is local and has no code overlap with the fitting/power stack. Parallelism is safe.
+
+**v1.3 explicit non-goals (v1.4+):**
+- Publication-quality SVG rendering (hexagons, diamonds, neural-correlate arrows)
+- Response-model equation rendering section
+- Posterior overlay visuals (violin plots, CI bars) — schema defined now, rendering later
+- pyhgf upstream contribution (Option A in old handoff) — remains Option C hybrid
 
 ### Out of Scope
 
@@ -122,4 +144,4 @@ Key v1.1 decisions informing v1.2 (see `project_utils/templates/guides/JAX_GPU_B
 - Rigoux et al. (2014) — Random-effects Bayesian model selection
 
 ---
-*Last updated: 2026-04-11 starting v1.2 Hierarchical GPU Fitting milestone*
+*Last updated: 2026-04-24 opening v1.3 Generic HGF Viewer milestone (parallel to v1.2 cluster-bound work)*
