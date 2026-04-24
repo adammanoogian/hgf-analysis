@@ -102,20 +102,20 @@ Explicitly excluded. Requested behaviors that do not belong in this module.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VIZ-01 | Phase 22 | Pending |
-| VIZ-02 | Phase 22 | Pending |
-| VIZ-03 | Phase 22 | Pending |
-| VIZ-04 | Phase 22 | Pending |
-| VIZ-05 | Phase 22 | Pending |
-| SCHEMA-01 | Phase 22 | Pending |
-| SCHEMA-02 | Phase 22 | Pending |
-| SCHEMA-03 | Phase 22 | Pending |
-| SCHEMA-04 | Phase 22 | Pending |
-| SCHEMA-05 | Phase 22 | Pending |
-| DOC-01 | Phase 22 | Pending |
-| TEST-01 | Phase 22 | Pending |
-| TEST-02 | Phase 22 | Pending |
-| TEST-03 | Phase 22 | Pending |
+| VIZ-01 | Phase 22 | Complete |
+| VIZ-02 | Phase 22 | Complete |
+| VIZ-03 | Phase 22 | Complete |
+| VIZ-04 | Phase 22 | Complete |
+| VIZ-05 | Phase 22 | Complete |
+| SCHEMA-01 | Phase 22 | Complete |
+| SCHEMA-02 | Phase 22 | Complete |
+| SCHEMA-03 | Phase 22 | Complete |
+| SCHEMA-04 | Phase 22 | Complete |
+| SCHEMA-05 | Phase 22 | Complete |
+| DOC-01 | Phase 22 | Complete |
+| TEST-01 | Phase 22 | Complete |
+| TEST-02 | Phase 22 | Complete |
+| TEST-03 | Phase 22 | Complete |
 | EXPORT-01 | Phase 23 | Pending |
 | EXPORT-02 | Phase 23 | Pending |
 | EXPORT-03 | Phase 23 | Pending |
