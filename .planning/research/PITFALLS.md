@@ -1,312 +1,485 @@
-# Domain Pitfalls: Simulation-Based BFDA for Computational Psychiatry
+# Domain Pitfalls: Generic HGF Viewer (v1.3 Scaffold)
 
-**Domain:** Bayes Factor Design Analysis for two-level HGF inference pipeline
-**Researched:** 2026-04-07
-**Milestone context:** v1.1 Power Analysis (BFDA) added to existing HGF pipeline
+**Domain:** Reader/visualization module added to existing scientific Python codebase
+**Researched:** 2026-04-24
+**Milestone context:** v1.3 Generic HGF Viewer — Scope C: spec + config + scaffold only
+**Confidence:** HIGH (grounded in actual code, STATE.md decisions, and existing HTML artifacts)
+
+---
+
+## Thematic Overview
+
+Pitfalls are grouped into five themes so planning can tackle related risks together:
+
+1. **pyhgf API Stability** — Pitfalls 1–3
+2. **HTML Injection Correctness** — Pitfalls 4–5
+3. **Parallel-Stack Respect** — Pitfalls 6–7
+4. **Scope-Creep Discipline** — Pitfalls 8–9
+5. **Test Coverage and Documentation Sync** — Pitfalls 10–14
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause invalid power estimates, require reruns, or produce misleading N recommendations.
+Mistakes that ship broken code or invalidate scientific output.
 
 ---
 
-### Pitfall 1: Ignoring MCMC Convergence Failures Inside the Power Loop
+### Pitfall 1: Hypothesis-Based Coding of pyhgf Internals
 
-**What goes wrong:** Each power simulation iteration runs MCMC fitting. When a fit diverges (too many divergent transitions, R-hat > 1.05, ESS too low), the resulting posterior summary is biased. If the power loop silently accepts these fits, the recovered parameter values fed into the group-level Bayes factor test are wrong. This inflates or deflates the BF distribution in ways that corrupt the power curve entirely.
+**What goes wrong:** The handoff doc (`docs/HANDOFF_pyhgf_plot_network_extension.md`) proposes attribute paths (`net.attributes`, `net.edges[idx].volatility_parents`, `net.input_idxs`) hypothetically — the doc explicitly says "key questions to resolve." If Phase 22 writes inspector code from those proposals without a REPL round-trip first, the inspector will use attribute names that either do not exist or have shifted between 0.2.8 (cluster) and 0.2.10 (local, Decision 184). The inspector will fail at the first real model, silently or with an `AttributeError` that only surfaces when a collaborator runs the viewer on the cluster.
 
-**Why it happens:** In a batch of 4,000+ parallel jobs each fitting a single subject, convergence warnings are printed to stderr and easy to miss. Post-hoc aggregation scripts typically just read the summary CSV; any warning that occurred during fitting is already gone.
+**Why it happens:** The handoff doc reads as authoritative because it was written by someone who knows the domain. Developers trust written specs. But the handoff explicitly notes it was written for planning, not from running code. Decision 184 confirms: "structural pattern assumed unchanged" — this is a working hypothesis, not a verified fact.
 
-**Consequences:** Power estimates based on biased posteriors are unreliable. The direction of corruption is unpredictable — divergences tend to cluster in specific parameter regimes (e.g., omega_3 at its prior boundary), so power may be systematically wrong for the exact parameter values you care about.
+**Concrete failure mode:** `net.edges[2].volatility_parents` returns a list of node indices in one version and a typed object in another. Or `net.attributes` is the internal JAX pytree, not a list of dicts, and accessing `net.attributes[i]["tonic_volatility"]` raises `TypeError: 'DeviceArray' object is not subscriptable`.
 
-**Prevention:**
-- Save R-hat, ESS-bulk, and divergence count as columns in every fit output CSV.
-- After aggregation, filter out fits where any R-hat > 1.05 or divergences > 0. Report the exclusion rate per simulation cell.
-- If exclusion rate exceeds ~5% in any cell, flag that cell as unreliable and investigate before concluding anything about power at those parameter values.
-- Pre-test the fitting pipeline on 10 representative simulated datasets before launching the full cluster job.
+**How to avoid:** Phase 22 must begin with a mandatory REPL verification step (one script or notebook cell, not a full test) that:
+1. Instantiates `build_2level_network_patrl()` and `build_3level_network_patrl()`.
+2. Calls `net.input_data(...)` to populate trajectories.
+3. Prints `type(net.attributes)`, `type(net.edges)`, `net.edges[0].__dict__`, `net.input_idxs`.
+4. Records exact attribute names and types — not guesses — in a decision comment at the top of `src/prl_hgf/viz/inspector.py` before any production code is written.
 
-**Detection:** Exclusion rate histogram across simulation cells; scatter of R-hat values versus recovered parameters.
+The production code must be written FROM these verified paths, not FROM the handoff proposals. If verification finds the handoff was wrong, update the handoff.
 
-**Phase:** Prechecks phase (MCMC validation step before main sweep).
+**Warning signs:**
+- Inspector written in the same Phase 22 session as the handoff was first read, without a terminal/notebook session in between.
+- Inspector unit tests mock `Network` at the module boundary without also having a canary integration test that instantiates a real `Network`.
+- Attribute paths in the inspector reference `.volatility_parents` as an index list — plausible but unverified for 0.2.10.
 
-**Sources:** Stan convergence documentation; PyMC discourse on divergent transitions.
+**Phase to address:** Phase 22 (inspector), first task, before any production code.
 
----
-
-### Pitfall 2: Using the Posterior Mean as a Noise-Free Point Estimate at Level 2
-
-**What goes wrong:** The standard two-level pipeline extracts posterior means for each parameter per participant, then feeds those means into a group-level t-test or mixed ANOVA. The posterior mean is not the true parameter value — it carries MCMC estimation uncertainty. Treating it as if it were a clean observation attenuates the group-level effect size exactly as classical measurement error does (errors-in-variables attenuation bias). For the power analysis, this means the BF distribution under H1 will be shifted toward H0, and estimated power will be pessimistic relative to what a properly propagated model would show.
-
-**Why it happens:** It is the default workflow (Wilson & Collins 2019 Rule 8; Hess et al. 2025). It is fast and workable for large N, but systematically underestimates power when parameter-level uncertainty is high relative to the true group effect.
-
-**Consequences:** Power estimates are conservative — you may recommend a larger N than is actually needed. The bias is worst for poorly-recovered parameters (omega_3, kappa) and shrinks as N_trials and N_subjects increase. In this study, given poor omega_3 recovery (r ≈ 0.67 with binary-only data; Hess et al. 2025), attenuation for omega_3 may be severe enough to make any JZS BF test underpowered even at realistic N.
-
-**Prevention:**
-- Quantify the expected attenuation per parameter before the main sweep: compute ICC between true simulated values and recovered posterior means across the recovery sample. Attenuation factor ≈ ICC. Use this to calibrate expectations.
-- Consider whether the BFDA power estimate should be labeled as a lower bound, with a note that fully propagated (single-step hierarchical) inference would perform better.
-- For omega_3 specifically: treat BFDA results as an exploratory estimate only, not a design-determinative one.
-
-**Detection:** Compare power curves from posterior-mean pipeline vs. a small trial using posterior samples directly (jackknife or bootstrap the posterior distribution). Large divergence confirms attenuation is material.
-
-**Phase:** Two-level inference design decision (before main sweep).
-
-**Sources:** Reliability paper (Friston group, PMC11104400); Hess et al. 2025 (PMC11951975); attenuation bias literature (Psychometrika 2024).
+**Priority:** HIGH — ships broken code.
 
 ---
 
-### Pitfall 3: Simulating Power for omega_3 as if It Were Identifiable
+### Pitfall 2: pyhgf Temp-Key Drift Between Patch Releases
 
-**What goes wrong:** omega_3 (meta-volatility) is the primary 3-level parameter that distinguishes the two models. In the HGF literature, omega_3 is known to have poor recovery with binary-only data. Hess et al. (2025) report r = 0.67 for omega_3 recovery in a 3-level eHGF with binary inputs — the weakest of all free parameters. The test-retest reliability study (PMC11573178) found that the phasic learning rate (kappa) had ICC = 0.04 before outlier removal. Running BFDA for group differences on these parameters as if recovery were adequate will produce power curves that are optimistic in a misleading way: the simulation will show apparent power because parameters were set by the simulation truth, but real-data power is much lower because those parameters cannot be reliably extracted.
+**What goes wrong:** Decision 129 confirmed `value_prediction_error`, `effective_precision`, and `volatility_prediction_error` exist in pyhgf 0.2.8 `node_trajectories[i]["temp"]`. The viewer's trajectory panel will want to display these (e.g., overlay PE on the belief trace). If pyhgf 0.2.10 renames `value_prediction_error` to `observation_prediction_error` (a plausible refactor), the viewer silently emits `NaN` trajectories for PE columns — or crashes if it doesn't guard.
 
-**Why it happens:** Researchers design power analyses using simulation, where the generating truth is known. The power analysis loop treats recovery as perfect by construction, unless recovery error is explicitly injected as noise in the simulation.
+The existing `_safe_temp()` helper in `src/prl_hgf/analysis/export_trajectories.py` already implements the correct pattern: fall back to `np.nan` on key absence. The viewer inspector MUST replicate this pattern, not hardcode key names.
 
-**Consequences:** The study is designed around power targets that do not apply to the actual measurable quantity. For omega_3, the effective power curve may be 20-40 percentage points lower than the naive simulation predicts.
+**Why it happens:** Developers copy attribute access patterns from code that works today. The `_safe_temp` fallback pattern exists but lives in a module the viewer may not import.
 
-**Prevention:**
-- Include a "recovery penalty" simulation variant: after fitting, inject Gaussian noise with SD equal to the observed parameter recovery RMSE before computing the group-level BF. Compare the resulting power curve against the noise-free version. The difference is the expected inflation.
-- Explicitly document in all outputs: "Power for omega_3 is an upper bound assuming recovery noise equal to empirical RMSE; effective power may be substantially lower."
-- Pre-register that omega_3 group effects are exploratory, not confirmatory. Focus BFDA on omega_2, beta, and zeta where recovery r > 0.85.
+**How to avoid:** The inspector's `extract_node_trajectories()` function (or equivalent) must use the same `traj_node.get("temp", {}).get(key, fallback)` pattern as `_safe_temp`, not direct `traj["temp"]["key"]` subscript. Import `_safe_temp` from `export_trajectories` or inline an identical guard. Add a canary test (`test_pyhgf_temp_keys_inspector`) analogous to the existing `test_pyhgf_temp_keys_extracted` that runs against a real (small) `Network` instance.
 
-**Detection:** Parameter recovery scatter plots (already in v1.0 pipeline at REC-01/02); ensure REC runs on full trial count before BFDA launches.
+**Warning signs:**
+- Inspector uses `net.node_trajectories[i]["temp"]["value_prediction_error"]` (direct subscript, no `.get()` guard).
+- No canary test that instantiates a real `Network` and asserts key names.
 
-**Phase:** Prechecks phase (parameter recovery validation); BFDA output labeling.
+**Phase to address:** Phase 22 (inspector).
 
-**Sources:** Hess et al. 2025 (r = 0.67 for omega_3 with binary data); PMC11573178 (kappa ICC = 0.04); project CLAUDE.md known limitation note.
-
----
-
-### Pitfall 4: Specifying the Effect Size Prior for BFDA from a Single Literature Source
-
-**What goes wrong:** BFDA requires specifying an expected effect size distribution (the H1 prior). Researchers commonly pick a Cohen's d from the closest published study and treat it as ground truth. For psilocybin-on-computational-parameters studies: (a) the literature is thin, (b) effect sizes from published studies are inflated by publication bias and winner's curse, and (c) the effect on HGF parameters specifically may differ substantially from the effect on simpler behavioral measures.
-
-**Why it happens:** There is no established convention for HGF parameter effect sizes in psilocybin-PCS studies. The nearest comparators (psychedelic reversal learning studies; post-concussion computational studies) are methodologically different enough that naive effect size transfer is unreliable.
-
-**Consequences:** If the assumed effect size is too large, the power analysis recommends a sample that is too small and the real study is underpowered. If it is too small, the power analysis recommends an unnecessarily large N. Schönbrodt et al. (2018) show that when the true effect size diverges greatly from the informed prior location, the efficiency benefit of the informed prior collapses, but the false-positive rate remains elevated.
-
-**Prevention:**
-- Run BFDA as a sweep over a range of effect sizes (e.g., d = 0.2, 0.4, 0.6, 0.8, 1.0) rather than a point estimate. Report the N required for each. Present the full power-by-effect-size surface.
-- Treat the literature-derived estimate as the midpoint, not the only scenario.
-- Clearly separate the "design prior" (what effect size we expect) from the "analysis prior" (the JZS prior used in computing the BF). These are different and must not be conflated.
-- Flag that publication bias inflates literature effect sizes; use half the published estimate as a conservative scenario.
-
-**Detection:** Sensitivity analysis: does the N recommendation change substantially if the assumed effect size changes by ±0.2? If yes, report the full range.
-
-**Phase:** Effect size specification step (before sweep configuration).
-
-**Sources:** Schönbrodt & Wagenmakers (2018); Stefan et al. (2019 tutorial in PMC6538819); Schreiber et al. (2024) bandit BFDA paper.
+**Priority:** HIGH — silently wrong output that looks like a real PE trace.
 
 ---
 
-### Pitfall 5: anovaBF Random-Slope Misspecification for Repeated-Measures Interaction
+### Pitfall 3: Shared Volatility Node Appearing Multiple Times in Graph Traversal
 
-**What goes wrong:** The standard BayesFactor R package function `anovaBF()` is misspecified for designs with two or more repeated-measures factors. It omits random slopes for within-subject factors, creating an RIO (random intercepts only) model that can inflate Bayes factors for interaction terms and produce false-positive evidence for interactions that do not exist. This study has at least two repeated-measures factors (session × phase) with a between-subjects factor (group), making it susceptible.
+**What goes wrong:** In the pick_best_cue 3-level model (`hgf_3level.py`), node 6 is the **single** shared volatility parent for belief nodes 1, 3, and 5. A naive graph traversal that follows "volatility_parents" edges from each belief node will visit node 6 three times. The viewer will render three volatility nodes in the SVG, which is architecturally wrong — there is only one. Worse, the JSON schema emitted to the template will contain three entries for the same node with identical parameters, inflating the node count.
 
-**Why it happens:** The `anovaBF()` function has been the default recommendation in the field for years. The misspecification was documented and corrected only in the 2023 update (van den Bergh et al. 2023), and many researchers continue using the old approach.
+**Why it happens:** Following adjacency lists without deduplication is the natural first implementation. For PAT-RL (single branch), no duplication occurs, so the bug hides on that test case and surfaces only on pick_best_cue.
 
-**Consequences:** The group × session interaction Bayes factor — the primary target of the power analysis — may be inflated. Power analysis built on an inflated BF test will predict correct power for the wrong test. When JASP or corrected BF functions are used in the actual study analysis, results may differ from the power analysis predictions.
+**How to avoid:** The inspector must build a `dict[int, NodeRecord]` keyed by node index, not a `list`. After traversal, deduplicate by index before emitting the schema dict. Add a unit test that calls the inspector on a `build_3level_network()` (pick_best_cue) instance and asserts `len(schema["nodes"]) == 7` (not 9).
 
-**Prevention:**
-- Do not use `anovaBF()` directly. Use `lmBF()` or `generalTestBF()` with random slopes manually specified.
-- Alternatively, use JASP version 0.16.3+ which implements MRE (maximal random effects) by default.
-- In Python: use bambi with mixed-effects specification and extract the Bayes factor via bridge sampling on competing models.
-- Validate on simulated data: run the intended BF computation on a known null dataset and confirm the BF does not systematically exceed 3.
+**Warning signs:**
+- Inspector uses a list accumulator and appends one entry per edge, not per node.
+- The schema JSON has duplicate `node_index` values.
+- The test suite only tests PAT-RL (single-branch) models.
 
-**Detection:** Cross-check any BF > 5 for interaction terms by computing with both RIO and MRE specifications. Large discrepancy indicates the misspecification is material for your data structure.
+**Phase to address:** Phase 22 (inspector), specifically the traversal logic.
 
-**Phase:** Group-level BF test implementation; BFDA simulation kernel.
-
-**Sources:** Van den Bergh et al. 2023 (Psychological Methods); JASP blog 2022 (jasp-stats.org); BayesFactor package anovaBF documentation.
+**Priority:** HIGH — wrong diagram misleads all readers.
 
 ---
 
-## Moderate Pitfalls
+### Pitfall 4: Regex-Injection Marker Collision with Existing JS/HTML Content
 
-Mistakes that corrupt individual simulation cells or introduce systematic bias in subsets of the power curve.
+**What goes wrong:** The HTML template (`figures/patrl_hgf_model.html`, ~50 KB of React JSX) contains dense JavaScript strings. A placeholder like `%%HGF_DATA%%` is safe, but a placeholder like `{{data}}` or `// DATA_HERE` risks colliding with existing JSX object literals, template literal syntax, or comment patterns. More subtly: injected JSON strings can contain `</script>` sequences, which terminate the enclosing `<script>` block mid-injection even if properly encoded — the browser's HTML tokenizer closes the script tag before the JSON string close. Unicode surrogate pairs in parameter labels (unlikely but possible) can also break JSON parsing in some runtime contexts.
 
----
+**Why it happens:** Developers test injection with small, clean ASCII values. The template works. The bug surfaces only when a parameter label or ArviZ coord name contains an apostrophe, backslash, or Unicode character.
 
-### Pitfall 6: Using Too Few Simulations per Power Cell
+**How to avoid:**
+- Use a unique, unmistakable marker that cannot appear in JSX: `__HGF_NETWORK_DATA__` (double underscores + all caps) surrounded by a JSX comment block `{/* __HGF_NETWORK_DATA__ */}`. This form cannot appear in normal JSX string literals.
+- Use `json.dumps(data, ensure_ascii=True)` — ensures no raw Unicode in the injected payload, no surrogate pairs. Do NOT use `ensure_ascii=False` for HTML injection.
+- Wrap the injected JSON in a JavaScript variable assignment, not an inline expression: `const _hgfData = <JSON>;` — keeps the payload isolated from JSX evaluation context.
+- Replace `</script>` in injected strings with `<\/script>` (escaped forward slash) before insertion. Python: `payload = payload.replace("</script>", r"<\/script>")`.
+- Write an injection test that verifies the HTML is parseable by BeautifulSoup after injection (structural validity check).
 
-**What goes wrong:** Each cell in the BFDA grid (N_subjects × effect_size × trial_count) needs enough simulation repetitions for the power estimate to be stable. With too few repetitions, Monte Carlo error inflates the variance of the power estimate, and the resulting power curve is jagged and untrustworthy.
+**Warning signs:**
+- Placeholder is a simple token like `DATA_PLACEHOLDER` or `%%DATA%%` without checking for collision with existing template content.
+- `json.dumps` called without `ensure_ascii=True`.
+- No test that round-trips an injection and parses the resulting HTML.
 
-**Prevention:**
-- Use at least 1,000 repetitions per cell for exploratory sweeps, 2,000-3,000 for the final reportable power curve (MCE target ≤ 0.005, per LMU Power Simulation tutorial).
-- During sweep design, start with 500 repetitions to locate the inflection zone, then re-run at 2,000 in that zone.
-- Report Monte Carlo error as error bands on all power curves.
+**Phase to address:** Phase 23 (export/injection).
 
-**Phase:** Sweep configuration; final power figure generation.
-
-**Sources:** LMU power simulation tutorial (shiny.psy.lmu.de/r-tutorials/powersim/); Schönbrodt BFDA package documentation (nicebread/BFDA on GitHub).
-
----
-
-### Pitfall 7: Conflating the Trial Count Sweep with a Sample Size Sweep
-
-**What goes wrong:** Both N_subjects and N_trials affect power in a computational model pipeline, but through different mechanisms. N_subjects controls the group-level statistical power (the second-level BF test). N_trials controls how well MCMC can recover parameters (the first-level noise). These are not interchangeable. A common mistake is to run only the N_subjects sweep and assume trial count is fixed, then recommend an N that only works at the existing task length. Alternatively, researchers sweep N_trials and treat it as equivalent to sweeping power when in fact more trials helps recovery but does not replace more subjects.
-
-**Why it happens:** Standard power analyses in non-computational designs only involve sample size. The additional dimension of trial count is unique to computational models and easy to overlook.
-
-**Consequences:** The N recommendation is valid only for one specific trial count. If the actual study uses a different task length (due to participant fatigue, IRB constraints, or phase-criterion variability), the power estimate is wrong.
-
-**Prevention:**
-- Run a 2D sweep: N_subjects × N_trials. Present as a heatmap.
-- Document the assumed trial count range explicitly and tie it to the config YAML trial structure.
-- Flag that criterion-based reversals create variable effective trial counts per participant. Use a distribution of trial counts in simulation, not a fixed value.
-
-**Phase:** Sweep design; trial count sweep implementation.
-
-**Sources:** Schreiber et al. 2024 (Wellcome Open Research) — explicitly examined "number of games per participant" as a separate dimension from sample size in bandit BFDA.
+**Priority:** HIGH — ships an HTML file that fails in browser silently or with JS parse error.
 
 ---
 
-### Pitfall 8: Partial Feedback Confound in Trial Count Assumptions
+### Pitfall 5: Detecting Injection Failures at Test Time
 
-**What goes wrong:** In the PRL pick_best_cue task, only the chosen cue receives a reward signal. Unchosen cues are not updated. This means the effective information per trial depends on the choice distribution: if the participant is highly consistent (high stickiness), some cues accumulate very few observations and their belief nodes are essentially unconstrained by data. A power analysis that treats all 3 cues as equally observed overestimates the per-trial information content.
+**What goes wrong:** A regex substitution that fails (wrong marker, encoding error, empty JSON) returns the template unchanged. The exported HTML looks syntactically intact but contains the literal marker string `__HGF_NETWORK_DATA__` rendered visibly in the browser, or the React component crashes on `undefined` data because the variable was never defined. This only surfaces when a human opens the file — not at export time.
 
-**Why it happens:** Partial observability is specific to this task type and rarely addressed in generic power analysis frameworks. HGF partial-feedback handling is documented in the project CLAUDE.md but may be forgotten when designing simulation parameters.
+**Why it happens:** `re.sub()` succeeds (returns a string) whether or not it made any replacements. There is no built-in failure mode.
 
-**Consequences:** Recovery of parameters for the least-chosen cue is worse than expected. This propagates to the group-level test because that cue's belief trajectory is noisier, adding variance to the softmax choice probabilities and inflating estimation uncertainty.
+**How to avoid:**
+- After injection, assert `marker not in result_html`. Raise `InjectionError` with the marker name if the assertion fails.
+- After injection, assert `len(result_html) > len(template_html)` — the result must be strictly larger.
+- In the test suite, test the failure path: given a template with no marker, confirm `inject()` raises `InjectionError`.
 
-**Prevention:**
-- When simulating participants for power analysis, use realistic choice distributions informed by the existing recovery analyses. Do not assume uniform exploration across cues.
-- Check that the trial count sweep reflects variation in "effective observations per cue branch," not just total trial count.
-- Document the partial-feedback assumption explicitly in power analysis outputs.
+**Warning signs:**
+- Export function does not assert marker absence post-injection.
+- No test for the "marker missing from template" failure path.
 
-**Phase:** Simulation parameter design for BFDA; trial count sweep.
+**Phase to address:** Phase 23 (export/injection).
 
-**Sources:** Project CLAUDE.md task structure; Wilson & Collins 2019 (eLife) — warns that tasks not sufficiently engaging target processes cause computational modeling to fail.
-
----
-
-### Pitfall 9: Non-Independent Random Streams Across Parallel Jobs
-
-**What goes wrong:** When 4,000+ SLURM job array tasks all seed numpy or JAX's PRNG from `np.random.seed(SLURM_ARRAY_TASK_ID)`, the seeds are sequentially correlated. If the PRNG's internal state from seed N quickly overlaps with the stream from seed N+1 (depends on PRNG period and advance rate), the simulated datasets across jobs are not statistically independent. This introduces subtle correlations in the BF distribution.
-
-**Why it happens:** Using the SLURM task ID as the seed is a natural shortcut and looks like it guarantees uniqueness. It guarantees unique seeds but not independent streams.
-
-**Consequences:** The Monte Carlo estimate of power is biased by inter-job correlation. The effect is usually small for modern PRNGs with large periods, but it is never zero and is not diagnosable post-hoc without re-running.
-
-**Prevention:**
-- Use numpy's `SeedSequence` API: `ss = np.random.SeedSequence(base_seed); child_seeds = ss.spawn(n_jobs); rng = np.random.default_rng(child_seeds[task_id])`. This guarantees statistically independent streams.
-- For JAX (pyhgf): use `jax.random.PRNGKey(task_id)` with a fixed base key split — `jax.random.split(base_key, n_jobs)[task_id]`.
-- Store the seed used in each job's output CSV for auditability.
-
-**Phase:** SLURM job array implementation.
-
-**Sources:** NumPy SeedSequence documentation (blog.scientific-python.org/numpy/numpy-rng/); reproducibility/PRNG tutorial (r-ega.net/articles/reproducibility-prng.html).
+**Priority:** HIGH — silent failure produces invalid viewer output.
 
 ---
 
-### Pitfall 10: SLURM Filesystem Saturation from Python Conda Import Storm
+### Pitfall 6: Importing from Both Config Modules in the Viewer
 
-**What goes wrong:** A job array with 4,000 tasks launching simultaneously all import Python packages from a shared conda environment on the cluster filesystem (Lustre/GPFS). Each import triggers thousands of filesystem calls. With 4,000 concurrent jobs, this creates an "import storm" that saturates the metadata server and slows or hangs all jobs, often causing cascade failures with cryptic error messages unrelated to the actual code.
+**What goes wrong:** Decision 112 and Decision 119 establish the parallel-stack invariant: `pat_rl_config.py` has zero imports from `task_config.py`. The viewer's `src/prl_hgf/viz/` package, as a reader, is legitimately allowed to import from both stacks. However, if Phase 22/23 adds a bridge function to either config module (e.g., `task_config.get_hgf_level()`) for the viewer's convenience, it violates the invariant in the other direction. The pick_best_cue stack would now import viewer-facing code, entangling test isolation.
 
-**Why it happens:** Standard conda environments are not optimized for high-concurrency import. The M3 MASSIVE cluster has documented this as a known issue for array jobs using Python environments stored on work disk (Monash eResearch docs; general HPC guidance).
+**Why it happens:** Adding a utility method to an existing config class seems less invasive than creating a new abstraction. The developer sees the existing class as the natural home for the helper.
 
-**Consequences:** Jobs time out waiting on filesystem metadata, SLURM kills them, and the failed jobs produce empty output files. The aggregation step silently treats missing files as non-existent cells, leading to a power curve with holes that look like valid zeros.
+**How to avoid:** All viewer-side adapter logic stays inside `src/prl_hgf/viz/`. If the viewer needs to interpret a `PATRLConfig` or `AnalysisConfig`, it does so by reading the public attributes of those configs — never by adding methods to the config classes. If shared logic is needed, it goes in `src/prl_hgf/viz/adapters.py`, not in `env/`.
 
-**Prevention:**
-- Throttle concurrent jobs: use `#SBATCH --array=0-3999%50` (max 50 concurrent) to stagger startup.
-- Build a conda-pack archive of the environment and extract it to each node's local scratch (`$TMPDIR`) before import. This distributes filesystem load.
-- Alternatively, run multiple simulations per job (e.g., 20 repetitions per task) rather than 1 per task, reducing total job count by 20× while maintaining the same total simulation count.
-- After the run, check for missing output files before aggregating. Any missing file should cause a visible warning, not silent omission.
+Review gate: a ruff import-cycle check on `src/prl_hgf/env/` modules before Phase 22 closes. `env/task_config.py` and `env/pat_rl_config.py` must show zero new imports pointing to `viz/`.
 
-**Phase:** SLURM job array configuration; output aggregation.
+**Warning signs:**
+- Phase 22 PR modifies any file under `src/prl_hgf/env/`.
+- `task_config.py` or `pat_rl_config.py` have a new import of anything from `viz/`.
 
-**Sources:** Monash M3 array jobs documentation; general HPC Python filesystem guidance (docs.hpc.shef.ac.uk EmbarrassinglyParallel); SLURM job failure investigation (doc.hpc.iter.es).
+**Phase to address:** Phase 22 (inspector scaffolding), enforced via code-review checklist.
 
----
-
-### Pitfall 11: GPU Memory Exhaustion When PyMC JAX Sampling Accumulates Chains
-
-**What goes wrong:** PyMC's JAX/NumPyro backend does not offload posterior samples from GPU memory until sampling completes. In a power loop running many short chains, if all chains are held in GPU memory simultaneously, the GPU OOM-kills the process. This is distinct from MCMC divergence — the job appears to hang or exit without useful diagnostics.
-
-**Why it happens:** GPU sampling is fast for individual fits, but the memory model differs from CPU sampling. This is documented in PyMC discourse threads on `pm.sampling_jax.sample_numpyro_nuts()`.
-
-**Consequences:** Silent job failure, especially for the 3-level model with longer chain requirements. Jobs that OOM-die produce no output, which aggregation treats as missing cells.
-
-**Prevention:**
-- For power loop fits on CPU (more robust for parallel jobs), use `pm.sample()` with `cores=1`, `chains=2`, and short runs (e.g., 500 tune + 500 draw).
-- Reserve GPU sampling for the production single-subject fitting pipeline, not the power simulation loop where reliability matters more than speed.
-- Test memory usage on a single node before launching the full array: `sacct -j <jobid> --format=MaxRSS`.
-
-**Phase:** SLURM job configuration; MCMC backend selection for power loop.
-
-**Sources:** PyMC discourse (discourse.pymc.io/t/reduce-memory-requirements-on-the-gpu); PyMC Labs benchmark (pymc-labs.com/blog-posts/pymc-stan-benchmark).
+**Priority:** MEDIUM — does not break the viewer, but breaks pick_best_cue test isolation and invalidates Decision 112.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 7: ipywidgets GUI Regression via Shared Model-Building Utilities
 
-Mistakes that are fixable post-hoc but waste time or require partial reruns.
+**What goes wrong:** `src/prl_hgf/gui/explorer.py` imports from `prl_hgf.models.hgf_2level`, `hgf_3level`, and `env.task_config`. If Phase 22/23 refactors any of these shared utilities for the viewer (e.g., renames `extract_beliefs` to `extract_beliefs_v2`, or changes the return shape of `build_2level_network` for a viewer convenience), the GUI breaks silently — it continues to import successfully but produces wrong trajectories.
 
----
+**Why it happens:** When adding a new consumer of shared code, developers sometimes "clean up" the shared module at the same time. This seems low-risk but the GUI has no continuous integration run that would catch a shape change.
 
-### Pitfall 12: Confounding the Design Prior with the Analysis Prior
+**How to avoid:** The viewer must add new code, never modify existing model-building or belief-extraction functions. If a new interface is needed (e.g., a typed `NetworkSchema` dict), the inspector creates it from the existing functions rather than refactoring those functions. Phase 22 review gate: confirm that `src/prl_hgf/models/hgf_2level.py`, `hgf_3level.py`, `hgf_2level_patrl.py`, and `hgf_3level_patrl.py` have no diff from the phase start.
 
-**What goes wrong:** BFDA uses two distinct priors: (a) the design prior on effect size, which specifies what effects are assumed when computing power; and (b) the JZS prior on effect size used in the Bayes factor computation itself. These are conceptually separate. A common mistake is to use the same prior for both (e.g., default Cauchy r = 0.707 for both), which makes the design prior a match for the analysis prior by construction and produces optimistic power estimates.
+**Warning signs:**
+- Phase 22 PR has diffs in `src/prl_hgf/models/` or `src/prl_hgf/env/`.
+- GUI tests (if any) fail after the phase closes.
 
-**Prevention:** Explicitly document which prior is used for which purpose. Run a sensitivity check where the design prior is more diffuse than the analysis prior to see whether power estimates hold.
+**Phase to address:** Phase 22 (inspector), enforced via "additive only" policy.
 
-**Phase:** BFDA configuration; analysis plan documentation.
-
-**Sources:** Schönbrodt & Wagenmakers (2018); Stefan et al. (2019 tutorial).
-
----
-
-### Pitfall 13: Mixing Model Recovery Power with Parameter Power
-
-**What goes wrong:** The v1.1 milestone includes two distinct power analyses: (A) N × effect_size sweep for JZS BF on parameter group differences, and (B) model discriminability via BMS at varying N. These answer different questions and should not be merged into a single "power" number. Combining them leads to N recommendations that are simultaneously too conservative for one question and too liberal for the other.
-
-**Prevention:** Keep the two power analyses in separate scripts with separate outputs and clearly labeled figures. The final N recommendation should specify which analysis drives it and for which parameter/model.
-
-**Phase:** Output reporting; N recommendation synthesis.
-
-**Sources:** Wilson & Collins 2019 (model recovery as distinct from parameter recovery); Rigoux et al. 2014 (BMS power).
+**Priority:** MEDIUM — breaks the GUI, which is an existing validated deliverable.
 
 ---
 
-### Pitfall 14: Ignoring Phase-Criterion Variability in Trial Count Assumptions
+### Pitfall 8: Scope Creep via SVG Rendering "While I'm In There"
 
-**What goes wrong:** The PRL task uses criterion-based reversal triggers, so the number of trials in each phase varies between simulated participants and will vary even more between real participants. A power analysis using a fixed trial count per participant will not match the distribution of trial counts in real data. The power estimate is implicitly conditional on a specific task experience that participants may not have.
+**What goes wrong:** Phase 22 is inspector-only (extract network structure to dict). Phase 23 is injection-only (write dict to HTML template). Scope C explicitly defers SVG rendering to a future milestone. The most common failure mode: while writing the inspector in Phase 22 and inspecting the template SVG in `patrl_hgf_model.html`, the developer starts implementing hexagon geometry or node-position calculations "since the data is right there." This is invisible creep — the phase still "ships" the inspector, but it also ships partial SVG code that is untested, unscoped, and not in the milestone requirements.
 
-**Prevention:** Simulate trial counts by sampling from a distribution (uniform or beta-distributed between the minimum and maximum expected trials per phase) rather than using a single fixed value. Document the assumed distribution in outputs.
+**Why it happens:** The template is compelling (it already has the SVG geometry helpers `hexPts`, `diamPts`). The developer has context. Starting is easy. The partial implementation creates technical debt that the next milestone must navigate.
 
-**Phase:** Simulation parameter design; trial count sweep.
+**How to avoid:** Phase 22 has a hard scope check item: `src/prl_hgf/viz/` must contain exactly:
+- `__init__.py`
+- `inspector.py` (extracts `NetworkSchema` dict)
+- `tests/test_inspector.py`
 
-**Sources:** Project CLAUDE.md task structure (criterion-based reversal phases).
+Nothing else. If `renderer.py`, `geometry.py`, or any SVG-related file appears in the Phase 22 commit, the phase is out of scope. Add this as a literal checklist item in the Phase 22 plan: "No renderer code. No SVG geometry. Scope C defers rendering."
+
+**Warning signs:**
+- Phase 22 commit contains `polygon`, `hexPts`, `svgwrite`, `matplotlib`, or `d3` anywhere in `src/prl_hgf/viz/`.
+- Time spent on Phase 22 exceeds estimate by more than 30% without a clear reason.
+
+**Phase to address:** Phase 22 (inspector), enforced by explicit file-list constraint in phase plan.
+
+**Priority:** HIGH — blows phase budgets and ships unvalidated rendering code that confuses future milestone scope.
 
 ---
 
-## Phase-Specific Warnings
+### Pitfall 9: ArviZ Coord-Name Collision
 
-| Phase | Likely Pitfall | Mitigation |
-|-------|----------------|------------|
-| Prechecks: parameter recovery | omega_3 appears recoverable in simulation but is not in real data (Pitfall 3) | Report recovery r with 95% CI; add recovery penalty variant |
-| Prechecks: MCMC validation | Convergence failures silently accepted (Pitfall 1) | Mandatory R-hat/ESS column in every output; filter before aggregation |
-| Trial count sweep | Sweep conflates trial count and sample size (Pitfall 7); partial feedback ignored (Pitfall 8) | 2D sweep; realistic choice distribution in simulation |
-| SLURM job array setup | Import storm (Pitfall 10); non-independent seeds (Pitfall 9); GPU OOM (Pitfall 11) | Throttle concurrency; SeedSequence; CPU MCMC for power loop |
-| Effect size specification | Single-point estimate from literature (Pitfall 4) | Sweep effect sizes d = 0.2 to 1.0 |
-| Group × session BF computation | anovaBF misspecification for repeated measures (Pitfall 5) | Use lmBF with manual random slopes or JASP 0.16.3+ |
-| N recommendation synthesis | Posterior mean attenuation bias (Pitfall 2); design vs. analysis prior confusion (Pitfall 12) | Report attenuation-corrected and -uncorrected curves; separate priors explicitly |
-| Final figure and reporting | Model recovery power merged with parameter power (Pitfall 13) | Two separate figures, two separate N recommendations |
+**What goes wrong:** Decision 131 and Decision 135 establish that the Laplace path emits `coord_name="participant_id"` (see `src/prl_hgf/fitting/laplace_idata.py` module docstring) while the NUTS path `_samples_to_idata` emits `"participant"`. A viewer that hardcodes either name will silently fail on the other path — `idata.posterior["omega_2"].sel(participant_id=...)` raises `KeyError` when given a NUTS idata, and vice versa. Worse: the viewer may succeed on the data it was tested with and fail only when a collaborator loads a NUTS-fit idata from an older run.
+
+**Why it happens:** Testing with only the Laplace path (which is Phase 20's default per Decision 184) misses the NUTS coord name. The error message (`KeyError: 'participant_id'`) is not obviously about the viewer.
+
+**How to avoid:** The viewer's idata adapter function must detect the coord name dynamically:
+```python
+def _get_participant_dim(idata: az.InferenceData) -> str:
+    posterior = idata.posterior
+    for candidate in ("participant_id", "participant"):
+        for var in posterior.data_vars.values():
+            if candidate in var.dims:
+                return candidate
+    raise ValueError(
+        f"Cannot find participant dimension; dims found: "
+        f"{set(d for v in posterior.data_vars.values() for d in v.dims)}"
+    )
+```
+Unit test: assert `_get_participant_dim` returns `"participant_id"` for a Laplace idata and `"participant"` for a mock NUTS idata.
+
+**Warning signs:**
+- Viewer idata reader hardcodes `"participant_id"` or `"participant"`.
+- Viewer only tested with Laplace idata.
+- No unit test covering both coord-name variants.
+
+**Phase to address:** Phase 23 (export/idata reader).
+
+**Priority:** HIGH — silently wrong when coord name mismatches, with a confusing error message.
+
+---
+
+### Pitfall 10: 2-Level Config Passed to 3-Level Template Panel
+
+**What goes wrong:** The HTML template (`patrl_hgf_model.html`) already has a React state toggle `hgfLevel = "3level" | "2level" | "2level_mm"` and conditionally renders the volatility panel `{is3 && ...}`. If the viewer's JSON payload claims a 2-level network but the React component defaults to `hgfLevel="3level"`, the volatility panel renders with empty/`NaN` data rather than being hidden. The user sees a broken volatility display, not an intentional absence.
+
+**Why it happens:** The `hgfLevel` default in the template JSX is hardcoded to `"3level"` (line 121 of `patrl_hgf_model.html`). A generic viewer that doesn't override this default will always start in 3-level mode.
+
+**How to avoid:** The injected JSON payload must include a `hgf_level` field that the React component reads for its initial state: `useState(injectedData.hgf_level || "2level")`. The inspector must emit `"hgf_level": "2level"` or `"3level"` based on whether node index 2 (VOLATILITY_NODE) is present in the network. Template generalization audit (Pitfall 14) must catch this default.
+
+**Warning signs:**
+- Injected JSON does not include a `hgf_level` key.
+- Template `useState("3level")` is not updated to read from injected data.
+- No test that loads a 2-level model and asserts the volatility panel is hidden.
+
+**Phase to address:** Phase 23 (template generalization) and Phase 22 (inspector must emit `hgf_level`).
+
+**Priority:** MEDIUM — visible rendering error, but does not corrupt data.
+
+---
+
+### Pitfall 11: HTML Template Hardcoded PAT-RL Assumptions
+
+**What goes wrong:** `figures/patrl_hgf_model.html` was hand-edited for PAT-RL specifically. It contains:
+- Phenotype labels `balanced`, `reward_blunted`, `threat_hypervigilant`, `both_disrupted` (PAT-RL specific, lines 46–86).
+- Hardcoded `INFO` strings mentioning `VOLATILITY_NODE`, `BELIEF_NODE`, specific Python module names (`response_patrl.py`), and PAT-RL response model equations `P(approach) = σ(β·EV + b)`.
+- Color constants `C.dhr` (green, for ΔHR) that are PAT-RL specific.
+- ANS phenotype descriptions referencing Klaassen 2024 and SNS/PNS framing.
+- Layout constants `CX=350`, `SW_D=700` that assume a specific number of nodes and panel widths.
+
+Promoting this file to a generic template WITHOUT auditing these assumptions will produce a viewer that either (a) silently renders PAT-RL labels on pick_best_cue models, or (b) crashes when the React component tries to read phenotype data from a pick_best_cue idata that has no phenotype dimension.
+
+**Why it happens:** The template works for PAT-RL. It's tempting to inject data and skip the audit because "the structure is the same." But the React component has 200+ lines of PAT-RL-specific rendering logic before the generic SVG nodes.
+
+**How to avoid:** Before Phase 23 writes a single line of injection code, run a systematic template audit:
+1. `grep -n "balanced\|reward_blunted\|threat_hypervigilant\|both_disrupted\|PHENOS\|SNS\|PNS\|Klaassen\|bradycardia\|shock_mag\|reward_mag" figures/patrl_hgf_model.html` — each hit is a hardcoded PAT-RL assumption that must either be injected from the schema or moved to a conditional block.
+2. Classify each hit: (a) remove, (b) make data-driven from injected JSON, or (c) keep with a visible conditional guard.
+3. The audit findings become a checklist in the Phase 23 plan before template modification begins.
+
+**Warning signs:**
+- Phase 23 begins with injection code before the audit is complete.
+- The Phase 23 plan does not have an explicit "template audit" task.
+- `PHENOS` array in template is still hardcoded (not replaced by injected phenotype data or removed).
+
+**Phase to address:** Phase 23 (template generalization), first task.
+
+**Priority:** HIGH — ships a viewer that shows PAT-RL labels on pick_best_cue models.
+
+---
+
+### Pitfall 12: Test Coverage Trap — Real Network Required for Meaningful Tests
+
+**What goes wrong:** Mocking `pyhgf.Network` at the module boundary (replacing it with a `MagicMock`) makes the inspector test fast but vacuous — it only tests that the inspector calls the right methods, not that it extracts the right values. The real failure modes (wrong attribute path, deduplication bug, temp-key KeyError) only manifest against a real `Network` instance. However, using a real Network in every test is slow if the network is fit to data.
+
+**Why it happens:** Developers default to unit-test isolation (mock everything external). For pyhgf specifically, "external" means the library, which feels like a valid mock boundary.
+
+**How to avoid:** Two-tier test strategy:
+- **Structural tests (fast):** Mock `Network` to test schema shape, field names, and error handling. These run on every `pytest` invocation. They do NOT test correct attribute extraction.
+- **Canary integration test (medium):** Instantiate `build_2level_network_patrl()` and `build_3level_network_patrl()`, call `input_data` with a tiny trial sequence (10 trials), and assert the inspector output has the correct node count, node types, and that temp keys are present (or gracefully absent). This test runs in < 1 second (no MCMC) and catches attribute-path regressions immediately.
+
+The canary test is NOT the same as a real-fit test. It uses `input_data` directly without MCMC. This is the same approach used in the existing `test_pyhgf_temp_keys_extracted` canary (Decision 129).
+
+For ArviZ idata mocking: use `az.from_dict()` with minimal synthetic data rather than `MagicMock`. This gives a real `InferenceData` object with the correct coord structure, enabling coord-name detection tests to work correctly.
+
+**Warning signs:**
+- All inspector tests use `MagicMock(spec=Network)`.
+- No test calls `build_2level_network_patrl()` or `build_3level_network_patrl()` directly.
+- idata tests use `MagicMock` instead of `az.from_dict()`.
+
+**Phase to address:** Phase 22 (inspector tests).
+
+**Priority:** MEDIUM — tests pass but provide false confidence; real bugs ship.
+
+---
+
+### Pitfall 13: Documentation Drift Between Handoff Spec and Shipped Inspector
+
+**What goes wrong:** `docs/HANDOFF_pyhgf_plot_network_extension.md` proposes attribute paths and schema shapes that are hypothetical. Phase 22 will discover the actual paths. If the handoff is not updated to reflect discoveries, collaborators reading it will implement downstream consumers based on the wrong spec. This is the "mislead future colleagues" failure mode specific to this project's two-workstream structure (local + cluster).
+
+**Why it happens:** Updating documentation feels like overhead after the code is done. The handoff was written in a different context and feels like "planning artifacts," not living spec.
+
+**How to avoid:** Phase 22's definition of done must include: "HANDOFF doc updated to reflect verified attribute paths." Specifically:
+- Replace all instances of "Hypothetical extended API" and "Key questions to resolve" in the handoff with verified findings from the REPL session.
+- Add a "Verified 2026-04-XX against pyhgf 0.2.10" annotation to each attribute path.
+- If the handoff's Option C architecture was modified during implementation, update the "What to build" task breakdown section.
+
+**Warning signs:**
+- Phase 22 closes without a commit to `docs/HANDOFF_pyhgf_plot_network_extension.md`.
+- The handoff still says "Key questions to resolve" in its last section after Phase 22 ships.
+
+**Phase to address:** Phase 22 (close-out), Phase 24 (docs pass).
+
+**Priority:** MEDIUM — does not break code, but produces misleading documentation for cluster-side collaborators.
+
+---
+
+### Pitfall 14: JSON vs YAML Schema Divergence
+
+**What goes wrong:** Existing configs (`configs/pat_rl.yaml`, `configs/prl_analysis.yaml`) are YAML. The viewer example schema referenced in project planning is JSON. If the viewer accepts both, a loader that parses YAML and JSON separately will silently drift: YAML parsers coerce unquoted values (e.g., `True`/`False`/`null`) differently from JSON parsers, and YAML accepts multi-line strings, anchors, and implicit type coercion that JSON does not. A schema defined in YAML and validated against JSON (or vice versa) can pass validation for the wrong reasons.
+
+**Why it happens:** Python's `yaml.safe_load` and `json.loads` both return `dict`, so they look equivalent at the call site. The differences emerge only with edge-case values.
+
+**How to avoid:** Scope C defines a single schema format for the viewer. Given that the existing codebase is YAML-primary and `pat_rl_config.py` uses `yaml.safe_load`, the viewer's network schema should also be YAML. If a JSON example was proposed in planning, it is a display format only — the canonical on-disk format is YAML, loaded by the existing infrastructure. If JSON output is required (for HTML injection), it is produced by `json.dumps(schema_dict)` from the Python dict, never by maintaining a separate JSON schema file.
+
+Do not add both a YAML loader and a JSON loader to the viewer package in v1.3. Add one. Add the other only when a concrete use case requires it, with explicit schema validation tests for both.
+
+**Warning signs:**
+- `src/prl_hgf/viz/` contains both a `load_yaml_schema()` and a `load_json_schema()` function.
+- The YAML and JSON loaders have no shared validation function.
+- A schema example exists in both `schema.yaml` and `schema.json` with subtly different defaults.
+
+**Phase to address:** Phase 22 (schema design), enforced by choosing one format at the start of the phase.
+
+**Priority:** LOW — schema drift is subtle and may not surface in v1.3, but compounds in v1.4+.
+
+---
+
+### Pitfall 15: Dev Environment Incompatibility Discovered at Cluster Time
+
+**What goes wrong:** The viewer adds a new dependency (e.g., `beautifulsoup4` for HTML testing, or `lxml` for XML parsing). The dependency installs cleanly in the developer's local environment (system Python or a different venv) but is incompatible with `ds_env` (conda, Python 3.10, pyhgf 0.2.8 pinned). The incompatibility is only discovered when the viewer is tested on the cluster.
+
+**Why it happens:** The viewer is developed locally with `pip install <new-dep>` without checking `ds_env`. The cluster `ds_env` has pinned versions that may conflict.
+
+**How to avoid:** Any new dependency added for the viewer must be verified against `ds_env` before Phase 23 closes:
+1. `conda run -n ds_env pip install <dep>` on the local machine (or check the conda package for the dep's conda-forge version against the Python 3.10 constraint).
+2. Add the dep to `requirements.txt` (or `pyproject.toml [dev]`) immediately when it is first used.
+3. `beautifulsoup4` and `lxml` are well-supported on Python 3.10 — acceptable. Anything requiring Python 3.11+ type union syntax or 3.12 features is not acceptable.
+
+**Warning signs:**
+- A new `import bs4` or `import lxml` appears in test files without a corresponding `requirements.txt` entry.
+- The new dep is only in `pip list` in the developer's default Python, not in `ds_env`.
+
+**Phase to address:** Phase 22/23 (at dependency introduction time).
+
+**Priority:** MEDIUM — code works locally, fails on cluster.
+
+---
+
+### Pitfall 16: Node Semantic Mislabeling
+
+**What goes wrong:** The inspector classifies a continuous-state node as a "value parent" when it is actually a "volatility parent." This is a semantic error that directly misleads scientific readers. In the pick_best_cue 3-level model, node 6 has `volatility_children=[1,3,5]` — it is a volatility parent. In the PAT-RL 3-level model, node 2 has the same role. If the inspector infers node type from `node_parameters["tonic_volatility"]` alone (a continuous node has this key regardless of coupling type), it will label node 6 as "continuous (value)" rather than "continuous (volatility)."
+
+**Why it happens:** pyhgf node types are determined by construction-time coupling semantics, not by a single attribute flag. A node is a "volatility parent" if it appears as a volatility child of another node OR if another node was added with it as a `volatility_children` argument. This topology is encoded in the `edges` structure, not in `node_parameters`.
+
+**How to avoid:** The inspector must determine node role from the adjacency structure, not from `node_parameters` alone:
+- A node is an "input node" if its index is in `net.input_idxs`.
+- A node is a "volatility parent" if it appears as a `volatility_parent` of any other node in the edges structure.
+- A node is a "value parent" if it appears as a `value_parent` of any other node and is NOT also a volatility parent of any node.
+
+Encode the semantic rules as explicit logic with assertions, not as heuristics. Add a unit test that asserts `schema["nodes"][6]["role"] == "volatility"` for the pick_best_cue 3-level model.
+
+**Warning signs:**
+- Inspector classifies nodes by `"kind"` attribute from `node_parameters` only.
+- Node role inference does not consult the edge structure.
+- No test asserts that node 6 in the 3-level model is classified as "volatility parent."
+
+**Phase to address:** Phase 22 (inspector).
+
+**Priority:** HIGH — scientifically misleading output.
+
+---
+
+## Technical Debt Patterns
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Mock `Network` in all inspector tests | Tests run in milliseconds | Real attribute-path bugs not caught | Never for the canary test; acceptable for structural/shape tests |
+| Hardcode `"participant_id"` coord name | Works for Laplace path today | Breaks when NUTS idata is loaded (Decision 131/135) | Never |
+| Copy phenotype labels from template into inspector | Avoids template audit | Generic viewer shows PAT-RL labels on pick_best_cue models | Never |
+| Use `json.dumps(..., ensure_ascii=False)` | Preserves Unicode in labels | `</script>` injection vulnerability; surrogate-pair breakage | Never for HTML injection |
+| Add bridge function to `task_config.py` | Convenient accessor | Violates Decision 112 parallel-stack invariant | Never |
+| Skip REPL verification of pyhgf attributes | Save 30 minutes | Inspector based on wrong paths; fails on first real use | Never |
+
+---
+
+## Integration Gotchas
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| pyhgf `Network` | Access `net.attributes[i]["tonic_volatility"]` from training-data assumption | Verify attribute path in REPL first; use `_safe_temp` pattern for temp keys |
+| ArviZ `InferenceData` | Hardcode `"participant_id"` coord name | Detect dynamically; support both `"participant"` and `"participant_id"` (Decisions 131, 135) |
+| React JSX template | Inject raw JSON string | Use `ensure_ascii=True`, escape `</script>`, assert marker absence after injection |
+| `pat_rl_config.py` | Add a viewer helper method to the config class | Keep all viewer adapter code in `src/prl_hgf/viz/adapters.py` |
+| Pick-best-cue 3-level model | Traverse edges naively and render 3 volatility nodes | Deduplicate by node index; use dict keyed by index |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+- [ ] **Inspector REPL verification:** Attribute paths confirmed against a running `Network` instance before any production code, not just from the handoff doc.
+- [ ] **Temp-key fallback:** `_safe_temp`-style guard used for all `node_trajectories["temp"]` access, not direct subscript.
+- [ ] **Deduplication test:** Pick-best-cue 3-level model produces exactly 7 nodes in schema, not 9.
+- [ ] **ArviZ coord detection:** `_get_participant_dim` handles both `"participant"` and `"participant_id"`.
+- [ ] **Injection marker assertion:** `inject()` raises `InjectionError` when marker is absent from template.
+- [ ] **2-level volatility panel:** A 2-level model payload causes the React component to hide the volatility panel (not render NaN values).
+- [ ] **Scope C file count:** `src/prl_hgf/viz/` contains only `__init__.py`, `inspector.py`, and `tests/test_inspector.py` after Phase 22.
+- [ ] **Handoff updated:** `docs/HANDOFF_pyhgf_plot_network_extension.md` reflects verified attribute paths, not hypotheses.
+- [ ] **Template audit complete:** All PAT-RL-specific hardcoded strings classified (remove / make data-driven / conditional) before Phase 23 injection work begins.
+- [ ] **No env/ diffs:** `src/prl_hgf/env/task_config.py` and `env/pat_rl_config.py` have zero new imports pointing to `viz/`.
+
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Wrong pyhgf attribute paths (P1) | MEDIUM | Re-run REPL verification; update inspector; re-run tests. ~2 hours if caught before Phase 23; ~1 day if after injection code written. |
+| Injection failure (P4–P5) | LOW | Fix `json.dumps` flags and marker escaping; re-run injection test. ~1 hour. |
+| Coord name collision (P9) | LOW | Refactor one function (`_get_participant_dim`); update tests. ~30 minutes. |
+| Template audit skipped (P11) | HIGH | Requires full template audit + targeted JSX refactor + re-test all model variants. ~1 day. |
+| Scope creep — partial renderer in Phase 22 (P8) | HIGH | Move renderer code to a branch; unscope from Phase 22; re-plan Phase 23. ~0.5 day churn plus planning overhead. |
+| Shared volatility node duplication (P3) | LOW | Fix traversal accumulator (list → dict); update test. ~1 hour if caught early. |
+| GUI regression from model-building refactor (P7) | MEDIUM | Revert model-building changes; add additive-only guard to Phase 22/23 checklists. ~0.5 day. |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| P1: Hypothesis-based coding | Phase 22 (first task) | REPL session committed as comment; no production code written before session |
+| P2: Temp-key drift | Phase 22 (inspector) | Canary integration test passes on real `Network` instance |
+| P3: Shared volatility node duplication | Phase 22 (traversal) | Unit test asserts 7 nodes for pick_best_cue 3-level |
+| P4: Marker collision / injection | Phase 23 (export) | BeautifulSoup parse test on injected HTML |
+| P5: Silent injection failure | Phase 23 (export) | `InjectionError` test for missing-marker case |
+| P6: Parallel-stack violation | Phase 22 (review gate) | `grep -r "from prl_hgf.viz" src/prl_hgf/env/` returns empty |
+| P7: GUI regression | Phase 22/23 (additive-only policy) | No diffs in `src/prl_hgf/models/` after phases close |
+| P8: Scope creep | Phase 22 (file-list constraint) | `ls src/prl_hgf/viz/` matches expected file list exactly |
+| P9: ArviZ coord name | Phase 23 (idata reader) | Unit test covers both `"participant"` and `"participant_id"` coords |
+| P10: 2-level template default | Phase 23 (template) | Test loads 2-level schema; asserts `hgf_level` field present in JSON payload |
+| P11: Template PAT-RL hardcoding | Phase 23 (first task) | Template audit grep checklist completed before injection code written |
+| P12: Vacuous mock tests | Phase 22 (test design) | At least one canary test calls `build_2level_network_patrl()` directly |
+| P13: Handoff drift | Phase 22 (close-out) + Phase 24 | Handoff has "Verified" annotation; no "Key questions to resolve" remaining |
+| P14: JSON vs YAML divergence | Phase 22 (schema design) | Single schema format chosen and documented in `viz/__init__.py` |
+| P15: Dev env incompatibility | Phase 22/23 (dep introduction) | New deps verified in `ds_env` before phase closes |
+| P16: Node semantic mislabeling | Phase 22 (inspector) | Unit test asserts role="volatility" for node 6 in 3-level pick_best_cue |
 
 ---
 
 ## Sources
 
-- Wilson & Collins (2019). Ten simple rules for the computational modeling of behavioral data. *eLife*. [PMC6879303](https://pmc.ncbi.nlm.nih.gov/articles/PMC6879303/)
-- Schönbrodt & Wagenmakers (2018). Bayes factor design analysis: Planning for compelling evidence. *Psychonomic Bulletin & Review*. [doi:10.3758/s13423-017-1230-y](https://link.springer.com/article/10.3758/s13423-017-1230-y)
-- Stefan et al. (2019). A tutorial on Bayes Factor Design Analysis using an informed prior. *Behavior Research Methods*. [PMC6538819](https://pmc.ncbi.nlm.nih.gov/articles/PMC6538819/)
-- Hess et al. (2025). Bayesian Workflow for Generative Modeling in Computational Psychiatry. *Computational Psychiatry*. [PMC11951975](https://pmc.ncbi.nlm.nih.gov/articles/PMC11951975/)
-- Schreiber et al. (2024). Enhancing experimental design through BFDA: insights from multi-armed bandit tasks. *Wellcome Open Research*. [doi:10.12688/wellcomeopenres.20041.2](https://wellcomeopenresearch.org/articles/9-423)
-- Test-retest reliability of HGF parameters. [PMC11573178](https://pmc.ncbi.nlm.nih.gov/articles/PMC11573178/)
-- Reliability of RL computational parameters. [PMC11104400](https://pmc.ncbi.nlm.nih.gov/articles/PMC11104400/)
-- Van den Bergh et al. (2023). Bayesian Repeated-Measures ANOVA: Updated Methodology. *Psychological Methods*. [doi:10.1177/25152459231168024](https://journals.sagepub.com/doi/10.1177/25152459231168024)
-- JASP blog: Bayesian RM-ANOVA random slope misspecification (2022). [jasp-stats.org](https://jasp-stats.org/2022/07/29/bayesian-repeated-measures-anova-an-updated-methodology-implemented-in-jasp/)
-- LMU Power Simulation: how many Monte Carlo iterations? [shiny.psy.lmu.de/r-tutorials/powersim/](https://shiny.psy.lmu.de/r-tutorials/powersim/how_many_iterations.html)
-- PyMC GPU memory issue: [discourse.pymc.io](https://discourse.pymc.io/t/reduce-memory-requirements-on-the-gpu-when-sampling-with-pm-sampling-jax-sample-numpyro-nuts/11596)
-- NumPy best practices for RNG in parallel: [blog.scientific-python.org](https://blog.scientific-python.org/numpy/numpy-rng/)
-- Monash M3 MASSIVE array jobs: [docs.erc.monash.edu](https://docs.erc.monash.edu/old-M3/M3/slurm/array-jobs/)
-- Sheffield HPC embarrassingly parallel guide: [docs.hpc.shef.ac.uk](https://docs.hpc.shef.ac.uk/en/latest/parallel/EmbarrassinglyParallel.html)
+- `docs/HANDOFF_pyhgf_plot_network_extension.md` — primary prior-art document (235 lines, Option C architecture)
+- `.planning/STATE.md` Decisions 112, 118, 119, 128, 129, 131, 135, 184 — verified design decisions grounding these pitfalls
+- `src/prl_hgf/analysis/export_trajectories.py:_safe_temp()` — existing correct pattern for pyhgf temp-key fallback
+- `src/prl_hgf/fitting/laplace_idata.py` module docstring — confirms `"participant_id"` vs `"participant"` asymmetry
+- `src/prl_hgf/models/hgf_3level.py` — confirms node 6 as shared volatility parent (topology duplication risk)
+- `src/prl_hgf/models/hgf_2level_patrl.py` — node index constants (INPUT_NODE=0, BELIEF_NODE=1)
+- `src/prl_hgf/models/hgf_3level_patrl.py` — node index constants (VOLATILITY_NODE=2)
+- `src/prl_hgf/env/pat_rl_config.py` module docstring — Decision 112 parallel-stack contract
+- `src/prl_hgf/gui/explorer.py` — ipywidgets GUI imports (blast-radius reference)
+- `figures/patrl_hgf_model.html` lines 46–131 — hardcoded PAT-RL phenotype labels and INFO strings (Pitfall 11)
+- `figures/patrl_hgf_model.html` line 121 — `useState("3level")` hardcoded default (Pitfall 10)
+
+---
+*Pitfalls research for: Generic HGF Viewer scaffold (v1.3)*
+*Researched: 2026-04-24*

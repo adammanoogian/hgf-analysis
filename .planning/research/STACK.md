@@ -1,178 +1,368 @@
-# Technology Stack: BFDA Power Analysis Milestone
+# Stack Research — v1.3 Generic HGF Viewer (Scaffold)
 
-**Project:** PRL HGF Analysis — v1.1 Power Analysis
-**Researched:** 2026-04-07
-**Scope:** New capabilities only. Existing stack (pyhgf, PyMC, ArviZ, bambi, groupBMC, JAX) is validated and unchanged.
+**Domain:** Config-driven HTML viewer scaffold for pyhgf networks
+**Researched:** 2026-04-24
+**Confidence:** HIGH (all versions verified at runtime or PyPI; pyhgf internals verified at runtime in ds_env)
 
 ---
 
 ## Decision Summary
 
-| Capability | Decision | Rationale |
+The v1.3 scaffold needs **two runtime additions** and **two dev additions** beyond what is
+already in `ds_env`. Everything else is reuse.
+
+| Concern | Decision | Rationale |
 |---|---|---|
-| JZS BF computation | `pingouin.bayesfactor_ttest` (already a dep) | Verified JZS impl with `scipy.integrate.quad`; validated against JASP/R BayesFactor |
-| BFDA orchestration | Custom Python module | No Python BFDA package exists; methodology is simple Monte Carlo |
-| Cluster parallelism | SLURM array jobs (primary) | Embarrassingly parallel; matches existing cluster infrastructure |
-| Within-node parallelism | `joblib` (already a transitive dep) | Optional; use only if packing multiple iterations per array task |
-| Power curve visualization | `matplotlib` (already a dep) | Already in stack; no new dependency needed |
-| Progress tracking (SLURM) | File-based logging, not tqdm | tqdm progress bars do not render in SLURM log files |
-
-**Net new packages to add to `pyproject.toml`: zero.**
-
----
-
-## JZS Bayes Factor Computation
-
-### Decision: Use `pingouin.bayesfactor_ttest` — do NOT implement from scratch
-
-`pingouin` is already declared in `pyproject.toml` (`pingouin>=0.5.5`). The current release is **0.6.1** (released 2026-03-28).
-
-**Verification of implementation correctness (HIGH confidence):**
-
-The GitHub source of `pingouin/bayesian.py` was inspected directly. The function `bayesfactor_ttest(t, nx, ny=None, paired=False, alternative='two-sided', r=0.707)` implements the Rouder et al. (2009) JZS prior using `scipy.integrate.quad` over the exact integrand from their Equation 2:
-
-```
-integrand(g) = (1 + N·g·r²)^(-1/2)
-             · (1 + t²/((1 + N·g·r²)·df))^(-(df+1)/2)
-             · (2π)^(-1/2) · g^(-3/2) · exp(-1/(2g))
-```
-
-`BF10 = ∫₀^∞ integrand(g) dg / (1 + t²/df)^(-(df+1)/2)`
-
-One-sample case is explicitly handled: when `ny is None` or `ny == 1`, the function sets `n = nx`, `df = nx - 1`. This is precisely the use case for BFDA (testing whether a group-level parameter contrast differs from zero).
-
-**Validated against JASP and the R BayesFactor package.**
-
-**What NOT to do:** Do not re-implement Rouder Eq. 2 with raw `scipy.integrate.quad`. The pingouin implementation is tested, readable, and already available. Implementing from scratch introduces transcription error risk with no benefit.
-
-**One-sided BF note (MEDIUM confidence, from docs):** pingouin computes one-sided BF by doubling the two-sided BF, which differs from R's BayesFactor package behavior. If the BFDA uses directional hypotheses, prefer two-sided BF with the standard BF₁₀ > 6 threshold, or verify against R output on a test case. For a symmetric design-prior scenario (testing group × session interaction), two-sided is the correct default.
-
-**Cauchy scale default:** `r = 0.707` (= √2/2). This is the JASP/BayesFactor default and appropriate for medium effect sizes. The BFDA should parameterize `r` so power curves can be generated at multiple prior scales if needed.
-
-### scipy.integrate.quad is the right tool (no JAX alternative)
-
-JAX does not have a production-ready equivalent to `scipy.integrate.quad`. A GitHub issue (#27493, open as of research date) requests this feature — it does not exist yet. The JZS integral is 1D and fast; `scipy.integrate.quad` (21-point Gauss-Kronrod) completes in microseconds per call. This computation is not the bottleneck — MCMC is. There is no reason to seek a JAX-native solution.
+| HTML template generation | Jinja2 `Environment(loader=BaseLoader())` | Already installed (3.1.6); safer than regex for multi-slot injection |
+| SVG elements | Hand-rolled in HTML template | No SVG library needed at scaffold stage |
+| pyhgf network inspection | Read `.attributes[idx]`, `.edges[idx]` directly | Verified API — no wrapper library needed |
+| JS/CSS in output | Inline at export time (fetch + embed) | Template currently uses CDN links; self-contained requirement mandates inlining |
+| ArviZ posterior extraction | `az.summary()` + `az.hdi()` | Already installed (0.22.0); covers all scaffold needs |
+| HTML structural testing | `beautifulsoup4` with `html.parser` | Already installed (4.13.4); no lxml needed |
+| Snapshot testing | `pytest-snapshot` | Lightweight; fits existing pytest infrastructure |
 
 ---
 
-## BFDA Orchestration
+## Reuse — Do Not Add
 
-### Decision: Custom module, no external BFDA package
+These facilities are already in `ds_env` and cover every v1.3 scaffold need. Do not
+introduce alternatives.
 
-The R `BFDA` package (nicebread/BFDA) has no Python equivalent. No Python BFDA package exists as of 2026-04 (confirmed: WebSearch found no Python port).
+### pyhgf Network inspection (verified at runtime, pyhgf 0.2.10)
 
-This is not a problem. The BFDA algorithm for a fixed-N design is simple:
+The `Network` object exposes everything `inspector.py` needs without any helper library:
 
+```python
+from pyhgf.model import Network
+
+# Node attributes — dict keyed by int index (also -1 for global time_step)
+net.attributes          # dict[int, dict[str, Any]]
+net.attributes[idx]     # keys: 'mean', 'expected_mean', 'precision',
+                        #       'tonic_volatility', 'tonic_drift',
+                        #       'autoconnection_strength',
+                        #       'value_coupling_children', 'value_coupling_parents',
+                        #       'volatility_coupling_children', 'volatility_coupling_parents',
+                        #       'observed', 'temp'
+                        # Note: binary-state nodes (node_type=1) do NOT have
+                        # 'tonic_volatility'; continuous-state nodes (node_type=2) do.
+
+# Edges — tuple of AdjacencyLists NamedTuples (one per node, 0-indexed)
+net.edges               # tuple[AdjacencyLists, ...]
+net.edges[idx].node_type          # int: 0=input, 1=binary-state, 2=continuous-state
+net.edges[idx].value_parents      # tuple[int, ...] | None
+net.edges[idx].volatility_parents # tuple[int, ...] | None
+net.edges[idx].value_children     # tuple[int, ...] | None
+net.edges[idx].volatility_children# tuple[int, ...] | None
+
+# Input node indices
+net.input_idxs          # tuple[int, ...]
+
+# Node count (excludes the -1 global node)
+net.n_nodes             # int
 ```
-for each N in sample_sizes:
-    for each iteration in 1..K:
-        1. simulate synthetic cohort of N participants
-        2. fit each participant with MCMC (existing pipeline)
-        3. extract parameter posterior means
-        4. run one-sample or paired t-test on contrast of interest
-        5. compute BF10 via pingouin.bayesfactor_ttest
-        6. record BF10
-    power[N] = mean(BF10 > threshold)
+
+The `AdjacencyLists` is a `NamedTuple` from `pyhgf.typing` — named field access
+is safe across 0.2.x. The `node_type` encoding (0/1/2) is documented in the source
+and verified stable.
+
+**Level inference rule** (no helper needed): traverse from input nodes upward via
+`volatility_parents`; each hop is one additional level. `node_type == 1` →
+binary-state (leaf or input); `node_type == 2` → continuous-state (value parent or
+volatility parent). A continuous-state node with `volatility_children` is a
+volatility parent (level 3+).
+
+### ArviZ posterior extraction (arviz 0.22.0)
+
+```python
+import arviz as az
+
+# Posterior parameter summary (mean, sd, hdi_3%, hdi_97%, r_hat, ess_bulk)
+df = az.summary(idata, var_names=["omega_2", "kappa"], group="posterior")
+
+# HDI for a specific variable
+hdi_vals = az.hdi(idata.posterior["omega_2"], hdi_prob=0.94)
+
+# Coord name: idata uses "participant_id" (Laplace path, Decision 131/19-02)
+# or "participant" (NUTS path, Decision 18-06).
+# schema.py must accept a coord_name kwarg with default "participant_id"
+# to match the Laplace idata that v1.3 primarily targets.
+idata.posterior.coords["participant_id"]   # Laplace path
+idata.posterior.coords["participant"]      # NUTS path (back-compat)
 ```
 
-The BFDA module should live at `src/prl_hgf/power/` and contain:
-- `simulate.py` — cohort simulation (wraps existing simulation code)
-- `compute_bf.py` — BF computation from fitted posteriors
-- `orchestrate.py` — iteration loop and result aggregation
-- `visualize.py` — power curves
+`az.summary()` returns a `pd.DataFrame` in `fmt='wide'` (default). The scaffold
+JSON serialisation layer in `schema.py` should call `.to_dict(orient='index')` on
+the result — no custom accessor needed.
+
+### NumPy (numpy 2.2.6) — already in ds_env
+
+Used for JAX array → Python float conversion in `inspector.py`:
+
+```python
+float(np.asarray(net.attributes[idx]["tonic_volatility"]))
+```
+
+JAX arrays are returned by `net.attributes` after any model run; `.asarray()` +
+`float()` avoids JAX device array JSON serialisation errors.
 
 ---
 
-## Cluster Parallelism
+## Runtime Additions
 
-### Primary approach: SLURM array jobs
+### 1. Jinja2 — HTML template injection
 
-The existing cluster infrastructure (M3 MASSIVE) already uses SLURM array-style dispatch (see `cluster/04_fit_mcmc_gpu.slurm`). The natural structure for BFDA is:
+**Already installed:** jinja2 3.1.6 (confirmed in ds_env).
 
+**Why Jinja2 over regex-only injection:**
+
+The prototype pattern (`re.sub(r'const PHENOS = \[.*?\]', ...)`) breaks silently
+on multiline JS blocks, fails if the constant name appears in a comment, and
+requires re-escaping backslashes in replacement strings. Jinja2's
+`Environment(loader=BaseLoader())` solves all three without adding a new
+dependency.
+
+**Why not Mako:** Mako is not installed and adds a dependency for no additional
+capability at scaffold scope.
+
+**Why not f-strings:** f-strings on a 676-line React/JSX template require escaping
+every `{` and `}` in the JS source — not maintainable.
+
+**Integration pattern for `export.py`:**
+
+```python
+from jinja2 import Environment, BaseLoader
+
+_ENV = Environment(loader=BaseLoader(), autoescape=False)
+# autoescape=False is correct here: we are injecting JS/JSON into a known
+# template we control, not sanitising user HTML.
+
+def export_viz_html(
+    network: Network,
+    idata: az.InferenceData | None,
+    config: ViewerConfig,
+    output_path: Path,
+) -> None:
+    template_text = (TEMPLATE_PATH).read_text(encoding="utf-8")
+    tmpl = _ENV.from_string(template_text)
+    rendered = tmpl.render(
+        network_json=_network_to_json(network),
+        posterior_json=_posterior_to_json(idata) if idata else "null",
+        viewer_config_json=config.to_json(),
+    )
+    output_path.write_text(rendered, encoding="utf-8")
 ```
-sbatch --array=0-199 cluster/08_bfda_iteration.slurm
+
+Template injection slots in `figures/hgf_viewer.html` use Jinja2 delimiters
+inside a JS `<script>` block, not inside JSX, to avoid Babel parse ambiguity:
+
+```html
+<script id="hgf-viewer-data" type="application/json">
+{
+  "network": {{ network_json }},
+  "posterior": {{ posterior_json }},
+  "config": {{ viewer_config_json }}
+}
+</script>
 ```
 
-Each array task:
-- Receives `$SLURM_ARRAY_TASK_ID` as its iteration index and reads N-level config from a pre-written parameter file
-- Runs simulation + MCMC fitting for one iteration
-- Writes result to `output/bfda/iter_{task_id}.parquet`
+The React component reads `document.getElementById('hgf-viewer-data')` on mount.
+This keeps Jinja2 out of JSX syntax entirely.
 
-A separate aggregation job (with `--dependency=afterok:$ARRAY_JOB_ID`) reads all per-iteration files and computes power curves.
+**pyproject.toml change:** None needed — jinja2 is already a transitive
+dependency (via PyMC → pytensor). To make it explicit, add to `[project.dependencies]`:
 
-**Why this over joblib within a single job:**
-- MCMC fitting (PyMC + JAX) is the compute bottleneck, not Python overhead
-- Each iteration needs GPU access; array jobs allocate one GPU per task cleanly
-- JAX has a documented incompatibility with `multiprocessing.fork` (confirmed via PyMC GitHub issues #1805, #6362, #7620). Fork-based parallelism inside a JAX process causes deadlocks. SLURM array jobs sidestep this entirely — each task is an independent process with its own JAX initialization
-- Existing SLURM scripts already handle conda env activation, JAX cache dirs, and GPU verification
+```toml
+"jinja2>=3.1,<4",
+```
 
-### Secondary (optional): joblib for CPU-only aggregation
+### 2. Self-contained output — inline JS/CSS at export time
 
-`joblib` 1.5.3 (released 2025-12-15) is a transitive dependency (sklearn depends on it) and requires no new install. It can be used in the aggregation step for parallel BF computation across iterations if needed, but this step is trivially fast (microseconds per BF call) and likely does not need parallelism.
+The current template loads React 18.2.0, React-DOM 18.2.0, and Babel Standalone
+7.23.2 from cdnjs, and loads Source Sans 3 + STIX Two Text from Google Fonts. The
+milestone requirement is a **single self-contained HTML file with no external
+runtime dependencies**.
 
-**If joblib is used inside a SLURM task**, set `multiprocessing_context="spawn"` or `"forkserver"` — never `"fork"` — due to JAX threading incompatibility.
+**Solution:** At export time, fetch each CDN resource once and embed as inline
+`<script>` / `<style>` content. This is stdlib-only:
 
----
+```python
+import urllib.request
 
-## Power Curve Visualization
+def _fetch_and_inline(url: str) -> str:
+    with urllib.request.urlopen(url, timeout=15) as r:
+        return r.read().decode("utf-8")
+```
 
-### Decision: matplotlib only
+**Pinned versions to use in the generic template** (verified 2026-04-24 via
+cdnjs API — these are the current stable releases; the template should pin
+explicit versions, not `@latest`):
 
-`matplotlib` (already a dependency, `>=3.4.0`) is sufficient. Power curves are line plots of P(BF₁₀ > threshold) vs N, with one curve per effect size. `seaborn` (also already a dep) can be used for styling.
-
-`statsmodels.stats.power.TTestPower.plot_power` is not appropriate here because it computes frequentist power (1 - β), not Bayesian power (P(BF > threshold)). Do not use it.
-
----
-
-## Recommended pyproject.toml Changes
-
-**No changes needed.** All required packages are already declared:
-
-| Package | Current constraint | BFDA use |
-|---|---|---|
-| `pingouin>=0.5.5` | Already declared | `bayesfactor_ttest` for JZS BF |
-| `scipy>=1.10` | Already declared | `scipy.integrate.quad` (used internally by pingouin) |
-| `matplotlib>=3.4.0` | Already declared | Power curve plots |
-| `pandas>=2.0` | Already declared | Result aggregation |
-| `numpy>=2.0.0` | Already declared | Array ops |
-
-`joblib` does not need to be declared explicitly — it is a dependency of scikit-learn (transitive) and will be present in the environment.
-
----
-
-## Integration Points with Existing Stack
-
-| Existing component | How BFDA uses it |
+| Resource | Pinned URL |
 |---|---|
-| `src/prl_hgf/models/` | Simulation uses the same HGF model definitions |
-| `src/prl_hgf/fitting/` | MCMC fitting reuses the existing `fit_participant()` interface |
-| `cluster/04_fit_mcmc_gpu.slurm` | New `cluster/08_bfda_iteration.slurm` follows same template (conda activate, JAX cache, GPU verify) |
-| `config.py` | BFDA paths (output dir, parameter grid file) added as constants |
-| `configs/prl_analysis.yaml` | BFDA section added for N-levels, K iterations, effect sizes, BF threshold |
+| React | `https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js` |
+| React-DOM | `https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js` |
+| Babel Standalone | `https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js` |
+
+**Do not upgrade to React 19** for this milestone. The existing JSX in the
+template uses `ReactDOM.createRoot()` which is React 18 API. React 19 introduces
+breaking changes to concurrent features. Pin at 18.2.0.
+
+**Google Fonts:** Inline the `@import` as a `<style>` block using the Google Fonts
+CSS2 API response (which itself contains `@font-face` with base64 data URIs for
+the subset). Alternatively, replace with system font stack for the scaffold if
+font fetching adds complexity — defer font inlining to v1.4. At scaffold stage,
+a `<style>` fallback is acceptable:
+
+```html
+<!-- FALLBACK if font inlining deferred -->
+<style>
+body { font-family: 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif; }
+</style>
+```
+
+**pyproject.toml change:** None — `urllib.request` is stdlib.
 
 ---
 
-## What NOT to Add
+## Dev-Only Additions
 
-| Rejected option | Reason |
+### 3. pytest-snapshot — HTML snapshot testing
+
+**Not installed.** Add to `[project.optional-dependencies] dev`.
+
+**Verified version:** pytest-snapshot 0.9.0 (PyPI, 2026-04-24).
+
+**Why pytest-snapshot over syrupy:** syrupy (5.1.0) is the more modern option
+and supports inline snapshots, but it requires a `--snapshot-update` flag that
+conflicts with the project's existing `addopts = "-v --tb=short --strict-markers"`
+setup. pytest-snapshot is simpler and integrates with the existing pytest config
+without `addopts` changes.
+
+**Why not raw `assert html_content == expected`:** Snapshot files are
+version-controlled and reviewable as diffs — structural regressions are
+immediately visible in PR reviews. String equality in test code is opaque.
+
+**Integration pattern for `tests/viz/`:**
+
+```python
+# tests/viz/test_export.py
+def test_export_produces_stable_html(snapshot, tmp_path):
+    net = build_3level_network_patrl()
+    html = export_viz_html(net, idata=None, config=default_config(), output_path=tmp_path / "out.html")
+    snapshot.assert_match(html, "patrl_3level_scaffold.html")
+```
+
+**pyproject.toml change:**
+
+```toml
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-snapshot>=0.9.0",  # ADD
+]
+```
+
+### 4. beautifulsoup4 — structural HTML tests
+
+**Already installed:** beautifulsoup4 4.13.4 (confirmed in ds_env).
+
+**Why bs4 over lxml:** lxml is NOT installed in ds_env and would require a C
+extension build on the cluster. bs4 with `html.parser` (stdlib) is sufficient for
+structural assertions — finding injection slots, verifying `<script type="application/json">`
+is present, asserting node count in the rendered JSON blob.
+
+**Why not regex on HTML:** Structural tests on HTML with regex are fragile
+(whitespace, attribute order). bs4 parse + `soup.find()` is the correct tool.
+
+**Integration pattern:**
+
+```python
+# tests/viz/test_structure.py
+from bs4 import BeautifulSoup
+
+def test_html_has_data_slot(tmp_path):
+    html = export_viz_html(net, idata=None, config=cfg, output_path=tmp_path / "o.html")
+    soup = BeautifulSoup(html, "html.parser")
+    slot = soup.find("script", {"id": "hgf-viewer-data", "type": "application/json"})
+    assert slot is not None, "injection slot missing from rendered HTML"
+```
+
+**pyproject.toml change:** Add to `[project.optional-dependencies] dev`:
+
+```toml
+"beautifulsoup4>=4.12",
+```
+
+(It is already a transitive dep but should be explicit in dev for test imports.)
+
+---
+
+## What NOT to Add for v1.3
+
+| Package | Why Not |
 |---|---|
-| `rpy2` to call R's BFDA package | Heavy dependency, complex env management, pingouin covers the BF computation already |
-| `torchquad` (GPU quadrature) | 1D integration is not the bottleneck; overkill and adds PyTorch dependency |
-| `ipyparallel` | Cluster-level parallelism via SLURM arrays is cleaner; ipyparallel adds broker complexity |
-| Custom JZS implementation via `scipy.integrate.quad` | pingouin already provides this, tested and validated |
-| `statsmodels` power functions | Frequentist power, not Bayesian power — wrong abstraction |
+| svgwrite / cairosvg | SVG stays hand-rolled in the HTML template. The existing template already has working SVG geometry functions (`hexPts`, `diamPts`, `retract`) as JS — no Python SVG library is needed until publication-quality static export (v1.4+) |
+| plotly / bokeh / altair | Scope C explicitly defers publication-quality rendering; these pull in large JS bundles incompatible with the self-contained output requirement |
+| lxml | bs4 with `html.parser` covers all structural test needs; lxml is not in ds_env and requires a C build |
+| Mako | jinja2 is already installed and sufficient |
+| numpyro / SVI | Not in ds_env; existing `fit_vb_laplace_patrl` is the Laplace path; no new fitting code in v1.3 |
+| pyhgf.plots / graphviz | `plot_network()` uses graphviz for graph rendering — not needed for the viewer scaffold which does its own SVG |
+| React 19 | Breaks `ReactDOM.createRoot()` concurrent API used in the existing template |
+| syrupy | More complex snapshot setup; pytest-snapshot is sufficient |
+
+---
+
+## Version Compatibility Summary
+
+| Package | Version in ds_env | Pinned Constraint | Notes |
+|---|---|---|---|
+| pyhgf | 0.2.10 | `>=0.2.8,<0.3` (existing) | `AdjacencyLists` API stable across 0.2.x |
+| jinja2 | 3.1.6 | `>=3.1,<4` | Already transitive dep; make explicit |
+| beautifulsoup4 | 4.13.4 | `>=4.12` | Dev dep; html.parser (no lxml) |
+| arviz | 0.22.0 | `>=0.21.0` (existing) | `az.summary()`, `az.hdi()` API stable |
+| numpy | 2.2.6 | `>=2.0.0,<3.0` (existing) | JAX array coercion |
+| pytest-snapshot | not installed | `>=0.9.0` (new, dev) | Add to dev extras |
+| React (CDN) | 18.2.0 (template) | Pin at 18.2.0 | Do NOT upgrade to 19 |
+| Babel Standalone (CDN) | 7.23.2 (template) | Pin at 7.23.2 | Proven with existing JSX |
+
+---
+
+## pyproject.toml Delta
+
+Minimal diff from the current `pyproject.toml`:
+
+```toml
+[project.dependencies]
+# ADD (currently transitive only, make explicit):
+"jinja2>=3.1,<4",
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-snapshot>=0.9.0",    # ADD — HTML snapshot regression tests
+    "beautifulsoup4>=4.12",       # ADD — structural HTML test assertions
+]
+```
 
 ---
 
 ## Sources
 
-- [pingouin 0.6.1 on PyPI](https://pypi.org/project/pingouin/) — version confirmed 2026-03-28
-- [pingouin bayesfactor_ttest documentation](https://pingouin-stats.org/generated/pingouin.bayesfactor_ttest.html) — function signature and mathematical formula
-- [pingouin bayesian.py source](https://github.com/raphaelvallat/pingouin/blob/master/src/pingouin/bayesian.py) — `scipy.integrate.quad` usage and one-sample case handling confirmed
-- [nicebread/BFDA R package](https://github.com/nicebread/BFDA) — confirmed no Python equivalent exists
-- [joblib 1.5.3 on PyPI](https://pypi.org/project/joblib/) — version confirmed 2025-12-15
-- [JAX multiprocessing fork issue #1805](https://github.com/jax-ml/jax/issues/1805) — fork incompatibility documented
-- [PyMC issue #7620](https://github.com/pymc-devs/pymc/issues/7620) — fork causes deadlocks with JAX ops
-- [JAX scipy.integrate.quad feature request #27493](https://github.com/jax-ml/jax/issues/27493) — confirms no JAX-native quad exists
-- [Parallelizing Workloads with Slurm Job Arrays](https://blog.ronin.cloud/slurm-job-arrays/) — SLURM array job patterns
-- [Schönbrodt & Wagenmakers 2018 BFDA paper](https://link.springer.com/article/10.3758/s13423-017-1230-y) — methodology reference
+- pyhgf 0.2.10 `Network` internals — verified at runtime in ds_env (`_inspect_pyhgf.py`, 2026-04-24); `AdjacencyLists` source via `inspect.getsource`
+- jinja2 3.1.6 — verified installed in ds_env; `Environment(loader=BaseLoader())` tested at runtime
+- beautifulsoup4 4.13.4 — verified installed in ds_env; `html.parser` round-trip tested
+- arviz 0.22.0 — verified installed in ds_env; `az.summary()` signature confirmed via `help()`
+- React / React-DOM / Babel Standalone versions — cdnjs.com API (`api.cdnjs.com/libraries/{lib}?fields=version`), 2026-04-24; current latest is React 19.1.1, Babel 7.28.4 — template stays on 18.2.0 / 7.23.2 (intentional pin)
+- pytest-snapshot 0.9.0 — PyPI (`pypi.org/pypi/pytest-snapshot/json`), 2026-04-24
+- syrupy 5.1.0 — PyPI, 2026-04-24; considered and rejected (see dev-only section)
+- `pyproject.toml` — read directly from repo root, 2026-04-24
+
+---
+*Stack research for: v1.3 Generic HGF Viewer scaffold (src/prl_hgf/viz/)*
+*Researched: 2026-04-24*

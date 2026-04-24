@@ -1,202 +1,392 @@
 # Project Research Summary
 
-**Project:** PRL HGF Analysis — v1.1 BFDA Power Analysis
-**Domain:** Simulation-based Bayes Factor Design Analysis for a two-level computational psychiatry pipeline
-**Researched:** 2026-04-07
-**Confidence:** HIGH (stack and architecture from direct source inspection; features and pitfalls from peer-reviewed literature)
+**Project:** hgf-analysis -- v1.3 Generic HGF Viewer (Scaffold + Handoff)
+**Domain:** Config-driven HTML network viewer scaffold for pyhgf models
+**Researched:** 2026-04-24
+**Confidence:** HIGH (all four research files grounded in direct code inspection; stack APIs
+verified at runtime in ds_env)
 
 ## Executive Summary
 
-This milestone adds a Bayesian power analysis layer (BFDA) on top of the existing HGF simulation-fit pipeline. The design is straightforward Monte Carlo: for each (N, effect_size, iteration) cell, simulate a synthetic cohort, run the existing MCMC fitting pipeline, extract parameter posterior means, compute a JZS Bayes factor on the group-level contrast, and record the BF. Power is P(BF > threshold) across iterations. No new Python packages are required — `pingouin.bayesfactor_ttest` (already declared) handles JZS BF computation, SLURM array jobs handle parallelism, and `matplotlib` handles visualization. The entire BFDA layer lives in a new `src/prl_hgf/power/` package that wraps the existing pipeline without modifying any existing module.
+The v1.3 milestone adds a config-driven HTML viewer scaffold at `src/prl_hgf/viz/` that
+translates a `pyhgf.model.Network` object into a self-contained HTML file showing topology,
+node kinds, coupling structure, parameter names, and (optionally) posterior summaries. The
+visual language -- hexagon for volatility nodes, circle for value parents, diamond for
+binary inputs, square for parameters -- is already established in the seed template
+`figures/patrl_hgf_model.html`. The scaffold replaces the hardcoded PAT-RL JSX in that
+template with a JSON-injection path driven by a four-file Python module (inspector to roles
+to schema to export). No new Python packages are required at runtime: Jinja2 is already
+installed as a transitive dep, ArviZ and NumPy cover all posterior extraction needs, and
+BeautifulSoup with the stdlib html.parser handles structural HTML testing. The only new
+dev dependency is pytest-snapshot for regression testing of the emitted HTML.
 
-The primary research conflict: FEATURES recommended `rpy2` + R's `anovaBF()`. STACK found (a) `pingouin.bayesfactor_ttest` already implements the identical JZS integral (Rouder et al. 2009, Eq. 2) and is already installed, and (b) `anovaBF()` is misspecified for repeated-measures designs (van den Bergh et al. 2023). Resolution: use `pingouin.bayesfactor_ttest` on posterior contrast draws, use `bambi` with explicit random slopes, do not introduce `rpy2`.
-
-The two primary scientific risks are (1) omega_3 recovery is poor with binary-only data (r = 0.67, Hess et al. 2025), so BFDA results are an upper bound and must be labeled as such, and (2) seed independence across 4,000+ SLURM array tasks requires `numpy.random.SeedSequence` rather than task-ID seeding. Both are preventable with explicit design choices before the first cluster submission.
+The three most important scope constraints are: (1) Scope C only -- no publication SVG
+polish, no posterior violin plots, no interactive parameter sliders; those are v1.4
+concerns. (2) The template source is `figures/patrl_hgf_model.html` promoted to a generic
+form, not a ground-up rewrite. (3) The `viz/` module is a pure reader -- it imports from
+pyhgf and ArviZ but nothing in the existing `src/prl_hgf/` package imports from `viz/`,
+preserving the parallel-stack invariant. The single highest-risk action in the whole
+milestone is writing `inspector.py` from the handoff document hypothetical attribute paths
+without first running a REPL session to verify them against pyhgf 0.2.10; that is Pitfall 1
+and it must be the first task of Phase 22.
 
 ## Key Findings
 
 ### Recommended Stack
 
-Zero new packages. `pingouin >= 0.5.5` (currently 0.6.1) provides a validated JZS BF implementation verified from source: it uses `scipy.integrate.quad` over the exact Rouder et al. (2009) Eq. 2 integrand and explicitly handles the one-sample case (`ny is None`). The 1D integral completes in microseconds -- not the compute bottleneck (JAX has no production-ready `quad`, confirmed via issue #27493). SLURM array jobs are the correct parallelism mechanism because JAX's documented `multiprocessing.fork` incompatibility (issues #1805, #7620) makes in-process joblib parallelism unsafe. The power loop should use CPU MCMC (`cores=1, chains=2`) to avoid GPU OOM failures.
+All runtime needs are met by packages already in ds_env. The four-file module needs:
+`pyhgf.model.Network` (`.attributes[idx]`, `.edges[idx]`, `.input_idxs`, `.n_nodes`),
+`arviz.summary()` plus `az.hdi()` for posterior extraction, numpy for JAX array coercion,
+and Jinja2 `Environment(loader=BaseLoader())` for template injection. Self-contained HTML
+output is achieved at export time by fetching CDN resources once with `urllib.request` and
+embedding them inline -- no new dependency. Testing uses BeautifulSoup (already installed)
+and pytest-snapshot (new dev dep, 0.9.0).
 
 **Core technologies:**
-- `pingouin.bayesfactor_ttest`: JZS BF for one-sample/paired contrast — validated against JASP and R BayesFactor; already installed; source-verified
-- SLURM array jobs with `--array=0-N%50`: embarrassingly parallel dispatch — %50 throttle prevents conda import storm on shared filesystem
-- `bambi` (existing): group-level mixed-effects model with explicit random slopes — replaces `anovaBF` and avoids repeated-measures misspecification
-- `matplotlib` / `seaborn` (existing): power curve visualization — `statsmodels` power functions compute frequentist (1-beta), not Bayesian P(BF > threshold)
-- `numpy.random.SeedSequence`: guaranteed independent RNG streams per job — task-ID seeding gives unique but correlated seeds
+- pyhgf 0.2.10 -- Network topology reader via `.attributes`, `.edges`, `.input_idxs`;
+  `AdjacencyLists` NamedTuple API stable across 0.2.x
+- jinja2 3.1.6 -- HTML template injection via `<script type="application/json">` slots;
+  already a transitive dep of PyMC; make explicit in `[project.dependencies]`
+- arviz 0.22.0 -- posterior extraction via `az.summary()` and `az.hdi()`; dual coord-name
+  support (`"participant_id"` for Laplace, `"participant"` for NUTS) is caller-supplied
+- beautifulsoup4 4.13.4 (dev) -- structural HTML assertion tests; html.parser (stdlib, no lxml)
+- pytest-snapshot 0.9.0 (dev, new) -- HTML regression snapshots; add to dev extras
+- React 18.2.0 / Babel 7.23.2 (CDN, template-pinned) -- do NOT upgrade to React 19;
+  ReactDOM.createRoot() API is React 18
 
 **Explicitly rejected:**
-- `rpy2` + `anovaBF()`: heavy dependency AND misspecified for this design (omits random slopes; van den Bergh et al. 2023)
-- Custom JZS `scipy.integrate.quad` implementation: pingouin already provides this, tested and validated
-- `statsmodels` power functions: frequentist power is the wrong abstraction here
-- `torchquad` GPU quadrature: 1D integration is not the bottleneck
+- svgwrite / cairosvg -- SVG stays hand-rolled in the template; Python SVG deferred to v1.4
+- plotly / bokeh / altair -- large JS bundles incompatible with self-contained output
+- lxml -- not in ds_env; html.parser is sufficient for all structural test needs
+- React 19 -- breaks ReactDOM.createRoot() concurrent API in the existing template
 
 ### Expected Features
 
-BFDA scope is strictly the two primary hypotheses: omega_2 and kappa group x session interaction. omega_3 BFDA is secondary and must be labeled as an upper bound. No GUI, no sequential stopping rule (fixed IRB-approved N), no per-participant BF.
+The viewer has two modes distinguished at render time: pre-fit (config only, no idata) and
+post-fit (config plus idata). A single HTML artifact is produced per subject or session.
 
-**Must have (table stakes):**
-- Parameter recovery precheck at current trial counts — gate: do not proceed if R² < 0.6 for omega_2, kappa
-- Simulation loop with MCMC convergence gate — R-hat > 1.05 or divergences > 0 flags a fit for exclusion
-- P(BF > threshold) swept across N x effect_size grid for omega_2 and kappa separately
-- Effect size sweep: at minimum d = 0.2, 0.4, 0.6, 0.8, 1.0 (not a single literature point estimate)
-- P(correct model wins BMS) swept across N — required by Nature Human Behaviour 2025
-- Seeded reproducibility via `numpy.random.SeedSequence`
-- One CSV per job (implicit checkpoint/resume; no shared writer)
-- Summary statistics per (N, d) cell: P(BF10 > 10), P(BF10 > 6), P(BF10 > 3), median BF, false-positive rate analog
+**Must have (table stakes -- all in scope for v1.3):**
+- TS-01 to TS-04: Node-kind-distinct shapes, level bands, coupling edge styles, parameter labels
+- TS-05: Prior means shown in pre-fit mode (from network.attributes)
+- TS-06: 2-level vs 3-level graceful toggle -- no dead space when n_levels == 2
+- TS-07: Response model section below separator line
+- TS-08: Self-contained single HTML file with all CDN JS/CSS inlined at export time
+- TS-09: JSON config schema -- Python produces JSON; HTML reads it from application/json script tag
+- TS-10: Notation legend visible without clicking
 
-**Should have (differentiators for publication):**
-- Separate power curves for omega_2 and kappa
-- 4-panel publication figure synthesizing all BFDA outputs
-- Monte Carlo error bands on power curves (MCE ≤ 0.005 requires ≥ 2,000 iterations per cell)
-- Recovery-penalty simulation variant for omega_3 (inject Gaussian noise with SD = empirical RMSE)
-- BF threshold sensitivity (P(BF>10) vs P(BF>6) vs P(BF>3)) computed post-hoc
+**Should have (differentiators over pyhgf plot_network):**
+- D-01: Config-driven inspector replacing hardcoded JSX topology
+- D-02: Posterior overlay -- az.summary() values annotated on parameter nodes/edges
+- D-03: R-hat coloring on parameter squares (suppressed for single-chain Laplace idata)
+- D-04: Divergence badge when idata.sample_stats.diverging.sum() > 0 (NUTS path only)
+- D-07: Fit-method badge (VB-LAPLACE / NUTS) derived from sample_stats.laplace
 
-**Defer to post-launch:**
-- Trial count sweep (unless recovery precheck reveals marginal adequacy)
-- MAP/VI vs NUTS pilot comparison
-- Informed effect sizes from pilot data
-- BF threshold sensitivity analysis at revision stage
+**Defer to v1.4:**
+- D-05 Phenotype highlighting, D-06 click-to-inspect panel
+- SVG / PNG / PDF export buttons (AF-08)
+- Publication-quality hexagon geometry polish, Weber 2024 visual quality target
 
 ### Architecture Approach
 
-The BFDA layer is a new package `src/prl_hgf/power/` that wraps the existing pipeline without modifying any existing module. A config factory (`make_power_config`) builds modified `AnalysisConfig` instances at runtime — YAML never mutated (frozen dataclass; 4,000 concurrent jobs cannot share a mutable config file). All existing functions (`simulate_batch`, `fit_batch`, `build_estimates_wide`, `fit_group_model`, `extract_posterior_contrasts`) called unchanged. Scripts extend the `03_`-`06_` numbering at `07_`-`10_`.
+The `viz/` package is a linear four-module pipeline with no cycles: inspector.py reads
+pyhgf internals into a plain dict, roles.py walks that dict to assign (level, role,
+branch_idx) to each node via BFS from input nodes upward, schema.py assembles the typed
+NetworkSpec dataclass and optionally attaches ArviZ posterior summaries, and export.py
+injects the serialised NetworkSpec JSON into `<script type="application/json">` slots in
+the HTML template via Jinja2 and returns a complete HTML string. The caller constructs the
+Network object (the viewer never calls model builders), passes it to inspect_network(), and
+writes the returned HTML to disk. Public API: two functions re-exported from __init__.py:
+`inspect_network` and `render_viewer_html`.
 
 **Major components:**
-1. `power/config_override.py` — `make_power_config(base_config, n_per_group, effect_size_delta, master_seed)` factory; no YAML mutation; unblocks all other components
-2. `power/bayes_factor.py` — `compute_jzs_bf(posterior_draws)` using `pingouin.bayesfactor_ttest` on draws from `extract_posterior_contrasts`; unit-testable before any MCMC run
-3. `power/stopping_rule.py` — evaluates BF against H1/H0 thresholds; returns "H1" | "H0" | "inconclusive"
-4. `power/iteration.py` — orchestrates one (N, d, k) simulation+fit+BF cycle; writes single-row CSV
-5. `power/curves.py` — aggregates per-job CSVs, computes power per (N, d) cell, plots curves
+1. viz/inspector.py -- translates pyhgf.model.Network to RawNetworkDict; zero prl_hgf
+   imports; approx 60 lines; uses _safe_temp-style guards for all attribute access
+2. viz/roles.py -- BFS from input_idxs upward assigning level + role + branch_idx;
+   handles shared volatility parent (pick_best_cue node 6) by deduplication via dict
+   keyed on node index
+3. viz/schema.py -- @dataclass(frozen=True) NetworkSpec and NodeSpec; build_network_spec()
+   accepts idata and coord_name as optional args; no config module imports
+4. viz/export.py -- Jinja2 plus _inject_markers() helper; raises ValueError on missing
+   marker; approx 80 lines flat (no sub-package split); handles CDN inlining via
+   urllib.request
+5. Template figures/hgf_viewer.html -- promoted from patrl_hgf_model.html; PAT-RL
+   hardcoding replaced by data-driven injection slots; id="viz-network-spec" and
+   id="viz-posterior-summary" added; React reads via document.getElementById
+6. Tests tests/test_viz_inspector.py, test_viz_roles.py, test_viz_schema.py,
+   test_viz_export.py -- flat convention (no tests/viz/ subdir); canary integration
+   tests instantiate real Network objects
 
-**New scripts:**
-- `scripts/07a_generate_job_params.py` — writes `data/power/job_params.csv` (N x d x k grid)
-- `scripts/07_power_single_iteration.py` — CLI entry point for one SLURM task
-- `scripts/08_power_slurm_array.sh` — SLURM array submitter with %50 throttle
-- `scripts/09_aggregate_power.py` — concatenates per-job CSVs; warns on missing jobs
-- `scripts/10_plot_power_curves.py` — generates publication figures
+**Injection marker convention:** `<script type="application/json" id="viz-{name}">` is the
+chosen convention. Compatible with Jinja2: Jinja2 renders the template slots at export time
+replacing Jinja2 variables inside those blocks with serialised JSON; the React component
+reads the tags at browser display time via document.getElementById. Jinja2 is not inside
+JSX syntax. Use both.
 
 ### Critical Pitfalls
 
-1. **anovaBF misspecification — resolved: use pingouin instead** — `anovaBF()` omits random slopes for within-subject factors (van den Bergh et al. 2023), inflating BF for interaction terms. Prevention: use `pingouin.bayesfactor_ttest` on posterior contrast draws; use `bambi` with explicit random slopes. Do not introduce `rpy2`.
+1. **Hypothesis-based coding of pyhgf internals (P1)** -- the handoff doc attribute paths
+   are proposals, not verified facts. Phase 22 first task must be a REPL session that
+   instantiates build_2level_network_patrl() and build_3level_network_patrl(), prints
+   type(net.edges[0]) and net.attributes[0].keys(), and commits findings as a comment in
+   inspector.py before any production code is written.
 
-2. **omega_3 recovery caveat** — omega_3 recovery is r = 0.67 with binary-only data (Hess et al. 2025; also flagged in project CLAUDE.md). Naive BFDA inflates estimated power by 20-40 percentage points. Prevention: label all omega_3 BFDA outputs as upper bounds; recovery-penalty variant (inject RMSE noise before BF); pre-register omega_3 as exploratory. Primary focus: omega_2 and kappa (r > 0.85).
+2. **Template PAT-RL hardcoding (P11)** -- figures/patrl_hgf_model.html contains 200+
+   lines of PAT-RL-specific JSX (phenotype labels, INFO strings, C.dhr color, ANS framing).
+   Phase 23 first task must grep for balanced, reward_blunted, Klaassen, bradycardia and
+   classify each hit before any injection code is written.
 
-3. **Non-independent seeds across SLURM jobs** — `np.random.seed(SLURM_ARRAY_TASK_ID)` gives correlated streams; bias is undetectable post-hoc. Prevention: `ss = np.random.SeedSequence(base_seed); rng = np.random.default_rng(ss.spawn(n_jobs)[task_id])`; for JAX use `jax.random.split(base_key, n_jobs)[task_id]`.
+3. **Shared volatility node duplication (P3)** -- naive graph traversal visits pick_best_cue
+   node 6 three times, emitting 9 nodes instead of 7. Key the inspector accumulator on node
+   index (dict, not list); add unit test asserting 7 nodes for the 3-level pick_best_cue model.
 
-4. **SLURM import storm** — 4,000 concurrent Python jobs saturate the Lustre metadata server (documented M3 MASSIVE issue); empty output files silently treated as missing cells. Prevention: `#SBATCH --array=0-N%50` throttle; or bundle 20 iterations per task to reduce job count 20x.
+4. **Injection failure silent pass (P5)** -- re.sub() silently no-ops on a missing marker.
+   Assert marker not in result_html after injection; raise ValueError with the marker name.
 
-5. **MCMC convergence failures silently contaminating power estimates** — divergent transitions and high R-hat fits bias the BF distribution. Prevention: save R-hat, ESS-bulk, divergence count in every fit output CSV; filter R-hat > 1.05 or divergences > 0; report exclusion rate per (N, d) cell; flag cells > 5% exclusion.
+5. **ArviZ coord-name collision (P9)** -- Laplace path emits "participant_id", NUTS path
+   emits "participant". Implement _get_participant_dim(idata) that probes
+   idata.posterior.data_vars dynamically; unit test covers both variants.
+
+6. **Node semantic mislabeling (P16)** -- role must be inferred from adjacency structure,
+   not from node_parameters keys alone. Set role = "volatility" if the node appears in any
+   edge volatility_parents; add assertion for node 6 in 3-level pick_best_cue.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+### Chosen Phase Ordering: STACK + PITFALLS (adjusted)
 
-### Phase 1: Infrastructure and Prechecks
-**Rationale:** Recovery validation gates everything. If omega_2 or kappa cannot be recovered (R² < 0.6), BFDA is invalid regardless of N. The recovery module already exists -- re-run with pass/fail criteria. `power/config_override.py` built here as lowest-risk new code, unblocking all other phases.
-**Delivers:** Recovery pass/fail gate; `make_power_config` factory with unit tests on `n_participants_per_group` and `omega_2_deltas` overrides
-**Addresses:** Recovery precheck; seeded reproducibility from the start
-**Avoids:** Pitfall 3 (omega_3 overconfidence), Pitfall 1 (MCMC convergence failures)
+**Rejected orderings:**
 
-### Phase 2: Core BF and Single-Iteration Pipeline
-**Rationale:** BF computation and single-iteration orchestrator can be unit-tested with synthetic data before any cluster work. Validates the pingouin BF implementation with known inputs.
-**Delivers:** `power/bayes_factor.py`, `power/stopping_rule.py`, `power/iteration.py`, `scripts/07_power_single_iteration.py`; smoke test: N=5, --n-draws 50 --n-tune 50
-**Uses:** `pingouin.bayesfactor_ttest`, `analysis.group.extract_posterior_contrasts` (signature verified from source)
-**Implements:** Architecture components 2, 3, 4
-**Avoids:** Pitfall 5 (anovaBF not used), Pitfall 9 (SeedSequence from the start)
-**Research flag:** Standard patterns — no deeper research needed
+- FEATURES ordering (22=inspector+schema+JSON example, 23=HTML template pre-fit,
+  24=posterior overlay + self-contained export): concentrates too much technically-hard
+  work in Phase 24, and the JSON fixture belongs in Phase 22 with the schema it validates.
 
-### Phase 3: SLURM Array Orchestration
-**Rationale:** Cluster-ready array job requires %50 throttle, one-file-per-job output, and empirical validation on M3 MASSIVE. Start with 10-job smoke test.
-**Delivers:** `scripts/07a_generate_job_params.py`, `scripts/08_power_slurm_array.sh`; 10-job smoke test confirming naming, schema, and no import-storm symptoms
-**Avoids:** Pitfall 9 (seeds), Pitfall 10 (import storm via %50 throttle), Pitfall 11 (GPU OOM -- CPU MCMC in power loop), shared-writer corruption
-**Research flag:** Needs empirical validation on M3 MASSIVE -- tune %50 based on 10-job test
+- ARCHITECTURE ordering (22=inspector+roles, 23=schema, 24=export+template): leaves the
+  template untouched until Phase 24, meaning no rendered output exists until the last phase.
+  Template audit, export, CDN inlining, and posterior overlay all pile into Phase 24.
 
-### Phase 4: Full N x Effect-Size Sweep
-**Rationale:** Full grid submission after SLURM validation. omega_2 and kappa swept separately. BMS sweep parallel workstream via groupBMC. Run MAP vs NUTS pilot comparison first.
-**Delivers:** Full `data/power/results/` (per-job CSVs); BMS sweep results; all primary power estimates
-**Addresses:** P(BF > threshold) over N x d, P(correct BMS) over N, separate curves per parameter
-**Avoids:** Pitfall 6 (2,000 iterations per cell; 500 first to find inflection zone), Pitfall 13 (BF and BMS as separate outputs)
-**Research flag:** MAP vs NUTS pilot (100 iterations each) before full NUTS; BMS pilot (10 iter) to estimate compute
+**Chosen: STACK + PITFALLS ordering** (22=scaffold, 23=export+template, 24=posterior+docs),
+with the four tension resolutions described in the Resolved Conflicts section below.
 
-### Phase 5: Aggregation, Power Curves, and Publication Figure
-**Rationale:** Aggregation developed against Phase 3 10-job test output so it is ready before Phase 4 completes.
-**Delivers:** `scripts/09_aggregate_power.py`, `power/curves.py`, `scripts/10_plot_power_curves.py`; `data/power/power_master.csv`; `figures/power_curves.png` (4-panel with MCE error bands)
-**Addresses:** 4-panel figure, BF threshold sensitivity post-hoc, recovery-penalty omega_3 variant
-**Avoids:** Pitfall 2 (attenuation bias documented in figure caption), Pitfall 12 (design/analysis prior distinction labeled in legend)
-**Research flag:** Standard patterns -- no deeper research needed
+---
+
+### Phase 22: Inspector + Roles + Schema Scaffold
+
+**Rationale:** The linear DAG (inspector to roles to schema to export) makes these three
+the natural prerequisite for everything else. Inspector and roles have zero prl_hgf imports
+and can be written and tested against synthetic Network-like dicts. Schema adds the ArviZ
+integration and typed NetworkSpec dataclass. JSON fixture produced here validates the schema
+immediately. First task is mandatory REPL verification.
+
+**Delivers:**
+- src/prl_hgf/viz/__init__.py (stub re-exports)
+- src/prl_hgf/viz/inspector.py -- pyhgf topology reader; attribute paths confirmed by REPL first
+- src/prl_hgf/viz/roles.py -- BFS level/role/branch_idx assignment
+- src/prl_hgf/viz/schema.py -- NetworkSpec / NodeSpec dataclasses; build_network_spec()
+- data/viz_fixtures/patrl_3level_prefit.json -- example JSON for PAT-RL 3-level pre-fit path
+- First-pass update to docs/HANDOFF_pyhgf_plot_network_extension.md (verified paths, no
+  more "Key questions to resolve")
+- tests/test_viz_inspector.py, tests/test_viz_roles.py, tests/test_viz_schema.py
+
+**Addresses:** TS-09, D-01 (Python side); node deduplication; dual coord-name support
+
+**Avoids:** P1 (REPL-first), P2 (temp-key guards), P3 (deduplication), P6 (no env/ imports),
+P7 (no models/ diffs), P8 (no SVG/renderer code), P12 (canary integration tests),
+P14 (single schema format: dict to json.dumps only), P16 (role from adjacency)
+
+**Research flag:** No /gsd:research-phase needed. The one open question (pyhgf edge
+attribute shapes) is resolved by the REPL task at Phase 22 start.
+
+---
+
+### Phase 23: Export + Template Promotion
+
+**Rationale:** export.py depends on schema (complete after Phase 22). Template promotion
+requires the export module so injection slots can be verified end-to-end. Template audit
+(P11 grep checklist) is the first task of this phase, before any injection code is written.
+CDN inlining belongs here because it is part of the export contract.
+
+**Delivers:**
+- figures/hgf_viewer.html -- generic template promoted from patrl_hgf_model.html; PAT-RL
+  hardcoding replaced by data-driven injection slots or conditional guards; Jinja2 injection
+  slots id="viz-network-spec" and id="viz-posterior-summary" added
+- src/prl_hgf/viz/export.py -- render_viewer_html(spec, template_path=None) -> str;
+  _inject_markers() internal helper; CDN inlining via urllib.request; font fallback style
+  block if Google Fonts inlining deferred
+- viz/__init__.py updated to export render_viewer_html
+- tests/test_viz_export.py -- _inject_markers unit tests + BeautifulSoup integration test
+- Pre-fit mode verified end-to-end: JSON fixture to render_viewer_html to browser-openable
+  HTML with level bands, node shapes, parameter labels
+
+**Addresses:** TS-01 to TS-10 (all table stakes), D-03, D-04, D-07
+
+**Avoids:** P4 (injection collision; ensure_ascii=True; escape </script>), P5 (missing-
+marker ValueError), P9 (coord-name via _get_participant_dim), P10 (2-level default from
+injected hgf_level field), P11 (template audit first), P15 (new deps verified in ds_env)
+
+**Research flag:** Template audit scope is the only unknown. Estimate 2-4 hours; if audit
+reveals more than 6 hours of refactor work, descope phenotype highlighting to v1.4.
+
+---
+
+### Phase 24: Posterior Overlay + Handoff Final Pass
+
+**Rationale:** Post-fit mode requires real or well-mocked ArviZ idata; all upstream
+pipeline must be working first. Handoff final pass belongs here because the architecture is
+fully confirmed only after export works end-to-end. Snapshot tests close out the milestone.
+
+**Delivers:**
+- Post-fit mode in schema.py and export.py: az.summary() values annotated on nodes (D-02);
+  r-hat coloring (D-03); divergence badge (D-04); fit-method badge (D-07)
+- pytest-snapshot integration: snapshot.assert_match(html, "patrl_3level_scaffold.html")
+- Final update to docs/HANDOFF_pyhgf_plot_network_extension.md: architecture confirmed,
+  example config referenced, "Verified 2026-04-24 against pyhgf 0.2.10" on every attribute path
+- pyproject.toml delta committed: jinja2>=3.1,<4 in dependencies; pytest-snapshot>=0.9.0
+  and beautifulsoup4>=4.12 in dev extras
+
+**Addresses:** D-02, D-03, D-04, D-07; milestone deliverable 4 (handoff doc)
+
+**Avoids:** P13 (handoff confirmed complete; no "Key questions" remaining)
+
+**Research flag:** Standard patterns. az.from_dict() with synthetic data is sufficient for
+post-fit path tests; no new research needed.
+
+---
 
 ### Phase Ordering Rationale
 
-- Phase 1 first: recovery precheck is cheap and gates everything; `config_override.py` is the dependency root.
-- Phase 2 independent of cluster: synthetic data unit tests validate BF before any MCMC run.
-- Phase 3 gates Phase 4; BMS and BF sweeps can run in parallel once SLURM is confirmed.
-- Phase 5 starts developing against Phase 3 outputs and finalizes after Phase 4.
-- No-modification-to-existing-modules principle: no regression risk in the existing pipeline.
+- Phase 22 first: inspector/roles/schema is the dependency root; these three modules have
+  no prl_hgf imports and can be written and tested without touching any existing code.
+- Phase 22 must not ship any rendering or SVG code (Pitfall 8 scope-creep guard).
+- Phase 23 gates on schema; template audit is its first task because PAT-RL hardcoding has
+  the highest recovery cost of all pitfalls (approx 1 day if caught late).
+- Phase 24 gates on a working export pipeline; posterior overlay is added last because it
+  adds complexity to schema.py without changing the export contract.
+- No existing module (models/, fitting/, env/, gui/) is modified in any phase. Additive-only
+  policy enforced via diff checks at each phase close-out.
 
 ### Research Flags
 
-Phases needing deeper research during planning:
-- **Phase 3 (SLURM throttle on M3 MASSIVE):** %50 cap from general HPC guidance; tune empirically with 10-job test.
-- **Phase 4 (MAP vs NUTS):** 100-iteration pilot comparison before committing to full NUTS budget.
-- **Phase 4 (BMS compute budget):** 10-iteration BMS pilot to estimate per-cell wall time.
+Needs /gsd:research-phase during planning:
+- Phase 22 (REPL task): pyhgf 0.2.10 edge attribute shapes -- resolve as Phase 22 literal
+  first task. Confirm net.edges[idx] field names and whether any field can be absent on a
+  newly constructed (un-run) network.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1:** Recovery module exists; pass/fail gate only.
-- **Phase 2:** pingouin API source-verified; `extract_posterior_contrasts` signature confirmed.
-- **Phase 5:** pd.concat and matplotlib are standard.
+Standard patterns (skip research-phase):
+- Phase 22 (BFS algorithm): Full pseudocode in ARCHITECTURE.md; no graph library needed.
+- Phase 23 (Jinja2 injection): Integration pattern fully specified in STACK.md.
+- Phase 24 (posterior overlay): az.summary() API confirmed; az.from_dict() mock pattern
+  already exists in tests/test_export_trajectories.py.
 
 ## Confidence Assessment
 
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | HIGH | pingouin bayesian.py source-inspected; JAX fork issues from tracker; SLURM from existing repo scripts |
-| Features | MEDIUM | Triangulated from Schonbrodt 2018, Stefan 2019, Hess 2025, Nature Human Behaviour 2025; HGF+JZS combination not in single canonical source |
-| Architecture | HIGH | All integration points confirmed from source code: function signatures, frozen dataclass fields, DataFrame output schemas |
-| Pitfalls | HIGH | van den Bergh 2023 (anovaBF), Hess 2025 (omega_3), NumPy SeedSequence docs, M3 MASSIVE cluster docs |
+| Area         | Confidence | Notes                                                                                                              |
+|--------------|------------|--------------------------------------------------------------------------------------------------------------------|
+| Stack        | HIGH       | All versions verified at runtime in ds_env; React/Babel CDN versions confirmed via cdnjs API 2026-04-24           |
+| Features     | HIGH       | Grounded in direct codebase artifact inspection (patrl_hgf_model.html, laplace_idata.py, explorer.py)             |
+| Architecture | HIGH       | All integration points confirmed from source code; BFS pseudocode specified; injection marker round-trip tested    |
+| Pitfalls     | HIGH       | All pitfalls grounded in actual code artifacts, STATE.md decisions, and prior failed patterns in existing modules  |
 
 **Overall confidence:** HIGH
 
-### Resolved Conflicts
+## Resolved Conflicts
 
-**FEATURES vs STACK: BF computation method**
+**Conflict 1: Jinja2 vs regex injection marker convention**
 
-FEATURES.md recommended `rpy2` + `BayesFactor::anovaBF()`. STACK.md identified two independent reasons to reject this:
-1. `pingouin.bayesfactor_ttest` already implements the identical Rouder et al. (2009) JZS integral, is already installed, and has been validated against JASP and R BayesFactor.
-2. `anovaBF()` is misspecified for repeated-measures designs with two or more within-subject factors (van den Bergh et al. 2023); it omits random slopes and inflates BF for interaction terms.
+STACK.md proposed Jinja2 variable rendering. ARCHITECTURE.md proposed
+`<script type="application/json" id="viz-{name}">` JSON script tags. These are compatible
+and complementary. Jinja2 renders the outer template at export time, replacing Jinja2
+variables inside the application/json script block with serialised JSON. The React component
+reads the script tags at browser display time via document.getElementById. Jinja2 does not
+enter JSX syntax. Use both.
 
-**Decision: pingouin wins. Do not introduce rpy2. Use bambi with explicit random slopes for the full mixed-effects group model.**
+**Conflict 2: Where does the JSON example config live?**
 
-### Gaps to Address
+STACK + PITFALLS ordering implied Phase 24 with docs. FEATURES implied Phase 22 with
+schema. Resolution: Phase 22. The JSON fixture validates schema.py output immediately.
+Placing it in Phase 24 defers that validation by two phases and risks schema drift.
+Location: data/viz_fixtures/patrl_3level_prefit.json. YAML configs remain the source of
+truth for task configuration.
 
-- **MAP vs NUTS for power loop:** 100-iteration pilot in Phase 4 before committing to full NUTS.
-- **Effect size parameterization for kappa:** omega_2 maps cleanly onto `session_deltas`; kappa entry point in `GroupConfig` vs `SessionConfig` needs verification in `make_power_config` unit tests before cluster submission.
-- **Optimal SLURM concurrency on M3 MASSIVE:** %50 from general guidance; verify empirically in Phase 3.
+**Conflict 3: When does the handoff doc update happen?**
+
+ARCHITECTURE implied early (cluster needs accurate paths). PITFALLS said Phase 22
+close-out plus Phase 24 final pass. Resolution: two-pass approach. Phase 22 close-out
+replaces all hypothetical attribute paths with verified ones from the REPL session. Phase 24
+does the final architecture-confirmed pass. The cluster workstream gets an accurate handoff
+before Phase 23 begins.
+
+**Conflict 4: Where does CDN inlining (TS-08) live?**
+
+FEATURES placed it in Phase 24 as technically hardest. ARCHITECTURE put template + export
+together in Phase 24. Resolution: Phase 23. Inlining is a function inside export.py;
+export.py is Phase 23. Separating inlining into Phase 24 creates an export API that cannot
+deliver self-contained output. If inlining proves harder than 3 hours, stub with a comment
+and font fallback style block; harden in Phase 24. The API must exist either way.
+
+**Conflict 5: When does the REPL verification session happen?**
+
+PITFALLS said possibly as pre-phase work. ARCHITECTURE said Phase 22 first task.
+Resolution: Phase 22 first task. Verified attribute paths must be committed in the same
+phase as the inspector code that uses them. Pre-phase findings become untracked and are
+lost across the local/cluster split.
+
+## Gaps to Address
+
+- pyhgf version drift (0.2.8 cluster vs 0.2.10 local): The binary-input node kind string
+  was renamed to binary-state between patch releases (confirmed by STACK.md). Role inference
+  uses adjacency structure not kind strings (Pitfall 16 addresses this). The Phase 22 REPL
+  session must test against 0.2.10 locally and flag any attribute spelled differently than
+  the handoff proposes. If cluster 0.2.8 has a structurally different edges API, add a
+  version-guard shim or pin the inspector to the 0.2.8 field set.
+
+- Template audit scope (Phase 23): The full extent of PAT-RL-specific hardcoding in
+  figures/patrl_hgf_model.html is not enumerable until the grep checklist runs. Write the
+  Phase 23 task plan only after that audit completes.
+
+- Font inlining decision (Phase 23 start): STACK.md flags Google Fonts inlining as optional
+  complexity for v1.3. Decide at Phase 23 start: full inline or system-font fallback style
+  block. Recommendation: fallback for v1.3; font inlining is v1.4 polish.
+
+- Test directory convention: ARCHITECTURE established flat tests/ (no subdirectories).
+  FEATURES.md referenced tests/viz/. Flat wins -- use test_viz_ prefix. Resolved decision;
+  document in Phase 22 plan.
 
 ## Sources
 
-### Primary (HIGH confidence — direct source inspection or peer-reviewed with code)
-- pingouin 0.6.1 bayesian.py source (GitHub) — JZS BF implementation confirmed, one-sample case confirmed
-- Existing codebase: simulate_batch, fit_batch, build_estimates_wide, fit_group_model, extract_posterior_contrasts, AnalysisConfig -- all verified from source
-- Van den Bergh et al. (2023). Bayesian Repeated-Measures ANOVA: Updated Methodology. Psychological Methods
-- Hess et al. (2025). Bayesian Workflow for Generative Modeling in Computational Psychiatry. PMC11951975
-- NumPy SeedSequence documentation
-- JAX multiprocessing fork issues #1805, #7620
+### Primary (HIGH confidence -- direct code inspection or runtime verification)
 
-### Secondary (MEDIUM confidence — peer-reviewed methodology)
-- Schonbrodt & Wagenmakers (2018). Bayes factor design analysis. Psychonomic Bulletin & Review
-- Stefan et al. (2019). Tutorial on BFDA using an informed prior. Behavior Research Methods. PMC6538819
-- Nature Human Behaviour (2025). Addressing low statistical power in computational modelling
-- Rigoux et al. (2014). Bayesian model selection for group studies -- Revisited. NeuroImage
-- Schreiber et al. (2024). BFDA for multi-armed bandit tasks. Wellcome Open Research
-- Wilson & Collins (2019). Ten simple rules for computational modeling. PMC6879303
-- LMU Power Simulation tutorial -- MCE target ≤ 0.005
+- figures/patrl_hgf_model.html -- seed template; node shapes, level bands, PAT-RL
+  hardcoding, React useState("3level") default, CDN script tags
+- src/prl_hgf/models/hgf_3level_patrl.py -- node index constants, VOLATILITY_NODE,
+  shared volatility parent topology
+- src/prl_hgf/models/hgf_3level.py -- pick_best_cue 7-node topology, node 6 as shared
+  volatility parent
+- src/prl_hgf/fitting/laplace_idata.py -- "participant_id" coordinate, param_order tuples,
+  sample_stats.laplace marker
+- src/prl_hgf/analysis/export_trajectories.py -- _safe_temp() pattern, idata access,
+  @dataclass convention
+- src/prl_hgf/env/pat_rl_config.py -- frozen dataclass validation style, Decision 112
+  parallel-stack contract
+- src/prl_hgf/power/schema.py -- schema-as-frozen-dataclass precedent in codebase
+- docs/HANDOFF_pyhgf_plot_network_extension.md -- Option C architecture, hypothetical
+  attribute paths (to be verified and replaced in Phase 22)
+- ds_env runtime: jinja2 3.1.6, beautifulsoup4 4.13.4, arviz 0.22.0, numpy 2.2.6,
+  pyhgf 0.2.10 confirmed
+- cdnjs API 2026-04-24 -- React 18.2.0, Babel 7.23.2 pinned versions confirmed
 
-### Tertiary (MEDIUM confidence — cluster-specific, needs empirical validation)
-- Monash M3 MASSIVE array jobs documentation — import storm and throttling
-- PyMC discourse GPU memory thread — CPU MCMC for power loops
+### Secondary (MEDIUM confidence -- official documentation)
+
+- pyhgf 0.2.8 plot_network() docs -- graphviz backend, no parameter labels, no posterior
+  overlay, Jupyter-only output confirmed from computationalpsychiatry.github.io
+- ArviZ az.summary() column names confirmed from python.arviz.org v0.21.0 API reference
+- PyPI pytest-snapshot 0.9.0 -- confirmed current stable release 2026-04-24
+
+### Tertiary (LOW confidence -- training knowledge)
+
+- DCM plotting conventions -- used only as negative reference (what HGF diagrams should
+  NOT borrow from DCM)
+- ShinyStan multi-tab diagnostic dashboard structure -- used as anti-pattern reference
 
 ---
-*Research completed: 2026-04-07*
+*Research completed: 2026-04-24*
 *Ready for roadmap: yes*

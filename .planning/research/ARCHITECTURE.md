@@ -1,545 +1,882 @@
-# Architecture: BFDA Power Analysis Integration
+# Architecture Research: `src/prl_hgf/viz/` — Generic HGF Viewer
 
-**Domain:** Sequential Bayesian power analysis layered on an existing HGF
-simulation–fit pipeline
-**Researched:** 2026-04-07
-**Overall confidence:** HIGH — findings are based on direct code reading of all
-existing modules, not inference or documentation alone.
+**Domain:** Scientific Python visualization module — HGF network inspector + HTML export
+**Researched:** 2026-04-24
+**Confidence:** HIGH (all claims grounded in direct code inspection of existing modules)
 
 ---
 
-## Existing Architecture (Verified)
+## System Overview
 
 ```
-src/prl_hgf/
-  env/           task_config.py (AnalysisConfig dataclass hierarchy)
-                 simulator.py   (generate_session, Trial)
-  models/        hgf_2level.py, hgf_3level.py, response.py
-  simulation/    agent.py       (sample_participant_params, simulate_agent)
-                 batch.py       (simulate_batch — takes AnalysisConfig)
-  fitting/       single.py      (fit_participant)
-                 batch.py       (fit_batch — takes pd.DataFrame)
-                 ops.py, models.py
-  analysis/      group.py       (build_estimates_wide, fit_group_model,
-                                 extract_posterior_contrasts)
-                 bms.py         (run_stratified_bms)
-                 recovery.py    (build_recovery_df)
-                 effect_sizes.py (compute_effect_sizes_table)
-                 phase_stratification.py, plots.py, group_plots.py
-  gui/           explorer.py
-scripts/
-  03_simulate_participants.py
-  04_fit_participants.py
-  05_run_validation.py
-  06_group_analysis.py
-configs/prl_analysis.yaml      (single source of truth)
-config.py                      (Path constants)
+┌───────────────────────────────────────────────────────────────────────────┐
+│                          CALLER LAYER                                      │
+│  scripts/  ·  notebooks/  ·  tests/viz/                                   │
+└──────────────────────┬────────────────────────────────────────────────────┘
+                       │ imports from viz/
+┌──────────────────────▼────────────────────────────────────────────────────┐
+│                       src/prl_hgf/viz/                                     │
+│                                                                            │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌────────────┐  │
+│  │ inspector.py │──▶│   roles.py   │──▶│  schema.py   │──▶│ export.py  │  │
+│  │              │   │              │   │              │   │            │  │
+│  │ Network →    │   │ assigns node │   │ NetworkSpec  │   │ inject →   │  │
+│  │ raw dict     │   │ levels/roles │   │ @dataclass   │   │ HTML str   │  │
+│  └──────────────┘   └──────────────┘   └──────────────┘   └────────────┘  │
+│         ▲                                     ▲                            │
+│         │                                     │ (optional, post-fit)       │
+│         │                                     │ idata posteriors           │
+└──────────────────────────────────────────────────────────────────────────-┘
+                       │
+        ┌──────────────┴───────────────────────────┐
+        │                                           │
+┌───────▼──────────────┐               ┌───────────▼──────────────────────┐
+│  src/prl_hgf/models/ │               │  src/prl_hgf/analysis/           │
+│  (Network builders)  │               │  (ArviZ InferenceData accessors) │
+│  IMPORTED BY viz/    │               │  IMPORTED BY viz/ (post-fit only) │
+└──────────────────────┘               └──────────────────────────────────┘
 ```
 
-Key signatures verified from source:
-
-- `simulate_batch(config: AnalysisConfig, output_path=None) -> pd.DataFrame`
-  Uses `config.simulation.n_participants_per_group` and
-  `config.simulation.groups[name]` (GroupConfig with per-parameter mean/sd)
-  and `config.simulation.session_deltas[name]` (SessionConfig with deltas).
-  The `master_seed` drives all RNG; seeds are drawn upfront so adding
-  participants does not disturb earlier seeds.
-
-- `fit_batch(sim_df, model_name, n_chains, n_draws, n_tune, target_accept,
-  random_seed, cores, output_path, ...) -> pd.DataFrame`
-  Operates entirely on a DataFrame; no direct config dependency at call time.
-  Outputs long-form rows: (participant_id, group, session, model, parameter,
-  mean, sd, hdi_3%, hdi_97%, r_hat, ess, flagged).
-
-- `build_estimates_wide(fit_df, model, exclude_flagged) -> pd.DataFrame`
-  Pivots long-form fit results to one row per (participant, session) with
-  parameter means as columns.
-
-- `AnalysisConfig` is a frozen dataclass; it cannot be mutated. Its
-  `SimulationConfig` subfield holds N-per-group and group distributions.
+The dependency arrow is one-way: `viz/` imports from `models/` and `analysis/`;
+nothing in `models/`, `fitting/`, `env/`, `analysis/`, or `simulation/` imports
+from `viz/`.
 
 ---
 
-## What BFDA Needs vs What Exists
+## File-by-File Component Breakdown
 
-The power analysis loop is:
+### `src/prl_hgf/viz/__init__.py`
 
-```
-for (N, effect_size_d, iteration):
-    config' = config with N and effect-size-modified group means
-    sim_df  = simulate_batch(config')
-    fit_df  = fit_batch(sim_df)
-    wide    = build_estimates_wide(fit_df)
-    BF      = compute_jzs_bf(wide, contrast="group:session_interaction")
-    record(N, d, iteration, BF)
-```
-
-Gap analysis:
-
-| Need | Exists | Gap |
-|------|--------|-----|
-| Varying N without editing YAML | No — N is baked into AnalysisConfig | Need `override_config()` helper |
-| Varying effect sizes without editing YAML | No — group means baked in | Same helper |
-| JZS Bayes factor for interaction contrast | No | New module: `power/bayes_factor.py` |
-| BFDA stopping-rule evaluation | No | New module: `power/stopping_rule.py` |
-| Single-iteration orchestrator callable | No | New module: `power/iteration.py` |
-| SLURM array job script | No | New script: `scripts/08_power_slurm.sh` |
-| Per-cell result recording (CSV rows) | No | Part of `power/iteration.py` |
-| Aggregation across job array outputs | No | New script: `scripts/09_aggregate_power.py` |
-| Power curve generation | No | New module: `power/curves.py` |
-
----
-
-## Parameterization Strategy (Question 2)
-
-### Recommendation: Runtime config override, never touch the YAML
-
-`AnalysisConfig` is a frozen dataclass. The cleanest approach is a factory
-function in the new `power/` package that constructs a modified
-`AnalysisConfig` from the base YAML config plus runtime override scalars:
+**Purpose:** Public API surface. Re-exports the two caller-facing entry points.
 
 ```python
-# src/prl_hgf/power/config_override.py
+from prl_hgf.viz.inspector import inspect_network
+from prl_hgf.viz.export import render_viewer_html
+```
 
-def make_power_config(
-    base_config: AnalysisConfig,
-    n_per_group: int,
-    effect_size_delta: dict[str, float],  # e.g. {"omega_2": 1.5}
-    master_seed: int,
-) -> AnalysisConfig:
+Nothing else is exported. All internal types (`NetworkSpec`, role constants)
+stay inside the package unless a caller explicitly imports them by path.
+
+---
+
+### `src/prl_hgf/viz/inspector.py`
+
+**Purpose:** Translate a `pyhgf.model.Network` object into a plain Python dict
+(`RawNetworkDict`) that is topology-complete and pyhgf-API-free.
+
+**Public API:**
+
+```python
+def inspect_network(network: Network) -> RawNetworkDict:
+    """Extract topology and parameters from a pyhgf Network.
+
+    Parameters
+    ----------
+    network : pyhgf.model.Network
+        A constructed (but not necessarily forward-passed) Network.
+        Must have `network.attributes`, `network.edges`, and
+        `network.input_idxs` populated (these are set at construction time,
+        before any call to `input_data`).
+
+    Returns
+    -------
+    RawNetworkDict
+        Plain dict with keys:
+            "n_nodes": int
+            "input_idxs": tuple[int, ...]
+            "nodes": list[dict]   # one per node index
+                each node dict has:
+                    "idx": int
+                    "attributes": dict   # full network.attributes[idx] copy
+                    "value_parents": tuple[int, ...] | None
+                    "value_children": tuple[int, ...] | None
+                    "volatility_parents": tuple[int, ...] | None
+                    "volatility_children": tuple[int, ...] | None
+    """
+```
+
+**What it does NOT do:** assign levels, assign roles, read idata, render HTML.
+It is a thin structural reader.
+
+**Imports:** `pyhgf.model.Network` only. No `prl_hgf` imports.
+
+**Type alias (module-level):**
+
+```python
+RawNetworkDict = dict  # narrow alias for documentation; not a runtime type
+```
+
+**Accessed pyhgf internals (confirmed in existing code):**
+- `network.attributes[idx]` — node parameter dict (confirmed: `hierarchical_patrl.py` line ~933 reads `attrs[VOLATILITY_NODE]`)
+- `network.edges[idx].volatility_parents` — tuple or None
+- `network.edges[idx].value_parents` — tuple or None
+- `network.edges[idx].volatility_children` — tuple or None
+- `network.edges[idx].value_children` — tuple or None
+- `network.input_idxs` — confirmed in every model builder
+
+**Edge case: pyhgf 0.2.8 edges may be None-typed.** The inspector must
+guard with `getattr(edge_obj, "volatility_parents", None)` rather than direct
+attribute access, because not all edge objects guarantee all four fields exist.
+This is the same defensive pattern used in `export_trajectories.py` via
+`_safe_temp()`.
+
+**Scope C flag:** This file is ~60 lines. No rendering, no SVG, no JSON
+serialisation. Deliberately thin.
+
+---
+
+### `src/prl_hgf/viz/roles.py`
+
+**Purpose:** Walk the raw topology dict and assign a `(level, role)` pair to
+every node. Output is a `dict[int, NodeRole]` mapping node index to role.
+
+**Public API:**
+
+```python
+@dataclass(frozen=True)
+class NodeRole:
+    level: int            # 1-indexed from observations upward
+    role: str             # "input" | "value" | "volatility"
+    branch_idx: int | None  # None if node is shared (e.g., shared vol parent)
+
+def assign_roles(raw: RawNetworkDict) -> dict[int, NodeRole]:
+    """Assign HGF level and structural role to each node.
+
+    Parameters
+    ----------
+    raw : RawNetworkDict
+        Output of inspect_network().
+
+    Returns
+    -------
+    dict[int, NodeRole]
+        Keyed by node index.
+    """
+```
+
+**Imports:** `prl_hgf.viz.inspector` (for the `RawNetworkDict` type alias only;
+no circular risk since `inspector.py` does not import from `roles.py`).
+
+**Level/role inference algorithm (concrete pseudocode):**
+
+```
+ALGORITHM assign_roles(raw):
+
+  input_idxs  = set(raw["input_idxs"])
+  nodes_by_idx = {n["idx"]: n for n in raw["nodes"]}
+
+  # Step 1 — seed input nodes at level 1
+  level = {idx: 1 for idx in input_idxs}
+  role  = {idx: "input" for idx in input_idxs}
+
+  # Step 2 — BFS / iterative upward propagation
+  # Process nodes in order of increasing index (pyhgf builds bottom-up by
+  # construction; higher indices are always parents of lower indices in all
+  # existing builders: hgf_2level, hgf_3level, hgf_2level_patrl,
+  # hgf_3level_patrl). This assumption is safe for existing models and
+  # should be documented as an invariant.
+  queue = list(input_idxs)
+  visited = set(input_idxs)
+
+  while queue:
+    idx = queue.pop(0)
+    node = nodes_by_idx[idx]
+    current_level = level[idx]
+
+    for parent_idx in (node["value_parents"] or ()):
+      candidate = current_level + 1
+      if parent_idx not in level or level[parent_idx] < candidate:
+        level[parent_idx] = candidate
+        role[parent_idx]  = "value"
+      if parent_idx not in visited:
+        visited.add(parent_idx)
+        queue.append(parent_idx)
+
+    for parent_idx in (node["volatility_parents"] or ()):
+      candidate = current_level + 1
+      if parent_idx not in level or level[parent_idx] < candidate:
+        level[parent_idx] = candidate
+        role[parent_idx]  = "volatility"
+      if parent_idx not in visited:
+        visited.add(parent_idx)
+        queue.append(parent_idx)
+
+  # Step 3 — branch assignment
+  # A node is "shared" if it appears in the volatility_parents of MORE THAN
+  # ONE distinct branch. Detect by counting reverse edges.
+  volatility_parent_ref_count: dict[int, int] = {}
+  for node in raw["nodes"]:
+    for vp in (node["volatility_parents"] or ()):
+      volatility_parent_ref_count[vp] = volatility_parent_ref_count.get(vp,0)+1
+
+  # Assign branch_idx: follow value chain upward from each input_idx.
+  # A volatility parent shared across > 1 value nodes gets branch_idx=None.
+  branch_of: dict[int, int | None] = {}
+  for b_idx, inp_idx in enumerate(sorted(input_idxs)):
+    _walk_branch_up(inp_idx, b_idx, nodes_by_idx, branch_of)
+
+  for shared_idx, count in volatility_parent_ref_count.items():
+    if count > 1:
+      branch_of[shared_idx] = None   # shared volatility parent
+
+  return {
+    idx: NodeRole(
+      level=level[idx],
+      role=role.get(idx, "value"),
+      branch_idx=branch_of.get(idx)
+    )
+    for idx in level
+  }
+```
+
+**HGF-specific edge cases handled:**
+
+1. **Shared volatility parent (pick_best_cue 3-level):** Node 6 is the
+   `volatility_parent` of nodes 1, 3, and 5. `branch_idx` is set to `None`.
+   The level assigned is `max(level[1], level[3], level[5]) + 1 = 3` because
+   the BFS processes all three children before node 6 is finalised. The
+   `level[parent] < candidate` guard ensures level monotonically increases to
+   the correct maximum.
+
+2. **PAT-RL single-branch 3-level:** Node 2 is the `volatility_parent` of
+   node 1 only. `branch_idx=0`. Level = 3.
+
+3. **PAT-RL 2-level:** No volatility parents. Only two nodes. Input=0,
+   level=1; belief=1, level=2.
+
+4. **Multimodal PAT-RL (hgf_2level_multimodal_patrl):** Multiple input nodes
+   may share a single belief node. The BFS will converge on the correct level
+   via the `candidate > existing` guard.
+
+**Role disambiguation:** A node with both `value_parents` and `volatility_parents`
+in the same level cannot occur in any existing builder (pyhgf does not allow a
+node to be both a value child and volatility child of the same parent). No
+special handling needed.
+
+---
+
+### `src/prl_hgf/viz/schema.py`
+
+**Purpose:** Hold the typed, validated intermediate representation that travels
+from the inspector/roles layer to the export layer. Also optionally attaches
+posterior summary data from ArviZ idata.
+
+**Decision: `@dataclass(frozen=True)` — not TypedDict, not pydantic.**
+
+Rationale grounded in the existing codebase conventions:
+- All existing config objects (`PATRLConfig`, `HazardConfig`, `PhaseConfig`)
+  are `@dataclass(frozen=True)`. This project does not use pydantic anywhere.
+- `TypedDict` provides no validation; a viewer receiving corrupt data would
+  silently produce a broken HTML file — a hard-to-debug failure mode.
+- `@dataclass` with `__post_init__` validation (same pattern as
+  `pat_rl_config.py`) makes invalid state unrepresentable and produces
+  informative `ValueError` messages (matching the project's "expected vs
+  actual" error convention).
+- Pydantic is not in `pyproject.toml`; adding it for a single module violates
+  the "prefer existing tools" principle.
+
+**Public API:**
+
+```python
+@dataclass(frozen=True)
+class NodeSpec:
+    idx: int
+    level: int                    # 1 = observation, n = top
+    role: str                     # "input" | "value" | "volatility"
+    branch_idx: int | None        # None for shared nodes
+    attributes: dict              # raw pyhgf node_parameters copy
+    posterior_summary: dict | None  # {"mean": float, "hdi_low": float, ...}
+                                    # per free param; None if pre-fit
+
+@dataclass(frozen=True)
+class NetworkSpec:
+    task_name: str                # "pat_rl" | "pick_best_cue" | user-supplied
+    n_levels: int                 # inferred: max(node.level for all nodes)
+    n_branches: int               # inferred: max(branch_idx) + 1 (excl. None)
+    nodes: tuple[NodeSpec, ...]
+    input_idxs: tuple[int, ...]
+    has_shared_volatility: bool   # True when any node.branch_idx is None
+    is_post_fit: bool             # True if any NodeSpec has posterior_summary
+
+def build_network_spec(
+    raw: RawNetworkDict,
+    roles: dict[int, NodeRole],
+    task_name: str,
+    idata: az.InferenceData | None = None,
+    participant_id: str | None = None,
+) -> NetworkSpec:
+    """Assemble a NetworkSpec from inspector + roles output.
+
+    If idata is provided, posterior_summary is populated per node
+    from the named pyhgf-parameter attributes (omega_2, omega_3, kappa,
+    mu3_0) matched to their node indices.
+
+    Parameters
+    ----------
+    raw : RawNetworkDict
+    roles : dict[int, NodeRole]
+    task_name : str
+    idata : az.InferenceData or None
+        If None, produces pre-fit spec (all posterior_summary = None).
+    participant_id : str or None
+        Required if idata is provided and has a participant_id coordinate.
+
+    Returns
+    -------
+    NetworkSpec
+    """
+```
+
+**idata coordinate access pattern:** Uses the same `participant_id` coordinate
+path confirmed in `export_trajectories.py` (PAT-RL) and `laplace_idata.py`.
+The pick_best_cue path uses `"participant"` (Decision 131). The schema builder
+accepts a `coord_name` parameter defaulting to `"participant_id"` to handle
+both without importing either config module:
+
+```python
+def build_network_spec(..., coord_name: str = "participant_id") -> NetworkSpec:
     ...
 ```
 
-This function creates new `GroupConfig`, `SessionConfig`, and
-`SimulationConfig` objects (all frozen dataclasses accept keyword args) with
-the substituted values, then wraps them in a new `AnalysisConfig`.
+This keeps `schema.py` task-agnostic — it reads whatever coordinate name the
+caller supplies.
 
-The effect size parameterization maps directly onto the existing
-`session_deltas` structure. For a BFDA study of the group × session
-interaction on omega_2, `effect_size_delta["omega_2"]` replaces
-`psilocybin.session_deltas.omega_2_deltas[1]` (the post-dose delta). The
-placebo group deltas are held at their YAML defaults (near zero), and the
-psilocybin group deltas are set to `baseline_delta + d * pooled_sd` where
-pooled_sd is estimated from the YAML group distributions.
+**Imports:**
+- `prl_hgf.viz.inspector` (`RawNetworkDict`)
+- `prl_hgf.viz.roles` (`NodeRole`)
+- `arviz` (TYPE_CHECKING only, same pattern as `export_trajectories.py`)
 
-Concretely, for a Cohen's d target:
-
-```
-psilocybin_post_dose_delta = d * pooled_sd(omega_2)
-```
-
-`pooled_sd` is `sqrt((sd_psilocybin² + sd_placebo²) / 2)`.
-
-This keeps the YAML untouched and makes each job fully self-contained.
+**Does NOT import:** `pat_rl_config.py`, `task_config.py`, any `models/` module.
 
 ---
 
-## New Module Layout (Question 1)
+### `src/prl_hgf/viz/export.py`
 
-Recommended location: `src/prl_hgf/power/`
+**Purpose:** Accept a `NetworkSpec` and a template HTML path; inject data into
+the template via `<script>` tag replacement; return a self-contained HTML string.
 
-```
-src/prl_hgf/power/
-  __init__.py
-  config_override.py   # make_power_config() factory
-  bayes_factor.py      # compute_jzs_bf() — JZS BF for group×session contrast
-  stopping_rule.py     # evaluate_bfda_stopping() — BF thresholds, sequential logic
-  iteration.py         # run_power_iteration() — one (N, d, k) cell
-  curves.py            # aggregate_power_results(), plot_power_curves()
-```
+**Scope C boundary:** This file does SVG/JS injection only. It does NOT
+re-implement any graphical logic. The template (`patrl_hgf_model.html`) already
+contains the React rendering code. Export injects data into that existing code.
 
-### Component Responsibilities
-
-| Component | Responsibility | Calls Into |
-|-----------|---------------|-----------|
-| `config_override.py` | Build modified AnalysisConfig without touching YAML | `env.task_config` dataclasses |
-| `bayes_factor.py` | JZS BF on group-difference posterior draws | `analysis.group.extract_posterior_contrasts` |
-| `stopping_rule.py` | Evaluate BF against H1/H0 thresholds (e.g. BF>10, BF<0.1) | `bayes_factor.py` |
-| `iteration.py` | Orchestrate one (N, d, k) simulation+fit+BF cycle | `simulation.batch`, `fitting.batch`, `analysis.group`, `bayes_factor.py` |
-| `curves.py` | Load aggregated CSVs, compute power at each cell, plot | pandas, matplotlib |
-
-### New Scripts
-
-```
-scripts/
-  07_power_single_iteration.py   # wrapper: reads CLI args, calls run_power_iteration()
-  08_power_slurm_array.sh        # SLURM array job submitter
-  09_aggregate_power.py          # gathers per-job CSVs, produces master results table
-  10_plot_power_curves.py        # calls power/curves.py
-```
-
-This naming respects the existing `03_–06_` pipeline numbering and keeps
-scripts callable independently (useful for local smoke tests before cluster
-submission).
-
----
-
-## SLURM Array Job Pattern (Question 3)
-
-### Job Decomposition
-
-Each SLURM array task corresponds to one `(N, d, k)` triple, where:
-- N is sample size per group
-- d is target Cohen's d for the primary contrast (omega_2 post-dose)
-- k is the iteration index (0 to K-1)
-
-This fully parallelizes across all three dimensions. At K=200, 7 N levels,
-3 d levels: 4,200 total jobs. Each job does N_per_group × 2 groups × 3
-sessions = up to 300 MCMC fits (at N=50). Wall time per job at N=50: ~2.5h
-(300 fits × 30s).
-
-### Array Index Encoding
-
-A job index file (CSV or text) lists one `(N, d, k)` triple per line. The
-SLURM array reads its row using `$SLURM_ARRAY_TASK_ID`:
-
-```bash
-# scripts/08_power_slurm_array.sh
-
-#SBATCH --array=0-4199
-#SBATCH --time=04:00:00
-#SBATCH --mem=16G
-#SBATCH --cpus-per-task=1    # JAX MCMC uses 1 core per chain internally
-
-PARAMS_FILE="data/power/job_params.csv"
-LINE=$(sed -n "$((SLURM_ARRAY_TASK_ID + 2))p" "$PARAMS_FILE")
-N=$(echo "$LINE" | cut -d, -f1)
-D=$(echo "$LINE" | cut -d, -f2)
-K=$(echo "$LINE" | cut -d, -f3)
-
-python scripts/07_power_single_iteration.py \
-    --n-per-group "$N" \
-    --effect-size "$D" \
-    --iteration "$K" \
-    --output-dir "data/power/results/"
-```
-
-`job_params.csv` is generated once by a helper script:
-`scripts/07a_generate_job_params.py`.
-
-### Output Per Job
-
-Each job writes a single-row CSV:
-
-```
-data/power/results/N{N}_d{D}_k{K:04d}.csv
-```
-
-Columns: `n_per_group, effect_size_d, iteration, bf_omega2, bf_kappa,
-decision, n_flagged_fits, wall_time_s`
-
-Single-row-per-job output avoids write conflicts entirely (no locking
-needed). Jobs that fail write nothing; the aggregation script detects gaps.
-
----
-
-## Results Aggregation (Questions 4 and 5)
-
-### Data Flow from Jobs to Power Curves
-
-```
-SLURM array (4,200 jobs)
-  -> data/power/results/N{N}_d{d}_k{k:04d}.csv   [one file per job]
-       |
-       v
-scripts/09_aggregate_power.py
-  -> pd.concat() all CSVs
-  -> data/power/power_master.csv
-       |  columns: n_per_group, effect_size_d, iteration, bf_omega2,
-       |           bf_kappa, decision, n_flagged_fits
-       v
-scripts/10_plot_power_curves.py  (calls power/curves.py)
-  -> power(N, d) = mean(decision == "H1") across iterations
-  -> figures/power_curves.png
-  -> data/power/power_summary.csv
-       |  columns: n_per_group, effect_size_d, power_omega2, power_kappa,
-       |           median_bf, n_iterations
-```
-
-### Aggregation Script Logic
+**Public API:**
 
 ```python
-# scripts/09_aggregate_power.py
-results_dir = DATA_DIR / "power" / "results"
-csvs = sorted(results_dir.glob("N*_d*_k*.csv"))
-master = pd.concat([pd.read_csv(p) for p in csvs], ignore_index=True)
-master.to_csv(DATA_DIR / "power" / "power_master.csv", index=False)
+def render_viewer_html(
+    spec: NetworkSpec,
+    template_path: Path | None = None,
+) -> str:
+    """Render a self-contained HTML viewer string.
 
-# Flag missing jobs
-expected = load_job_params()  # reads data/power/job_params.csv
-completed = set(zip(master.n_per_group, master.effect_size_d, master.iteration))
-missing = [(n, d, k) for n, d, k in expected if (n, d, k) not in completed]
-if missing:
-    print(f"WARNING: {len(missing)} jobs not yet completed")
+    Parameters
+    ----------
+    spec : NetworkSpec
+        Assembled network specification (pre-fit or post-fit).
+    template_path : Path or None
+        Path to the HTML template file. Defaults to
+        config.FIGURES_DIR / "patrl_hgf_model.html".
+
+    Returns
+    -------
+    str
+        Complete HTML document as a string.  Write to disk with
+        Path(output).write_text(html, encoding="utf-8").
+
+    Raises
+    ------
+    FileNotFoundError
+        If template_path does not exist.
+    ValueError
+        If a required injection marker is missing from the template.
+    """
 ```
 
-This pattern is safe to run incrementally (re-run after partial completion to
-check progress).
+**Supporting function (internal but tested):**
 
----
+```python
+def _inject_markers(html: str, substitutions: dict[str, str]) -> str:
+    """Replace VIZ_INJECT markers in an HTML string.
 
-## Data Flow Diagram
+    Parameters
+    ----------
+    html : str
+    substitutions : dict[str, str]
+        Keys are marker names (without delimiters); values are replacement text.
 
-```
-configs/prl_analysis.yaml
-        |
-        | load_config()
-        v
-AnalysisConfig (base)
-        |
-        | make_power_config(N, d, seed)    [power/config_override.py]
-        v
-AnalysisConfig (power variant)
-        |
-        | simulate_batch()                 [simulation/batch.py — UNCHANGED]
-        v
-sim_df  (trial-level, N*2*3 participants)
-        |
-        | fit_batch()                      [fitting/batch.py — UNCHANGED]
-        v
-fit_df  (long-form: participant x session x parameter)
-        |
-        | build_estimates_wide()           [analysis/group.py — UNCHANGED]
-        v
-estimates_wide  (one row per participant-session)
-        |
-        | fit_group_model() + extract_posterior_contrasts()
-        |                                  [analysis/group.py — UNCHANGED]
-        v
-posterior contrast samples (omega_2 group x session interaction)
-        |
-        | compute_jzs_bf()                 [power/bayes_factor.py — NEW]
-        v
-BF scalar
-        |
-        | evaluate_bfda_stopping()         [power/stopping_rule.py — NEW]
-        v
-decision: "H1" | "H0" | "inconclusive"
-        |
-        | write N{N}_d{d}_k{k}.csv        [iteration.py — NEW]
-        v
-data/power/results/  (4,200 files)
-        |
-        | 09_aggregate_power.py            [NEW script]
-        v
-data/power/power_master.csv
-        |
-        | 10_plot_power_curves.py          [NEW script]
-        v
-figures/power_curves.png
-data/power/power_summary.csv
+    Returns
+    -------
+    str
+        HTML with all markers replaced.
+
+    Raises
+    ------
+    ValueError
+        If any key in substitutions has no corresponding marker in html.
+    """
 ```
 
----
+**Imports:**
+- `prl_hgf.viz.schema` (`NetworkSpec`)
+- `config` (`FIGURES_DIR`)
+- `json`, `re`, `pathlib.Path`
 
-## Integration Points with Existing Components
-
-### Unchanged (reused as-is)
-
-| Module | How Power Analysis Uses It |
-|--------|---------------------------|
-| `env.task_config.load_config()` | Loads base config; power module wraps it |
-| `env.task_config` dataclasses | `make_power_config()` constructs new frozen instances |
-| `simulation.batch.simulate_batch()` | Called with power-variant config |
-| `fitting.batch.fit_batch()` | Called with sim_df; all MCMC params passed as kwargs |
-| `analysis.group.build_estimates_wide()` | Extracts posterior means |
-| `analysis.group.fit_group_model()` | Fits bambi model for interaction |
-| `analysis.group.extract_posterior_contrasts()` | Gets posterior draws for BF computation |
-| `config.DATA_DIR` | Output paths hang off `DATA_DIR / "power" / ...` |
-
-### Modified
-
-None. The design deliberately avoids modifying any existing module. All new
-functionality is additive.
-
-### New Additions
-
-| Path | Type | Purpose |
-|------|------|---------|
-| `src/prl_hgf/power/__init__.py` | Package | Exports `run_power_iteration`, `make_power_config` |
-| `src/prl_hgf/power/config_override.py` | Module | Config factory without YAML mutation |
-| `src/prl_hgf/power/bayes_factor.py` | Module | JZS BF from posterior draws |
-| `src/prl_hgf/power/stopping_rule.py` | Module | BFDA decision rule evaluation |
-| `src/prl_hgf/power/iteration.py` | Module | Single (N, d, k) orchestrator |
-| `src/prl_hgf/power/curves.py` | Module | Power curve aggregation and plotting |
-| `scripts/07a_generate_job_params.py` | Script | Write job_params.csv for SLURM |
-| `scripts/07_power_single_iteration.py` | Script | CLI entry point for one job |
-| `scripts/08_power_slurm_array.sh` | Bash | SLURM array job submitter |
-| `scripts/09_aggregate_power.py` | Script | Concat per-job CSVs |
-| `scripts/10_plot_power_curves.py` | Script | Power curve figures |
-| `data/power/job_params.csv` | Data | (N, d, k) grid; generated, not committed |
-| `data/power/results/` | Dir | Per-job output CSVs |
-| `data/power/power_master.csv` | Data | Aggregated results |
+**Does NOT split into sub-files.** The "regex injection vs HTML assembly"
+split (mentioned in the milestone brief) is over-engineered for scope C.
+The entire export is ~80 lines. A sub-package (`export/regex_injection.py`,
+`export/html_assembly.py`) would add two `__init__.py` files and three import
+paths for a module that fits on one screen. The internal helper `_inject_markers`
+provides the same separation at zero overhead.
 
 ---
 
-## Key Design Decisions and Rationale
+## Injection Marker Convention
 
-### Decision 1: Config override via factory, not YAML mutation
+**Decision: `<script type="application/json" id="viz-{name}">...</script>` tags.**
 
-The existing `AnalysisConfig` is frozen. Mutating the YAML between jobs is
-unsafe on a shared filesystem and impossible when 4,200 jobs run concurrently.
-The factory function `make_power_config()` builds a fresh immutable config per
-job. This is zero-risk and requires no changes to any existing module.
+Rationale for choosing this over alternatives:
 
-### Decision 2: One file per SLURM job, no shared writer
+| Option | Why Rejected |
+|--------|-------------|
+| HTML comments `<!-- VIZ:NODES -->` | Comments are stripped by HTML minifiers; not parseable by `json.loads` directly; BeautifulSoup test requires full parse |
+| `__VIZ_NODES__` string tokens | Invisible in rendered HTML; no semantic boundary; regex must avoid matching JavaScript source code containing similar strings |
+| `data-` attributes | Limited to short strings; breaks for large JSON payloads (>64KB); requires element to exist in DOM |
+| `<script type="application/json" id="viz-{name}">` | Standard pattern; parseable via `document.getElementById("viz-nodes").textContent`; survives all HTML formatters; testable with both `json.loads` and `BeautifulSoup`; zero collision risk with React source |
 
-Writing to a shared CSV from thousands of concurrent jobs risks corruption
-without a lock or database. One-file-per-job eliminates this entirely. The
-aggregation step (sequential, after all jobs complete) is trivial with
-`pd.concat`.
+**Marker names (confirmed against template structure):**
 
-### Decision 3: Pass bambi model through analysis.group, not a custom path
+| Marker `id` | Content | Injected by |
+|-------------|---------|-------------|
+| `viz-network-spec` | Full `NetworkSpec` as JSON | `export.py` always |
+| `viz-posterior-summary` | Per-node posterior dict or `null` | `export.py` when `spec.is_post_fit` |
 
-`fit_group_model()` already returns an `az.InferenceData` from bambi.
-`extract_posterior_contrasts()` already extracts posterior draws for the
-group × session interaction. `compute_jzs_bf()` takes those draws and
-computes the JZS BF. This avoids duplicating the bambi model fitting logic
-and reuses the validated contrast-extraction code.
+**Template location of markers:** Immediately before `</head>`, after existing
+`<style>` block. The React component reads them via:
 
-### Decision 4: SLURM array index = flat row in job_params.csv
+```javascript
+const spec = JSON.parse(
+  document.getElementById("viz-network-spec")?.textContent || "null"
+);
+```
 
-Encoding (N, d, k) into the array index avoids off-by-one errors from
-arithmetic index unpacking. The job reads its own parameters from a file
-using the array task ID. This makes the mapping inspectable and allows
-partial re-submission of failed jobs by rebuilding job_params.csv with only
-the missing triples.
+This is a non-breaking addition to the existing template: if the script tags
+are absent (legacy template), `spec` is `null` and the viewer falls back to
+its hardcoded defaults (current behaviour preserved).
 
-### Decision 5: bambi group model inside the power loop
+**Injection implementation (no regex needed for the primary path):**
 
-`fit_group_model()` runs a bambi MCMC per iteration. At N=50, this adds
-~5-10 min per job (bambi is cheaper than HGF fitting). This is acceptable.
-If it becomes a bottleneck, the bambi step can be skipped in favor of a
-simpler frequentist t-test BF approximation in `bayes_factor.py` (document
-this as a future optimization flag).
+```python
+import json, re
+
+_MARKER_RE = re.compile(
+    r'(<script\s+type="application/json"\s+id="(?P<name>[^"]+)">[^<]*</script>)',
+    re.DOTALL,
+)
+
+def _inject_markers(html: str, substitutions: dict[str, str]) -> str:
+    present = {m.group("name") for m in _MARKER_RE.finditer(html)}
+    missing = set(substitutions) - present
+    if missing:
+        raise ValueError(
+            f"Template missing markers: {sorted(missing)}. "
+            f"Found: {sorted(present)}"
+        )
+    def replace(m):
+        name = m.group("name")
+        if name in substitutions:
+            return f'<script type="application/json" id="{name}">{substitutions[name]}</script>'
+        return m.group(0)
+    return _MARKER_RE.sub(replace, html)
+```
+
+**Test approach (both methods):**
+
+```python
+# Method 1: raw string assert (fast unit test)
+def test_inject_nodes_round_trip():
+    template = '<script type="application/json" id="viz-network-spec"></script>'
+    payload = json.dumps({"n_levels": 3})
+    result = _inject_markers(template, {"viz-network-spec": payload})
+    assert '"n_levels": 3' in result
+
+# Method 2: BeautifulSoup parse (integration test)
+def test_inject_parseable_as_json():
+    from bs4 import BeautifulSoup
+    html = render_viewer_html(spec, template_path=minimal_template)
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("script", {"id": "viz-network-spec"})
+    data = json.loads(tag.string)
+    assert data["n_levels"] == spec.n_levels
+```
+
+BeautifulSoup is not currently in `pyproject.toml`. The `test_inject_nodes_round_trip`
+raw-string test is sufficient for CI; the BeautifulSoup test can be marked
+`@pytest.mark.optional` and run only when `beautifulsoup4` is installed.
 
 ---
 
-## Suggested Build Order
+## Data Flow Diagrams
 
-The build order respects dependency chains. Each step can be tested before
-the next is started.
+### Pre-Fit Path
 
-**Step 1: `power/config_override.py`**
-Lowest risk. No external dependencies beyond existing dataclasses. Write unit
-tests verifying that N and d overrides produce the expected
-`n_participants_per_group` and `omega_2_deltas`. This unblocks all subsequent
-steps.
+```
+JSON/YAML config
+      │
+      ▼
+env/pat_rl_config.py:load_pat_rl_config()  OR  env/task_config.py:load_config()
+      │
+      ▼ (caller constructs Network — viz/ does NOT call model builders)
+models/hgf_3level_patrl.py:build_3level_network_patrl(omega_2, omega_3, kappa, mu3_0)
+      │
+      ▼  pyhgf.model.Network object (topology-complete, no forward pass needed)
+viz/inspector.py:inspect_network(network)
+      │
+      ▼  RawNetworkDict (plain dict, no pyhgf types)
+viz/roles.py:assign_roles(raw)
+      │
+      ▼  dict[int, NodeRole]
+viz/schema.py:build_network_spec(raw, roles, task_name="pat_rl", idata=None)
+      │
+      ▼  NetworkSpec (is_post_fit=False, all posterior_summary=None)
+viz/export.py:render_viewer_html(spec, template_path=FIGURES_DIR/"patrl_hgf_model.html")
+      │
+      ▼  str (complete HTML)
+Path("output/hgf_viewer_patrl_prefit.html").write_text(html, encoding="utf-8")
+```
 
-**Step 2: `power/bayes_factor.py`**
-Requires understanding of JZS BF formula applied to posterior draws. Depends
-on `analysis.group.extract_posterior_contrasts` output format, which is
-verified. Can be unit-tested with synthetic posterior draw arrays before any
-HGF fitting is done.
+**Key design decision:** The viewer does NOT call model builders. The caller
+constructs the `Network` with default or specified parameters and passes it to
+`inspect_network`. This avoids the viewer needing to know which builder to call
+for each task — that knowledge lives in `models/` and the calling script.
 
-**Step 3: `power/stopping_rule.py`**
-Simple threshold logic. Depends on BF scalar from Step 2. Trivial to test
-in isolation.
+**Why this is correct:** `export_trajectories.py` follows the same pattern:
+the caller selects the builder (`build_2level_network_patrl` vs
+`build_3level_network_patrl`) and passes the result to the exporter. The viewer
+should not be smarter than the exporter.
 
-**Step 4: `power/iteration.py` + `scripts/07_power_single_iteration.py`**
-Integrates all prior steps. This is the first end-to-end test: run one
-iteration locally with N=5 and fast MCMC settings to verify the pipeline
-runs without errors. Use `--n-draws 50 --n-tune 50` flags.
+---
 
-**Step 5: `scripts/07a_generate_job_params.py`**
-Generates the job grid. Can be reviewed before any cluster submission.
+### Post-Fit Path
 
-**Step 6: `scripts/08_power_slurm_array.sh`**
-Submit 10 test jobs (small array) before full submission. Verify output file
-naming and CSV schema.
+```
+JSON/YAML config  +  az.InferenceData from fitting/laplace_idata.py (or NUTS)
+      │                          │
+      ▼                          │
+(same Network construction as   │
+ pre-fit path)                  │
+      │                          │
+      ▼                          ▼
+viz/inspector.py:inspect_network(network)
+viz/roles.py:assign_roles(raw)
+viz/schema.py:build_network_spec(
+    raw, roles,
+    task_name="pat_rl",
+    idata=idata,                      ← ArviZ InferenceData injected here
+    participant_id="P001",            ← optional: show one subject's posteriors
+    coord_name="participant_id"       ← PAT-RL; "participant" for pick_best_cue
+)
+      │
+      ▼  NetworkSpec (is_post_fit=True, posterior_summary populated per node)
+viz/export.py:render_viewer_html(spec)
+      │
+      ▼  str (complete HTML with both network topology and posterior data)
+Path("output/hgf_viewer_P001_postfit.html").write_text(html, encoding="utf-8")
+```
 
-**Step 7: `scripts/09_aggregate_power.py` + `power/curves.py` +
-`scripts/10_plot_power_curves.py`**
-Can be developed and tested against the 10 test-job outputs before the full
-run completes.
+**idata access in `schema.py`:** Uses the same coordinate pattern as
+`export_trajectories.py:export_subject_parameters()`. The `posterior_summary`
+dict per `NodeSpec` is populated by matching pyhgf attribute names to known
+parameter names:
+
+```
+node.attributes["tonic_volatility"]  → parameter key "omega_2" (belief/vol nodes)
+node.attributes["mean"]              → parameter key "mu3_0" (volatility node only)
+```
+
+The mapping from node index to parameter name is task-specific and must be
+supplied by the caller (or inferred from `task_name` in `schema.py` via a
+small lookup table). This is the only task-specific logic in `schema.py`, and
+it is confined to the `_param_for_node` helper function.
+
+---
+
+## Integration Points
+
+### What `viz/` imports FROM (explicit list)
+
+| Module imported | What is used | File in viz/ |
+|----------------|-------------|--------------|
+| `pyhgf.model.Network` | type annotation + attribute access | `inspector.py` |
+| `config.FIGURES_DIR` | default template path | `export.py` |
+| `arviz` (TYPE_CHECKING only) | `az.InferenceData` type hint | `schema.py` |
+| `json`, `re`, `pathlib.Path` | standard library | `export.py` |
+| `dataclasses` | `@dataclass` | `schema.py`, `roles.py` |
+
+**`viz/` does NOT import from `models/`, `fitting/`, `env/`, `analysis/`,
+`simulation/`, `gui/`, or `power/`.** The caller is responsible for constructing
+`Network` objects using `models/` builders.
+
+### What imports FROM `viz/` (allowed)
+
+| Caller | Imports | Notes |
+|--------|---------|-------|
+| `scripts/` pipeline scripts | `render_viewer_html`, `inspect_network` | Entry points |
+| `tests/test_viz_*.py` | any public symbol | Testing only |
+| `notebooks/` | any public symbol | Interactive use |
+
+**Nothing in the existing `src/prl_hgf/` package imports from `viz/`.** This is
+an intentional one-way dependency.
+
+---
+
+## Parallel-Stack Invariant Audit
+
+**Question:** Does `viz/` need to import from `pat_rl_config.py` AND
+`task_config.py`? Does this create coupling between the two stacks?
+
+**Answer: No import from either config module is required.**
+
+The viewer is a structural reader. It inspects a `Network` object that has
+already been built by the caller. The `Network` object contains no reference to
+`PATRLConfig` or `AnalysisConfig` — it is a pure pyhgf object.
+
+The only task-specific item the viewer needs is `task_name` (a `str`), which
+the caller supplies. The viewer never needs to read YAML, call a config loader,
+or know the difference between PAT-RL and pick_best_cue config hierarchies.
+
+**Parallel-stack invariant check:**
+
+| File | Imports pat_rl_config? | Imports task_config? | Creates coupling? |
+|------|----------------------|---------------------|------------------|
+| `inspector.py` | No | No | No |
+| `roles.py` | No | No | No |
+| `schema.py` | No | No | No |
+| `export.py` | No | No | No |
+
+**The viewer works equally for both task stacks because it reads from a
+`pyhgf.Network` object, which is task-agnostic.** A pick_best_cue 3-level
+network (7 nodes, shared volatility parent) and a PAT-RL 3-level network
+(3 nodes, single volatility parent) both expose the same pyhgf `edges` and
+`attributes` API. The roles algorithm handles both topologies without any
+task-specific branching.
+
+The one place where task context matters — the `coord_name` for idata access
+— is a `str` parameter passed by the caller, not a config import. This is the
+same pattern Decision 131 established: the producer (PAT-RL exporter) uses
+`"participant_id"` and the consumer (viewer) accepts whatever name is supplied.
+
+---
+
+## Dependency DAG Between the Four Files
+
+```
+inspector.py
+    │
+    ▼ (imports RawNetworkDict type alias)
+roles.py
+    │
+    ▼ (imports RawNetworkDict, NodeRole)
+schema.py
+    │
+    ▼ (imports NetworkSpec)
+export.py
+```
+
+The DAG is a linear chain. No cycles. No shared mutable state. Each module can
+be imported and unit-tested in isolation.
+
+**Corollary:** `inspector.py` and `roles.py` have zero `prl_hgf` dependencies —
+they can be tested with a synthetic `Network`-like dict without importing any
+fitting or config code.
+
+---
+
+## Do the Existing Modules Need Changes?
+
+### `fitting/hierarchical_patrl.py` and `fitting/laplace_idata.py`
+
+**No changes required.** The idata format emitted by `build_idata_from_laplace`
+already has:
+- `posterior` group with per-participant arrays
+- `"participant_id"` coordinate (confirmed: `laplace_idata.py` line ~253)
+- `beta`, `omega_2`, `omega_3`, `kappa`, `mu3_0` as variables
+
+`schema.py:build_network_spec` reads these fields with the same `idata.posterior[var].sel(participant_id=pid)` pattern already confirmed in
+`export_trajectories.py:export_subject_parameters`. No richer idata format is
+needed.
+
+**Slow-path fallback:** If a posterior variable is absent from `idata.posterior`
+(e.g., `omega_3` when using the 2-level model), `schema.py` sets
+`posterior_summary=None` for that node rather than raising. This matches the
+`_safe_temp` pattern in `export_trajectories.py`.
+
+### `env/pat_rl_config.py` and `env/task_config.py`
+
+**No changes required.** No `to_viewer_json()` method is needed. The viewer
+consumes the `Network` object directly; config values that appear in the figure
+(parameter priors, task structure) are either already in `network.attributes` or
+are not the viewer's concern (task structure is for the task-specific display
+in the template, which is hardcoded in the React component).
+
+The JSON fixture mentioned in the milestone brief is exactly that — a test
+fixture, not a new input format. The viewer reads `Network` objects and `idata`,
+not JSON task configs. The existing YAML configs remain the source of truth for
+task structure.
+
+---
+
+## Test Layout
+
+**Convention:** Flat `tests/` directory (confirmed — no subdirectories exist
+under `tests/`). All existing test files are at the top level:
+`tests/test_models_patrl.py`, `tests/test_export_trajectories.py`, etc.
+
+**New test files (matching convention):**
+
+```
+tests/
+  test_viz_inspector.py    # unit: inspect_network on 2level and 3level networks
+  test_viz_roles.py        # unit: assign_roles level/role assignment correctness
+  test_viz_schema.py       # unit: build_network_spec pre-fit and post-fit paths
+  test_viz_export.py       # unit + integration: _inject_markers + render_viewer_html
+```
+
+**No `tests/viz/` subdirectory.** The existing codebase has no test subdirectory
+precedent. `test_viz_` prefix is sufficient to group them in alphabetical
+directory listings and pytest `-k viz` filtering.
+
+---
+
+## Phase 22 / 23 / 24 Boundary Recommendations
+
+The dependency DAG directly determines phase boundaries. Each phase ends on a
+shippable unit (a file that passes tests on its own without requiring downstream
+files to exist).
+
+### Phase 22: Core Inspector + Roles
+
+**Deliverables:**
+- `viz/__init__.py` (stub only — empty or with TODO re-exports)
+- `viz/inspector.py` + `tests/test_viz_inspector.py`
+- `viz/roles.py` + `tests/test_viz_roles.py`
+
+**Why this phase boundary:** `inspector.py` and `roles.py` have zero `prl_hgf`
+dependencies. They can be written, tested, and merged without touching `schema.py`
+or `export.py`. The test suite can run with a synthetic minimal `Network`
+(no JAX, no pyhgf needed for unit tests if tests construct `RawNetworkDict`
+directly).
+
+**Shippable test:** `assign_roles(inspect_network(build_3level_network_patrl()))` 
+returns `{0: NodeRole(1,"input",0), 1: NodeRole(2,"value",0), 2: NodeRole(3,"volatility",0)}`.
+
+**Risks needing research:** pyhgf 0.2.8 edges API — specifically whether
+`network.edges[idx]` is a dataclass, namedtuple, or object, and whether all
+four directional edge attributes are always present. This is the one place where
+a single `_inspect_pyhgf.py` exploratory script should be run before writing
+`inspector.py`.
+
+### Phase 23: Schema + Post-Fit Integration
+
+**Deliverables:**
+- `viz/schema.py` + `tests/test_viz_schema.py`
+- `viz/__init__.py` updated to export `build_network_spec`
+
+**Why this phase boundary:** `schema.py` depends on `inspector` and `roles`
+(both complete after Phase 22). It also touches the idata access path, which
+requires either a real or mocked `az.InferenceData`. The test can reuse the
+`_make_2level_idata` factory pattern from `tests/test_export_trajectories.py`
+(lines 47-70 of that file show the exact pattern).
+
+**Shippable test:** `build_network_spec` with `idata=None` produces
+`NetworkSpec(is_post_fit=False, ...)`; with a mocked `idata`, posteriors
+appear in `NodeSpec.posterior_summary`.
+
+**No changes to `fitting/` or `env/` modules.**
+
+### Phase 24: Export + Template Marker Integration
+
+**Deliverables:**
+- Marker `<script>` tags added to `figures/patrl_hgf_model.html` (template edit)
+- `viz/export.py` + `tests/test_viz_export.py`
+- `viz/__init__.py` fully populated with public exports
+- `scripts/` entry-point script (optional; scope C demo only)
+
+**Why this phase boundary:** `export.py` depends on `schema` (complete after
+Phase 23). The template edit is independent and can be done in Phase 24 or
+earlier as a parallel task. Tests confirm round-trip: `NetworkSpec` → JSON →
+injected into template → extracted from `<script>` tag → matches original.
+
+**Shippable test:** `render_viewer_html(spec)` produces valid HTML that a browser
+can open; the `viz-network-spec` script tag is present and parseable.
+
+**Risk:** The template currently uses React CDN (`react.production.min.js`).
+Self-contained output requires either bundling React inline or accepting the CDN
+dependency. Scope C does not require self-containment beyond "single file" —
+CDN dependency is acceptable.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Mutating the YAML config between jobs
+### Anti-Pattern 1: Viewer calls model builders
 
-What goes wrong: concurrent SLURM jobs read/write the same file; race
-conditions produce corrupted configs or wrong N values for some jobs.
-What to do instead: `make_power_config()` factory — each job constructs its
-own config in memory.
+**What would go wrong:** `export.py` imports `build_3level_network_patrl` and
+`build_3level_network`, then dispatches based on `task_name`. Now `viz/`
+has imports from `models/`, which in turn import `pyhgf` + JAX. The viewer
+becomes JAX-dependent even for pure structural inspection.
 
-### Anti-Pattern 2: Passing N and d through environment variables
+**Do instead:** Caller constructs the Network and passes it in. The viewer is
+a reader, not an orchestrator. Same pattern as `export_trajectories.py`.
 
-What goes wrong: SLURM environment variable injection is fragile and not
-reproducible outside the cluster. What to do instead: explicit CLI arguments
-to `07_power_single_iteration.py` parsed with `argparse`. The SLURM script
-reads the job params CSV and passes them as arguments.
+### Anti-Pattern 2: `schema.py` imports from `pat_rl_config.py` for node→param mapping
 
-### Anti-Pattern 3: Running bambi with 4 chains per job on SLURM
+**What would go wrong:** Creates a cross-stack import in `schema.py`. If
+`pat_rl_config.py` is modified (e.g., new phenotype keys), `schema.py` tests
+may fail. Violates parallel-stack invariant.
 
-What goes wrong: if `cores=4` is set for the bambi step and the SLURM job
-requests 1 CPU, bambi will spawn 4 processes and oversubscribe the node.
-What to do instead: keep `cores=1` (matching the existing pattern in
-`04_fit_participants.py`) for HGF fitting; bambi's chains can run
-sequentially or set `--cpus-per-task 4` in SLURM and pass `cores=4` only to
-bambi, not to HGF fitting.
+**Do instead:** Pass `task_name: str` as a parameter and resolve the mapping
+via a simple lookup table inside `schema.py`. No config imports needed.
 
-### Anti-Pattern 4: Reusing the same `master_seed` across iterations
+### Anti-Pattern 3: Splitting `export.py` into a sub-package
 
-What goes wrong: all K=200 iterations at a given (N, d) cell produce
-identical simulated data, defeating the purpose of Monte Carlo power
-estimation. What to do instead: derive `master_seed` from the iteration
-index: `master_seed = base_seed + iteration * large_prime`. The
-`make_power_config()` factory accepts `master_seed` as an explicit argument.
+**What would go wrong:** `viz/export/regex_injection.py` and
+`viz/export/html_assembly.py` with a `viz/export/__init__.py`. This adds three
+files for ~80 lines of code, creates a `viz/export/` directory that callers
+must navigate, and adds no value since the internal `_inject_markers` function
+already provides the separation.
 
-### Anti-Pattern 5: Writing results to a shared CSV with multiple writers
+**Do instead:** Keep `export.py` flat. Internal helpers with leading underscore
+provide the same modularity without the filesystem overhead.
 
-What goes wrong: file corruption, truncation, incomplete rows. What to do
-instead: one file per job (described above), aggregated sequentially after
-all jobs complete.
+### Anti-Pattern 4: Roles algorithm using topological sort library
 
-### Anti-Pattern 6: Running group-level bambi for every (N, d, k) cell with production-quality MCMC settings
+**What would go wrong:** Importing `networkx` or `graphlib.TopologicalSorter`
+adds a non-trivial dependency for a 30-line BFS. The existing codebase has
+no graph library dependency.
 
-What goes wrong: each iteration adds 5-10 min for bambi in addition to 2.5h
-for HGF fitting. At 4,200 jobs this is tolerable, but with default `draws=2000,
-tune=1000` the bambi portion could be the tail. What to do instead: use
-reduced bambi settings inside the power loop (`draws=500, tune=500, chains=2`)
-— sufficient for BF estimation from the group contrast posterior, not for
-publication-quality inference. Document this as a separate MCMC budget from
-the HGF fitting step.
-
----
-
-## Scalability Notes
-
-| Concern | At N=10/group | At N=50/group | At N=100/group |
-|---------|--------------|--------------|---------------|
-| Fits per iteration | 60 (2g×10p×3s) | 300 | 600 |
-| Wall time per job | ~30 min | ~2.5h | ~5h |
-| Total job-hours (4,200 jobs) | 2,100h | 10,500h | 21,000h |
-| Memory per job | ~4 GB | ~8 GB | ~12 GB |
-
-At N=10 the full grid runs in ~2,100 CPU-hours. Most clusters with 100+
-cores can complete this in 24-48h. N=100 jobs should request 12h wall time
-to be safe.
-
-The JAX JIT pre-warm cost (~30s) is paid once per job, amortized across all
-fits in that job. It is negligible for N>10.
+**Do instead:** The BFS over pyhgf edges (always small: max 7 nodes in current
+models) is faster to write, faster to run, and has no dependency. The
+"higher index = parent" invariant from all existing builders makes simple
+index-ordered iteration equivalent to topological order.
 
 ---
 
 ## Sources
 
-All findings based on direct source inspection of:
+All findings are grounded in direct code inspection (confidence: HIGH):
 
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/simulation/batch.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/fitting/batch.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/analysis/group.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/analysis/bms.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/analysis/recovery.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/env/task_config.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/src/prl_hgf/simulation/agent.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/configs/prl_analysis.yaml`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/config.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/scripts/03_simulate_participants.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/scripts/04_fit_participants.py`
-- `/c/Users/aman0087/Documents/Github/psilocybin_prl_analyses/scripts/06_group_analysis.py`
+- `src/prl_hgf/models/hgf_2level_patrl.py` — node layout, INPUT_NODE, BELIEF_NODE constants
+- `src/prl_hgf/models/hgf_3level_patrl.py` — VOLATILITY_NODE, `volatility_children=([BELIEF_NODE], [kappa])` pattern
+- `src/prl_hgf/models/hgf_3level.py` — shared volatility parent (node 6) across 3 branches
+- `src/prl_hgf/fitting/laplace_idata.py` — `participant_id` coordinate, param names
+- `src/prl_hgf/analysis/export_trajectories.py` — idata access pattern, `_safe_temp` defensive pattern
+- `src/prl_hgf/env/pat_rl_config.py` — `@dataclass(frozen=True)` convention, validation style
+- `src/prl_hgf/power/schema.py` — schema-as-dataclass precedent in this codebase
+- `src/prl_hgf/fitting/hierarchical_patrl.py` — `attrs[VOLATILITY_NODE]` access confirms `network.attributes[idx]` is a dict
+- `figures/patrl_hgf_model.html` — React component structure, existing constant declarations (PHENOS, INFO, C), no existing injection markers
+- `tests/` directory listing — flat convention, no subdirectories
+- `docs/HANDOFF_pyhgf_plot_network_extension.md` — Option C (hybrid) recommendation
 
-Confidence: HIGH. No inference required — all integration points confirmed
-from actual function signatures and dataclass fields.
+---
+
+*Architecture research for: `src/prl_hgf/viz/` — Generic HGF Viewer (v1.3 milestone)*
+*Researched: 2026-04-24*
