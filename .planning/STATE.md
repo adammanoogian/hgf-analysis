@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-Phase: 22 — Inspector + Roles + Schema Scaffold — pending `/gsd:plan-phase 22`
-Plan: —
-Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Phase 22 first task: mandatory REPL verification of pyhgf attribute paths before any production code.
-Last activity: 2026-04-24 — ROADMAP.md + STATE.md updated with v1.3 phases 22-24.
+Phase: 22 — Inspector + Roles + Schema Scaffold — Plan 22-01 COMPLETE (2026-04-24)
+Plan: 22-01 complete (REPL-verify + inspect_network BFS + handoff first-pass); next: 22-02 (roles.py)
+Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Plan 22-01: REPL session against pyhgf 0.2.8 (NOT 0.2.10 -- STATE Decision 184 wording may need revisiting), inspect_network BFS with shared-parent dedup shipped (3 commits: 1a7db18 REPL-comment, e1a4ec9 BFS, 9107b8f HANDOFF). Fixture node counts confirmed: patrl_3level=3, patrl_2level=2, pick_best_cue_3level=7.
+Last activity: 2026-04-24 — Plan 22-01 complete; 3 atomic commits; SUMMARY.md published; ruff/mypy clean on src/prl_hgf/viz/.
 
 ### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
 
@@ -204,6 +204,11 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Phase 21 success criterion for the fix: at P=50, next_proc_warm_s / cold_jit_s ratio >= 3.0x (baseline 1.00x); cold JIT < 300s; P=5 same_proc_warm speedup >= 2.0x (no regression) | Target next_proc_warm_s <= 75s at P=50 (matching same_proc_warm_s of 93s ± tolerance); quantitative invariant measurable via re-run of cluster/21_submit_pscan_chain.sh after node-pin lands | 21 |
 | Phase 21 Candidate 7 (warmup_params duplication confound, RESEARCH Risk #4) DISSOLVED; full 1965s warm wall-clock attributable to cross-process re-compile, not duplicate window adaptation | fit_batch_hierarchical accepts warmup_params at hierarchical.py:2012 (verified 21-02 Patch C); cold call captures adapted_params, warm call passes via kwarg — no production code change required | 21 |
 | Phase 21 ROADMAP + CONTEXT synced at phase close: SC1 state-space baselines only; SC2 vb_laplace_vs_nuts_jit.json + 7-value enum; SC4 P ∈ {5, 20, 50} + status column | B1/B2/B3/B4/M1 checker blockers resolved. Phase 21 entry row: "7/7 Complete 2026-04-19"; plans list marked [x]; SVI→VB-Laplace wording replaced throughout; per_stage_compile_events + per_call_wall_clock sibling fields documented in CONTEXT vb_laplace_vs_nuts_jit.json schema | 21 |
+| pyhgf AdjacencyLists.node_type is INTEGER (0-6), not string -- REPL-confirmed in ds_env 2026-04-24. int->string map: {0:constant-state, 1:binary-state, 2:continuous-state, 3:ef-state, 4:dp-state, 5:categorical-state, 6:volatile-state}; authoritative source is pyhgf/model/add_nodes.py (NOT pyhgf/typing.py docstring which is stale at 0-4) | CONTEXT Decision 3 used strings from add_nodes(kind=...) public kwarg; RESEARCH + REPL correction flowed into inspector.py top-comment and _NODE_TYPE_INT_TO_STR mapping constant | 22-01 |
+| ds_env actual pyhgf is 0.2.8 (NOT 0.2.10 as STATE Decision 184 + RESEARCH 22 claimed); pyproject.toml is correctly pinned at 0.2.8 | REPL `pyhgf.__version__` session 2026-04-24. All inspector.py + handoff annotations use "0.2.8" as the authoritative version string. Decision 184 may need quick-NNN correction or addendum | 22-01 |
+| Two-pass BFS in inspect_network (Pass 1 resolves branch_of with contested-promotion; Pass 2 emits rows in Pass 1 discovery order) | One-pass "set on first visit + skip if visited" fails shared-parent dedup because the first-discovery branch baked in before contesting branches arrived (node 6 in pick_best_cue 3-level got branch=0 instead of None). Two-pass correctly yields node 6 branch_idx=None | 22-01 |
+| viz/__init__.py partial export: only inspect_network in plan 22-01; NetworkSpec/NodeSpec/build_network_spec land in 22-03; render_viewer_html in Phase 23 | Exporting unimported names raises ImportError; partial export matches file-level reality at each plan boundary | 22-01 |
+| pre-existing editable install pointed at old repo path (`psilocybin_prl_analyses`) after rename to `hgf-analysis`; `pip install -e .` from correct repo root resyncs | Same failure mode as M3 cluster job 54934145 which failed with ModuleNotFoundError: prl_hgf. Local fix: ran reinstall at plan start. Cluster fix still pending. Watch for silent drift if any prior local Python session touched code paths since the rename | 22-01 |
 
 ### Pending Todos
 
@@ -247,8 +252,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-24 (v1.3 milestone opened — Generic HGF Viewer)
-Stopped at: PROJECT.md + STATE.md updated for v1.3 parallel milestone. Next workflow step: research decision (research vs skip), then REQUIREMENTS.md, then ROADMAP.md.
+Last session: 2026-04-24 (Plan 22-01 executed — REPL-verify + inspector.py BFS shipped)
+Stopped at: Completed 22-01-PLAN.md; 3 atomic commits (1a7db18, e1a4ec9, 9107b8f); SUMMARY.md published.
 Resume file: None
-Next action (v1.3): Continue `/gsd:new-milestone` flow — research decision → requirements → roadmap.
+Next action (v1.3): Execute Plan 22-02 (roles.py -- role inference from adjacency only, 3 cases: input / value / volatility). Inputs ready: inspect_network() emits per-node dicts with full parent/child tuples.
 Next action (v1.2, cluster): On M3, run `pip install -e .` in `ds_env` to resync editable install after repo rename, then `sbatch cluster/14_benchmark_gpu.slurm` to rerun Phase 14.1-03 benchmark (prior job 54934145 failed with `ModuleNotFoundError: prl_hgf`). Cluster 160-agent PRL-V1/V2 runs remain deferred until benchmark closes.
