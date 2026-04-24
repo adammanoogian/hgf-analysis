@@ -504,10 +504,13 @@ geometry code introduced). Files this phase may modify: `src/prl_hgf/viz/export.
 `tests/test_viz_export.py` (new), `pyproject.toml`, `data/viz_fixtures/patrl_3level_prefit.json`
 (adjustments if needed). No other files.
 **Effort**: 2-3 dev days
-**Plans**: TBD (run `/gsd:plan-phase 23` to break down)
+**Plans**: 4 plans in 4 waves
 
 Plans:
-- [ ] TBD
+- [ ] 23-01-PLAN.md — TEMPLATE_AUDIT.md (P11 guard) + DEPS-01 (jinja2 runtime + pytest-snapshot/bs4 dev) + ds_env P15 import verification
+- [ ] 23-02-PLAN.md — Promote patrl_hgf_model.html to generic hgf_viewer.html: apply (R) excisions, add injection markers with valid default JSON, P10-guarded INITIAL_HGF_LEVEL derivation, Jinja2 CDN block
+- [ ] 23-03-PLAN.md — src/prl_hgf/viz/export.py: render_viewer_html + _inject_markers (Strategy B regex) + _json_for_html (finding #1 both-defenses) + Jinja2 CDN inlining (offline_mode toggle); __init__.py re-export
+- [ ] 23-04-PLAN.md — tests/test_viz_export.py: TEST-04 structural + finding #1 escape defense + EXPORT-04 exact message + P10 rendered-HTML guard + TEST-05 pytest-snapshot pre-fit fixture (Windows line-endings normalized) + parallel-stack source check
 
 ### Phase 24: Posterior Overlay + Handoff Final Pass
 
