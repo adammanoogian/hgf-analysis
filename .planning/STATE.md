@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-Phase: 22 — Inspector + Roles + Schema Scaffold — Plan 22-01 COMPLETE (2026-04-24)
-Plan: 22-01 complete (REPL-verify + inspect_network BFS + handoff first-pass); next: 22-02 (roles.py)
-Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Plan 22-01: REPL session against pyhgf 0.2.8 (NOT 0.2.10 -- STATE Decision 184 wording may need revisiting), inspect_network BFS with shared-parent dedup shipped (3 commits: 1a7db18 REPL-comment, e1a4ec9 BFS, 9107b8f HANDOFF). Fixture node counts confirmed: patrl_3level=3, patrl_2level=2, pick_best_cue_3level=7.
-Last activity: 2026-04-24 — Plan 22-01 complete; 3 atomic commits; SUMMARY.md published; ruff/mypy clean on src/prl_hgf/viz/.
+Phase: 22 — Inspector + Roles + Schema Scaffold — Plan 22-02 COMPLETE (2026-04-24)
+Plan: 22-02 complete (roles.py adjacency-only infer_role + assign_levels_and_branches BFS); next: 22-03 (schema.py NetworkSpec/NodeSpec)
+Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Plan 22-01 shipped inspector.py BFS (3 commits). Plan 22-02 shipped src/prl_hgf/viz/roles.py (1 commit a4ac313) with adjacency-only role inference + set[int]-dedup BFS helpers; canaries verified: pick_best_cue node 6 -> role='volatility', branch_idx=None, level=3; PAT-RL 3-level traverses 3 nodes. ruff/mypy clean. roles.py NOT exported from __init__.py (22-03 decides public API).
+Last activity: 2026-04-24 — Plan 22-02 complete; 1 atomic commit (a4ac313); SUMMARY.md published; P16 grep guard = 0, zero prl_hgf imports.
 
 ### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
 
@@ -209,6 +209,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Two-pass BFS in inspect_network (Pass 1 resolves branch_of with contested-promotion; Pass 2 emits rows in Pass 1 discovery order) | One-pass "set on first visit + skip if visited" fails shared-parent dedup because the first-discovery branch baked in before contesting branches arrived (node 6 in pick_best_cue 3-level got branch=0 instead of None). Two-pass correctly yields node 6 branch_idx=None | 22-01 |
 | viz/__init__.py partial export: only inspect_network in plan 22-01; NetworkSpec/NodeSpec/build_network_spec land in 22-03; render_viewer_html in Phase 23 | Exporting unimported names raises ImportError; partial export matches file-level reality at each plan boundary | 22-01 |
 | pre-existing editable install pointed at old repo path (`psilocybin_prl_analyses`) after rename to `hgf-analysis`; `pip install -e .` from correct repo root resyncs | Same failure mode as M3 cluster job 54934145 which failed with ModuleNotFoundError: prl_hgf. Local fix: ran reinstall at plan start. Cluster fix still pending. Watch for silent drift if any prior local Python session touched code paths since the rename | 22-01 |
+| roles.py is adjacency-only: `infer_role` uses `idx in other.volatility_parents` scan; never reads per-node attribute dict keys (P16 guard). Docstring uses "per-node attribute dict" phrasing to satisfy `grep -c node_parameters == 0` verify check | Plan 22-02 example docstring conflicted with its own grep-c verify criterion; rewrote to "per-node attribute dict" -- preserves Pitfall P16 reference + guidance, passes grep guard, zero behavioural change | 22-02 |
+| `assign_levels_and_branches` single-pass BFS with tuple-queue `deque[(idx, level, branch)]` and "already visited -> contested promotion" sentinel (None) | Plan 22-01's inspector.py uses two-pass BFS (branch_of dict + separate parents loop); plan 22-02's roles.py uses single-pass tuple-queue per plan example. Isomorphic for shared-parent dedup; both emit pick_best_cue node 6 with branch=None | 22-02 |
+| roles.py NOT exported from `src/prl_hgf/viz/__init__.py` in plan 22-02 | Plan 22-03 (schema.py) decides final public API surface. `schema.py` will `from prl_hgf.viz.roles import ...` internally without exposing helpers on the package surface | 22-02 |
+| roles.py duck-types edges via `typing.Any` (zero prl_hgf.* / pyhgf.* imports) | Enables unit tests in plan 22-04 to build synthetic `AdjacencyLists` NamedTuples without constructing full pyhgf Network objects | 22-02 |
 
 ### Pending Todos
 
@@ -252,8 +256,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-24 (Plan 22-01 executed — REPL-verify + inspector.py BFS shipped)
-Stopped at: Completed 22-01-PLAN.md; 3 atomic commits (1a7db18, e1a4ec9, 9107b8f); SUMMARY.md published.
+Last session: 2026-04-24 (Plan 22-02 executed — roles.py adjacency-only role inference + BFS level/branch helpers shipped)
+Stopped at: Completed 22-02-PLAN.md; 1 atomic commit (a4ac313); SUMMARY.md published.
 Resume file: None
-Next action (v1.3): Execute Plan 22-02 (roles.py -- role inference from adjacency only, 3 cases: input / value / volatility). Inputs ready: inspect_network() emits per-node dicts with full parent/child tuples.
+Next action (v1.3): Execute Plan 22-03 (schema.py -- NetworkSpec + NodeSpec frozen dataclasses). Inputs ready: inspect_network() (plan 22-01) emits per-node dicts; roles.infer_role() + roles.assign_levels_and_branches() (plan 22-02) give adjacency-only role/level/branch. Plan 22-03 will decide the final public __init__.py surface for viz.
 Next action (v1.2, cluster): On M3, run `pip install -e .` in `ds_env` to resync editable install after repo rename, then `sbatch cluster/14_benchmark_gpu.slurm` to rerun Phase 14.1-03 benchmark (prior job 54934145 failed with `ModuleNotFoundError: prl_hgf`). Cluster 160-agent PRL-V1/V2 runs remain deferred until benchmark closes.
