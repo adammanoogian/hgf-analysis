@@ -5,6 +5,7 @@
 - **v1.0 Simulation-to-Inference Pipeline** — Phases 1-7 (shipped 2026-04-07)
 - **v1.1 BFDA Power Analysis** — Phases 8-11 (code-complete 2026-04-07)
 - **v1.2 Hierarchical GPU Fitting** — Phases 12-21 (in progress; Phase 18 PAT-RL task adaptation + Phase 19 VB-Laplace parity fit path + Phase 20 PAT-RL scientific completion + Phase 21 benchmark bottleneck diagnosis appended — see notes)
+- **v1.3 Generic HGF Viewer — Scaffold + Handoff** — Phases 22-24 (opened 2026-04-24; parallel to v1.2 cluster-bound work)
 
 ---
 
@@ -388,6 +389,165 @@ Plans:
 
 ---
 
+## v1.3 Generic HGF Viewer — Scaffold + Handoff (2026-04-24 — )
+
+**Milestone Goal:** Ship a config-driven HGF viewer scaffold (`src/prl_hgf/viz/`) that reads
+real pyhgf Network internals and optional ArviZ posteriors, produces a self-contained HTML
+file valid pre- and post-fit, and ships with a runtime-verified handoff doc for follow-up
+Claude Code implementation of polish features. Full rendering polish, interactive sidebar,
+and SVG export are deferred to v1.4+.
+
+**Why this is parallel:** v1.2's remaining work is cluster-bound and latency-dominated
+(Phase 14.1-03 benchmark resubmission + Phase 15 production run). Viewer work is local and
+has no code overlap with the fitting/power stack. Parallel execution is safe.
+
+**Parallel-stack invariant (Decision 112):** No file under `src/prl_hgf/viz/` may be
+imported by `env/`, `models/`, `fitting/`, `analysis/`, `gui/`, `power/`, or `simulation/`.
+Enforced by diff-check success criterion in each phase.
+
+### Phase 22: Inspector + Roles + Schema Scaffold
+
+**Goal**: The `viz/` module foundation exists — pyhgf attribute paths are runtime-verified,
+the inspector extracts topology into a plain dict, roles are inferred from adjacency structure,
+and a typed `NetworkSpec` dataclass with optional ArviZ posterior attachment is ready for the
+export phase.
+**Depends on**: Nothing in v1.3 (first v1.3 phase); pyhgf Network objects available from
+existing `models/` builders; no existing src/prl_hgf module is modified
+**Requirements**: VIZ-01, VIZ-02, VIZ-03, VIZ-04, VIZ-05, SCHEMA-01, SCHEMA-02, SCHEMA-03,
+SCHEMA-04, SCHEMA-05, DOC-01, TEST-01, TEST-02, TEST-03
+**Success Criteria** (what must be TRUE):
+  1. A 30-minute REPL verification session is committed as a module-level comment at the top
+     of `inspector.py` naming the exact pyhgf version and each verified attribute path
+     (`network.attributes[idx]`, `network.edges[idx]`, `network.input_idxs`,
+     `network.n_nodes`) BEFORE any production code is written in that file (P1 guard)
+  2. `inspect_network(network)` on a real PAT-RL 3-level `Network` returns a dict with
+     exactly 3 node entries; on a pick_best_cue 3-level `Network` returns exactly 7 node
+     entries (shared volatility parent node 6 deduplicated via dict-keyed traversal, not
+     visited once per branch — not 9) (P3 guard)
+  3. Role inference for pick_best_cue node 6 returns `role="volatility"`, derived from
+     adjacency structure (node appears in another node's `volatility_parents` edge field),
+     not from `node_parameters` key presence; `role="input"` assigned via `input_idxs`
+     membership; `role="value"` is the fallback (P16 guard)
+  4. `build_network_spec(network, idata=None)` round-trips to a `NetworkSpec` frozen
+     dataclass; `_get_participant_dim(idata)` detects `"participant_id"` (Laplace path,
+     Decision 131) and `"participant"` (NUTS path) dynamically without hardcoding either;
+     r_hat field absent from emitted spec when `idata.sample_stats.laplace == True` (P9
+     guard; SCHEMA-03, SCHEMA-04)
+  5. `docs/HANDOFF_pyhgf_plot_network_extension.md` first-pass update committed: every
+     "Key questions to resolve" entry replaced with REPL-verified finding annotated "Verified
+     2026-04-24 against pyhgf X.Y.Z"; no hypothetical attribute paths remain (P13 guard);
+     `git diff --stat src/prl_hgf/env/ src/prl_hgf/models/` shows zero lines changed at
+     phase close (P6, P7 parallel-stack guard)
+**Pitfalls addressed**: P1 (REPL-first mandatory), P2 (temp-key fallback pattern), P3
+(deduplication via dict not list), P6 (no env/ imports added), P7 (additive-only — no
+existing model/env file modified), P8 (no SVG/renderer code — viz/ contains only
+`__init__.py`, `inspector.py`, `roles.py`, `schema.py` at phase close), P12 (canary
+integration tests instantiate real pyhgf Network objects), P13 (handoff first-pass),
+P14 (single schema format — JSON only for HTML injection; no parallel YAML schema),
+P15 (new deps verified in ds_env), P16 (role from adjacency structure)
+**Effort**: 1-2 dev days
+**Plans**: TBD (run `/gsd:plan-phase 22` to break down)
+
+Plans:
+- [ ] TBD
+
+### Phase 23: Export + Template Promotion
+
+**Goal**: The full pre-fit render path works end-to-end — `render_viewer_html(spec)` injects
+the `NetworkSpec` JSON into a generic `figures/hgf_viewer.html` template (promoted from the
+PAT-RL seed after a mandatory audit-first pass removes all PAT-RL hardcoding), returns a
+browser-openable self-contained HTML with all CDN assets inlined, and raises `ValueError`
+on any missing injection marker.
+**Depends on**: Phase 22 (NetworkSpec dataclass and build_network_spec complete)
+**Requirements**: EXPORT-01, EXPORT-02, EXPORT-03, EXPORT-04, EXPORT-05, TEMPLATE-01,
+TEMPLATE-02, TEMPLATE-03, TEMPLATE-04, TEMPLATE-05, TEMPLATE-06, TEMPLATE-07, TEMPLATE-08,
+TEMPLATE-09, TEMPLATE-10, TEST-04, DEPS-01
+**Success Criteria** (what must be TRUE):
+  1. Template audit grep (terms: `balanced`, `reward_blunted`, `threat_hypervigilant`,
+     `both_disrupted`, `Klaassen`, `bradycardia`, `C.dhr`, `PHENOS`, `shock_mag`,
+     `reward_mag`, `response_patrl`) is committed as
+     `.planning/phases/23-export-template/TEMPLATE_AUDIT.md`, classifying every hit as
+     remove/inject/conditional-guard BEFORE any `hgf_viewer.html` or `export.py` lines are
+     written (P11 guard)
+  2. `render_viewer_html(spec)` on the PAT-RL 3-level pre-fit fixture returns an HTML string
+     that (a) opens in a browser offline with CDN assets inlined via `urllib.request` (React
+     18.2.0, Babel 7.23.2 pinned), (b) `bs4.BeautifulSoup(html, "html.parser")` parses
+     without errors, (c) both `<script type="application/json" id="viz-network-spec">` and
+     `<script type="application/json" id="viz-posterior-summary">` tags present with content
+     deserializable via `json.loads()`, (d) injected JSON uses `ensure_ascii=True` (P4 guard)
+  3. `_inject_markers()` raises `ValueError("injection marker 'viz-{name}' not found in
+     template")` when the named marker is absent from the template; missing-marker path is
+     covered by a dedicated test in `tests/test_viz_export.py` (P5 guard)
+  4. Level bands L3 (coral), L2 (teal), L1 (blue) render as horizontal bands from injected
+     JSON; node shapes are kind-correct (hexagon volatility, circle value parent, diamond
+     binary input, square parameter); a 2-level spec produces HTML with no L3 band and no
+     dead space — `hgf_level` field in injected JSON drives React initial state, not the
+     hardcoded `useState("3level")` default (P10 guard)
+  5. `pyproject.toml` gains `jinja2>=3.1,<4` in `[project.dependencies]` and
+     `pytest-snapshot>=0.9.0`, `beautifulsoup4>=4.12` in `[project.optional-dependencies.dev]`;
+     all three verified importable in `ds_env` (P15 guard); `git diff --stat src/prl_hgf/env/
+     src/prl_hgf/models/ src/prl_hgf/fitting/ src/prl_hgf/analysis/ src/prl_hgf/gui/`
+     shows zero lines changed (parallel-stack invariant)
+**Pitfalls addressed**: P4 (injection marker convention; `ensure_ascii=True`; `</script>`
+escape), P5 (missing-marker ValueError), P9 (coord-name detection passed through from Phase
+22 schema), P10 (2-level default from injected `hgf_level`), P11 (template audit first),
+P15 (new deps verified in ds_env before close)
+**Scope discipline**: No post-fit code (no ArviZ access in `export.py` beyond the schema
+pass-through); `hexPts`/`diamPts` helper functions remain in the JS template only (no Python
+geometry code introduced). Files this phase may modify: `src/prl_hgf/viz/export.py` (new),
+`src/prl_hgf/viz/__init__.py` (add `render_viewer_html`), `figures/hgf_viewer.html` (new),
+`tests/test_viz_export.py` (new), `pyproject.toml`, `data/viz_fixtures/patrl_3level_prefit.json`
+(adjustments if needed). No other files.
+**Effort**: 2-3 dev days
+**Plans**: TBD (run `/gsd:plan-phase 23` to break down)
+
+Plans:
+- [ ] TBD
+
+### Phase 24: Posterior Overlay + Handoff Final Pass
+
+**Goal**: Post-fit render mode is complete — an ArviZ `InferenceData` passed to
+`build_network_spec` annotates parameter squares with posterior mean + HDI, r-hat coloring,
+fit-method badge, and divergence badge; pytest-snapshot tests lock the output HTML bit-for-bit;
+the handoff doc receives its final architecture-confirmed pass and becomes the single
+source of truth for a follow-up session building v1.4 SVG polish.
+**Depends on**: Phase 23 (export pipeline and template injection working end-to-end)
+**Requirements**: POST-01, POST-02, POST-03, POST-04, POST-05, TEST-05, DOC-02
+**Success Criteria** (what must be TRUE):
+  1. `render_viewer_html(build_network_spec(network, idata=laplace_idata))` produces HTML
+     with parameter squares annotated by posterior mean and `[lo, hi]` HDI bracket extracted
+     via `az.summary(..., hdi_prob=0.94)` columns `mean`, `hdi_3%`, `hdi_97%`; r-hat color
+     border is absent entirely (not green — absent) when `idata.sample_stats.laplace == True`;
+     fit-method badge reads "VB-LAPLACE" (POST-02, POST-03, POST-05)
+  2. `render_viewer_html(build_network_spec(network, idata=nuts_idata))` with at least one
+     divergent draw shows a divergence badge on the canvas derived from
+     `idata.sample_stats.diverging.sum() > 0`; parameter squares have r-hat color borders
+     (green <= 1.01, amber <= 1.05, red > 1.05); fit-method badge reads "NUTS" (POST-03,
+     POST-04, POST-05)
+  3. `pytest-snapshot` regression tests `test_snapshot_prefit` and
+     `test_snapshot_postfit_laplace` in `tests/test_viz_export.py` lock pre-fit and
+     Laplace post-fit HTML output bit-for-bit; snapshot fixtures committed under
+     `tests/fixtures/viz/` (TEST-05)
+  4. `docs/HANDOFF_pyhgf_plot_network_extension.md` final-pass update: every attribute path
+     annotated "Verified 2026-04-24 against pyhgf X.Y.Z"; `data/viz_fixtures/patrl_3level_prefit.json`
+     referenced; no "Key questions to resolve" section; implementation checklist for a
+     follow-up Claude Code session building v1.4 SVG polish present and self-contained
+     for an LLM resuming v1.4 with no other context (DOC-02, P13 final closure)
+  5. `git diff --stat src/prl_hgf/env/ src/prl_hgf/models/ src/prl_hgf/fitting/
+     src/prl_hgf/analysis/ src/prl_hgf/gui/ src/prl_hgf/power/ src/prl_hgf/simulation/`
+     at phase close shows zero lines changed — parallel-stack invariant final verification
+     (Decision 112)
+**Pitfalls addressed**: P13 (handoff final pass — verified paths, no "Key questions"
+remaining, implementation checklist for v1.4)
+**Effort**: 1-2 dev days
+**Plans**: TBD (run `/gsd:plan-phase 24` to break down)
+
+Plans:
+- [ ] TBD
+
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -413,3 +573,6 @@ Plans:
 | 19 - VB-Laplace Fit Path (Tapas-Parity) | v1.2 | 5/5 | Complete | 2026-04-18 |
 | 20 - PAT-RL Scientific Completion | v1.2 | 8/8 | Complete (gate logic wired; 160-agent numeric run cluster-deferred) | 2026-04-19 |
 | 21 - Benchmark Bottleneck Diagnosis | v1.2 | 7/7 | Complete | 2026-04-19 |
+| 22 - Inspector + Roles + Schema Scaffold | v1.3 | 0/TBD | Not started | -- |
+| 23 - Export + Template Promotion | v1.3 | 0/TBD | Not started | -- |
+| 24 - Posterior Overlay + Handoff Final Pass | v1.3 | 0/TBD | Not started | -- |

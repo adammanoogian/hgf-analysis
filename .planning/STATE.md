@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-Phase: Not started (defining requirements)
+Phase: 22 — Inspector + Roles + Schema Scaffold — pending `/gsd:plan-phase 22`
 Plan: —
-Status: v1.3 opened 2026-04-24. Scope C: spec + config + scaffold. Template: `figures/patrl_hgf_model.html` (most recent); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Rough phase shape 22-24 (subject to roadmap).
-Last activity: 2026-04-24 — milestone opened; PROJECT.md + STATE.md updated.
+Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Phase 22 first task: mandatory REPL verification of pyhgf attribute paths before any production code.
+Last activity: 2026-04-24 — ROADMAP.md + STATE.md updated with v1.3 phases 22-24.
 
 ### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
 
