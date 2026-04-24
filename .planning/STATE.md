@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-Phase: 22 — Inspector + Roles + Schema Scaffold — Plan 22-02 COMPLETE (2026-04-24)
-Plan: 22-02 complete (roles.py adjacency-only infer_role + assign_levels_and_branches BFS); next: 22-03 (schema.py NetworkSpec/NodeSpec)
-Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Plan 22-01 shipped inspector.py BFS (3 commits). Plan 22-02 shipped src/prl_hgf/viz/roles.py (1 commit a4ac313) with adjacency-only role inference + set[int]-dedup BFS helpers; canaries verified: pick_best_cue node 6 -> role='volatility', branch_idx=None, level=3; PAT-RL 3-level traverses 3 nodes. ruff/mypy clean. roles.py NOT exported from __init__.py (22-03 decides public API).
-Last activity: 2026-04-24 — Plan 22-02 complete; 1 atomic commit (a4ac313); SUMMARY.md published; P16 grep guard = 0, zero prl_hgf imports.
+Phase: 22 — Inspector + Roles + Schema Scaffold — Plan 22-03 COMPLETE (2026-04-24)
+Plan: 22-03 complete (schema.py NetworkSpec/NodeSpec frozen dataclasses + build_network_spec + Medium-tier PAT-RL 3-level JSON fixture); next: 22-04 (unit tests test_viz_inspector.py / test_viz_roles.py / test_viz_schema.py + HANDOFF doc update)
+Status: v1.3 roadmap created 2026-04-24. Scope C: spec + config + scaffold. Phases 22-24 defined. Template: `figures/patrl_hgf_model.html` (seed); handoff evolves `docs/HANDOFF_pyhgf_plot_network_extension.md`. Plan 22-01 shipped inspector.py BFS (3 commits). Plan 22-02 shipped src/prl_hgf/viz/roles.py (1 commit a4ac313). Plan 22-03 shipped src/prl_hgf/viz/schema.py (frozen NodeSpec + NetworkSpec, no schema_version, no extra dict; build_network_spec composes inspector + roles + optional ArviZ; _get_participant_dim probes set(idata.posterior.dims) for dual "participant_id"/"participant" coord names; _is_laplace uses "laplace" in sample_stats.data_vars membership), data/viz_fixtures/patrl_3level_prefit.json (Medium tier: topology + visual hints + priors verbatim from configs/pat_rl.yaml; NO phenotypes; NO ζ), and final Phase 22 public API on src/prl_hgf/viz/__init__.py (inspect_network, build_network_spec, NetworkSpec, NodeSpec). Laplace canary + NUTS canary + topology-vs-builder + priors-vs-YAML all PASS; ruff/mypy clean; parallel-stack invariant preserved across 2 commits (6cde056, 9ecb8fa).
+Last activity: 2026-04-24 — Plan 22-03 complete; 2 atomic task commits (6cde056, 9ecb8fa); SUMMARY.md published; .gitignore amended to data/* + !data/viz_fixtures/ to unblock fixture commit.
 
 ### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
 
@@ -213,6 +213,14 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | `assign_levels_and_branches` single-pass BFS with tuple-queue `deque[(idx, level, branch)]` and "already visited -> contested promotion" sentinel (None) | Plan 22-01's inspector.py uses two-pass BFS (branch_of dict + separate parents loop); plan 22-02's roles.py uses single-pass tuple-queue per plan example. Isomorphic for shared-parent dedup; both emit pick_best_cue node 6 with branch=None | 22-02 |
 | roles.py NOT exported from `src/prl_hgf/viz/__init__.py` in plan 22-02 | Plan 22-03 (schema.py) decides final public API surface. `schema.py` will `from prl_hgf.viz.roles import ...` internally without exposing helpers on the package surface | 22-02 |
 | roles.py duck-types edges via `typing.Any` (zero prl_hgf.* / pyhgf.* imports) | Enables unit tests in plan 22-04 to build synthetic `AdjacencyLists` NamedTuples without constructing full pyhgf Network objects | 22-02 |
+| NetworkSpec + NodeSpec are `@dataclass(frozen=True)` with NO `schema_version` field, NO `extra` dict (CONTEXT Decision 4) | v1.3 scaffold; forward-compat scaffolding has negative ROI now. `schema_version` invites readers to branch; `extra` invites callers to stuff payload and defeat type safety. v1.5+ revisits forward-compat when schema evolution becomes a concrete need via explicit PR | 22-03 |
+| `_get_participant_dim` probes `set(idata.posterior.dims)` (NOT `data_vars`); returns "participant_id" OR "participant" OR None | Participant coord is a coordinate dimension, not a data variable. Dual probe handles Decision 131 (Laplace/PAT-RL NUTS use "participant_id"; pick_best_cue NUTS uses "participant"). RESEARCH Pattern 5 correction vs stale REQUIREMENTS SCHEMA-03 | 22-03 |
+| `_is_laplace` uses `"laplace" in idata.sample_stats.data_vars` membership (NOT `idata.sample_stats.laplace == True`) | `== True` on xarray DataArray returns element-wise DataArray, not scalar bool (xarray pitfall). Membership check on `data_vars` is the correct sentinel presence check. RESEARCH Pattern 6 correction vs stale REQUIREMENTS SCHEMA-04 | 22-03 |
+| Phase 22 scaffold emits presence-only posterior_mean/hdi (empty tuple when idata given, None when not); r_hat additionally None when Laplace | Avoids scope drift into Phase 24 POST-01. Presence signal is sufficient to validate schema behaviour + SCHEMA-04 r_hat suppression. Phase 24 replaces empty tuples with `az.summary` per parameter | 22-03 |
+| `data/` gitignore pattern changed from blanket `data/` to `data/*` + `!data/viz_fixtures/` | Blanket-ignore cannot be reopened via negation; `data/*` pattern allows `!data/viz_fixtures/` whitelist. Preserves large/sensitive runtime-output ignore semantics; only the committed schema fixture directory passes | 22-03 |
+| `NetworkSpec.source_pyhgf_version` default pulled from `inspector._VERIFIED_AGAINST_PYHGF_VERSION` (currently "0.2.8") | Keeps NetworkSpec coupled to the REPL-verified pyhgf pin; single source of truth for version string across inspector + schema + fixture | 22-03 |
+| PAT-RL fixture parameter set: ω₂, ω₃, κ, β, b, μ₃⁰ (NO ζ; `grep -n zeta src/prl_hgf/models/response_patrl.py` = 0) | ζ is pick_best_cue softmax-stickiness, NOT PAT-RL. PAT-RL response model uses bias `b`. CONTEXT parameter list "ω₂, ω₃, κ, β, ζ, b, μ₃⁰" was a copy-paste error; plan flagged as Pitfall 7; fixture uses configs/pat_rl.yaml fitting.priors keys as authoritative list | 22-03 |
+| Fixture prior mean/sd/lower/upper values pulled VERBATIM from `configs/pat_rl.yaml` fitting.priors | Prevents silent drift between fixture and actual fit priors. Drift-check script compares every field at plan close; any mismatch fails the check. Amends fixture (not YAML) if builder ground truth and fixture disagree | 22-03 |
 
 ### Pending Todos
 
@@ -256,8 +264,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-24 (Plan 22-02 executed — roles.py adjacency-only role inference + BFS level/branch helpers shipped)
-Stopped at: Completed 22-02-PLAN.md; 1 atomic commit (a4ac313); SUMMARY.md published.
+Last session: 2026-04-24 (Plan 22-03 executed — schema.py NetworkSpec/NodeSpec frozen dataclasses + build_network_spec + Medium-tier PAT-RL fixture shipped)
+Stopped at: Completed 22-03-PLAN.md; 2 atomic task commits (6cde056, 9ecb8fa); SUMMARY.md published; final Phase 22 public API landed on src/prl_hgf/viz/__init__.py (inspect_network, build_network_spec, NetworkSpec, NodeSpec).
 Resume file: None
-Next action (v1.3): Execute Plan 22-03 (schema.py -- NetworkSpec + NodeSpec frozen dataclasses). Inputs ready: inspect_network() (plan 22-01) emits per-node dicts; roles.infer_role() + roles.assign_levels_and_branches() (plan 22-02) give adjacency-only role/level/branch. Plan 22-03 will decide the final public __init__.py surface for viz.
+Next action (v1.3): Execute Plan 22-04 (unit tests test_viz_inspector.py / test_viz_roles.py / test_viz_schema.py + HANDOFF doc update). Inputs ready: inspect_network (plan 22-01), roles.infer_role + roles.assign_levels_and_branches (plan 22-02), build_network_spec + NetworkSpec/NodeSpec + data/viz_fixtures/patrl_3level_prefit.json (plan 22-03).
 Next action (v1.2, cluster): On M3, run `pip install -e .` in `ds_env` to resync editable install after repo rename, then `sbatch cluster/14_benchmark_gpu.slurm` to rerun Phase 14.1-03 benchmark (prior job 54934145 failed with `ModuleNotFoundError: prl_hgf`). Cluster 160-agent PRL-V1/V2 runs remain deferred until benchmark closes.
