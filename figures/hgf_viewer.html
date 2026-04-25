@@ -26,15 +26,15 @@
 }
 </script>
 <script type="application/json" id="viz-posterior-summary"></script>
-{% if react_inlined and react_dom_inlined and babel_inlined %}
+<!-- {% if react_inlined and react_dom_inlined and babel_inlined %} -->
 <script>{{ react_inlined | safe }}</script>
 <script>{{ react_dom_inlined | safe }}</script>
 <script>{{ babel_inlined | safe }}</script>
-{% else %}
+<!-- {% else %} -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-{% endif %}
+<!-- {% endif %} -->
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif; background: #F3F4F6; font-size: 20px; }
