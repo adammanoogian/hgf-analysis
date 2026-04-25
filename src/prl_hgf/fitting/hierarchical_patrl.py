@@ -61,6 +61,9 @@ from prl_hgf.fitting.hierarchical import (
     _run_blackjax_nuts,
     _samples_to_idata,
 )
+from prl_hgf.models.hgf_2level_multimodal_patrl import (
+    build_2level_multimodal_network_patrl,
+)
 from prl_hgf.models.hgf_2level_patrl import build_2level_network_patrl
 from prl_hgf.models.hgf_3level_patrl import build_3level_network_patrl
 from prl_hgf.models.response_patrl import (
@@ -84,8 +87,15 @@ _BELIEF_NODE: int = 1
 #: Node index for the continuous-state volatility parent (3-level only).
 _VOLATILITY_NODE: int = 2
 
+#: Node index for the shared belief parent in the multimodal 2-level variant.
+_BELIEF_NODE_MM: int = 2
+
 #: Supported PAT-RL model names.
-_PATRL_MODEL_NAMES: tuple[str, ...] = ("hgf_2level_patrl", "hgf_3level_patrl")
+_PATRL_MODEL_NAMES: tuple[str, ...] = (
+    "hgf_2level_patrl",
+    "hgf_3level_patrl",
+    "hgf_2level_multimodal_patrl",
+)
 
 #: Required columns in the PAT-RL sim_df.
 _REQUIRED_COLUMNS: frozenset[str] = frozenset(
@@ -124,7 +134,7 @@ def _build_session_scanner_patrl(
 
     Parameters
     ----------
-    model_name : {"hgf_2level_patrl", "hgf_3level_patrl"}
+    model_name : {"hgf_2level_patrl", "hgf_3level_patrl", "hgf_2level_multimodal_patrl"}
         PAT-RL model variant.
 
     Returns
@@ -134,7 +144,8 @@ def _build_session_scanner_patrl(
     scan_fn : callable
         pyhgf ``Network.scan_fn`` (a ``jax.tree_util.Partial``).
     belief_idx : int
-        Node index for the continuous-state value parent (always ``1``).
+        Node index for the continuous-state value parent (``1`` for scalar
+        variants; ``2`` for the multimodal variant).
 
     Raises
     ------
@@ -150,13 +161,18 @@ def _build_session_scanner_patrl(
 
     if model_name == "hgf_2level_patrl":
         net = build_2level_network_patrl()
-    else:  # hgf_3level_patrl
+        belief_idx = _BELIEF_NODE          # node 1
+        dummy = np.zeros((1, 1), dtype=np.float64)
+    elif model_name == "hgf_3level_patrl":
         net = build_3level_network_patrl()
-
-    belief_idx = _BELIEF_NODE  # always node 1 for both variants
+        belief_idx = _BELIEF_NODE          # node 1
+        dummy = np.zeros((1, 1), dtype=np.float64)
+    else:  # hgf_2level_multimodal_patrl
+        net = build_2level_multimodal_network_patrl()
+        belief_idx = _BELIEF_NODE_MM       # node 2 (shared belief parent)
+        dummy = np.zeros((1, 2), dtype=np.float64)
 
     # Prime scan_fn with one dummy observation so attributes are initialised.
-    dummy = np.zeros((1, 1), dtype=np.float64)
     net.input_data(input_data=dummy, time_steps=np.ones(1, dtype=np.float64))
 
     base_attrs = net.attributes
@@ -209,6 +225,7 @@ def _make_single_logp_fn(
         ``(params, state, choices, reward, shock, mask[, delta_hr]) -> scalar``.
     """
     is_3level = model_name == "hgf_3level_patrl"
+    is_multimodal = model_name == "hgf_2level_multimodal_patrl"
 
     def _single_logp(
         params: dict[str, jnp.ndarray],
@@ -322,6 +339,95 @@ def _make_single_logp_fn(
                 params["beta"],
                 params.get("b", 0.0),
             )
+            return jnp.sum(jnp.where(mask, logp_per_trial, 0.0))
+
+        # -----------------------------------------------------------------------
+        # Multimodal 2-level: two binary inputs → shared μ₂ (belief_idx = 2).
+        # Both input nodes receive the same state signal here; the architecture
+        # is structural — plug in distinct u₁/u₂ arrays at the logp-factory
+        # level when two independent observation streams are available.
+        # -----------------------------------------------------------------------
+
+        if is_multimodal:
+            attrs_mm = {**base_attrs}
+            attrs_mm[belief_idx] = {
+                **attrs_mm[belief_idx],
+                "tonic_volatility": params["omega_2"],
+            }
+
+            # Build (T, 2) input: replicate state into both channels for now.
+            # Replace second column with a distinct observable when available.
+            values_mm = jnp.stack(
+                [state.astype(jnp.float64), state.astype(jnp.float64)], axis=1
+            )  # (T, 2)
+            observed_mm = jnp.ones((n_trials,), dtype=jnp.int32)
+            time_steps_mm = jnp.ones((n_trials,), dtype=jnp.float64)
+
+            def _clamped_step_mm(
+                carry: dict,
+                x: tuple,
+            ) -> tuple[dict, jnp.ndarray]:
+                val1_i, val2_i, obs_i, ts_i = x
+                new_carry, _traj = scan_fn(
+                    carry,
+                    ((val1_i, val2_i), (obs_i, obs_i), ts_i, None),
+                )
+                new_mean = new_carry[belief_idx]["mean"]
+                is_stable = jnp.all(jnp.isfinite(new_mean)) & (
+                    jnp.abs(new_mean) < _MU_2_BOUND
+                )
+                safe_carry = jax.tree_util.tree_map(
+                    lambda n, o: jnp.where(is_stable, n, o),
+                    new_carry,
+                    carry,
+                )
+                return safe_carry, safe_carry[belief_idx]["mean"]
+
+            _, mu2_traj_mm = jax.lax.scan(
+                _clamped_step_mm,
+                attrs_mm,
+                (values_mm[:, 0], values_mm[:, 1], observed_mm, time_steps_mm),
+            )
+
+            # Response model dispatch (same as Models A/B/C below).
+            if response_model == "model_a":
+                logp_per_trial = model_a_logp(
+                    mu2_traj_mm,
+                    choices.astype(jnp.int32),
+                    reward.astype(jnp.float64),
+                    shock.astype(jnp.float64),
+                    params["beta"],
+                    params.get("b", 0.0),
+                )
+            elif response_model == "model_b":
+                logp_per_trial = model_b_logp(
+                    mu2_traj_mm,
+                    choices.astype(jnp.int32),
+                    reward.astype(jnp.float64),
+                    shock.astype(jnp.float64),
+                    params["beta"],
+                    params["b"],
+                    params["gamma"],
+                    delta_hr_i.astype(jnp.float64),
+                )
+            elif response_model == "model_c":
+                logp_per_trial = model_c_logp(
+                    mu2_traj_mm,
+                    choices.astype(jnp.int32),
+                    reward.astype(jnp.float64),
+                    shock.astype(jnp.float64),
+                    params["beta"],
+                    params["b"],
+                    params["alpha"],
+                    params["gamma"],
+                    delta_hr_i.astype(jnp.float64),
+                )
+            else:
+                raise ValueError(
+                    f"response_model={response_model!r} is not supported for "
+                    "hgf_2level_multimodal_patrl.  Use 'model_a', 'model_b', "
+                    "or 'model_c'."
+                )
             return jnp.sum(jnp.where(mask, logp_per_trial, 0.0))
 
         # -----------------------------------------------------------------------
@@ -465,7 +571,7 @@ def build_logp_fn_batched_patrl(
         Shock magnitudes per participant.
     trial_mask : numpy.ndarray, shape (P, n_trials)
         Boolean mask; ``True`` for valid trials, ``False`` for padding.
-    model_name : {"hgf_2level_patrl", "hgf_3level_patrl"}
+    model_name : {"hgf_2level_patrl", "hgf_3level_patrl", "hgf_2level_multimodal_patrl"}
         PAT-RL HGF variant.
     response_model : str, default "model_a"
         Response function to use.  One of ``"model_a"``, ``"model_b"``,
