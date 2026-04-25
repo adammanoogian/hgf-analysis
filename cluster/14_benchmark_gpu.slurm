@@ -17,7 +17,7 @@
 #SBATCH --job-name=prl_bench14
 #SBATCH --output=cluster/logs/bench14_%j.out
 #SBATCH --error=cluster/logs/bench14_%j.err
-#SBATCH --time=08:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=128G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu

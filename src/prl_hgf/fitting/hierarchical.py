@@ -36,6 +36,7 @@ reimplemented here.
 
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING
 
 import jax
@@ -997,11 +998,26 @@ def _run_blackjax_nuts(
     """
     import blackjax
 
+    _t_fn0 = time.perf_counter()
+    _p_axis = jax.tree_util.tree_leaves(initial_position)[0].shape[0]
+    print(
+        f"[hierarchical] _run_blackjax_nuts entered: model={model_name} "
+        f"P={_p_axis} n_chains={n_chains} n_tune={n_tune} n_draws={n_draws} "
+        f"warmup_skipped={warmup_params is not None}",
+        flush=True,
+    )
+
     rng_key, warmup_key, sample_key = jax.random.split(rng_key, 3)
     warmup_state = None  # Set by window_adaptation if warmup runs
 
     # Phase 1: Window adaptation (skip if pre-adapted params provided)
     if warmup_params is None:
+        _t_w0 = time.perf_counter()
+        print(
+            f"[hierarchical t={_t_w0 - _t_fn0:.1f}s] starting window_adaptation "
+            f"(num_steps={n_tune}, target_accept={target_accept})",
+            flush=True,
+        )
         warmup = blackjax.window_adaptation(
             blackjax.nuts,
             logdensity_fn,
@@ -1013,10 +1029,29 @@ def _run_blackjax_nuts(
             initial_position,
             num_steps=n_tune,
         )
+        # Block on the warmup outputs so the timing reflects compile+execute.
+        jax.block_until_ready(warmup_state.position)
+        print(
+            f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+            f"window_adaptation complete in {time.perf_counter() - _t_w0:.1f}s",
+            flush=True,
+        )
+    else:
+        print(
+            f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+            "skipping window_adaptation (warmup_params provided)",
+            flush=True,
+        )
 
     # Phase 2: Determine chain strategy
     n_devices = jax.device_count()
     use_pmap = n_devices >= n_chains
+    print(
+        f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+        f"chain strategy: use_pmap={use_pmap} (n_devices={n_devices}, "
+        f"n_chains={n_chains})",
+        flush=True,
+    )
 
     # Phase 3: Sampling with traced-arg sample loop (or legacy fallback)
     _has_traced_args = (
@@ -1029,6 +1064,12 @@ def _run_blackjax_nuts(
 
     if _has_traced_args:
         # Traced-arg path: data flows as JIT arguments for cache reuse
+        _t_b0 = time.perf_counter()
+        print(
+            f"[hierarchical t={_t_b0 - _t_fn0:.1f}s] building sample loop "
+            f"(traced-arg path, log_every={log_every})",
+            flush=True,
+        )
         sample_loop = _build_sample_loop(
             batched_logp_fn,
             model_name,
@@ -1037,6 +1078,11 @@ def _run_blackjax_nuts(
             use_pmap,
             log_every=log_every,
             phase_label=phase_label,
+        )
+        print(
+            f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+            f"sample loop built in {time.perf_counter() - _t_b0:.1f}s",
+            flush=True,
         )
 
         # init_position: use adapted position from warmup if available,
@@ -1049,6 +1095,12 @@ def _run_blackjax_nuts(
             else initial_position
         )
 
+        _t_s0 = time.perf_counter()
+        print(
+            f"[hierarchical t={_t_s0 - _t_fn0:.1f}s] sample_loop dispatch "
+            "(compile+sample begins)",
+            flush=True,
+        )
         all_states, all_infos = sample_loop(
             init_pos,
             warmup_params,
@@ -1058,8 +1110,18 @@ def _run_blackjax_nuts(
             choices,
             trial_mask,
         )
+        # Block on positions to ensure the JIT'd scan completes before we
+        # log "sample_loop complete" — without this, the elapsed time
+        # would understate the true wall clock by the async dispatch lag.
+        jax.tree_util.tree_map(jax.block_until_ready, all_states.position)
+        print(
+            f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+            f"sample_loop complete in {time.perf_counter() - _t_s0:.1f}s",
+            flush=True,
+        )
 
         # Post-process: convert JAX arrays to numpy
+        _t_p0 = time.perf_counter()
         if use_pmap:
             # pmap: (n_chains, n_draws, P) -- already correct layout
             positions_dict = {k: np.asarray(v) for k, v in all_states.position.items()}
@@ -1071,6 +1133,12 @@ def _run_blackjax_nuts(
                 for k, v in all_states.position.items()
             }
             stats_dict = _extract_nuts_stats(all_infos, transpose=True)
+        print(
+            f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+            f"post-process complete in {time.perf_counter() - _t_p0:.1f}s "
+            "(traced-arg path returning)",
+            flush=True,
+        )
 
         return positions_dict, stats_dict, n_chains, warmup_params
 
@@ -2101,6 +2169,16 @@ def fit_batch_hierarchical(
         )
         sampler = "numpyro"
 
+    _t_fb0 = time.perf_counter()
+    print(
+        f"[fit_batch_hierarchical] entered: model={model_name} "
+        f"sampler={sampler} n_chains={n_chains} n_tune={n_tune} "
+        f"n_draws={n_draws} target_accept={target_accept} "
+        f"warmup_skipped={warmup_params is not None} "
+        f"sim_df_rows={len(sim_df)}",
+        flush=True,
+    )
+
     # ------------------------------------------------------------------
     # Validate input DataFrame
     # ------------------------------------------------------------------
@@ -2186,8 +2264,20 @@ def fit_batch_hierarchical(
         # ==============================================================
         # BlackJAX path (default): pure JAX log-posterior + NUTS
         # ==============================================================
+        print(
+            f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
+            f"cohort assembled: P={n_participants} n_trials={n_trials} "
+            "(BlackJAX path)",
+            flush=True,
+        )
 
         # Build log-posterior (priors + batched HGF likelihood)
+        _t_lp0 = time.perf_counter()
+        print(
+            f"[fit_batch_hierarchical t={_t_lp0 - _t_fb0:.1f}s] "
+            "building closure-based logdensity (warmup-only, no JIT yet)",
+            flush=True,
+        )
         logdensity_fn = _build_log_posterior(
             logp_fn,
             jax_input_data,
@@ -2196,6 +2286,11 @@ def fit_batch_hierarchical(
             jax_trial_mask,
             n_participants,
             model_name,
+        )
+        print(
+            f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
+            f"logdensity built in {time.perf_counter() - _t_lp0:.1f}s",
+            flush=True,
         )
 
         # Build initial position dict at prior modes.
@@ -2223,6 +2318,12 @@ def fit_batch_hierarchical(
             var_names = ["omega_2", "log_beta", "beta", "zeta"]
 
         # Run MCMC (data as traced args for JIT cache reuse)
+        _t_nuts0 = time.perf_counter()
+        print(
+            f"[fit_batch_hierarchical t={_t_nuts0 - _t_fb0:.1f}s] "
+            "dispatching to _run_blackjax_nuts",
+            flush=True,
+        )
         positions, sample_stats, n_chains_actual, adapted_params = (
             _run_blackjax_nuts(
                 logdensity_fn,
@@ -2243,8 +2344,15 @@ def fit_batch_hierarchical(
                 phase_label=model_name.replace("hgf_", ""),
             )
         )
+        print(
+            f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
+            f"_run_blackjax_nuts returned in "
+            f"{time.perf_counter() - _t_nuts0:.1f}s",
+            flush=True,
+        )
 
         # Convert to ArviZ InferenceData
+        _t_id0 = time.perf_counter()
         idata = _samples_to_idata(
             positions,
             sample_stats,
@@ -2253,6 +2361,12 @@ def fit_batch_hierarchical(
             participant_groups,
             participant_sessions,
             model_name,
+        )
+        print(
+            f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
+            f"_samples_to_idata complete in {time.perf_counter() - _t_id0:.1f}s "
+            f"(BlackJAX path returning, total wall {time.perf_counter() - _t_fb0:.1f}s)",
+            flush=True,
         )
 
         # Return adapted params so caller can skip warmup next time
