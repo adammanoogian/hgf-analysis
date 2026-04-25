@@ -475,11 +475,17 @@ TEMPLATE-09, TEMPLATE-10, TEST-04, DEPS-01
      remove/inject/conditional-guard BEFORE any `hgf_viewer.html` or `export.py` lines are
      written (P11 guard)
   2. `render_viewer_html(spec)` on the PAT-RL 3-level pre-fit fixture returns an HTML string
-     that (a) opens in a browser offline with CDN assets inlined via `urllib.request` (React
-     18.2.0, Babel 7.23.2 pinned), (b) `bs4.BeautifulSoup(html, "html.parser")` parses
-     without errors, (c) both `<script type="application/json" id="viz-network-spec">` and
-     `<script type="application/json" id="viz-posterior-summary">` tags present with content
-     deserializable via `json.loads()`, (d) injected JSON uses `ensure_ascii=True` (P4 guard)
+     that (a) in the default `offline_mode=True` path performs zero render-time network I/O
+     and preserves CDN `<script src=...>` tags for React 18.2.0 / React-DOM 18.2.0 / Babel
+     7.23.2 (user's browser fetches at file-open time) AND in the opt-in `offline_mode=False`
+     path fetches those CDN assets via `urllib.request` and inlines them, producing a
+     self-contained ~2.9 MiB HTML (research §3 + §10.3 reinterpretation of original
+     "offline with CDN inlined" wording -- the two modes serve distinct workflows), (b)
+     `bs4.BeautifulSoup(html, "html.parser")` parses without errors, (c) both `<script
+     type="application/json" id="viz-network-spec">` and `<script type="application/json"
+     id="viz-posterior-summary">` tags present with content deserializable via
+     `json.loads()`, (d) injected JSON uses `ensure_ascii=True` AND `.replace("</", "<\\/")`
+     (research finding #1 + §4 both-defenses override -- P4 guard)
   3. `_inject_markers()` raises `ValueError("injection marker 'viz-{name}' not found in
      template")` when the named marker is absent from the template; missing-marker path is
      covered by a dedicated test in `tests/test_viz_export.py` (P5 guard)
