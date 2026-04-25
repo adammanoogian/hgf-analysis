@@ -115,3 +115,8 @@ End: Mon Apr 20 03:43:33 AM AEST 2026
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
+[main 7964c15] chore(21-05): p-scan probe P=20 role=cold job=54902460
+ 4 files changed, 1017 insertions(+), 997 deletions(-)
+ create mode 100644 cluster/logs/diag21_pscan_54902460.err
+ create mode 100644 cluster/logs/diag21_pscan_54902460.out
+Pushed Phase 21 p-scan probe artifacts (P=20 cold) to origin/main

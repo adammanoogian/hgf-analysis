@@ -8,26 +8,26 @@ OK: ptxas version <= driver version (XLA parallel compilation enabled)
 ============================================================
 Phase 21 P-scan Probe
 ============================================================
-Job ID:       54902369
-Node:         m3g110
+Job ID:       54902365
+Node:         m3g111
 GPU(s):       0
 JAX cache:    /scratch/fc37/aman0087/.jax_cache_gpu/shared
 JAX_LOG_COMPILES: 1
-PROBE_P:      50
+PROBE_P:      5
 PROBE_ROLE:   cold
-Start:        Mon Apr 20 02:10:57 AM AEST 2026
+Start:        Mon Apr 20 02:10:58 AM AEST 2026
 ============================================================
 
 JAX devices: [CudaDevice(id=0)]
 GPU: cuda:0
 
 ========================================
-P-scan probe: P=50 role=cold
+P-scan probe: P=5 role=cold
 ========================================
 Start: Mon Apr 20 02:11:10 AM AEST 2026
-XLA_FLAGS=--xla_dump_hlo_as_text --xla_dump_to=.planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P50_cold
+XLA_FLAGS=--xla_dump_hlo_as_text --xla_dump_to=.planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P5_cold
 Probe exit: 1
---- pscan P=50 role=cold log tail (80 lines) ---
+--- pscan P=5 role=cold log tail (80 lines) ---
 /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/arviz/__init__.py:50: FutureWarning: 
 ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
 Some upcoming changes may be backward incompatible.
@@ -60,8 +60,4 @@ End: Mon Apr 20 02:11:56 AM AEST 2026
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
-[main c0205c1] chore(21-05): p-scan probe P=50 role=cold job=54902369
- 3 files changed, 87 insertions(+), 2696 deletions(-)
- create mode 100644 cluster/logs/diag21_pscan_54902369.err
- create mode 100644 cluster/logs/diag21_pscan_54902369.out
-Pushed Phase 21 p-scan probe artifacts (P=50 cold) to origin/main
+No new files to push

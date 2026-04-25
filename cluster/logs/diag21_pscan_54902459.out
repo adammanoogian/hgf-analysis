@@ -119,3 +119,8 @@ Updated next_proc_warm_s=46.40 for P=5
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
+[main 7606fb3] chore(21-05): p-scan probe P=5 role=warm job=54902459
+ 4 files changed, 956 insertions(+), 927 deletions(-)
+ create mode 100644 cluster/logs/diag21_pscan_54902459.err
+ create mode 100644 cluster/logs/diag21_pscan_54902459.out
+Pushed Phase 21 p-scan probe artifacts (P=5 warm) to origin/main

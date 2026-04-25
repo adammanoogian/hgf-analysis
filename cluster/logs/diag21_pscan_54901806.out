@@ -119,3 +119,9 @@ Updated next_proc_warm_s=245.70 for P=20
 ========================================
 Phase 21 p-scan probe: git auto-push
 ========================================
+[main 17ee956] chore(21-05): p-scan probe P=20 role=warm job=54901806
+ 4 files changed, 2447 insertions(+), 2 deletions(-)
+ create mode 100644 .planning/phases/21-benchmark-bottleneck-diagnosis/pscan_P20_warm.log
+ create mode 100644 cluster/logs/diag21_pscan_54901806.err
+ create mode 100644 cluster/logs/diag21_pscan_54901806.out
+Pushed Phase 21 p-scan probe artifacts (P=20 warm) to origin/main
