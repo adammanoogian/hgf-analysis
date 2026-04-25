@@ -11,10 +11,11 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
-Phase: 22 — Inspector + Roles + Schema Scaffold — **COMPLETE** (2026-04-24) — all 4 plans shipped
-Plan: 22-04 complete (32 canary tests across test_viz_inspector.py / test_viz_roles.py / test_viz_schema.py); Phase 22 closed; next: Phase 23 (render_viewer_html)
-Status: Phase 22 delivered the full pre-rendering stack for the v1.3 Generic HGF Viewer: inspector.py BFS (22-01), roles.infer_role + assign_levels_and_branches (22-02), schema.py NetworkSpec/NodeSpec frozen dataclasses + build_network_spec + Medium-tier PAT-RL fixture (22-03), and 32-test canary suite (22-04 — 10 inspector + 9 roles + 13 schema). All critical canaries pass: P3 dedup (7 nodes not 9), P16 adjacency-only role inference, Pitfall 8 input-node emission guard, SCHEMA-03 dual coord-name probe (participant/participant_id), SCHEMA-04 Laplace r_hat suppression, CONTEXT Decision 3/4 contracts. Structural source-level guards added for future-refactor protection. Parallel-stack invariant holds across all 4 plans. Public API on src/prl_hgf/viz/__init__.py: inspect_network, build_network_spec, NetworkSpec, NodeSpec.
-Last activity: 2026-04-24 — Plan 22-04 complete; 3 atomic task commits (e5f543f, daa9464, a0378cb); SUMMARY.md published; full viz test suite green (32 passed in 5.97s); ruff + mypy clean across tests/test_viz_*.py; Phase 22 closed.
+Phase: 23 — Export + Template Promotion — IN PROGRESS (1/4 plans shipped)
+Plan: 23-01 complete (TEMPLATE_AUDIT.md + DEPS-01); next: 23-02 (template promotion of figures/patrl_hgf_model.html → figures/hgf_viewer.html)
+Status: Plan 23-01 delivered the P11 procedural guard + DEPS-01: TEMPLATE_AUDIT.md (356 lines, 22 classification rows) catalogs 11 ROADMAP audit terms (4+3+3+3+0+5+6+3+1+1+1 = 30 unique source-line hits across the 676-line PAT-RL seed) plus 2 Google Fonts `<link>` hits, all classified R/I/G with line-level granularity for plan 23-02. `Klaassen` recorded as 0-hit explicitly. P10 guard verification commands published at audit §6. pyproject.toml gains jinja2>=3.1,<4 (runtime), pytest-snapshot>=0.9.0 + beautifulsoup4>=4.12 (dev), and pytest_snapshot.* + bs4.* mypy overrides. P15 ds_env empirical verification: jinja2 3.1.6, bs4 4.13.4, pytest_snapshot 0.9.0 all importable; `pytest --fixtures` registers `snapshot` fixture. P11 ordering preserved: `figures/hgf_viewer.html` and `src/prl_hgf/viz/export.py` both still absent at plan close. Parallel-stack invariant holds: zero lines changed in src/prl_hgf/{env,models,fitting,analysis,gui,power,simulation}/ across HEAD~2..HEAD.
+Phase 22 — Inspector + Roles + Schema Scaffold — COMPLETE (2026-04-24) — all 4 plans shipped: inspector.py BFS, roles.infer_role + assign_levels_and_branches, schema.py NetworkSpec/NodeSpec + build_network_spec + Medium-tier PAT-RL fixture, 32-test canary suite. Public API on src/prl_hgf/viz/__init__.py: inspect_network, build_network_spec, NetworkSpec, NodeSpec.
+Last activity: 2026-04-25 — Plan 23-01 complete; 2 atomic task commits (32cc3d8 docs TEMPLATE_AUDIT.md, 3ca6f40 chore DEPS-01 + P15 verify); SUMMARY.md published; both commits pushed to remote.
 
 ### v1.2 Hierarchical GPU Fitting (active — cluster-bound, parallel workstream)
 
@@ -24,7 +25,7 @@ Status: Phase 21 VERDICT.md published (bottleneck=`cache_key`); 14.1-07 node-pin
 14.1-07b COMPLETE (2026-04-20) — P-sweep chain confirmed cross-node persistent-cache reuse (10/10 hits).
 14.1-07c COMPLETE (2026-04-20) — Phase closed; 14.1-03 unblocked.
 
-[===========██████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (3/6 + 14.1-07 complete) — 14.1-03 next; Phase 20 COMPLETE (8/8); Phase 21 COMPLETE (7/7); v1.3 milestone opened (phases 22+, TBD via roadmap)
+[===========██████████████████]   v1.1 code-complete (Phases 1-11); Phases 12-14 verified; Phase 16 complete; Phase 17 complete; Phase 18 complete (6/6); Phase 19 COMPLETE (5/5); Phase 14.1 gap closure in progress (3/6 + 14.1-07 complete) — 14.1-03 next; Phase 20 COMPLETE (8/8); Phase 21 COMPLETE (7/7); Phase 22 COMPLETE (4/4); Phase 23 IN PROGRESS (1/4: TEMPLATE_AUDIT.md + DEPS-01 shipped)
 
 ## Performance Metrics
 
@@ -225,6 +226,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | Schema tests use synthetic `az.from_dict` idata (no MCMC, no PyMC) | SCHEMA-03 dual coord-name + SCHEMA-04 Laplace r_hat suppression are testable purely via constructed xarray posteriors + optional sample_stats.laplace marker. Decouples test suite from fitting stack, runs in milliseconds | 22-04 |
 | `cast(az.InferenceData, az.from_dict(...))` to satisfy mypy (Decision 143 reuse) | arviz typeshed stub declares `az.from_dict -> Any`; explicit cast is zero-overhead and matches existing project convention from `src/prl_hgf/fitting/laplace_idata.py` | 22-04 |
 | Structural source-level guard tests (`test_inspector_does_not_import_from_prl_hgf`, `test_roles_does_not_read_node_parameters`) as first-class regression defence | `Path(mod.__file__).read_text()` assertions catch P16 (node_parameters read) and VIZ-02 (prl_hgf.* import in inspector) violations even without behavioural divergence. Complements behavioural canary tests; costs near-zero at runtime | 22-04 |
+| INFO dict tooltip bodies stripped wholesale in plan 23-02 (no per-node label substitution) | NetworkSpec v1.3 NodeSpec has no `label` field (CONTEXT Decision 4 froze the schema). Selection highlight (blue dashed outline on click) preserved — operates on `sel`, not `INFO[sel]`. Tooltip enhancement deferred to Phase 24 (add `label` to NodeSpec or `tooltips` parameter to render_viewer_html). Documented in TEMPLATE_AUDIT.md §5 | 23-01 |
+| Sidebar layout after stripping HGF LEVEL + RESPONSE MODEL + ANS PHENOTYPES Blks deferred to plan 23-02 layout pass | After Blk strips, only NOTATION remains in 278px sidebar — recommendation: shrink to ~180px or convert to bottom-right card. Plan 23-02 owns the layout decision once it sees the post-strip diff | 23-01 |
+| Google Fonts triple-line block (lines 7, 8, 9) all classified R, including non-googleapis preconnect at line 8 | Line 8 (`fonts.gstatic.com` preconnect) does NOT match the audit regex `googleapis|@import|fonts.googleapis.com` but is semantically part of the Google Fonts triple — plan 23-02 must remove all three lines, not just the 2 that grep finds. System-font fallback CSS specified verbatim in TEMPLATE_AUDIT.md §3.2 | 23-01 |
+| Line 121 P10 guard `useState("3level")` flagged Inject (I), not Remove (R) | Variable `hgfLevel` still needed downstream by `is3` and `isMM` booleans at lines 129-130 which gate the LEVEL 3 hexagon block and multimodal vs single-observation branching. Distinguishing I from R at line-level prevents plan 23-02 from over-stripping the booleans + their `{is3&&...}` / `{isMM ? ... : ...}` consumers. The `useState` source becomes `NETWORK_SPEC.hgf_level` | 23-01 |
 
 ### Pending Todos
 
@@ -268,8 +273,8 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 
 ## Session Continuity
 
-Last session: 2026-04-24 (Plan 22-04 executed — 32 canary tests across test_viz_inspector.py / test_viz_roles.py / test_viz_schema.py; Phase 22 closed)
-Stopped at: Completed 22-04-PLAN.md; 3 atomic task commits (e5f543f, daa9464, a0378cb); SUMMARY.md published. Phase 22 complete — all 4 plans shipped. Public API on src/prl_hgf/viz/__init__.py: inspect_network, build_network_spec, NetworkSpec, NodeSpec; structural canary tests in tests/test_viz_*.py encode P3 dedup, P16 adjacency-only, Pitfall 8 input-node emission, SCHEMA-03 dual coord-name, SCHEMA-04 Laplace r_hat suppression invariants.
+Last session: 2026-04-25 (Plan 23-01 executed — TEMPLATE_AUDIT.md P11 guard + DEPS-01 P15 guard; Phase 23 opened)
+Stopped at: Completed 23-01-PLAN.md; 2 atomic task commits (32cc3d8 docs TEMPLATE_AUDIT.md, 3ca6f40 chore DEPS-01 + P15 verify); SUMMARY.md published; both pushed to remote. P11 ordering preserved — `figures/hgf_viewer.html` and `src/prl_hgf/viz/export.py` both still absent at plan close. P10 guard verification commands published at TEMPLATE_AUDIT.md §6 for plan 23-02 close-checks.
 Resume file: None
-Next action (v1.3): Plan Phase 23 (render_viewer_html). Inputs ready: full Phase 22 scaffold (inspector.py BFS, roles.py adjacency-only inference, schema.py frozen NetworkSpec/NodeSpec + build_network_spec, data/viz_fixtures/patrl_3level_prefit.json, 32-test canary suite).
+Next action (v1.3): Execute Plan 23-02 (template promotion of figures/patrl_hgf_model.html → figures/hgf_viewer.html). Inputs ready: TEMPLATE_AUDIT.md (line-level R/I/G classification of 30 PAT-RL hits + 3 Google Fonts lines), full Phase 22 scaffold (inspector.py BFS, roles.py adjacency-only inference, schema.py frozen NetworkSpec/NodeSpec + build_network_spec, data/viz_fixtures/patrl_3level_prefit.json, 32-test canary suite), jinja2 3.1.6 importable in ds_env (for plan 23-03 export.py).
 Next action (v1.2, cluster): On M3, run `pip install -e .` in `ds_env` to resync editable install after repo rename, then `sbatch cluster/14_benchmark_gpu.slurm` to rerun Phase 14.1-03 benchmark (prior job 54934145 failed with `ModuleNotFoundError: prl_hgf`). Cluster 160-agent PRL-V1/V2 runs remain deferred until benchmark closes.
