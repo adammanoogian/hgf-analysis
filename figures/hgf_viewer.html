@@ -4,9 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HGF Viewer</title>
+<!-- v1.3 injection markers (EXPORT-02). render_viewer_html does string-surgery
+     on the content between these tag delimiters. The default content below is a
+     valid NetworkSpec so the template renders a meaningful visualization when
+     opened directly in a browser without Python (research §2 Strategy B). -->
+<script type="application/json" id="viz-network-spec">
+{
+  "n_nodes": 3,
+  "input_idxs": [0],
+  "nodes": [
+    {"idx": 0, "kind": "binary-state", "level": 1, "role": "input", "branch_idx": 0,
+     "value_parents": [1], "volatility_parents": [], "value_children": [], "volatility_children": []},
+    {"idx": 1, "kind": "continuous-state", "level": 2, "role": "value", "branch_idx": 0,
+     "value_parents": [], "volatility_parents": [2], "value_children": [0], "volatility_children": []},
+    {"idx": 2, "kind": "continuous-state", "level": 3, "role": "volatility", "branch_idx": 0,
+     "value_parents": [], "volatility_parents": [], "value_children": [], "volatility_children": [1]}
+  ],
+  "coord_name": null,
+  "source_pyhgf_version": "0.2.8",
+  "is_laplace": false
+}
+</script>
+<script type="application/json" id="viz-posterior-summary"></script>
+{% if react_inlined and react_dom_inlined and babel_inlined %}
+<script>{{ react_inlined | safe }}</script>
+<script>{{ react_dom_inlined | safe }}</script>
+<script>{{ babel_inlined | safe }}</script>
+{% else %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+{% endif %}
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif; background: #F3F4F6; font-size: 20px; }
@@ -25,6 +53,32 @@
 <div id="root"></div>
 <script type="text/babel">
 const { useState } = React;
+
+// ── Injected NetworkSpec + posterior summary (research §6 canonical pattern) ──
+// Parsed once at module load from the <script type="application/json"> marker tags.
+const NETWORK_SPEC = JSON.parse(
+  document.getElementById("viz-network-spec").textContent
+);
+
+const POSTERIOR_SUMMARY = (() => {
+  const el = document.getElementById("viz-posterior-summary");
+  if (!el || !el.textContent.trim()) return null;
+  try {
+    return JSON.parse(el.textContent);
+  } catch {
+    return null;
+  }
+})();
+
+// ── P10 guard: derive initial HGF level from NetworkSpec, never hardcoded ─────
+// 3-level if any node lives at level >= 3; multimodal 2-level if >1 input;
+// otherwise a plain 2-level. Replaces the old hardcoded-string useState fallback.
+const INITIAL_HGF_LEVEL = (() => {
+  const maxL = NETWORK_SPEC.nodes.reduce((m, n) => Math.max(m, n.level), 0);
+  if (maxL >= 3) return "3level";
+  if (NETWORK_SPEC.input_idxs.length > 1) return "2level_mm";
+  return "2level";
+})();
 
 // ── Color palette ──────────────────────────────────────────────────────────────
 const C = {
@@ -60,7 +114,7 @@ const retract=(x1,y1,x2,y2,d)=>{const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);re
 
 // ── Main component ─────────────────────────────────────────────────────────────
 function App() {
-  const [hgfLevel, setHgfLevel] = useState("3level");
+  const [hgfLevel, setHgfLevel] = useState(INITIAL_HGF_LEVEL);
   const omega2 = -3.0, omega3 = -4.0, kappa = 1.0, mu3_0 = 1.0;
   const beta = 2.0, b = 0.0;
   const [sel,    setSel]    = useState(null);

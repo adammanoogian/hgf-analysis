@@ -129,7 +129,7 @@ Explicitly excluded. Requested behaviors that do not belong in this module.
 | TEMPLATE-06 | Phase 23 | Pending |
 | TEMPLATE-07 | Phase 23 | Pending |
 | TEMPLATE-08 | Phase 23 | Pending |
-| TEMPLATE-09 | Phase 23 | Pending |
+| TEMPLATE-09 | Phase 23 / 24 | Partial — generic placeholder in Phase 23; spec-derived rendering requires NetworkSpec.response_model field (Phase 24) |
 | TEMPLATE-10 | Phase 23 | Pending |
 | TEST-04 | Phase 23 | Pending |
 | DEPS-01 | Phase 23 | Pending |
