@@ -593,18 +593,19 @@ DEER — see PHASE_DESCRIPTION.md for full synopses):
     reference
   - Mathys et al. 2014 — HGF as Laplace-linearized Gaussian filter
 **Effort**: 3-5 weeks of research-pace work (NOT execution-pace).
-**Plans**: TBD (run `/gsd:plan-phase 25` to break down).  Pre-proposed
-sub-phase breakdown in `.planning/phases/25-parallel-scan-acceleration-research/PHASE_DESCRIPTION.md`:
-  - 25-00 literature synthesis (RESEARCH.md)
-  - 25-01 contraction / predictability proof for HGF (gate)
-  - 25-02 algorithm selection (ELK vs DEER vs Zoltowski-MCMC vs hybrid)
-  - 25-03 reference-implementation reproduction (gate)
-  - 25-04 HGF prototype + numerical agreement validation
-  - 25-05 posterior-validity check via parameter recovery (gate)
-  - 25-06 productionization decision
+**Plans**: 7 plans in 6 waves (1 parallel start). Sub-phase breakdown
+in `.planning/phases/25-parallel-scan-acceleration-research/PHASE_DESCRIPTION.md`,
+extended by 25-RESEARCH.md (literature synthesis already complete) and
+25-00b (API bridging study added per research recommendation).
 
 Plans:
-- [ ] TBD (run `/gsd:plan-phase 25` to break down)
+- [ ] 25-00b-PLAN.md - API bridging study: pyhgf -> reference impl mapping
+- [ ] 25-01-PLAN.md - theoretical validation: HGF Lipschitz / LLE scan, K prediction (gate)
+- [ ] 25-02-PLAN.md - algorithm decision: PIEKS vs ELK vs DEER vs Zoltowski vs Hybrid
+- [ ] 25-03-PLAN.md - reference reproduction on GPU: published benchmark match (gate)
+- [ ] 25-04-PLAN.md - HGF prototype: rel-err < 1e-5 + GPU timing at 3 (P,T) shapes
+- [ ] 25-05-PLAN.md - posterior-validity: differentiability + recovery RMSE/ESS (gate)
+- [ ] 25-06-PLAN.md - productionization verdict: GO / NO-GO / CONDITIONAL-GO
 
 
 ---
