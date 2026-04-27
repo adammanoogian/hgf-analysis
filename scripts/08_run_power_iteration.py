@@ -134,6 +134,19 @@ def parse_args() -> argparse.Namespace:
         help="Tuning steps per chain.",
     )
     parser.add_argument(
+        "--max-tree-depth",
+        type=int,
+        default=10,
+        help=(
+            "NUTS max tree depth (BlackJAX `max_num_doublings`).  Caps the "
+            "binary-tree expansion so each draw runs at most 2^d leapfrog "
+            "evaluations.  Default 10 (BlackJAX/Stan default, 1024 leapfrogs "
+            "max per draw).  Phase 14.2 variant 1 uses 8 (256 leapfrogs max) "
+            "as a runtime ceiling — converges in bounded time even when the "
+            "posterior geometry would otherwise saturate the default cap."
+        ),
+    )
+    parser.add_argument(
         "--sampler",
         type=str,
         choices=["pymc", "numpyro", "blackjax"],
@@ -752,6 +765,7 @@ def _run_smoke_test(
         random_seed=42,
         progressbar=False,
         log_every=log_every_smoke,
+        max_tree_depth=args.max_tree_depth,
     )
     jit_cold_s = time.perf_counter() - t0
     results["jit_cold_s"] = round(jit_cold_s, 2)
@@ -797,6 +811,7 @@ def _run_smoke_test(
         progressbar=False,
         warmup_params=adapted_params,
         log_every=log_every_smoke,
+        max_tree_depth=args.max_tree_depth,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -821,6 +836,7 @@ def _run_smoke_test(
         progressbar=False,
         warmup_params=adapted_params,
         log_every=log_every_smoke,
+        max_tree_depth=args.max_tree_depth,
     )
     jit_warm2_s = time.perf_counter() - t0
     results["jit_warm2_s"] = round(jit_warm2_s, 2)
@@ -1088,6 +1104,7 @@ def _run_benchmark(
         target_accept=0.9,
         random_seed=42,
         progressbar=False,
+        max_tree_depth=args.max_tree_depth,
     )
     if isinstance(_cold_return, tuple):
         _idata_cold, adapted_params = _cold_return
@@ -1131,6 +1148,7 @@ def _run_benchmark(
         random_seed=43,
         progressbar=False,
         warmup_params=adapted_params,
+        max_tree_depth=args.max_tree_depth,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -1179,6 +1197,7 @@ def _run_benchmark(
         n_draws=args.fit_draws,
         n_tune=args.fit_tune,
         use_legacy=False,
+        max_tree_depth=args.max_tree_depth,
     )
     per_iteration_s = time.perf_counter() - t0
 

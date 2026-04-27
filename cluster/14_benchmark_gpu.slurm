@@ -130,6 +130,15 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export SAMPLER="${SAMPLER:-blackjax}"
 
 # =============================================================================
+# Phase 14.2 variant knobs — overridable from sbatch --export=...
+#   MAX_TREE_DEPTH=8  : variant 1, caps each NUTS draw at 256 leapfrogs
+#                       (BlackJAX default is 10 = 1024).  Persistent JAX
+#                       cache picks up a new HLO entry; default 10 keeps
+#                       the existing cache valid.
+# =============================================================================
+export MAX_TREE_DEPTH="${MAX_TREE_DEPTH:-10}"
+
+# =============================================================================
 # Verify GPU
 # =============================================================================
 echo "============================================================"
@@ -140,6 +149,7 @@ echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "Sampler:  ${SAMPLER}"
+echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -169,7 +179,8 @@ python scripts/08_run_power_iteration.py \
     --fit-chains 4 \
     --fit-draws 500 \
     --fit-tune 500 \
-    --sampler "${SAMPLER}"
+    --sampler "${SAMPLER}" \
+    --max-tree-depth "${MAX_TREE_DEPTH}"
 
 EXIT_CODE=$?
 

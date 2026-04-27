@@ -1085,6 +1085,7 @@ def _run_blackjax_nuts(
     warmup_params: dict | None = None,
     log_every: int = 0,
     phase_label: str = "sample",
+    max_tree_depth: int = 10,
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int, dict]:
     """Run BlackJAX NUTS with window_adaptation warmup and lax.scan sampling.
 
@@ -1185,6 +1186,7 @@ def _run_blackjax_nuts(
             logdensity_fn,
             target_acceptance_rate=target_accept,
             is_mass_matrix_diagonal=True,
+            max_num_doublings=max_tree_depth,
         )
         (warmup_state, warmup_params), warmup_info = warmup.run(
             warmup_key,
@@ -1257,6 +1259,7 @@ def _run_blackjax_nuts(
             use_pmap,
             log_every=log_every,
             phase_label=phase_label,
+            max_num_doublings=max_tree_depth,
         )
         print(
             f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
@@ -1334,7 +1337,11 @@ def _run_blackjax_nuts(
         return positions_dict, stats_dict, n_chains, warmup_params
 
     # Legacy fallback: closure-based chain runners
-    nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+    nuts = blackjax.nuts(
+        logdensity_fn,
+        max_num_doublings=max_tree_depth,
+        **warmup_params,
+    )
 
     # Build warmup_state if it wasn't created by window_adaptation
     # (happens when warmup_params was provided to skip warmup)
@@ -1568,6 +1575,7 @@ def _build_sample_loop(
     use_pmap: bool,
     log_every: int = 0,
     phase_label: str = "sample",
+    max_num_doublings: int = 10,
 ):  # noqa: ANN205
     """Build a JIT'd sampling function where data flows as traced arguments.
 
@@ -1683,7 +1691,11 @@ def _build_sample_loop(
                     )
                 return prior_lp + likelihood_lp
 
-            nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+            nuts = blackjax.nuts(
+                logdensity_fn,
+                max_num_doublings=max_num_doublings,
+                **warmup_params,
+            )
             # Build initial state INSIDE JIT — value_and_grad uses traced data
             initial_state = nuts.init(init_position)
             chain_keys = jax.random.split(sample_key, n_chains)
@@ -1765,7 +1777,11 @@ def _build_sample_loop(
                 )
             return prior_lp + likelihood_lp
 
-        nuts = blackjax.nuts(logdensity_fn, **warmup_params)
+        nuts = blackjax.nuts(
+            logdensity_fn,
+            max_num_doublings=max_num_doublings,
+            **warmup_params,
+        )
         # Build initial state INSIDE JIT — value_and_grad uses traced data
         initial_state = nuts.init(init_position)
         chain_keys = jax.random.split(sample_key, n_chains)
@@ -2270,6 +2286,7 @@ def fit_batch_hierarchical(
     progressbar: bool = True,
     warmup_params: dict | None = None,
     log_every: int = 0,
+    max_tree_depth: int = 10,
 ) -> az.InferenceData | tuple[az.InferenceData, dict]:
     """Fit an entire cohort via BlackJAX NUTS (default) or NumPyro MCMC.
 
@@ -2533,6 +2550,7 @@ def fit_batch_hierarchical(
                 warmup_params=warmup_params,
                 log_every=log_every,
                 phase_label=model_name.replace("hgf_", ""),
+                max_tree_depth=max_tree_depth,
             )
         )
         print(

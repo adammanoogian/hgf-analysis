@@ -791,6 +791,7 @@ def run_sbf_iteration(
     n_tune: int = 500,
     sampler: str = "pymc",
     use_legacy: bool = False,
+    max_tree_depth: int = 10,
 ) -> list[dict]:
     """Run one SBF iteration: simulate at max N, fit once, subsample at each N.
 
@@ -921,6 +922,7 @@ def run_sbf_iteration(
             target_accept=0.9,
             random_seed=child_seed,
             progressbar=False,
+            max_tree_depth=max_tree_depth,
         )
 
         # Step 4 (batched): Fit 2-level model — single NUTS call
@@ -933,6 +935,7 @@ def run_sbf_iteration(
             target_accept=0.9,
             random_seed=child_seed + 1,
             progressbar=False,
+            max_tree_depth=max_tree_depth,
         )
 
         # Extract participant metadata from coords (ground truth ordering)
