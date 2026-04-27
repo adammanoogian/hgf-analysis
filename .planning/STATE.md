@@ -9,6 +9,14 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ## Current Position
 
+### v1.4 Phase 25 Research: Parallel-scan acceleration of HGF (out-of-cycle, parallel)
+
+Phase: 25 — Parallel-scan acceleration of HGF likelihood evaluation — IN PROGRESS
+Plan: 25-00b complete (API_BRIDGING_STUDY.md + scratch/api_bridging_probe.py); next: 25-01 (theoretical validation — predictability/contraction proof) + 25-02 (algorithm selection, depends on 25-00b approval + 25-01)
+Status: 25-00b complete. Probe PASS (max rel-err 1.07e-13 on 50 trials). Recommendation: ELK for 25-04 prototype. Checkpoint awaiting user review.
+Last activity: 2026-04-27 — Plan 25-00b complete; 2 atomic task commits (c886285 feat probe, d15765d docs study memo); SUMMARY.md published.
+Key decisions: (1) JAX_ENABLE_X64=1 mandatory for pyhgf float64 compat; (2) ELK recommended for 25-04; (3) PIEKS vs ELK question deferred to 25-02.
+
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
 Phase: 23 — Export + Template Promotion — IN PROGRESS (3/4 plans shipped)
@@ -240,6 +248,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | `_DEFAULT_TEMPLATE_PATH` derived from `config.PROJECT_ROOT / 'figures' / 'hgf_viewer.html'` with import-time existence assertion (BLOCKER fix from plan-checker, replaces hand-counted `parents[3]`) | CLAUDE.md mandates "Config via config.py Path constants — no scattered hardcoded paths". Hand-counted `parents[3]` silently breaks under any packaging move (installed editable vs site-packages vs relocated source tree). config.py is sanctioned (NOT in parallel-stack forbidden list `prl_hgf.{env,models,fitting,analysis,gui,power,simulation}`). Import-time `if not _DEFAULT_TEMPLATE_PATH.exists(): raise FileNotFoundError(...)` makes misconfiguration fail loudly at `import prl_hgf.viz.export` rather than deep inside a render call | 23-03 |
 | `render_viewer_html` `offline_mode` default is True (no render-time network I/O; CDN `<script src>` tags retained) — opt-in False does urllib fetch + inline (~2.83 MiB self-contained) | Phase 24 snapshot tests + "just open the file" workflow get deterministic output without network dependency on default. "Distribute one file" workflow opts in to False explicitly. Reinterpretation of original ROADMAP SC2(a) "opens offline with CDN inlined" wording — the prose conflated two distinct modes. ROADMAP SC2(a) reinterpreted in-place in plan 23-03 task 3 (cites research §3 + §10.3) so future verifiers and Phase 24 planners read the corrected spec | 23-03 |
 | `viz-posterior-summary` marker injected with empty string `""` as pre-fit sentinel via the same `_inject_markers` Strategy B contract that POST-02 will use later (with non-empty value) | Exercises the full marker-injection path even pre-fit; Phase 24 POST-02 just substitutes `_json_for_html(az_summary_dict)` for the empty string. Avoids a special-case branch for "skip marker if no posterior" that would diverge pre-fit from post-fit code paths | 23-03 |
+| ELK (lindermanlab/elk quasi-ELK) recommended as 25-04 default API — shallowest bridging, LM trust region prevents Jacobian instability | hgf_step probe confirms f(state) IS the ELK input function (max rel-err 1.07e-13). PIEKS requires state-dependent R wrapper and eHGF update deviation. 25-02 must close PIEKS vs ELK theoretical question. | 25-00b |
+| JAX_ENABLE_X64=1 is mandatory for all Phase 25 code | pyhgf uses float64 throughout; without it jax.lax.cond fails with dtype mismatch in posterior_update_precision_continuous_node. Hard constraint confirmed by failed first probe run. | 25-00b |
+| Minimal 3-level HGF dynamical state is 4-dim: (mu_1, pi_1, mu_2, pi_2) from attributes[1] and attributes[6] | expected_mean/precision are derived quantities, not state. Full 3-branch production state is 8-dim (add nodes 3, 5). | 25-00b |
 
 ### Pending Todos
 
