@@ -65,6 +65,18 @@ _RE_JOB_ID = re.compile(r"^Job ID:\s+(\S+)", re.MULTILINE)
 _RE_ARRAY_JOB = re.compile(r"^Array job ID:\s+(\S+)", re.MULTILINE)
 _RE_ARRAY_TASK = re.compile(r"^Array task ID:\s+(\S+)", re.MULTILINE)
 _RE_NODE = re.compile(r"^Node:\s+(\S+)", re.MULTILINE)
+# Primary partition signal: JAX device line printed at start of every bench.
+# CudaDevice -> gpu partition, CpuDevice -> comp.  Falls back to node-prefix
+# heuristic for older logs that pre-date the print.
+_RE_JAX_DEVICES = re.compile(r"JAX devices:\s*\[([^\]]+)\]")
+# Node-prefix fallback (m3g* = gpu, m3t* = T4 gpu, m3a* = mixed).  Note m3a
+# nodes can be either gpu or comp depending on the SBATCH partition request,
+# so this is best-effort only.  When in doubt the JAX-device signal wins.
+_NODE_PARTITION_PREFIX = {
+    "m3g": "gpu",
+    "m3t": "gpu",
+    "m3a": "comp",
+}
 _RE_SAMPLER = re.compile(r"^Sampler:\s+(\S+)", re.MULTILINE)
 _RE_MAX_TREE = re.compile(r"^Max tree depth:\s+(\d+)", re.MULTILINE)
 _RE_CHUNK_COUNT = re.compile(r"^Chunk count:\s+(\d+)", re.MULTILINE)
@@ -175,6 +187,24 @@ def parse_log(path: Path) -> dict[str, Any]:
             except ValueError:
                 rec[key] = val
 
+    # Partition: prefer the JAX-device signal printed in the banner;
+    # fall back to node-prefix heuristic for older logs.
+    m = _RE_JAX_DEVICES.search(text)
+    if m:
+        devstr = m.group(1)
+        if "Cuda" in devstr:
+            rec["partition"] = "gpu"
+        elif "Cpu" in devstr:
+            rec["partition"] = "comp"
+        else:
+            rec["partition"] = "unknown"
+    else:
+        node_str = rec.get("node", "")
+        if isinstance(node_str, str) and len(node_str) >= 3:
+            rec["partition"] = _NODE_PARTITION_PREFIX.get(
+                node_str[:3], "unknown",
+            )
+
     # fit_batch_hierarchical entry
     m = _RE_FBH_ENTERED.search(text)
     if m:
@@ -244,6 +274,7 @@ _CSV_COLUMNS = [
     "array_job_id",
     "array_task_id",
     "node",
+    "partition",
     "outcome",
     "sampler",
     "model",
@@ -293,6 +324,7 @@ def _emit_markdown(records: list[dict[str, Any]]) -> str:
     )
     md_cols = [
         "outcome",
+        "partition",
         "P_cohort",
         "max_tree_depth",
         "chunk",
@@ -322,9 +354,10 @@ def _emit_markdown(records: list[dict[str, Any]]) -> str:
         div = r.get("warmup_divergent_count")
         lf = r.get("warmup_leapfrog_per_step_total")
         out.append(
-            "| {outcome} | {P} | mtd={mtd} | {chunk} | {warm} | {sample} | "
-            "{sat} | {div} | {lf} | {node} | {log} |".format(
+            "| {outcome} | {part} | {P} | mtd={mtd} | {chunk} | {warm} | "
+            "{sample} | {sat} | {div} | {lf} | {node} | {log} |".format(
                 outcome=r.get("outcome", "-"),
+                part=r.get("partition", "-"),
                 P=r.get("P_cohort", "-"),
                 mtd=r.get("max_tree_depth", "-"),
                 chunk=chunk,
