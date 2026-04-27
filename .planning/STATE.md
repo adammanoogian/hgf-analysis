@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 Phase: 25 — Parallel-scan acceleration of HGF likelihood evaluation — IN PROGRESS
 Plan: 25-00b complete (API_BRIDGING_STUDY.md + scratch/api_bridging_probe.py); next: 25-01 (theoretical validation — predictability/contraction proof) + 25-02 (algorithm selection, depends on 25-00b approval + 25-01)
-Status: 25-00b complete. Probe PASS (max rel-err 1.07e-13 on 50 trials). Recommendation: ELK for 25-04 prototype. Checkpoint awaiting user review.
+Status: 25-00b APPROVED (2026-04-27). Probe PASS (max rel-err 1.07e-13 on 50 trials). Recommendation: ELK for 25-04 prototype. User approved API_BRIDGING_STUDY.md at checkpoint.
 Last activity: 2026-04-27 — Plan 25-00b complete; 2 atomic task commits (c886285 feat probe, d15765d docs study memo); SUMMARY.md published.
 Key decisions: (1) JAX_ENABLE_X64=1 mandatory for pyhgf float64 compat; (2) ELK recommended for 25-04; (3) PIEKS vs ELK question deferred to 25-02.
 
