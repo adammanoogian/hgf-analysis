@@ -49,9 +49,88 @@ __all__ = [
     "run_sbf_iteration",
     "build_arrays_from_sim",
     "apply_decision_gate",
+    "subset_cohort_by_chunk",
 ]
 
 log = logging.getLogger(__name__)
+
+
+def subset_cohort_by_chunk(
+    sim_df: pd.DataFrame,
+    chunk_id: int,
+    chunk_count: int,
+) -> pd.DataFrame:
+    """Subset a simulated cohort to its ``chunk_id``-th 1/``chunk_count``-th.
+
+    Phase 14.2 variant 4: the bench cohort is statistically IID across
+    participant-sessions (per :func:`_build_log_posterior` in
+    ``prl_hgf.fitting.hierarchical`` — each PS gets the same priors, no
+    pooling).  Splitting into chunks therefore produces statistically
+    identical samples per chunk while parallelising wall time across SLURM
+    array tasks.
+
+    Slicing is over the unique ``(participant_id, group, session)`` keys
+    in deterministic ``(group, session, participant_id)`` lex order.  At
+    the production cohort shape (2 groups × 50 N × 3 sessions = 300 PS),
+    ``chunk_count=6`` gives one ``(group, session)`` cell per chunk —
+    50 PS each, the same shape Phase 21's P-scan measured at ~225s warm.
+
+    Parameters
+    ----------
+    sim_df : pandas.DataFrame
+        Trial-level cohort with columns ``participant_id``, ``group``,
+        ``session`` (other columns passed through unchanged).
+    chunk_id : int
+        Zero-based chunk index.  Must satisfy ``0 <= chunk_id < chunk_count``.
+    chunk_count : int
+        Total number of chunks the cohort is split across.  ``1`` returns
+        ``sim_df`` unchanged (no-op for the un-chunked baseline).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Rows belonging to chunk ``chunk_id``, indexed contiguously from 0.
+
+    Raises
+    ------
+    ValueError
+        If ``chunk_count < 1``, ``chunk_id`` out of range, or the resulting
+        slice is empty (e.g., chunk_count exceeds the unique-PS count).
+    """
+    if chunk_count < 1:
+        msg = f"chunk_count must be >= 1, got {chunk_count}"
+        raise ValueError(msg)
+    if chunk_count == 1:
+        return sim_df
+    if not 0 <= chunk_id < chunk_count:
+        msg = f"chunk_id={chunk_id} not in [0, {chunk_count})"
+        raise ValueError(msg)
+
+    keys = (
+        sim_df[["participant_id", "group", "session"]]
+        .drop_duplicates()
+        .sort_values(["group", "session", "participant_id"])
+        .reset_index(drop=True)
+    )
+    n_total = len(keys)
+    chunk_size = (n_total + chunk_count - 1) // chunk_count
+    start = chunk_id * chunk_size
+    end = min(start + chunk_size, n_total)
+
+    if start >= n_total:
+        msg = (
+            f"chunk_id={chunk_id} produces empty slice "
+            f"(n_total={n_total}, chunk_count={chunk_count}, "
+            f"chunk_size={chunk_size})"
+        )
+        raise ValueError(msg)
+
+    keep_keys = keys.iloc[start:end]
+    return sim_df.merge(
+        keep_keys,
+        on=["participant_id", "group", "session"],
+        how="inner",
+    ).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -792,6 +871,8 @@ def run_sbf_iteration(
     sampler: str = "pymc",
     use_legacy: bool = False,
     max_tree_depth: int = 10,
+    participant_chunk_id: int = 0,
+    participant_chunk_count: int = 1,
 ) -> list[dict]:
     """Run one SBF iteration: simulate at max N, fit once, subsample at each N.
 
@@ -874,6 +955,14 @@ def run_sbf_iteration(
     # Step 2: Simulate at max N (same for both paths — simulate_batch already
     # uses JAX vmap internally since Phase 13)
     sim_df = simulate_batch(cfg)
+
+    # Phase 14.2 variant 4: optional cohort chunking for SLURM-array runs.
+    # The simulation runs at full N first so chunk selection is deterministic
+    # regardless of chunk_count (same RNG-seeded base cohort).
+    if participant_chunk_count > 1:
+        sim_df = subset_cohort_by_chunk(
+            sim_df, participant_chunk_id, participant_chunk_count,
+        )
 
     if use_legacy:
         # ------------------------------------------------------------------

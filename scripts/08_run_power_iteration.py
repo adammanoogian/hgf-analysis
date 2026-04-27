@@ -147,6 +147,30 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--participant-chunk-id",
+        type=int,
+        default=0,
+        help=(
+            "Phase 14.2 variant 4: zero-based participant chunk index for "
+            "SLURM-array benchmark mode.  Combined with "
+            "--participant-chunk-count, slices the simulated cohort to its "
+            "K-th 1/N-th of unique (participant_id, group, session) tuples.  "
+            "Default 0 (with chunk-count 1 = full cohort, no-op)."
+        ),
+    )
+    parser.add_argument(
+        "--participant-chunk-count",
+        type=int,
+        default=1,
+        help=(
+            "Phase 14.2 variant 4: total number of participant chunks the "
+            "cohort is split across in SLURM-array benchmark mode.  At the "
+            "production cohort shape (300 PS), --participant-chunk-count=6 "
+            "gives 50 PS per chunk, matching Phase 21's P=50 scan.  Default "
+            "1 (no chunking — full cohort)."
+        ),
+    )
+    parser.add_argument(
         "--sampler",
         type=str,
         choices=["pymc", "numpyro", "blackjax"],
@@ -1091,6 +1115,37 @@ def _run_benchmark(
     cfg_warm = make_power_config(base_config, max_n_warm, d_bench, 99999)
     sim_warm = simulate_batch(cfg_warm)
 
+    # Variant 4: optionally subset the cohort to one chunk before fitting.
+    # The simulation runs at full N first so chunk selection is deterministic
+    # and reproducible regardless of chunk_count (same RNG-seeded cohort).
+    if args.participant_chunk_count > 1:
+        from prl_hgf.power.iteration import subset_cohort_by_chunk
+        n_total_ps = (
+            sim_warm[["participant_id", "group", "session"]]
+            .drop_duplicates()
+            .shape[0]
+        )
+        sim_warm = subset_cohort_by_chunk(
+            sim_warm,
+            args.participant_chunk_id,
+            args.participant_chunk_count,
+        )
+        n_chunk_ps = (
+            sim_warm[["participant_id", "group", "session"]]
+            .drop_duplicates()
+            .shape[0]
+        )
+        print(
+            f"Variant 4 chunking: chunk {args.participant_chunk_id} of "
+            f"{args.participant_chunk_count} -> {n_chunk_ps} of {n_total_ps} "
+            "participant-sessions",
+            flush=True,
+        )
+        results["participant_chunk_id"] = args.participant_chunk_id
+        results["participant_chunk_count"] = args.participant_chunk_count
+        results["chunk_n_participant_sessions"] = n_chunk_ps
+        results["cohort_n_participant_sessions_full"] = n_total_ps
+
     t0 = time.perf_counter()
     # Cold call: returns (idata, adapted_params) when warmup_params is None
     # (Phase 21 Patch C: capture adapted params so the warm call can skip
@@ -1198,6 +1253,8 @@ def _run_benchmark(
         n_tune=args.fit_tune,
         use_legacy=False,
         max_tree_depth=args.max_tree_depth,
+        participant_chunk_id=args.participant_chunk_id,
+        participant_chunk_count=args.participant_chunk_count,
     )
     per_iteration_s = time.perf_counter() - t0
 
@@ -1241,7 +1298,17 @@ def _run_benchmark(
     }
 
     # --- Write benchmark_batched.json ---
-    bench_path = output_dir / "benchmark_batched.json"
+    # Variant 4: when chunked, encode chunk in the filename so SLURM-array
+    # tasks don't clobber each other.  Un-chunked path keeps the original
+    # filename for backwards compatibility with downstream consumers.
+    if args.participant_chunk_count > 1:
+        _chunk_tag = (
+            f"_chunk_{args.participant_chunk_id:02d}"
+            f"_of_{args.participant_chunk_count:02d}"
+        )
+        bench_path = output_dir / f"benchmark_batched{_chunk_tag}.json"
+    else:
+        bench_path = output_dir / "benchmark_batched.json"
     with open(bench_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nBenchmark saved to: {bench_path}")
