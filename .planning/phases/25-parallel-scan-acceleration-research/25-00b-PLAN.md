@@ -353,7 +353,7 @@ Output:
   4. Confirm 25-02 has enough information to make the algorithm choice with
      engineering feasibility known (not just theoretical preference).
   </how-to-verify>
-  <resume-signal>Type "approved" to unblock 25-01 and 25-02; or describe revisions needed.</resume-signal>
+  <resume-signal>Type "approved" to unblock 25-01 (Wave 2 per dependency); 25-02 will unblock after 25-01's PASS verdict. Or describe revisions needed.</resume-signal>
 </task>
 
 </tasks>
