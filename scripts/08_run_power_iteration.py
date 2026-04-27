@@ -171,6 +171,20 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--laplace-warmup",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 14.2 variant 2: skip BlackJAX window_adaptation and "
+            "instead initialize NUTS from a Laplace approximation — "
+            "jaxopt LBFGS to find the MAP, Hessian diagonal at the MAP "
+            "via vmapped jvp, regularize and invert to get the inverse "
+            "mass matrix.  Falls back to standard window_adaptation if "
+            "the Laplace step fails (LBFGS doesn't converge, Hessian has "
+            "non-finite entries, etc.)."
+        ),
+    )
+    parser.add_argument(
         "--sampler",
         type=str,
         choices=["pymc", "numpyro", "blackjax"],
@@ -790,6 +804,7 @@ def _run_smoke_test(
         progressbar=False,
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
+        use_laplace_warmup=args.laplace_warmup,
     )
     jit_cold_s = time.perf_counter() - t0
     results["jit_cold_s"] = round(jit_cold_s, 2)
@@ -836,6 +851,7 @@ def _run_smoke_test(
         warmup_params=adapted_params,
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
+        use_laplace_warmup=args.laplace_warmup,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -861,6 +877,7 @@ def _run_smoke_test(
         warmup_params=adapted_params,
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
+        use_laplace_warmup=args.laplace_warmup,
     )
     jit_warm2_s = time.perf_counter() - t0
     results["jit_warm2_s"] = round(jit_warm2_s, 2)
@@ -1160,6 +1177,7 @@ def _run_benchmark(
         random_seed=42,
         progressbar=False,
         max_tree_depth=args.max_tree_depth,
+        use_laplace_warmup=args.laplace_warmup,
     )
     if isinstance(_cold_return, tuple):
         _idata_cold, adapted_params = _cold_return
@@ -1204,6 +1222,7 @@ def _run_benchmark(
         progressbar=False,
         warmup_params=adapted_params,
         max_tree_depth=args.max_tree_depth,
+        use_laplace_warmup=args.laplace_warmup,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -1255,6 +1274,7 @@ def _run_benchmark(
         max_tree_depth=args.max_tree_depth,
         participant_chunk_id=args.participant_chunk_id,
         participant_chunk_count=args.participant_chunk_count,
+        use_laplace_warmup=args.laplace_warmup,
     )
     per_iteration_s = time.perf_counter() - t0
 

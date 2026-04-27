@@ -1068,6 +1068,186 @@ def _log_nuts_diagnostics(
             )
 
 
+def _laplace_warmup_params(
+    logdensity_fn,  # noqa: ANN001
+    initial_position: dict[str, jnp.ndarray],
+    *,
+    n_lbfgs_iter: int = 200,
+    lbfgs_tol: float = 1e-5,
+    ridge: float = 1e-4,
+) -> dict | None:
+    """Compute (step_size, inverse_mass_matrix) via Laplace approximation.
+
+    Variant 2 of the Phase 14.2 comparison.  Runs ``jaxopt.LBFGS`` on
+    ``-logdensity_fn`` to find an approximate MAP, then computes the
+    Hessian diagonal at the MAP via Hessian-vector products
+    (one ``jvp`` per parameter).  Regularizes positive, inverts to a
+    per-parameter inverse mass matrix, picks an initial step_size from
+    the median IMM.  Returns the dict in the shape that the existing
+    ``warmup_params`` hook accepts — when fed back into
+    :func:`_run_blackjax_nuts`, BlackJAX's ``window_adaptation`` is
+    skipped entirely (see line ~1135 in this file).
+
+    The Hessian diagonal is mathematically equivalent to the diagonal
+    of a per-PS block-Hessian because the BlackJAX path uses IID priors
+    per participant-session and a likelihood that factorizes across
+    PS — the off-block entries of the joint Hessian are zero by
+    construction.  See ``_build_log_posterior`` for that factorization.
+
+    Cost is ~``P*K`` likelihood evaluations (one jvp each) plus the
+    LBFGS iterations.  At the production shape (P=300, K=4) that's
+    ~1200 evaluations for the diagonal — minutes, not hours.
+
+    Returns ``None`` if any step (LBFGS, Hessian, regularization)
+    produces NaNs or non-finite outputs; caller falls back to the
+    standard window_adaptation warmup with a logged warning.
+
+    Parameters
+    ----------
+    logdensity_fn : callable
+        ``dict[str, jnp.ndarray] -> scalar`` log-posterior.
+    initial_position : dict[str, jnp.ndarray]
+        Starting point for LBFGS (typically prior means).  Each value
+        has shape ``(P,)``.
+    n_lbfgs_iter : int, default 200
+        ``jaxopt.LBFGS`` ``maxiter``.
+    lbfgs_tol : float, default 1e-5
+        ``jaxopt.LBFGS`` ``tol``.
+    ridge : float, default 1e-4
+        Diagonal floor applied to the Hessian before inversion.  Larger
+        values produce a more conservative (smaller-magnitude) IMM.
+
+    Returns
+    -------
+    dict or None
+        ``{"step_size": float, "inverse_mass_matrix": jnp.ndarray}`` or
+        None on failure.
+    """
+    try:
+        import jaxopt
+        from jax.flatten_util import ravel_pytree
+    except ImportError as exc:
+        print(f"[laplace_warmup] import failed ({exc!r}); falling back", flush=True)
+        return None
+
+    flat_init, unravel = ravel_pytree(initial_position)
+    n_flat = int(flat_init.shape[0])
+
+    @jax.jit
+    def neg_logp_flat(flat: jnp.ndarray) -> jnp.ndarray:
+        return -logdensity_fn(unravel(flat))
+
+    grad_neg_logp_flat = jax.jit(jax.grad(neg_logp_flat))
+
+    print(
+        f"[laplace_warmup] running LBFGS (n_flat={n_flat}, max_iter="
+        f"{n_lbfgs_iter}, tol={lbfgs_tol})...",
+        flush=True,
+    )
+    t0 = time.perf_counter()
+    try:
+        solver = jaxopt.LBFGS(
+            fun=neg_logp_flat, maxiter=n_lbfgs_iter, tol=lbfgs_tol,
+        )
+        res = solver.run(flat_init)
+        flat_map = res.params
+        jax.block_until_ready(flat_map)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[laplace_warmup] LBFGS raised {exc!r}; falling back", flush=True)
+        return None
+    lbfgs_s = time.perf_counter() - t0
+    map_neg_logp = float(neg_logp_flat(flat_map))
+    if not np.isfinite(map_neg_logp):
+        print(
+            f"[laplace_warmup] LBFGS returned non-finite neg_logp="
+            f"{map_neg_logp}; falling back",
+            flush=True,
+        )
+        return None
+    print(
+        f"[laplace_warmup] LBFGS done in {lbfgs_s:.1f}s, "
+        f"final neg_logp={map_neg_logp:.2f}",
+        flush=True,
+    )
+
+    # Hessian diagonal via Hessian-vector products: H[i,i] = e_i^T (H @ e_i).
+    # Computed as jvp(grad_neg_logp_flat, x, e_i) which is one extra forward
+    # pass on top of the existing reverse-mode grad.  vmap'd across the i
+    # dimension produces the full diagonal in one compiled call.
+    print(
+        f"[laplace_warmup] computing Hessian diagonal "
+        f"(n={n_flat} jvps)...",
+        flush=True,
+    )
+    t0 = time.perf_counter()
+
+    def hess_diag_at(i: jnp.ndarray) -> jnp.ndarray:
+        e_i = jnp.zeros_like(flat_map).at[i].set(1.0)
+        _, hv = jax.jvp(grad_neg_logp_flat, (flat_map,), (e_i,))
+        return hv[i]
+
+    try:
+        hess_diag = jax.vmap(hess_diag_at)(jnp.arange(n_flat))
+        jax.block_until_ready(hess_diag)
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"[laplace_warmup] Hessian-diagonal jvp raised {exc!r}; falling back",
+            flush=True,
+        )
+        return None
+    hess_diag_s = time.perf_counter() - t0
+    hess_diag_np = np.asarray(hess_diag)
+    n_nonpos = int((hess_diag_np <= 0).sum())
+    n_nonfinite = int((~np.isfinite(hess_diag_np)).sum())
+    print(
+        f"[laplace_warmup] Hessian diag done in {hess_diag_s:.1f}s, "
+        f"min={float(hess_diag_np.min()):.3e} "
+        f"max={float(hess_diag_np.max()):.3e} "
+        f"non-positive={n_nonpos} non-finite={n_nonfinite}",
+        flush=True,
+    )
+    if n_nonfinite > 0:
+        print(
+            "[laplace_warmup] non-finite Hessian-diagonal entries; falling back",
+            flush=True,
+        )
+        return None
+
+    # Regularize: clip to >= ridge so reciprocal is bounded.  The negative
+    # entries here mean the LBFGS solution wasn't a true minimum along
+    # that direction — replacing with `ridge` gives a conservative
+    # (large) inverse mass matrix value, which BlackJAX will refine
+    # downward during sampling if too generous.
+    hess_diag_pd = jnp.maximum(hess_diag, ridge)
+    inverse_mass_matrix = 1.0 / hess_diag_pd
+    inverse_mass_matrix_np = np.asarray(inverse_mass_matrix)
+
+    # Heuristic step size: sqrt of median IMM gives an O(1) leapfrog
+    # displacement under the preconditioned Hamiltonian.  BlackJAX's
+    # default initial step_size when window_adaptation runs is 1.0, so
+    # this is starting closer to a workable scale.
+    step_size = float(np.sqrt(np.median(inverse_mass_matrix_np)))
+    cond = float(
+        inverse_mass_matrix_np.max() / max(inverse_mass_matrix_np.min(), 1e-30)
+    )
+    print(
+        f"[laplace_warmup] inverse_mass_matrix: size={n_flat} "
+        f"min={float(inverse_mass_matrix_np.min()):.3e} "
+        f"max={float(inverse_mass_matrix_np.max()):.3e} "
+        f"cond={cond:.2g}",
+        flush=True,
+    )
+    print(
+        f"[laplace_warmup] step_size = sqrt(median(IMM)) = {step_size:.4g}",
+        flush=True,
+    )
+
+    return {
+        "step_size": jnp.asarray(step_size),
+        "inverse_mass_matrix": jnp.asarray(inverse_mass_matrix_np),
+    }
+
+
 def _run_blackjax_nuts(
     logdensity_fn,  # noqa: ANN001
     initial_position: dict[str, jnp.ndarray],
@@ -1086,6 +1266,7 @@ def _run_blackjax_nuts(
     log_every: int = 0,
     phase_label: str = "sample",
     max_tree_depth: int = 10,
+    use_laplace_warmup: bool = False,
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int, dict]:
     """Run BlackJAX NUTS with window_adaptation warmup and lax.scan sampling.
 
@@ -1172,6 +1353,36 @@ def _run_blackjax_nuts(
 
     rng_key, warmup_key, sample_key = jax.random.split(rng_key, 3)
     warmup_state = None  # Set by window_adaptation if warmup runs
+
+    # Variant 2 (Phase 14.2): if use_laplace_warmup is set and no
+    # warmup_params were passed in, compute (step_size, inverse_mass_matrix)
+    # via Laplace approximation and feed them into the existing
+    # warmup_params skip-window-adaptation hook.  Falls back to the
+    # default warmup if Laplace fails.
+    if warmup_params is None and use_laplace_warmup:
+        _t_lp0 = time.perf_counter()
+        print(
+            f"[hierarchical t={_t_lp0 - _t_fn0:.1f}s] "
+            "computing Laplace warmup_params (variant 2)...",
+            flush=True,
+        )
+        laplace_params = _laplace_warmup_params(logdensity_fn, initial_position)
+        if laplace_params is not None:
+            warmup_params = laplace_params
+            print(
+                f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+                f"Laplace warmup_params computed in "
+                f"{time.perf_counter() - _t_lp0:.1f}s "
+                "— window_adaptation will be skipped",
+                flush=True,
+            )
+        else:
+            print(
+                f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
+                "Laplace warmup failed; falling back to standard "
+                "window_adaptation",
+                flush=True,
+            )
 
     # Phase 1: Window adaptation (skip if pre-adapted params provided)
     if warmup_params is None:
@@ -2287,6 +2498,7 @@ def fit_batch_hierarchical(
     warmup_params: dict | None = None,
     log_every: int = 0,
     max_tree_depth: int = 10,
+    use_laplace_warmup: bool = False,
 ) -> az.InferenceData | tuple[az.InferenceData, dict]:
     """Fit an entire cohort via BlackJAX NUTS (default) or NumPyro MCMC.
 
@@ -2551,6 +2763,7 @@ def fit_batch_hierarchical(
                 log_every=log_every,
                 phase_label=model_name.replace("hgf_", ""),
                 max_tree_depth=max_tree_depth,
+                use_laplace_warmup=use_laplace_warmup,
             )
         )
         print(

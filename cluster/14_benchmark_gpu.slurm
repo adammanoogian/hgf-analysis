@@ -138,6 +138,14 @@ export SAMPLER="${SAMPLER:-blackjax}"
 # =============================================================================
 export MAX_TREE_DEPTH="${MAX_TREE_DEPTH:-10}"
 
+# variant 2: when set to 1, replaces window_adaptation with Laplace-derived
+# (step_size, inverse_mass_matrix).
+export LAPLACE_WARMUP="${LAPLACE_WARMUP:-0}"
+_LAPLACE_FLAG=""
+if [[ "${LAPLACE_WARMUP}" == "1" ]]; then
+    _LAPLACE_FLAG="--laplace-warmup"
+fi
+
 # =============================================================================
 # Verify GPU
 # =============================================================================
@@ -150,6 +158,7 @@ echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "Sampler:  ${SAMPLER}"
 echo "Max tree depth: ${MAX_TREE_DEPTH}"
+echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -180,7 +189,8 @@ python scripts/08_run_power_iteration.py \
     --fit-draws 500 \
     --fit-tune 500 \
     --sampler "${SAMPLER}" \
-    --max-tree-depth "${MAX_TREE_DEPTH}"
+    --max-tree-depth "${MAX_TREE_DEPTH}" \
+    ${_LAPLACE_FLAG}
 
 EXIT_CODE=$?
 

@@ -86,6 +86,13 @@ export SAMPLER="${SAMPLER:-blackjax}"
 export MAX_TREE_DEPTH="${MAX_TREE_DEPTH:-10}"
 export PARTICIPANT_CHUNK_COUNT="${PARTICIPANT_CHUNK_COUNT:-6}"
 
+# variant 2: Laplace warmup
+export LAPLACE_WARMUP="${LAPLACE_WARMUP:-0}"
+_LAPLACE_FLAG=""
+if [[ "${LAPLACE_WARMUP}" == "1" ]]; then
+    _LAPLACE_FLAG="--laplace-warmup"
+fi
+
 # =============================================================================
 # Banner
 # =============================================================================
@@ -100,6 +107,7 @@ echo "Sampler:        ${SAMPLER}"
 echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Chunk count:    ${PARTICIPANT_CHUNK_COUNT}"
 echo "Chunk id:       ${SLURM_ARRAY_TASK_ID:-0}"
+echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Start:          $(date)"
 echo "============================================================"
 echo ""
@@ -114,7 +122,8 @@ python scripts/08_run_power_iteration.py \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
     --participant-chunk-id "${SLURM_ARRAY_TASK_ID:-0}" \
-    --participant-chunk-count "${PARTICIPANT_CHUNK_COUNT}"
+    --participant-chunk-count "${PARTICIPANT_CHUNK_COUNT}" \
+    ${_LAPLACE_FLAG}
 
 EXIT_CODE=$?
 
