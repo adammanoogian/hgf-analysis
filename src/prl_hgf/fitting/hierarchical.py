@@ -906,6 +906,168 @@ def _extract_nuts_stats(
     }
 
 
+def _unwrap_nuts_info(info):  # noqa: ANN001
+    """Pull the per-step NUTSInfo out of a possibly-wrapped adaptation info.
+
+    BlackJAX's ``window_adaptation.run`` returns an ``AdaptationInfo`` that
+    nests the per-step ``NUTSInfo`` under attribute ``.info``; sampling
+    scans return the bare stacked ``NUTSInfo`` directly.  This helper
+    handles both shapes plus a final defensive fallback so version drift
+    in the BlackJAX layout cannot kill the diagnostic prints.
+    """
+    if hasattr(info, "is_divergent"):
+        return info
+    if hasattr(info, "info") and hasattr(info.info, "is_divergent"):
+        return info.info
+    return info
+
+
+def _log_nuts_diagnostics(
+    label: str,
+    info,  # noqa: ANN001
+    *,
+    n_steps: int,
+    n_chains: int,
+    p_axis: int,
+    elapsed_s: float | None = None,
+    adapted_step_size=None,  # noqa: ANN001
+    adapted_inverse_mass_matrix=None,  # noqa: ANN001
+) -> None:
+    """Print summary statistics from a stacked NUTSInfo pytree.
+
+    Reads only fields that BlackJAX has already populated inside the
+    JIT'd scan (``num_trajectory_expansions``, ``num_integration_steps``,
+    ``acceptance_rate``, ``is_divergent``, ``energy``) so adding the call
+    is HLO-invariant and persistent-cache-safe.  Surfaces the four
+    quantities that distinguish a benign warmup from one stuck on bad
+    posterior geometry: tree-depth saturation, leapfrog totals, divergent
+    transitions, and energy drift.  When ``label == "warmup"`` and the
+    Stan-default 500-step schedule is detected, also breaks the trace
+    into init/slow1-4/term windows so the .out file shows when (in
+    adaptation time) tree depth blows up.
+    """
+    nuts_info = _unwrap_nuts_info(info)
+
+    def _safe_np(x):  # noqa: ANN001, ANN202
+        if x is None:
+            return None
+        try:
+            return np.asarray(jax.block_until_ready(x))
+        except Exception:  # noqa: BLE001
+            return None
+
+    depth = _safe_np(getattr(nuts_info, "num_trajectory_expansions", None))
+    n_lf = _safe_np(getattr(nuts_info, "num_integration_steps", None))
+    accept = _safe_np(getattr(nuts_info, "acceptance_rate", None))
+    div = _safe_np(getattr(nuts_info, "is_divergent", None))
+    energy = _safe_np(getattr(nuts_info, "energy", None))
+
+    print(
+        f"[diag {label}] n_steps={n_steps} n_chains={n_chains} P={p_axis}"
+        + (f" elapsed={elapsed_s:.1f}s" if elapsed_s is not None else ""),
+        flush=True,
+    )
+    if depth is not None:
+        print(
+            f"[diag {label}] tree_depth: "
+            f"mean={depth.mean():.2f} median={float(np.median(depth)):.0f} "
+            f"p95={float(np.percentile(depth, 95)):.0f} max={int(depth.max())} "
+            f"saturated_frac={float((depth >= 10).mean()):.3f}",
+            flush=True,
+        )
+    if n_lf is not None:
+        per_step_mean = float(n_lf.mean())
+        print(
+            f"[diag {label}] leapfrog_per_step: "
+            f"mean={per_step_mean:.1f} median={float(np.median(n_lf)):.0f} "
+            f"p95={float(np.percentile(n_lf, 95)):.0f} max={int(n_lf.max())} "
+            f"total={int(n_lf.sum())}",
+            flush=True,
+        )
+        if elapsed_s is not None and n_lf.sum() > 0:
+            print(
+                f"[diag {label}] derived: "
+                f"{elapsed_s / float(n_lf.sum()) * 1000:.2f}ms per leapfrog "
+                f"(across all chains)",
+                flush=True,
+            )
+    if accept is not None:
+        msg = f"[diag {label}] accept_rate: mean={accept.mean():.3f}"
+        if accept.shape[0] >= 50:
+            msg += f" final50={accept[-50:].mean():.3f}"
+        print(msg, flush=True)
+    if div is not None:
+        print(
+            f"[diag {label}] divergent: "
+            f"count={int(div.sum())} rate={float(div.mean()):.4f}",
+            flush=True,
+        )
+    if energy is not None:
+        e_finite = energy[np.isfinite(energy)]
+        if e_finite.size > 1:
+            de = np.diff(e_finite.reshape(-1))
+            print(
+                f"[diag {label}] energy: "
+                f"mean={float(e_finite.mean()):.2f} std={float(e_finite.std()):.2f} "
+                f"|dE|_mean={float(np.abs(de).mean()):.3f} "
+                f"|dE|_max={float(np.abs(de).max()):.2f}",
+                flush=True,
+            )
+
+    # Window-partitioned summary for warmup at the Stan-default 500-step
+    # schedule (init=75, slow=[25,50,100,200], term=50).  Tells you when in
+    # adaptation tree depth saturates / divergences cluster.
+    if label == "warmup" and depth is not None and depth.shape[0] == 500:
+        windows = [
+            (0, 75, "init"),
+            (75, 100, "slow1"),
+            (100, 150, "slow2"),
+            (150, 250, "slow3"),
+            (250, 450, "slow4"),
+            (450, 500, "term"),
+        ]
+        for start, end, name in windows:
+            seg_depth = depth[start:end]
+            seg_div = div[start:end] if div is not None else None
+            seg_acc = accept[start:end] if accept is not None else None
+            div_count = int(seg_div.sum()) if seg_div is not None else -1
+            acc_mean = float(seg_acc.mean()) if seg_acc is not None else float("nan")
+            print(
+                f"[diag warmup window={name} steps={start}-{end}] "
+                f"depth_mean={seg_depth.mean():.2f} "
+                f"depth_max={int(seg_depth.max())} "
+                f"saturated={float((seg_depth >= 10).mean()):.3f} "
+                f"accept={acc_mean:.3f} div={div_count}",
+                flush=True,
+            )
+
+    # Adapted parameters (warmup only — these are the things passed forward
+    # as warmup_params to the sampler).
+    ss_np = _safe_np(adapted_step_size)
+    if ss_np is not None:
+        if ss_np.ndim == 0:
+            print(f"[diag {label}] adapted step_size: {float(ss_np):.4g}", flush=True)
+        else:
+            print(
+                f"[diag {label}] adapted step_size (per-chain): "
+                f"min={float(ss_np.min()):.4g} max={float(ss_np.max()):.4g} "
+                f"mean={float(ss_np.mean()):.4g}",
+                flush=True,
+            )
+    imm_np = _safe_np(adapted_inverse_mass_matrix)
+    if imm_np is not None:
+        flat = imm_np.reshape(-1)
+        finite_pos = flat[np.isfinite(flat) & (flat > 0)]
+        if finite_pos.size > 0:
+            cond = float(finite_pos.max() / finite_pos.min())
+            print(
+                f"[diag {label}] inverse_mass_matrix: "
+                f"size={finite_pos.size} min={float(finite_pos.min()):.4g} "
+                f"max={float(finite_pos.max()):.4g} cond={cond:.2g}",
+                flush=True,
+            )
+
+
 def _run_blackjax_nuts(
     logdensity_fn,  # noqa: ANN001
     initial_position: dict[str, jnp.ndarray],
@@ -1024,18 +1186,35 @@ def _run_blackjax_nuts(
             target_acceptance_rate=target_accept,
             is_mass_matrix_diagonal=True,
         )
-        (warmup_state, warmup_params), _warmup_info = warmup.run(
+        (warmup_state, warmup_params), warmup_info = warmup.run(
             warmup_key,
             initial_position,
             num_steps=n_tune,
         )
         # Block on the warmup outputs so the timing reflects compile+execute.
         jax.block_until_ready(warmup_state.position)
+        _warmup_elapsed = time.perf_counter() - _t_w0
         print(
             f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
-            f"window_adaptation complete in {time.perf_counter() - _t_w0:.1f}s",
+            f"window_adaptation complete in {_warmup_elapsed:.1f}s",
             flush=True,
         )
+        try:
+            _log_nuts_diagnostics(
+                "warmup",
+                warmup_info,
+                n_steps=n_tune,
+                n_chains=n_chains,
+                p_axis=_p_axis,
+                elapsed_s=_warmup_elapsed,
+                adapted_step_size=warmup_params.get("step_size"),
+                adapted_inverse_mass_matrix=warmup_params.get(
+                    "inverse_mass_matrix"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001
+            # Diagnostics must never break a fit — log and continue.
+            print(f"[diag warmup] FAILED: {exc!r}", flush=True)
     else:
         print(
             f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
@@ -1114,11 +1293,23 @@ def _run_blackjax_nuts(
         # log "sample_loop complete" — without this, the elapsed time
         # would understate the true wall clock by the async dispatch lag.
         jax.tree_util.tree_map(jax.block_until_ready, all_states.position)
+        _sample_elapsed = time.perf_counter() - _t_s0
         print(
             f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
-            f"sample_loop complete in {time.perf_counter() - _t_s0:.1f}s",
+            f"sample_loop complete in {_sample_elapsed:.1f}s",
             flush=True,
         )
+        try:
+            _log_nuts_diagnostics(
+                "sample",
+                all_infos,
+                n_steps=n_draws,
+                n_chains=n_chains,
+                p_axis=_p_axis,
+                elapsed_s=_sample_elapsed,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[diag sample] FAILED: {exc!r}", flush=True)
 
         # Post-process: convert JAX arrays to numpy
         _t_p0 = time.perf_counter()
