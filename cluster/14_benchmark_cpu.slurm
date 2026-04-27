@@ -87,6 +87,13 @@ if [[ "${TIGHT_OMEGA3}" == "1" ]]; then
     _TIGHT_OMEGA3_FLAG="--tight-omega3-prior"
 fi
 
+# variant 5: Laplace-only
+export LAPLACE_ONLY="${LAPLACE_ONLY:-0}"
+_LAPLACE_ONLY_FLAG=""
+if [[ "${LAPLACE_ONLY}" == "1" ]]; then
+    _LAPLACE_ONLY_FLAG="--laplace-only"
+fi
+
 # =============================================================================
 # Banner
 # =============================================================================
@@ -100,6 +107,7 @@ echo "Sampler:  ${SAMPLER}"
 echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Tight omega3:   ${TIGHT_OMEGA3}"
+echo "Laplace only:   ${LAPLACE_ONLY}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -128,7 +136,8 @@ python scripts/08_run_power_iteration.py \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
     ${_LAPLACE_FLAG} \
-    ${_TIGHT_OMEGA3_FLAG}
+    ${_TIGHT_OMEGA3_FLAG} \
+    ${_LAPLACE_ONLY_FLAG}
 
 EXIT_CODE=$?
 

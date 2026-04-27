@@ -198,6 +198,20 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--laplace-only",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 14.2 variant 5: run only the Laplace approximation and "
+            "skip the NUTS sampling phase entirely (NUTS still runs but "
+            "with n_tune=1 / n_draws=1 so the wall is dominated by the "
+            "Laplace LBFGS + Hessian work).  Implies --laplace-warmup; "
+            "overrides --fit-tune and --fit-draws to 1.  Provides the "
+            "'Laplace as supplement, not replacement' baseline against "
+            "which full NUTS variants are compared."
+        ),
+    )
+    parser.add_argument(
         "--sampler",
         type=str,
         choices=["pymc", "numpyro", "blackjax"],
@@ -1898,6 +1912,20 @@ def main() -> None:
             base_config, power_config, output_dir, args.probe_p, args,
         )
         return
+
+    # Phase 14.2 variant 5: --laplace-only short-circuits the NUTS sampling
+    # work to a 1-tune / 1-draw token call so wall time is dominated by
+    # the Laplace LBFGS + Hessian.  Implies --laplace-warmup so
+    # window_adaptation is skipped (warmup_params come from Laplace).
+    if args.laplace_only:
+        args.laplace_warmup = True
+        args.fit_tune = 1
+        args.fit_draws = 1
+        print(
+            "[variant 5] --laplace-only: forcing --laplace-warmup, "
+            "--fit-tune=1, --fit-draws=1",
+            flush=True,
+        )
 
     grid_size = sbf_grid_size(
         power_config.effect_size_grid,
