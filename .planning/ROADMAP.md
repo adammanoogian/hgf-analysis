@@ -562,6 +562,53 @@ Plans:
 
 ---
 
+### Phase 25: Parallel-scan acceleration of HGF likelihood evaluation (research)
+
+**Goal**: Investigate, theoretically validate, and prototype log-depth
+parallel-scan methods for HGF likelihood evaluation, replacing the trial-axis
+O(T) sequential `lax.scan` with an O(K log T) iterated-linearization scheme.
+Targets the *next* bottleneck after Phase 14.2 variants 1-5 land: per-eval
+cost as the model grows in T, branches, trial-varying θ, hierarchical
+pooling, or moves to online inference.  Research phase — literature-first,
+with theoretical validation gates before any code.  Implementation
+prototype is the LAST sub-phase, gated on positive theory verdict.
+**Depends on**: Phase 14.2 variant comparison (commits 0055408..f35698f)
+must produce clean numbers so we know parallel scan is the *next* problem,
+not redundant with the easy wins.
+**Track**: out-of-cycle research, parallel to v1.3.  Candidate for v1.4
+promotion if 25-06 verdict is positive.
+**Critical literature** (Linderman lab 2024-2025 progression past vanilla
+DEER — see PHASE_DESCRIPTION.md for full synopses):
+  - Lim et al. 2023 (DEER, arXiv:2309.12252) — original
+  - Gonzalez et al. NeurIPS 2024 (ELK = quasi-Newton + LM + Kalman
+    smoothing) — implement this, not vanilla DEER
+  - Zoltowski et al. 2025 (arXiv:2508.18413, "Parallelizing MCMC Across
+    the Sequence Length") — most directly relevant to HGF + NUTS
+  - Gonzalez et al. 2025 (arXiv:2508.16817, "Predictability Enables
+    Parallelization of Nonlinear State Space Models") — theoretical
+    convergence guarantees we need to verify HGF satisfies
+  - Gonzalez et al. 2025 (arXiv:2509.21716, unifying framework) —
+    practical guidance on which strategy for which structure
+  - Sarkka & Garcia-Fernandez 2021 (parallel Kalman) — linear-Gaussian
+    reference
+  - Mathys et al. 2014 — HGF as Laplace-linearized Gaussian filter
+**Effort**: 3-5 weeks of research-pace work (NOT execution-pace).
+**Plans**: TBD (run `/gsd:plan-phase 25` to break down).  Pre-proposed
+sub-phase breakdown in `.planning/phases/25-parallel-scan-acceleration-research/PHASE_DESCRIPTION.md`:
+  - 25-00 literature synthesis (RESEARCH.md)
+  - 25-01 contraction / predictability proof for HGF (gate)
+  - 25-02 algorithm selection (ELK vs DEER vs Zoltowski-MCMC vs hybrid)
+  - 25-03 reference-implementation reproduction (gate)
+  - 25-04 HGF prototype + numerical agreement validation
+  - 25-05 posterior-validity check via parameter recovery (gate)
+  - 25-06 productionization decision
+
+Plans:
+- [ ] TBD (run `/gsd:plan-phase 25` to break down)
+
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
