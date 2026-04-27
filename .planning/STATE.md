@@ -12,10 +12,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ### v1.4 Phase 25 Research: Parallel-scan acceleration of HGF (out-of-cycle, parallel)
 
 Phase: 25 — Parallel-scan acceleration of HGF likelihood evaluation — IN PROGRESS
-Plan: 25-00b complete (API_BRIDGING_STUDY.md + scratch/api_bridging_probe.py); next: 25-01 (theoretical validation — predictability/contraction proof) + 25-02 (algorithm selection, depends on 25-00b approval + 25-01)
-Status: 25-00b APPROVED (2026-04-27). Probe PASS (max rel-err 1.07e-13 on 50 trials). Recommendation: ELK for 25-04 prototype. User approved API_BRIDGING_STUDY.md at checkpoint.
-Last activity: 2026-04-27 — Plan 25-00b complete; 2 atomic task commits (c886285 feat probe, d15765d docs study memo); SUMMARY.md published.
-Key decisions: (1) JAX_ENABLE_X64=1 mandatory for pyhgf float64 compat; (2) ELK recommended for 25-04; (3) PIEKS vs ELK question deferred to 25-02.
+Plan: 25-01 complete (THEORETICAL_VALIDATION.md + lipschitz_scan.py + 2 CSVs); awaiting user gate at checkpoint; next: 25-02 (algorithm selection) upon user approval
+Status: 25-01 COMPLETE (awaiting checkpoint gate). PASS-WITH-FAILURE-MODES verdict. QR lambda_hat median=-0.0132 (100% of 100 vectors negative). 2 atomic task commits pushed.
+Last activity: 2026-04-27 — Plan 25-01 complete; 2 atomic task commits (de8c8aa feat scan, e640b19 docs memo); SUMMARY.md published.
+Key decisions: (1) Benettin QR is correct LLE estimator for HGF (GMSR biased by pi_1 monotonic growth); (2) HGF is weakly contracting (lambda~-0.013, not -0.1 to -0.3); (3) ELK LM trust radius confirmed essential (76% of trials have sr >= 1); (4) K=8-15 iterations predicted (vs 3-10); (5) failure-mode driver is omega_2 near -2.0 (not omega_3 as predicted).
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 
@@ -251,6 +251,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 | ELK (lindermanlab/elk quasi-ELK) recommended as 25-04 default API — shallowest bridging, LM trust region prevents Jacobian instability | hgf_step probe confirms f(state) IS the ELK input function (max rel-err 1.07e-13). PIEKS requires state-dependent R wrapper and eHGF update deviation. 25-02 must close PIEKS vs ELK theoretical question. | 25-00b |
 | JAX_ENABLE_X64=1 is mandatory for all Phase 25 code | pyhgf uses float64 throughout; without it jax.lax.cond fails with dtype mismatch in posterior_update_precision_continuous_node. Hard constraint confirmed by failed first probe run. | 25-00b |
 | Minimal 3-level HGF dynamical state is 4-dim: (mu_1, pi_1, mu_2, pi_2) from attributes[1] and attributes[6] | expected_mean/precision are derived quantities, not state. Full 3-branch production state is 8-dim (add nodes 3, 5). | 25-00b |
+| Benettin QR is correct LLE estimator for HGF; GMSR biased near 0 due to pi_1 monotonic precision accumulation | pi_1 grows monotonically → ∂pi_1_new/∂pi_1 ≈ 1 for most trials → spectral_radius = 1 → log(1) = 0 → GMSR averages to near-zero. GMSR 35/100 "fail" is methodological artifact. Benettin QR (-0.013) is authoritative. | 25-01 |
+| HGF is weakly contracting: QR lambda_hat median=-0.0132 (NOT -0.1 to -0.3 as predicted) | The magnitude is 8-23x smaller than the analogy-based prediction from 25-RESEARCH.md §8. 100/100 vectors negative. K-iteration prediction revised upward to 8-15 (vs 3-10). | 25-01 |
+| Primary failure-mode driver for HGF transient growth is omega_2 near -2.0 (NOT omega_3) | 25-RESEARCH.md predicted extreme omega_3 or |mu_3|. Empirically, top-4 failure vectors all have omega_2 in [-2.22, -2.05]. Omega_3 is not a significant driver within the scanned prior region. | 25-01 |
+| ELK LM trust radius is mandatory (not optional) for NUTS warm-up: 76.1% of trials have transient spectral_radius >= 1 | API_BRIDGING_STUDY.md Risk #3 confirmed empirically. Transient spikes reach sr=2.11 for shallow omega_2. LM damping clips Newton steps during these spikes. | 25-01 |
 
 ### Pending Todos
 
