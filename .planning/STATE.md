@@ -247,6 +247,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 decision log.
 - quarto-arxiv extension must be installed before first arxiv-pdf render
 - Phase 10 kappa effect size parameterization: verify kappa entry point in GroupConfig vs SessionConfig during Phase 10 planning (kappa delta lives in SessionConfig.kappa_deltas — confirmed in 08-01 tests, but grid parameterization for kappa needs review before Phase 10 sweep)
 - Phase 10: run 100-iteration MAP vs NUTS pilot before committing to full NUTS budget
+- Phase 14.2 variant comparison: submit cluster runs when GPU available (see `.planning/todos/pending/2026-04-27-phase-14-2-variant-comparison-cluster-runs.md` — variants 1–5 + diagnostics + aggregator all landed in commits 0055408..f5a5b83; just need sbatch submissions)
 
 ### Blockers/Concerns
 
