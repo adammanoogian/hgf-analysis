@@ -146,6 +146,13 @@ if [[ "${LAPLACE_WARMUP}" == "1" ]]; then
     _LAPLACE_FLAG="--laplace-warmup"
 fi
 
+# variant 3: tight ω₃ prior — Normal(-6, 1.0) instead of TruncatedNormal(-6, 2)
+export TIGHT_OMEGA3="${TIGHT_OMEGA3:-0}"
+_TIGHT_OMEGA3_FLAG=""
+if [[ "${TIGHT_OMEGA3}" == "1" ]]; then
+    _TIGHT_OMEGA3_FLAG="--tight-omega3-prior"
+fi
+
 # =============================================================================
 # Verify GPU
 # =============================================================================
@@ -159,6 +166,7 @@ echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "Sampler:  ${SAMPLER}"
 echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Laplace warmup: ${LAPLACE_WARMUP}"
+echo "Tight omega3:   ${TIGHT_OMEGA3}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -190,7 +198,8 @@ python scripts/08_run_power_iteration.py \
     --fit-tune 500 \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
-    ${_LAPLACE_FLAG}
+    ${_LAPLACE_FLAG} \
+    ${_TIGHT_OMEGA3_FLAG}
 
 EXIT_CODE=$?
 

@@ -752,6 +752,7 @@ def _build_log_posterior(
     trial_mask: jnp.ndarray,
     n_participants: int,
     model_name: str = "hgf_3level",
+    tight_omega3_prior: bool = False,
 ) -> callable:
     """Build a pure JAX log-posterior function for BlackJAX.
 
@@ -799,11 +800,25 @@ def _build_log_posterior(
     prior_log_beta = dist.Normal(0.0, 1.5)
     prior_zeta = dist.Normal(0.0, 2.0)
     if is_3level:
-        prior_omega_3 = dist.TruncatedNormal(
-            loc=-6.0,
-            scale=2.0,
-            high=0.0,
-        )
+        # Variant 3 (Phase 14.2): tighter ω₃ prior collapses the (μ₃, ω₃)
+        # funnel arm at extreme-negative ω₃ where σ₃ → 0 and the
+        # log-posterior develops a Neal-style funnel.  Per the literature
+        # agent's read of TAPAS / pyhgf / Mathys 2014: ω₃ is poorly
+        # identified by the data anyway, so a tight prior near the typical
+        # value is field-defensible (cf. CLAUDE.md "ω₃ recovery is known to
+        # be poor in the literature").  pyhgf binary tutorial uses
+        # Normal(-11, 2); we use Normal(-6, 1) which is centered at the
+        # current TruncatedNormal location but with half the scale.  No
+        # truncation needed: the tight prior already concentrates the mass
+        # well below 0.
+        if tight_omega3_prior:
+            prior_omega_3 = dist.Normal(loc=-6.0, scale=1.0)
+        else:
+            prior_omega_3 = dist.TruncatedNormal(
+                loc=-6.0,
+                scale=2.0,
+                high=0.0,
+            )
         # κ is frozen at _KAPPA_FIXED (1.0) — see module docstring.  No prior
         # needed because κ is not sampled.
 
@@ -1267,6 +1282,7 @@ def _run_blackjax_nuts(
     phase_label: str = "sample",
     max_tree_depth: int = 10,
     use_laplace_warmup: bool = False,
+    tight_omega3_prior: bool = False,
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], int, dict]:
     """Run BlackJAX NUTS with window_adaptation warmup and lax.scan sampling.
 
@@ -1471,6 +1487,7 @@ def _run_blackjax_nuts(
             log_every=log_every,
             phase_label=phase_label,
             max_num_doublings=max_tree_depth,
+            tight_omega3_prior=tight_omega3_prior,
         )
         print(
             f"[hierarchical t={time.perf_counter() - _t_fn0:.1f}s] "
@@ -1787,6 +1804,7 @@ def _build_sample_loop(
     log_every: int = 0,
     phase_label: str = "sample",
     max_num_doublings: int = 10,
+    tight_omega3_prior: bool = False,
 ):  # noqa: ANN205
     """Build a JIT'd sampling function where data flows as traced arguments.
 
@@ -1842,11 +1860,17 @@ def _build_sample_loop(
     prior_log_beta = dist.Normal(0.0, 1.5)
     prior_zeta = dist.Normal(0.0, 2.0)
     if is_3level:
-        prior_omega_3 = dist.TruncatedNormal(
-            loc=-6.0,
-            scale=2.0,
-            high=0.0,
-        )
+        # Variant 3: matches the gate in _build_log_posterior so warmup
+        # and sampling share the same prior.  See that comment for the
+        # rationale.
+        if tight_omega3_prior:
+            prior_omega_3 = dist.Normal(loc=-6.0, scale=1.0)
+        else:
+            prior_omega_3 = dist.TruncatedNormal(
+                loc=-6.0,
+                scale=2.0,
+                high=0.0,
+            )
         # κ frozen at _KAPPA_FIXED (1.0); no sampled prior.
 
     if use_pmap:
@@ -2499,6 +2523,7 @@ def fit_batch_hierarchical(
     log_every: int = 0,
     max_tree_depth: int = 10,
     use_laplace_warmup: bool = False,
+    tight_omega3_prior: bool = False,
 ) -> az.InferenceData | tuple[az.InferenceData, dict]:
     """Fit an entire cohort via BlackJAX NUTS (default) or NumPyro MCMC.
 
@@ -2706,6 +2731,7 @@ def fit_batch_hierarchical(
             jax_trial_mask,
             n_participants,
             model_name,
+            tight_omega3_prior=tight_omega3_prior,
         )
         print(
             f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
@@ -2764,6 +2790,7 @@ def fit_batch_hierarchical(
                 phase_label=model_name.replace("hgf_", ""),
                 max_tree_depth=max_tree_depth,
                 use_laplace_warmup=use_laplace_warmup,
+                tight_omega3_prior=tight_omega3_prior,
             )
         )
         print(

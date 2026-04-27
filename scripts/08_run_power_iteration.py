@@ -185,6 +185,19 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--tight-omega3-prior",
+        action="store_true",
+        default=False,
+        help=(
+            "Phase 14.2 variant 3: tighten the ω₃ prior to "
+            "Normal(-6, 1.0) (default is TruncatedNormal(-6, 2, high=0)). "
+            "Collapses the (μ₃, ω₃) funnel arm at extreme-negative ω₃ "
+            "where σ₃→0.  Field-defensible — TAPAS / pyhgf treat ω₃ as "
+            "poorly-identified and constrain it via prior; cf. CLAUDE.md "
+            "'ω₃ recovery is known to be poor in the literature'."
+        ),
+    )
+    parser.add_argument(
         "--sampler",
         type=str,
         choices=["pymc", "numpyro", "blackjax"],
@@ -805,6 +818,7 @@ def _run_smoke_test(
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     jit_cold_s = time.perf_counter() - t0
     results["jit_cold_s"] = round(jit_cold_s, 2)
@@ -852,6 +866,7 @@ def _run_smoke_test(
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -878,6 +893,7 @@ def _run_smoke_test(
         log_every=log_every_smoke,
         max_tree_depth=args.max_tree_depth,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     jit_warm2_s = time.perf_counter() - t0
     results["jit_warm2_s"] = round(jit_warm2_s, 2)
@@ -1178,6 +1194,7 @@ def _run_benchmark(
         progressbar=False,
         max_tree_depth=args.max_tree_depth,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     if isinstance(_cold_return, tuple):
         _idata_cold, adapted_params = _cold_return
@@ -1223,6 +1240,7 @@ def _run_benchmark(
         warmup_params=adapted_params,
         max_tree_depth=args.max_tree_depth,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     jit_warm_s = time.perf_counter() - t0
     results["jit_warm_s"] = round(jit_warm_s, 2)
@@ -1275,6 +1293,7 @@ def _run_benchmark(
         participant_chunk_id=args.participant_chunk_id,
         participant_chunk_count=args.participant_chunk_count,
         use_laplace_warmup=args.laplace_warmup,
+        tight_omega3_prior=args.tight_omega3_prior,
     )
     per_iteration_s = time.perf_counter() - t0
 

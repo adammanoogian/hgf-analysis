@@ -874,6 +874,7 @@ def run_sbf_iteration(
     participant_chunk_id: int = 0,
     participant_chunk_count: int = 1,
     use_laplace_warmup: bool = False,
+    tight_omega3_prior: bool = False,
 ) -> list[dict]:
     """Run one SBF iteration: simulate at max N, fit once, subsample at each N.
 
@@ -1014,6 +1015,7 @@ def run_sbf_iteration(
             progressbar=False,
             max_tree_depth=max_tree_depth,
             use_laplace_warmup=use_laplace_warmup,
+            tight_omega3_prior=tight_omega3_prior,
         )
 
         # Step 4 (batched): Fit 2-level model — single NUTS call
@@ -1028,6 +1030,7 @@ def run_sbf_iteration(
             progressbar=False,
             max_tree_depth=max_tree_depth,
             use_laplace_warmup=use_laplace_warmup,
+            tight_omega3_prior=tight_omega3_prior,
         )
 
         # Extract participant metadata from coords (ground truth ordering)
