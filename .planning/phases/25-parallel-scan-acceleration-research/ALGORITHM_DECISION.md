@@ -30,6 +30,10 @@
   25-RESEARCH.md). T=420 is near the GPU breakeven; no CPU speedup is expected.
 - **T>>420 future speedup expectation:** 5–20× on GPU for T ≥ 1000–2000 (cite §9 of
   25-RESEARCH.md and PIEKS paper D=4 curve). This is the primary Phase 25 motivation.
+- **Parked future options:** Two candidates were considered but explicitly deferred to
+  post-Phase-25 work: (1) PIEKS as a validation cross-check for simpler linear HGFs;
+  (2) Zoltowski parallel-MCMC as a third-axis sampler-trajectory parallelization
+  composable with ELK. See §13 for rationale and gating conditions.
 
 ---
 
@@ -541,6 +545,128 @@ but requires LM damping in the ω₂ > −3.0 region. No regime requires sequent
 
 ---
 
+## 13. Parked Algorithms / Future Work (post-Phase-25)
+
+Two candidates from the five-way comparison were explicitly deferred by the user at the
+25-02 decision checkpoint (2026-04-28, confirm-elk gate). They are not abandoned — they
+are future-todo items with documented gating conditions. Neither should be revisited
+until the 25-06 ELK verdict is in.
+
+### 13.1 PIEKS as Future Validation Option for Simpler Linear HGFs
+
+**Why PIEKS was not selected in Phase 25 (summary of §8 rationale):**
+
+The §8 decision rationale identifies three empirical findings that override PIEKS's
+theoretical advantages:
+
+1. Empirical λ̂ = −0.0135 (cross-regime median from 25-01) is far weaker than the
+   −0.1 to −0.3 range that would make PIEKS's K-iteration advantage meaningful. At
+   this λ̂, both ELK and PIEKS converge in 8–15 iterations; the K difference is
+   estimated at 1–3 iterations — not decisive.
+2. Transient spectral radius ≥ 1 in 76.5% of trials across all four regimes (25-01
+   cross-regime scan) mandates LM trust-radius step control. PIEKS's sqrt-covariance
+   form guards against σ underflow but has no trust-radius mechanism for Newton step
+   size. ELK's LM damping is the direct, principled mitigation.
+3. eHGF posterior mismatch (pyhgf 0.2.8 uses mean-before-precision update in
+   `continuous_node_posterior_update_ehgf` for node 6; standard PIEKS/IEKS assumes
+   precision-first) adds ~1 day of bridging beyond the 3–4 day API_BRIDGING_STUDY.md
+   estimate. ELK bypasses this entirely by treating `hgf_step` as an opaque function.
+
+**Future use case for PIEKS:**
+
+PIEKS is the natural parallel-scan algorithm when implementing simpler 2-level binary
+HGFs or other Gaussian-emission HGF variants where the bridging cost is lower:
+
+- No eHGF posterior mismatch (standard IEKS update applies directly when the
+  volatility node uses the standard precision-first Bayesian update).
+- Simpler Q/R wrappers (constant or state-independent observation noise; no
+  state-dependent R precomputation step required).
+- Lower D (e.g., D=2 for a pure 2-level binary HGF: μ₁, π₁ only), further reducing
+  the O(D³) per-iteration cost advantage.
+
+In these cases, PIEKS via EEA-sensors/sqrt-parallel-smoothers would be a natural
+validation cross-check against ELK's output: the two algorithms should converge to
+the same fixed point within tolerance, and PIEKS's covariance history provides a
+formal correctness reference.
+
+**Community-explainability advantage:** PIEKS speaks Mathys-vocabulary directly —
+the algorithm IS the parallel version of the Kalman-smoother structure underlying
+HGF. For HGF-community-facing publications or code that will be read by computational
+psychiatry audiences, PIEKS's semantic alignment with the Gaussian filter literature
+may be preferred even if ELK is the production implementation.
+
+**Suggested gating:**
+
+- Implement PIEKS as a comparator pass during a future 25-05 re-run if K under ELK
+  exceeds 12 across many parameter regimes in the 25-04 prototype (indicating the
+  LM trust radius is being triggered very frequently, making PIEKS's K advantage
+  more relevant).
+- Implement as a standalone validation in a follow-on phase if the project pursues
+  continuous-emission HGF variants (e.g., Gaussian observations rather than Bernoulli)
+  where the eHGF mismatch is absent and the Q/R bridging is straightforward.
+- Do NOT revisit before 25-06 verdict: if ELK fails the 25-06 productionization
+  criterion, PIEKS is the natural successor to evaluate.
+
+### 13.2 Zoltowski Parallel-MCMC as Future Third-Axis Parallelization
+
+**What it is:**
+
+Zoltowski, Wu, Gonzalez, Kozachkov, Linderman (arXiv:2508.18413, Aug 2025) parallelize
+the NUTS leapfrog trajectory *across sequence positions*, not just within the likelihood
+evaluator. This is candidate (c) in the five-way comparison table (§7). The paper was
+published August 2025; reference implementation maturity should be re-checked before
+any adoption decision.
+
+**Why it is orthogonal to ELK, not a replacement:**
+
+ELK fills the *trial-axis* at the likelihood-evaluator layer: it reduces the cost of
+computing log p(y | θ) from O(T) sequential scan to O(K log T) via associative scan,
+called once per NUTS leapfrog step. Zoltowski fills the *sampler-trajectory axis* at
+the NUTS layer: it parallelizes the leapfrog trajectory itself across the T observed
+data points. The two mechanisms operate at different levels of the computational graph
+and are composable:
+
+```
+Phase 25 target (ELK):
+  NUTS leapfrog step → ELK log p(y | θ) in O(K log T)   [likelihood axis]
+
+Zoltowski (future):
+  Parallel NUTS trajectory → each leapfrog step evaluates log p(y | θ)  [sampler axis]
+
+Combined (compound speedup if both land):
+  Parallel NUTS trajectory → each leapfrog step uses ELK log p(y | θ)
+```
+
+The potential compound speedup is multiplicative: if ELK gives 10× on the likelihood
+and Zoltowski gives 10× on the sampler, the combined speedup could approach 100× for
+T >> 420. This is speculative until both are profiled on HGF.
+
+**Why it is deferred:**
+
+1. Phase 25's scope is likelihood-evaluation parallelization. Prototyping two distinct
+   parallelization axes simultaneously would split engineering focus.
+2. The reference implementation of Zoltowski is not publicly released (lab prototype
+   only as of Apr 2026; arXiv:2508.18413 cites Linderman lab codebase). Adoption
+   requires waiting for a stable public release.
+3. The API modification to BlackJAX NUTS is non-trivial (modifies sampler internals,
+   not just the likelihood function). This is a higher-risk change than the ELK
+   likelihood wrapper.
+
+**Gating:**
+
+- Revisit only if the 25-06 verdict on ELK is positive (ELK shows confirmed speedup
+  at T ≥ 1000 and parameter recovery within tolerance).
+- At that point, assess whether Zoltowski's reference implementation has been publicly
+  released and whether it supports BlackJAX NUTS integration.
+- If both conditions are met, plan a v1.4+ phase that layers Zoltowski on top of ELK
+  as the third parallelization axis. The expected benefit scales with leapfrog depth
+  (HMC benefit larger than MALA) and T (composable with ELK's T-scaling advantage).
+- If ELK fails 25-06, Zoltowski alone will not save the parallel-scan approach (it
+  depends on ELK or PIEKS for the likelihood layer).
+
+---
+
 *Phase: 25-parallel-scan-acceleration-research*
 *Decision memo completed: 2026-04-27*
+*§13 Parked / Future Work added: 2026-04-28 (confirm-elk checkpoint closure)*
 *Decision owner: Phase 25 executor (25-02)*
