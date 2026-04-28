@@ -487,6 +487,7 @@ def parallel_scan_likelihood(
     *,
     max_iter: int = 20,
     tol: float = 1e-5,
+    init_trajectory: jax.Array | None = None,
 ) -> tuple[jax.Array, dict]:
     """Parallel-scan log-likelihood for one participant via quasi-ELK.
 
@@ -495,8 +496,17 @@ def parallel_scan_likelihood(
     rel-err 1.28e-15 on coordinated-turn D=4/T=500).
 
     Algorithm (quasi-DEER from lindermanlab/elk deer.py):
-      1. Run one sequential lax.scan pass to get the initialisation trajectory
-         y^(0).  This starts the Newton iterations near the fixed point.
+      1. Determine starting trajectory y^(0) via one of three strategies:
+         - Cold start (init_trajectory=None): replicate _initial_state(theta)
+           for all T trials.  This is the natural starting point for a fresh
+           NUTS call with no cached trajectory.  Measures K in worst-case
+           parallel-vs-sequential regime (K=8-15 per 25-01 prediction).
+         - Caller-supplied warm start (init_trajectory shape (T, D)): the
+           caller passes a precomputed trajectory (e.g. linear interpolation
+           from initial state to a coarse final-state estimate, or a cached
+           trajectory from a prior parallel-scan call at nearby theta).
+           This reduces K toward 1-3, matching the production NUTS leapfrog
+           scenario where a trajectory cache is maintained across steps.
       2. For k = 0, 1, ..., max_iter:
          a. Compute diagonal Jacobians diag_jac[t] = diag(df/dy) at y^(k)[t-1].
          b. Compute bias: b[t] = f(y^(k)[t-1]) - diag_jac[t] * y^(k)[t-1].
@@ -506,14 +516,27 @@ def parallel_scan_likelihood(
          e. Check convergence: max|y^(k+1) - y^(k)| < tol.
       3. Extract log-likelihood from the converged trajectory.
 
+    Initialisation strategy detail
+    -------------------------------
+    When init_trajectory is None (cold start), the Newton iterations begin at
+    yt = replicated initial state: yt[t] = y0 for all t, where y0 =
+    _attrs_to_flat(base_attrs).  This is the most conservative starting point
+    and produces the largest K (worst-case parallel work).
+
+    When init_trajectory is supplied (warm start), the caller is responsible
+    for shape (T, D) agreement.  Two useful warm-start strategies:
+      - Linear interpolation: jnp.linspace(y0, y_final_estimate, T) where
+        y_final_estimate is a coarse guess for the final state.
+      - Cached: yt from a prior call to parallel_scan_likelihood at the same
+        or adjacent theta (e.g. previous NUTS leapfrog step).
+
     Log-likelihood computation
     --------------------------
     After quasi-ELK convergence, the converged flat trajectory yt contains
     the 8-dim state at each trial.  To extract expected_mean (sigmoid
-    probability) for the LL computation, we reinject the converged state
-    into the network via a forward pass.  Specifically, we use the sequential
-    forward scan starting from the converged trajectory's initial condition to
-    recover expected_mean at each trial.
+    probability) for the LL computation, we use yt directly:
+    expected_mean_binary_i[t] = sigmoid(mu_1_i[t-1 posterior]) where t-1
+    uses the prepended y0 for t=0.
 
     For the numerical agreement test, this means the LL computed by
     parallel_scan_likelihood reflects the TRAJECTORY quality of quasi-ELK
@@ -530,6 +553,12 @@ def parallel_scan_likelihood(
         Newton iteration cap.  Default 20.
     tol : float
         Convergence tolerance.  Default 1e-5.
+    init_trajectory : jax.Array or None, shape (T, D), optional
+        Starting trajectory for Newton iterations.  If None (default), uses
+        cold start: replicated initial state y0 for all T trials.  Pass a
+        precomputed trajectory for warm-start strategies (linear interpolation
+        or cached trajectory).  This parameter does NOT change the API contract
+        of the return values.
 
     Returns
     -------
@@ -550,11 +579,18 @@ def parallel_scan_likelihood(
     scan_inputs_jax = _build_scan_inputs_jax(choices, rewards)
 
     # -----------------------------------------------------------------------
-    # Step 1: Sequential initialisation pass
+    # Step 1: Sequential reference pass for traj_max_rel_err diagnostic.
+    #
+    # We always run one sequential pass to get yt_seq for comparison.
+    # If init_trajectory is None (cold start), the Newton iterations begin at
+    # the replicated initial state rather than yt_seq.  This is intentional:
+    # cold-start benchmarks measure worst-case K (K=8-15 per 25-01 prediction),
+    # while the sequential init was the source of the K=1 artifact observed in
+    # checkpoint 1 (Newton started at the fixed point, trivially converging).
     # -----------------------------------------------------------------------
     _, node_traj_init = lax.scan(scan_fn, base_attrs, scan_inputs_jax)
 
-    # Extract sequential flat trajectory for convergence comparison
+    # Extract sequential flat trajectory for convergence comparison (diagnostic)
     yt_seq = jnp.stack(
         [
             node_traj_init[1]["mean"],
@@ -616,7 +652,17 @@ def parallel_scan_likelihood(
     # -----------------------------------------------------------------------
     # Step 3: quasi-ELK Newton iterations
     # -----------------------------------------------------------------------
-    yt = yt_seq  # (T, 8) — initialise at sequential trajectory (y^(0))
+    if init_trajectory is not None:
+        # Caller-supplied warm start: linear interp or cached trajectory.
+        yt = jnp.asarray(init_trajectory, dtype=jnp.float64)
+    else:
+        # Cold start: replicate initial state for all T trials.
+        # This is the natural starting point when no trajectory cache is
+        # available.  Produces largest K (worst-case parallel work), matching
+        # the 25-01 prediction of K=8-15 for weakly-contracting HGF.
+        yt = jnp.broadcast_to(y0[None], (n_trials, _D_STATE)).astype(
+            jnp.float64
+        )  # (T, 8)
 
     err_trace: list[float] = []
     K_observed = 0
