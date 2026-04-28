@@ -1,0 +1,41 @@
+{
+  "reproduction_target": "ELK on coordinated turn (option C)",
+  "reference_dataset": "Coordinated turn nonlinear SSM, Sarkka 2013 ch.5 / Yaghoobi et al. 2021 (arXiv:2102.00514) \u00a75 setup",
+  "algorithm_description": "quasi-DEER (diagonal-Jacobian Newton iterations + jax.lax.associative_scan); re-implemented from lindermanlab/elk",
+  "algorithm_implementation": "lindermanlab/elk (re-implemented in pure JAX)",
+  "elk_repo_commit": "2801539febf07f5e9a28eacc6265dc9ac179e835",
+  "elk_repo_url": "https://github.com/lindermanlab/elk",
+  "sequential_reference": "jax.lax.scan over the same transition_fn (NOT EKF); ELK and lax.scan both solve y[t]=f(y[t-1]) \u2014 ELK in O(K log T), lax.scan in O(T).",
+  "T": 500,
+  "D": 4,
+  "dt": 0.1,
+  "K_observed": 3,
+  "K_target_max": 15,
+  "K_note": "Coordinated-turn has strong contraction (linear transition near omega=0); K expected 3-5. HGF K=8-15 prediction still stands (weakly contracting, transient sr>=1). These are different systems.",
+  "rel_err_vs_sequential": 1.2810479175621247e-15,
+  "mean_rel_err_vs_sequential": 8.455034227618463e-17,
+  "rel_err_tolerance": 1e-05,
+  "per_component_max_rel_err": {
+    "pos_x": 1.7764456609427588e-16,
+    "pos_y": 1.2810479175621247e-15,
+    "velocity": 0.0,
+    "omega": 0.0
+  },
+  "convergence_trace_max_delta": [
+    10.0,
+    498.97505020791596,
+    3.296918293926865e-12
+  ],
+  "seq_wall_seconds": 0.00019839999731630087,
+  "par_wall_seconds": 0.15100139996502548,
+  "par_wall_note": "Python loop over Newton iterations; par_wall includes jax.vmap/jacfwd overhead but NOT compilation time.",
+  "speedup_observed": 0.0013138950854909538,
+  "speedup_note": "CPU-only; speedup expected < 1 on CPU per 25-RESEARCH.md \u00a77b. GPU speedup informational; see cluster SLURM script.",
+  "hardware": "TFRT_CPU_0",
+  "jax_version": "0.9.0",
+  "jax_x64_enabled": true,
+  "rng_seed": 2503,
+  "verdict": "PASS",
+  "verdict_note": "PASS: rel_err < 1e-5 (quasi-ELK matches lax.scan) and K <= 15. GPU speedup is informational (not gating).",
+  "platform_note": "CPU-only run (local Windows 11 machine). GPU run submitted via SLURM (see cluster/25_reproduce_reference_gpu.slurm). M3 cluster status: Phase 14.1-03 stale pip install issue pending (job 54934145 failed with ModuleNotFoundError:prl_hgf); see STATE.md."
+}

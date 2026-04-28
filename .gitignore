@@ -71,6 +71,9 @@ dmypy.json
 # JAX compilation cache
 jax_cache/
 
+# Phase 25: cloned ELK reference implementation (do not commit into hgf-analysis)
+.planning/phases/25-parallel-scan-acceleration-research/scratch/elk/
+
 # Temporary
 *.tmp
 *.bak
