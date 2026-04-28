@@ -1,0 +1,178 @@
+#!/bin/bash
+# =============================================================================
+# SLURM Job: Phase 25-03 — ELK Reference Reproduction on GPU
+# =============================================================================
+# Runs the quasi-ELK coordinated-turn reproduction benchmark on a GPU node:
+#   1. Verifies GPU device is available (fails early if CPU-only).
+#   2. Runs reproduce_reference.py with JAX_ENABLE_X64=1 (mandatory).
+#   3. Writes results JSON to:
+#      .planning/phases/25-parallel-scan-acceleration-research/results/
+#      reproduction_benchmark.json (overwrites CPU run; GPU JSON is authoritative).
+#   4. Logs stdout to results/reproduction_gpu_<JOBID>.out.
+#   5. Auto-commits and pushes results to git (mirrors Phase 14 pattern).
+#
+# Usage:
+#   sbatch cluster/25_reproduce_reference_gpu.slurm
+#
+# Expected outcome (PASS gate):
+#   rel_err_vs_sequential < 1e-5  (numerical agreement)
+#   K_observed <= 15              (convergence rate)
+#   GPU speedup informational only (not gating per plan override note)
+#
+# Derived from: cluster/14_benchmark_gpu.slurm (Phase 14 GPU benchmark template)
+# Plan: 25-03, Phase 25 — Parallel-scan acceleration of HGF likelihood
+# =============================================================================
+
+#SBATCH --job-name=25-reproduce-ref
+#SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_%j.out
+#SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_%j.err
+#SBATCH --time=00:30:00
+#SBATCH --mem=8G
+#SBATCH --gres=gpu:1
+#SBATCH --partition=gpu
+#SBATCH --cpus-per-task=2
+
+# =============================================================================
+# Environment Setup (mirrors 14_benchmark_gpu.slurm pattern)
+# =============================================================================
+module load miniforge3
+
+cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
+PROJECT_ROOT="$(pwd)"
+
+mkdir -p cluster/logs
+mkdir -p .planning/phases/25-parallel-scan-acceleration-research/results
+export PYTHONUNBUFFERED=1
+
+# Activate ds_env
+_PROJECT="${PROJECT:-fc37}"
+conda activate ds_env 2>/dev/null || \
+conda activate /scratch/${_PROJECT}/${USER}/conda/envs/ds_env 2>/dev/null || {
+    echo "ERROR: Failed to activate ds_env conda environment"
+    exit 1
+}
+
+# =============================================================================
+# Add pip-installed ptxas to PATH (from Phase 14 template — GPU compilation)
+# =============================================================================
+PTXAS_BIN=$(python -c 'import nvidia.cuda_nvcc, os; print(os.path.join(os.path.dirname(nvidia.cuda_nvcc.__file__), "bin"))' 2>/dev/null)
+if [[ -n "$PTXAS_BIN" && -d "$PTXAS_BIN" ]]; then
+    export PATH="$PTXAS_BIN:$PATH"
+    echo "Added ptxas to PATH: $PTXAS_BIN"
+fi
+
+# =============================================================================
+# JAX float64 mode (HIGH SEVERITY — must be set before jax import; Risk #6)
+# =============================================================================
+export JAX_ENABLE_X64=1
+
+# JAX compilation cache (shared across nodes — Phase 21 VERDICT §c pattern)
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared"
+export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
+export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
+mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || {
+    echo "WARNING: Could not create JAX cache dir, disabling cache"
+    unset JAX_COMPILATION_CACHE_DIR
+}
+
+# Show actual VRAM usage, not preallocated pool
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+
+# =============================================================================
+# Banner
+# =============================================================================
+echo "============================================================"
+echo "Phase 25-03: ELK Reference Reproduction GPU Benchmark"
+echo "============================================================"
+echo "Job ID:  ${SLURM_JOB_ID:-local}"
+echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
+echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
+echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
+echo "JAX_ENABLE_X64: ${JAX_ENABLE_X64}"
+echo "Start:   $(date)"
+echo "============================================================"
+echo ""
+
+# =============================================================================
+# GPU Verification (fail early if no GPU)
+# =============================================================================
+python -c "
+import jax
+devices = jax.devices()
+gpu = [d for d in devices if d.platform == 'gpu']
+print(f'JAX devices: {devices}')
+if not gpu:
+    print('ERROR: No GPU detected — this script requires a GPU node!')
+    import sys; sys.exit(1)
+print(f'GPU: {gpu[0]}')
+print(f'JAX version: {jax.__version__}')
+"
+if [[ $? -ne 0 ]]; then
+    echo "GPU check failed. Exiting."
+    exit 1
+fi
+echo ""
+
+# =============================================================================
+# Re-install ELK dependencies if needed (quasi-DEER uses only JAX;
+# dynamax and flax are NOT required for reproduce_reference.py)
+# =============================================================================
+# The reproduce_reference.py script is a pure-JAX implementation of
+# quasi-DEER; it does NOT import elk, dynamax, or flax.
+# No additional pip installs needed beyond ds_env base JAX.
+
+# =============================================================================
+# Run Reproduction Script
+# =============================================================================
+echo "Running quasi-ELK coordinated-turn reproduction (T=500, D=4)..."
+echo ""
+
+python .planning/phases/25-parallel-scan-acceleration-research/scratch/reproduce_reference.py
+
+EXIT_CODE=$?
+
+echo ""
+echo "============================================================"
+
+RESULTS_JSON=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_benchmark.json"
+
+if [[ $EXIT_CODE -eq 0 ]]; then
+    echo "REPRODUCTION COMPLETE (PASS)"
+    echo ""
+    if [[ -f "$RESULTS_JSON" ]]; then
+        echo "Results:"
+        cat "$RESULTS_JSON" | python -m json.tool 2>/dev/null || cat "$RESULTS_JSON"
+    fi
+else
+    echo "REPRODUCTION FAILED (exit code: $EXIT_CODE)"
+    echo "Check: .planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.err"
+fi
+
+echo ""
+echo "End: $(date)"
+echo "============================================================"
+
+# =============================================================================
+# Auto-push results to git (mirrors 14_benchmark_gpu.slurm and 18_smoke_patrl_cpu.slurm)
+# Runs regardless of EXIT_CODE so failed run still uploads its error log.
+# =============================================================================
+echo ""
+echo "Pushing reproduction results to git..."
+
+_LOG_OUT=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.out"
+_LOG_ERR=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.err"
+
+git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
+git add "$RESULTS_JSON" 2>/dev/null
+if ! git diff --cached --quiet 2>/dev/null; then
+    git commit -m "bench phase25-03 gpu elk-coordinated-turn (job ${SLURM_JOB_ID})"
+    if git push origin main 2>/dev/null; then
+        echo "Pushed reproduction results to origin/main"
+    else
+        echo "WARNING: git push failed — results committed locally only"
+    fi
+else
+    echo "No new files to push"
+fi
+
+exit $EXIT_CODE
