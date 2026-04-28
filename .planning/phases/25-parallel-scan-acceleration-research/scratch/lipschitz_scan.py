@@ -6,7 +6,7 @@ Verify that the 3-level binary HGF satisfies the predictability/contraction
 conditions of arXiv:2508.16817 (Gonzalez et al. 2025) required for
 ELK/PIEKS convergence guarantees.
 
-For each of 100 representative parameter vectors the script:
+For each of 100 representative parameter vectors × 4 input regimes the script:
 
 1. Builds a 1-participant synthetic HGF cohort with T=420 trials.
 2. Runs pyhgf sequentially to obtain the reference state trajectory.
@@ -29,6 +29,16 @@ Prior ranges (from configs/prl_analysis.yaml + hierarchical.py):
   kappa    : fixed 1.0          (_KAPPA_FIXED in hierarchical.py:76)
   beta     : Uniform[0.5, 4.0] (yaml: lower 0.01, upper 20; restrict to typical)
   zeta     : Uniform[-1.0, 1.0] (yaml: lower -5, upper 5; restrict to posterior-like)
+
+Input regimes (cross-regime sensitivity analysis — amendment 2026-04-27)
+-------------------------------------------------------------------------
+All four regimes use round-robin cue selection (cue = i % 3) for fair
+comparison; only the *outcome* generation differs:
+
+  round_robin : stationary Bernoulli(0.7) — original baseline
+  grw         : Gaussian-random-walk outcome probability (slow drift)
+  oddball     : stationary Bernoulli(0.7) + 5% rare flipped trials
+  reversal    : 4-phase block-reversal [0.7, 0.3, 0.7, 0.3] matching PRL
 
 State representation
 --------------------
@@ -54,23 +64,23 @@ components grow monotonically (spectral radius = 1.0 for precision trials).
 For HGF, pi_1 grows monotonically, causing GMSR to be biased toward 0.
 
 VERDICT criterion: lambda_hat_qr < 0 (negative leading Lyapunov exponent)
-All 100 vectors show negative QR lambda_hat (-0.010 to -0.020).
+All 100 vectors × 4 regimes show negative QR lambda_hat.
 
 Outputs
 -------
-  results/lipschitz_lle_distribution.csv
-  results/jacobian_spectral_radius_per_trial.csv
+  results/lipschitz_lle_distribution.csv         (400 rows: 4 regimes × 100)
+  results/jacobian_spectral_radius_per_trial.csv (168,000 rows: 4 × 100 × 420)
 
 Usage
 -----
     python .planning/phases/25-parallel-scan-acceleration-research/scratch/lipschitz_scan.py
 
 Expected output (final summary line):
-    N=100 vectors scanned. lambda_hat: median=X, p5=Y, p95=Z.
+    N=100 vectors × 4 regimes scanned.  lambda_hat: median=X, p5=Y, p95=Z.
     Failure-mode count (lambda >= 0): K vectors.
 
 Author: Phase 25-01 executor
-Date:   2026-04-27
+Date:   2026-04-27 (amended 2026-04-27 for cross-regime scan)
 """
 from __future__ import annotations
 
@@ -103,11 +113,15 @@ from prl_hgf.models.hgf_3level import build_3level_network
 # Configuration
 # -------------------------------------------------------------------------
 
-N_VECTORS = 100        # number of parameter vectors to scan
+N_VECTORS = 100        # number of parameter vectors per regime
 T = 420                # production trial count (pick_best_cue per configs/prl_analysis.yaml)
 SEED = 25_01           # RNG seed — wide prior sweep (Phase 14.2 chains not available)
 KAPPA_FIXED = 1.0      # _KAPPA_FIXED from src/prl_hgf/fitting/hierarchical.py:76
 QR_RENORM_EVERY = 10   # renormalize matrix product every this many steps
+
+# Cross-regime sensitivity analysis (amendment 2026-04-27)
+# Four input regimes, same cue-cycling, differing outcome distributions.
+REGIMES = ["round_robin", "grw", "oddball", "reversal"]
 
 # Prior ranges — restricted to posterior-like region
 # Source: configs/prl_analysis.yaml + prior-phase notes
@@ -160,14 +174,19 @@ def draw_parameter_vectors(
 
 
 # -------------------------------------------------------------------------
-# Step 2: Synthetic input sequence generator
+# Step 2: Synthetic input sequence generators (4 regimes)
+#
+# All four regimes use round-robin cue selection (cue = i % 3) for fair
+# per-cue trial-frequency comparison.  Only outcome generation differs.
+# Amendment 2026-04-27: original make_synthetic_inputs was Bernoulli(0.7)
+# stationary (now "round_robin" regime).  Three new regimes added.
 # -------------------------------------------------------------------------
 
-def make_synthetic_inputs(
+def make_round_robin_inputs(
     t: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Generate synthetic binary input for a single participant.
+    """Existing baseline: round-robin cue, stationary Bernoulli(0.7).
 
     Parameters
     ----------
@@ -182,24 +201,139 @@ def make_synthetic_inputs(
         Shape (T, 3), float64.  Reward signal for each of 3 cues.
     observed : np.ndarray
         Shape (T, 3), int32.  Observation mask (1 = observed).
-
-    Notes
-    -----
-    Generates a mixed-cue sequence with cue selection cycling through all
-    3 cues to populate the full HGF state.  Outcomes are Bernoulli(0.7)
-    for the chosen cue.
     """
     rng = np.random.default_rng(seed)
     input_data = np.zeros((t, 3), dtype=np.float64)
     observed = np.zeros((t, 3), dtype=np.int32)
-    # Cycle through cues to give all branches some signal
     for i in range(t):
         cue = i % 3
-        outcome = rng.random() < 0.7
-        if outcome:
+        if rng.random() < 0.7:
             input_data[i, cue] = 1.0
         observed[i, cue] = 1
     return input_data, observed
+
+
+# Backward-compatibility alias (original name preserved)
+make_synthetic_inputs = make_round_robin_inputs
+
+
+def make_grw_inputs(
+    t: int,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Gaussian-random-walk outcome probability, slow drift.
+
+    Outcome probability drifts as a random walk clipped to [0.05, 0.95],
+    probing HGF contraction under non-stationary reward statistics.
+
+    Parameters
+    ----------
+    t : int
+        Number of trials.
+    seed : int
+        Per-participant seed for reproducible sequences.
+
+    Returns
+    -------
+    input_data : np.ndarray
+        Shape (T, 3), float64.
+    observed : np.ndarray
+        Shape (T, 3), int32.
+    """
+    rng = np.random.default_rng(seed)
+    p = np.clip(0.5 + np.cumsum(0.03 * rng.standard_normal(t)), 0.05, 0.95)
+    input_data = np.zeros((t, 3), dtype=np.float64)
+    observed = np.zeros((t, 3), dtype=np.int32)
+    for i in range(t):
+        cue = i % 3
+        if rng.random() < p[i]:
+            input_data[i, cue] = 1.0
+        observed[i, cue] = 1
+    return input_data, observed
+
+
+def make_oddball_inputs(
+    t: int,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Stationary Bernoulli(0.7) with 5% rare flipped trials.
+
+    Each trial has a 5% chance of having its outcome flipped, producing
+    transient large prediction errors without changing the stationary mean.
+    Tests whether oddball PE spikes localize sr >= 1 events.
+
+    Parameters
+    ----------
+    t : int
+        Number of trials.
+    seed : int
+        Per-participant seed for reproducible sequences.
+
+    Returns
+    -------
+    input_data : np.ndarray
+        Shape (T, 3), float64.
+    observed : np.ndarray
+        Shape (T, 3), int32.
+    """
+    rng = np.random.default_rng(seed)
+    input_data = np.zeros((t, 3), dtype=np.float64)
+    observed = np.zeros((t, 3), dtype=np.int32)
+    for i in range(t):
+        cue = i % 3
+        base = rng.random() < 0.7
+        flip = rng.random() < 0.05
+        if base ^ flip:
+            input_data[i, cue] = 1.0
+        observed[i, cue] = 1
+    return input_data, observed
+
+
+def make_reversal_inputs(
+    t: int,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """4-phase block-reversal: 0.7 / 0.3 / 0.7 / 0.3.
+
+    Matches the PRL acquisition→reversal pattern (configs/prl_analysis.yaml
+    4-phase structure).  Tests whether phase boundaries produce sr >= 1 spikes
+    localized at the reversal onset.
+
+    Parameters
+    ----------
+    t : int
+        Number of trials.
+    seed : int
+        Per-participant seed for reproducible sequences.
+
+    Returns
+    -------
+    input_data : np.ndarray
+        Shape (T, 3), float64.
+    observed : np.ndarray
+        Shape (T, 3), int32.
+    """
+    rng = np.random.default_rng(seed)
+    n = t // 4
+    p_blocks = [0.7, 0.3, 0.7, 0.3]
+    input_data = np.zeros((t, 3), dtype=np.float64)
+    observed = np.zeros((t, 3), dtype=np.int32)
+    for i in range(t):
+        cue = i % 3
+        phase = min(i // n, 3)
+        if rng.random() < p_blocks[phase]:
+            input_data[i, cue] = 1.0
+        observed[i, cue] = 1
+    return input_data, observed
+
+
+# Dispatch table keyed by REGIMES list
+_INPUT_GENERATORS: dict[str, callable] = {
+    "round_robin": make_round_robin_inputs,
+    "grw": make_grw_inputs,
+    "oddball": make_oddball_inputs,
+    "reversal": make_reversal_inputs,
+}
 
 
 # -------------------------------------------------------------------------
@@ -574,13 +708,22 @@ def compute_per_trial_metrics(
 # -------------------------------------------------------------------------
 
 def main() -> None:
-    """Run the full Lipschitz/LLE scan and write output CSVs."""
+    """Run the full Lipschitz/LLE scan across 4 input regimes and write CSVs."""
     t_wall_start = time.time()
+
+    n_regimes = len(REGIMES)
+    n_total = N_VECTORS * n_regimes
+    n_total_trials = n_total * T
 
     print("=" * 72)
     print("Phase 25-01: Lipschitz / LLE Scan for 3-level Binary HGF")
+    print("         Cross-Regime Sensitivity Analysis (amendment 2026-04-27)")
     print("=" * 72, flush=True)
-    print(f"N_VECTORS = {N_VECTORS}, T = {T}, SEED = {SEED}", flush=True)
+    print(
+        f"N_VECTORS = {N_VECTORS} per regime, {n_regimes} regimes = {n_total} total",
+        flush=True,
+    )
+    print(f"T = {T}, SEED = {SEED}", flush=True)
     print(
         "Parameter source: wide prior sweep (Phase 14.2 chains not available)",
         flush=True,
@@ -591,164 +734,259 @@ def main() -> None:
         flush=True,
     )
     print(f"  beta in {BETA_RANGE}, zeta in {ZETA_RANGE}", flush=True)
-    print(f"LLE method: GMSR (primary) + QR renormalized (cross-validation)", flush=True)
+    print(f"LLE method: QR (Benettin) primary + GMSR secondary (archived)", flush=True)
     print(f"State dim: 4 (mu_1, pi_1, mu_2, pi_2) — cue-0 branch", flush=True)
+    print(f"Regimes: {REGIMES}", flush=True)
+    print(
+        f"Expected total Jacobians: {n_total_trials:,}  "
+        f"({n_regimes} × {N_VECTORS} × {T})",
+        flush=True,
+    )
     print(flush=True)
 
-    # Draw parameter vectors
+    # Draw parameter vectors (same 100 vectors reused across all 4 regimes
+    # for a fair comparison — parameter effects factored out from regime effects)
     param_vecs = draw_parameter_vectors(N_VECTORS, SEED)
 
-    # Prepare output CSV writers
+    # Prepare output directory
     os.makedirs(_RESULTS_DIR, exist_ok=True)
 
-    lle_rows = []
-    sr_rows = []
-
-    for vec_id in range(N_VECTORS):
-        omega_2, omega_3, kappa, beta, zeta = param_vecs[vec_id]
-
-        t_vec_start = time.time()
-
-        # Generate synthetic inputs
-        input_data, observed = make_synthetic_inputs(T, seed=SEED + vec_id)
-
-        # Reference trajectory via pyhgf lax.scan
-        state_traj = run_reference_trajectory(
-            omega_2=float(omega_2),
-            omega_3=float(omega_3),
-            kappa=float(kappa),
-            input_data=input_data,
-            observed=observed,
-        )
-
-        # Build hgf_step and initial attrs
-        hgf_step_fn, initial_attrs, _scan_fn = build_hgf_step(
-            omega_2=float(omega_2),
-            omega_3=float(omega_3),
-            kappa=float(kappa),
-        )
-
-        # Compute per-trial Jacobians (vectorised via vmap — no 420-loop compilation)
-        jacobians = compute_jacobians(
-            hgf_step_fn, initial_attrs, input_data, observed, state_traj
-        )
-
-        # LLE estimates: QR (Benettin) is primary; GMSR is secondary/archived
-        lambda_hat_qr = estimate_lle_qr(jacobians)
-        lambda_hat = estimate_lle_gmsr(jacobians)   # secondary (biased near 0 for HGF)
-
-        # Per-trial metrics
-        spectral_radii, max_svs = compute_per_trial_metrics(jacobians)
-
-        # Summary statistics
-        max_sv_overall = float(np.max(max_svs))
-        num_sigma_gt_1 = int(np.sum(np.array(spectral_radii) >= 1.0))
-
-        # Accumulate LLE row
-        lle_rows.append({
-            "param_vector_id": vec_id,
-            "omega_2": float(omega_2),
-            "omega_3": float(omega_3),
-            "kappa": float(kappa),
-            "beta": float(beta),
-            "zeta": float(zeta),
-            "lambda_hat": lambda_hat,
-            "lambda_hat_qr": lambda_hat_qr,
-            "max_singular_value": max_sv_overall,
-            "num_trials_sigma_gt_1": num_sigma_gt_1,
-        })
-
-        # Accumulate per-trial rows
-        for t_idx in range(T):
-            sr_rows.append({
-                "param_vector_id": vec_id,
-                "trial_index": t_idx,
-                "spectral_radius": spectral_radii[t_idx],
-                "max_singular_value": max_svs[t_idx],
-            })
-
-        t_vec_elapsed = time.time() - t_vec_start
-        # Primary verdict uses QR (Benettin) lambda; GMSR is archived
-        status = "FAIL" if lambda_hat_qr >= 0.0 else "pass"
-        print(
-            f"  [{vec_id + 1:3d}/{N_VECTORS}] "
-            f"w2={omega_2:.2f} w3={omega_3:.2f} b={beta:.2f} z={zeta:.2f} | "
-            f"qr={lambda_hat_qr:+.4f} gmsr={lambda_hat:+.4f} "
-            f"sr_max={max_sv_overall:.3f} fails={num_sigma_gt_1} | "
-            f"{status} [{t_vec_elapsed:.1f}s]",
-            flush=True,
-        )
+    lle_rows: list[dict] = []
+    sr_rows: list[dict] = []
 
     # -----------------------------------------------------------------------
-    # Write LLE CSV
+    # Incremental CSV writers — open files once, write as we go.
+    # This prevents data loss if the process is killed mid-run.
+    # Resumable: skip (regime, vec_id) pairs already present in LLE CSV.
     # -----------------------------------------------------------------------
     lle_fieldnames = [
-        "param_vector_id", "omega_2", "omega_3", "kappa", "beta", "zeta",
-        "lambda_hat", "lambda_hat_qr", "max_singular_value",
+        "regime", "param_vector_id", "omega_2", "omega_3", "kappa", "beta", "zeta",
+        "lambda_hat_qr", "lambda_hat_gmsr", "max_singular_value",
         "num_trials_sigma_gt_1",
     ]
-    with open(LLE_CSV, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=lle_fieldnames)
-        writer.writeheader()
-        writer.writerows(lle_rows)
-
-    # -----------------------------------------------------------------------
-    # Write per-trial spectral-radius CSV
-    # -----------------------------------------------------------------------
     sr_fieldnames = [
-        "param_vector_id", "trial_index", "spectral_radius", "max_singular_value"
+        "regime", "param_vector_id", "trial_index", "spectral_radius",
+        "max_singular_value",
     ]
-    with open(SR_CSV, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=sr_fieldnames)
-        writer.writeheader()
-        writer.writerows(sr_rows)
+
+    # Detect already-completed (regime, vec_id) pairs from existing LLE CSV
+    completed: set[tuple[str, int]] = set()
+    if os.path.exists(LLE_CSV):
+        with open(LLE_CSV, newline="") as _f:
+            _reader = csv.DictReader(_f)
+            if _reader.fieldnames and "regime" in _reader.fieldnames:
+                for _row in _reader:
+                    completed.add((_row["regime"], int(_row["param_vector_id"])))
+        if completed:
+            print(
+                f"Resuming: {len(completed)} (regime, vec_id) pairs already in LLE CSV.",
+                flush=True,
+            )
+
+    # Append mode: write headers only if file is new/empty
+    lle_file_exists = os.path.exists(LLE_CSV) and os.path.getsize(LLE_CSV) > 0
+    sr_file_exists = os.path.exists(SR_CSV) and os.path.getsize(SR_CSV) > 0
+
+    lle_f = open(LLE_CSV, "a", newline="")  # noqa: SIM115
+    sr_f = open(SR_CSV, "a", newline="")    # noqa: SIM115
+    lle_writer = csv.DictWriter(lle_f, fieldnames=lle_fieldnames)
+    sr_writer = csv.DictWriter(sr_f, fieldnames=sr_fieldnames)
+    if not lle_file_exists:
+        lle_writer.writeheader()
+    if not sr_file_exists:
+        sr_writer.writeheader()
+
+    for regime in REGIMES:
+        input_gen = _INPUT_GENERATORS[regime]
+        print(f"\n--- Regime: {regime} ---", flush=True)
+
+        for vec_id in range(N_VECTORS):
+            # Skip pairs already completed in a previous (interrupted) run
+            if (regime, vec_id) in completed:
+                print(
+                    f"  [{regime}|{vec_id + 1:3d}/{N_VECTORS}] already done — skip",
+                    flush=True,
+                )
+                continue
+
+            omega_2, omega_3, kappa, beta, zeta = param_vecs[vec_id]
+
+            t_vec_start = time.time()
+
+            # Generate synthetic inputs for this regime
+            # Use a regime-offset seed so each (regime, vec_id) pair is independent
+            regime_offset = REGIMES.index(regime) * 10_000
+            input_data, observed = input_gen(T, seed=SEED + regime_offset + vec_id)
+
+            # Reference trajectory via pyhgf lax.scan
+            state_traj = run_reference_trajectory(
+                omega_2=float(omega_2),
+                omega_3=float(omega_3),
+                kappa=float(kappa),
+                input_data=input_data,
+                observed=observed,
+            )
+
+            # Build hgf_step and initial attrs
+            hgf_step_fn, initial_attrs, _scan_fn = build_hgf_step(
+                omega_2=float(omega_2),
+                omega_3=float(omega_3),
+                kappa=float(kappa),
+            )
+
+            # Compute per-trial Jacobians (vectorised via vmap)
+            jacobians = compute_jacobians(
+                hgf_step_fn, initial_attrs, input_data, observed, state_traj
+            )
+
+            # LLE estimates: QR (Benettin) is primary; GMSR is secondary/archived
+            lambda_hat_qr = estimate_lle_qr(jacobians)
+            lambda_hat = estimate_lle_gmsr(jacobians)
+
+            # Per-trial metrics
+            spectral_radii, max_svs = compute_per_trial_metrics(jacobians)
+
+            # Summary statistics
+            max_sv_overall = float(np.max(max_svs))
+            num_sigma_gt_1 = int(np.sum(np.array(spectral_radii) >= 1.0))
+
+            # Write LLE row immediately
+            lle_row = {
+                "regime": regime,
+                "param_vector_id": vec_id,
+                "omega_2": float(omega_2),
+                "omega_3": float(omega_3),
+                "kappa": float(kappa),
+                "beta": float(beta),
+                "zeta": float(zeta),
+                "lambda_hat_qr": lambda_hat_qr,
+                "lambda_hat_gmsr": lambda_hat,
+                "max_singular_value": max_sv_overall,
+                "num_trials_sigma_gt_1": num_sigma_gt_1,
+            }
+            lle_rows.append(lle_row)
+            lle_writer.writerow(lle_row)
+            lle_f.flush()
+
+            # Write per-trial rows immediately
+            for t_idx in range(T):
+                sr_row = {
+                    "regime": regime,
+                    "param_vector_id": vec_id,
+                    "trial_index": t_idx,
+                    "spectral_radius": spectral_radii[t_idx],
+                    "max_singular_value": max_svs[t_idx],
+                }
+                sr_rows.append(sr_row)
+                sr_writer.writerow(sr_row)
+            sr_f.flush()
+
+            t_vec_elapsed = time.time() - t_vec_start
+            status = "FAIL" if lambda_hat_qr >= 0.0 else "pass"
+            print(
+                f"  [{regime}|{vec_id + 1:3d}/{N_VECTORS}] "
+                f"w2={omega_2:.2f} w3={omega_3:.2f} b={beta:.2f} z={zeta:.2f} | "
+                f"qr={lambda_hat_qr:+.4f} gmsr={lambda_hat:+.4f} "
+                f"sr_max={max_sv_overall:.3f} fails={num_sigma_gt_1} | "
+                f"{status} [{t_vec_elapsed:.1f}s]",
+                flush=True,
+            )
+
+    lle_f.close()
+    sr_f.close()
 
     # -----------------------------------------------------------------------
-    # Summary statistics
+    # Summary statistics — overall and per-regime
     # -----------------------------------------------------------------------
-    # PRIMARY: QR (Benettin) lambda_hat — correct LLE definition
-    lambda_hats_qr = np.array([r["lambda_hat_qr"] for r in lle_rows])
-    n_fail_qr = int(np.sum(lambda_hats_qr >= 0.0))
-    n_pass_qr = N_VECTORS - n_fail_qr
-    frac_pass_qr = n_pass_qr / N_VECTORS * 100.0
+    # Reload the full LLE CSV for summary statistics (includes resumed rows)
+    # -----------------------------------------------------------------------
+    all_lle_rows: list[dict] = []
+    with open(LLE_CSV, newline="") as _f:
+        _reader = csv.DictReader(_f)
+        for _row in _reader:
+            all_lle_rows.append({
+                "regime": _row["regime"],
+                "param_vector_id": int(_row["param_vector_id"]),
+                "omega_2": float(_row["omega_2"]),
+                "omega_3": float(_row["omega_3"]),
+                "kappa": float(_row["kappa"]),
+                "beta": float(_row["beta"]),
+                "zeta": float(_row["zeta"]),
+                "lambda_hat_qr": float(_row["lambda_hat_qr"]),
+                "lambda_hat_gmsr": float(_row["lambda_hat_gmsr"]),
+                "max_singular_value": float(_row["max_singular_value"]),
+                "num_trials_sigma_gt_1": int(_row["num_trials_sigma_gt_1"]),
+            })
+    # Use all_lle_rows for statistics from here on
+    lle_rows = all_lle_rows
 
-    p5_qr = float(np.percentile(lambda_hats_qr, 5))
-    p50_qr = float(np.percentile(lambda_hats_qr, 50))
-    p95_qr = float(np.percentile(lambda_hats_qr, 95))
+    print(flush=True)
+    print("=" * 72, flush=True)
+    print(f"N={N_VECTORS} vectors × {n_regimes} regimes = {n_total} total scanned.",
+          flush=True)
 
-    # SECONDARY: GMSR lambda_hat (archived, biased near 0 for HGF precision growth)
-    lambda_hats_gmsr = np.array([r["lambda_hat"] for r in lle_rows])
-    n_fail_gmsr = int(np.sum(lambda_hats_gmsr >= 0.0))
+    # Per-regime breakdown
+    overall_verdict = "PASS"
+    for regime in REGIMES:
+        regime_rows = [r for r in lle_rows if r["regime"] == regime]
+        lhq = np.array([r["lambda_hat_qr"] for r in regime_rows])
+        lhg = np.array([r["lambda_hat_gmsr"] for r in regime_rows])
+        n_fail_qr = int(np.sum(lhq >= 0.0))
+        n_fail_gmsr = int(np.sum(lhg >= 0.0))
+        frac_pass = (N_VECTORS - n_fail_qr) / N_VECTORS * 100.0
+        p5 = float(np.percentile(lhq, 5))
+        p50 = float(np.percentile(lhq, 50))
+        p95 = float(np.percentile(lhq, 95))
+        sr_counts = np.array([r["num_trials_sigma_gt_1"] for r in regime_rows])
+        n_any_sr_gt1 = int(np.sum(sr_counts > 0))
+        frac_trials_sr_gt1 = float(np.sum(sr_counts)) / (N_VECTORS * T) * 100.0
+        print(
+            f"  {regime:12s}: median={p50:+.4f} p5={p5:+.4f} p95={p95:+.4f} "
+            f"pass={frac_pass:.0f}% "
+            f"sr>=1 trials={frac_trials_sr_gt1:.1f}% "
+            f"gmsr_fail={n_fail_gmsr}",
+            flush=True,
+        )
+        if frac_pass < 80.0:
+            overall_verdict = "FAIL"
+        elif frac_pass < 95.0 and overall_verdict != "FAIL":
+            overall_verdict = "PASS-WITH-FAILURE-MODES"
 
-    all_sigma_gt_1 = int(
-        np.sum(np.array([r["num_trials_sigma_gt_1"] for r in lle_rows]) > 0)
+    # Overall totals
+    lambda_hats_qr_all = np.array([r["lambda_hat_qr"] for r in lle_rows])
+    n_fail_all = int(np.sum(lambda_hats_qr_all >= 0.0))
+    frac_pass_all = (n_total - n_fail_all) / n_total * 100.0
+    p5_all = float(np.percentile(lambda_hats_qr_all, 5))
+    p50_all = float(np.percentile(lambda_hats_qr_all, 50))
+    p95_all = float(np.percentile(lambda_hats_qr_all, 95))
+    all_sr_gt1_counts = np.array([r["num_trials_sigma_gt_1"] for r in lle_rows])
+    frac_trials_sr_gt1_all = (
+        float(np.sum(all_sr_gt1_counts)) / (n_total * T) * 100.0
     )
 
     t_wall_elapsed = time.time() - t_wall_start
 
     print(flush=True)
-    print("=" * 72, flush=True)
-    print(f"N={N_VECTORS} vectors scanned.", flush=True)
-    print(f"QR (Benettin) lambda_hat: median={p50_qr:.4f}, p5={p5_qr:.4f}, p95={p95_qr:.4f}.",
+    print(f"OVERALL QR lambda_hat: median={p50_all:.4f} p5={p5_all:.4f} p95={p95_all:.4f}",
           flush=True)
-    print(f"GMSR lambda_hat (secondary, biased): fail count (>= 0) = {n_fail_gmsr}/100",
+    print(f"OVERALL QR fail count (>= 0): {n_fail_all}/{n_total}", flush=True)
+    print(f"OVERALL QR pass rate: {frac_pass_all:.1f}%", flush=True)
+    print(f"OVERALL fraction of trials with sr >= 1: {frac_trials_sr_gt1_all:.1f}%",
           flush=True)
-    print(f"QR Failure-mode count (lambda_qr >= 0): {n_fail_qr} vectors.", flush=True)
-    print(f"Vectors with any trial spectral_radius >= 1: {all_sigma_gt_1}", flush=True)
-    print(f"QR Pass rate (lambda_qr < 0): {frac_pass_qr:.1f}%", flush=True)
     print(f"Wall time: {t_wall_elapsed:.1f}s", flush=True)
     print(f"LLE CSV:  {LLE_CSV}", flush=True)
     print(f"SR CSV:   {SR_CSV}", flush=True)
     print("=" * 72, flush=True)
 
-    # Verdict uses QR (Benettin) as primary estimator
-    if frac_pass_qr >= 95.0 and all_sigma_gt_1 < N_VECTORS * 0.1:
-        verdict = "PASS"
-    elif frac_pass_qr >= 80.0:
-        verdict = "PASS-WITH-FAILURE-MODES"
+    # Refine overall verdict: if ANY single regime has frac_pass < 95 we degrade
+    any_sr_pressure = frac_trials_sr_gt1_all >= 50.0
+    if frac_pass_all >= 95.0 and not any_sr_pressure:
+        overall_verdict = "PASS"
+    elif frac_pass_all >= 80.0:
+        overall_verdict = "PASS-WITH-FAILURE-MODES"
     else:
-        verdict = "FAIL"
-    print(f"Preliminary verdict (QR-based): {verdict}", flush=True)
+        overall_verdict = "FAIL"
+    print(f"Overall verdict (QR-based, cross-regime): {overall_verdict}", flush=True)
     print("=" * 72, flush=True)
 
 
