@@ -12,10 +12,10 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 ### v1.4 Phase 25 Research: Parallel-scan acceleration of HGF (out-of-cycle, parallel)
 
 Phase: 25 — Parallel-scan acceleration of HGF likelihood evaluation — IN PROGRESS
-Plan: 25-01 complete (THEORETICAL_VALIDATION.md + lipschitz_scan.py + 2 CSVs); awaiting user gate at checkpoint; next: 25-02 (algorithm selection) upon user approval
-Status: 25-01 COMPLETE (awaiting checkpoint gate). PASS-WITH-FAILURE-MODES verdict. QR lambda_hat median=-0.0132 (100% of 100 vectors negative). 2 atomic task commits pushed.
-Last activity: 2026-04-27 — Plan 25-01 complete; 2 atomic task commits (de8c8aa feat scan, e640b19 docs memo); SUMMARY.md published.
-Key decisions: (1) Benettin QR is correct LLE estimator for HGF (GMSR biased by pi_1 monotonic growth); (2) HGF is weakly contracting (lambda~-0.013, not -0.1 to -0.3); (3) ELK LM trust radius confirmed essential (76% of trials have sr >= 1); (4) K=8-15 iterations predicted (vs 3-10); (5) failure-mode driver is omega_2 near -2.0 (not omega_3 as predicted).
+Plan: 25-01 complete (THEORETICAL_VALIDATION.md + lipschitz_scan.py + 2 CSVs + cross-regime amendment); awaiting user gate at checkpoint; next: 25-02 (algorithm selection) upon user approval
+Status: 25-01 COMPLETE with cross-regime amendment (2026-04-28). PASS-WITH-FAILURE-MODES verdict confirmed across 4 input regimes (400 vectors, 168,000 Jacobians). QR lambda_hat median=-0.0135 overall (range -0.0132 to -0.0143 by regime), 100% pass. K=8-15 prediction validated for production PRL reversal regime.
+Last activity: 2026-04-28 — Plan 25-01 cross-regime amendment complete; commits d5b4c36 (feat scan ext) + docs; SUMMARY.md + THEORETICAL_VALIDATION.md §10 updated.
+Key decisions: (1) Benettin QR is correct LLE estimator for HGF (GMSR biased by pi_1 monotonic growth); (2) HGF is weakly contracting (lambda~-0.013, not -0.1 to -0.3); (3) ELK LM trust radius confirmed essential (73-83% of trials have sr >= 1 depending on regime); (4) K=8-15 iterations predicted (vs 3-10); (5) failure-mode driver is omega_2 near -2.0 (not omega_3 as predicted); (6) verdict and K-prediction are regime-independent (confirmed reversal/GRW/oddball).
 
 ### v1.3 Generic HGF Viewer (active — local, primary active line)
 

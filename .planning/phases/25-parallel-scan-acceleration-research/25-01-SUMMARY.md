@@ -9,11 +9,11 @@ requires:
   - phase: 25-00b
     provides: "hgf_step pure-function extraction (api_bridging_probe.py); float64 requirement"
 provides:
-  - "THEORETICAL_VALIDATION.md: PASS-WITH-FAILURE-MODES verdict with empirical lambda_hat distribution"
-  - "lipschitz_scan.py: 100-vector Benettin QR + GMSR LLE scan over T=420 trajectories"
-  - "results/lipschitz_lle_distribution.csv: per-vector LLE estimates (101 rows)"
-  - "results/jacobian_spectral_radius_per_trial.csv: per-trial spectral radius (42001 rows)"
-  - "K-iteration prediction: K=8-15 for ELK/PIEKS to reach 1e-4 to 1e-5 tolerance"
+  - "THEORETICAL_VALIDATION.md: PASS-WITH-FAILURE-MODES verdict with empirical lambda_hat distribution (4-regime cross-validated)"
+  - "lipschitz_scan.py: 400-vector (4 regimes × 100) Benettin QR + GMSR LLE scan over T=420 trajectories, incremental CSV writing"
+  - "results/lipschitz_lle_distribution.csv: per-vector LLE estimates (401 rows = header + 400 rows)"
+  - "results/jacobian_spectral_radius_per_trial.csv: per-trial spectral radius (168,001 rows = header + 168,000 rows)"
+  - "K-iteration prediction: K=8-15 for ELK/PIEKS to reach 1e-4 to 1e-5 tolerance (validated across 4 input regimes)"
 affects: [25-02, 25-04]
 
 # Tech tracking
@@ -53,25 +53,34 @@ completed: 2026-04-27
 
 **PASS-WITH-FAILURE-MODES: Benettin QR lambda_hat median=-0.0132 (100% pass), confirming HGF is weakly contracting; ELK LM trust radius essential; K=8-15 predicted for 1e-4 tolerance**
 
+> **Amendment 2026-04-27:** Extended scan from 1 input regime (round_robin) to 4 regimes
+> (round_robin, grw, oddball, reversal) × 100 parameter vectors = 400 total, 168,000 Jacobians.
+> Verdict unchanged: PASS-WITH-FAILURE-MODES. K-prediction unchanged: K=8-15.
+> Cross-regime λ̂ medians: round_robin=−0.0132, grw=−0.0143, oddball=−0.0134, reversal=−0.0133.
+> See THEORETICAL_VALIDATION.md §10 for full analysis.
+
 ## Performance
 
-- **Duration:** ~120 min (including 327s wall time for full scan)
+- **Duration:** ~120 min (original scan) + ~450 min (cross-regime amendment)
 - **Started:** 2026-04-27T20:30:00Z (approx.)
-- **Completed:** 2026-04-27T22:30:00Z (approx.)
-- **Tasks:** 2 auto (scan + memo) + 1 checkpoint (awaiting user review)
-- **Files created:** 4 (scan script, THEORETICAL_VALIDATION.md, 2 CSVs)
+- **Completed:** 2026-04-28T12:00:00Z (approx., including amendment)
+- **Tasks:** 2 auto (scan + memo) + 1 amendment (cross-regime scan) + 1 checkpoint
+- **Files created:** 4 (scan script, THEORETICAL_VALIDATION.md, 2 CSVs) + amendment updates
 
 ## Accomplishments
 
-- Designed and ran a 100-vector Jacobian spectral-radius scan over T=420
-  synthetic HGF trajectories; identified the GMSR estimator bias for
+- Designed and ran a 400-vector (4 regimes × 100) Jacobian spectral-radius scan
+  over T=420 synthetic HGF trajectories; identified the GMSR estimator bias for
   precision-accumulating systems and switched to Benettin QR as primary
-- Empirical verdict: PASS-WITH-FAILURE-MODES (100% QR pass; 76.1% of trials
-  have transient sr >= 1, all bounded)
+- Empirical verdict: PASS-WITH-FAILURE-MODES (100% QR pass across all 4 regimes;
+  73–83% of trials have transient sr >= 1 regime-dependent, all bounded)
 - Identified that the primary failure-mode driver is shallow omega_2 (near
   -2.0), contradicting the prior prediction of extreme omega_3
-- K-iteration prediction revised to K=8-15 (vs 3-10 prediction); provides
+- K-iteration prediction revised to K=8-15 (vs 3-10 prediction); validated for
+  all 4 input regimes including production PRL reversal structure; provides
   concrete range for 25-04 prototype testing
+- Extended scan to 4 input regimes (round_robin, GRW, oddball, reversal) to
+  provide cross-regime evidence; verdict and K-prediction confirmed regime-independent
 - Documented the GMSR vs Benettin QR discrepancy — a methodological finding
   applicable to any precision-accumulating SSM scan
 
@@ -81,20 +90,22 @@ Each task committed atomically:
 
 1. **Task 1: Build the Lipschitz/LLE scan script and generate CSVs** — `de8c8aa` (feat)
 2. **Task 2: Write THEORETICAL_VALIDATION.md memo** — `e640b19` (docs)
+3. **Amendment: Extend scan to 4 input regimes + update documentation** — `d5b4c36` (feat) + docs commit (pending)
 
 ## Files Created/Modified
 
 - `.planning/phases/25-parallel-scan-acceleration-research/scratch/lipschitz_scan.py` —
-  100-vector LLE scan with Benettin QR + GMSR estimators; jax.vmap Jacobian computation;
-  runs in ~327s on CPU
+  400-vector (4 regimes × 100) LLE scan with Benettin QR + GMSR estimators; jax.vmap
+  Jacobian computation; incremental CSV writing with resume capability; runs in ~327s
+  per 100 vectors on CPU (~23 min total for 400 vectors)
 - `.planning/phases/25-parallel-scan-acceleration-research/THEORETICAL_VALIDATION.md` —
-  9-section theoretical validation memo with empirical results, failure-mode
-  characterization, and K-iteration prediction
+  10-section theoretical validation memo with empirical results, failure-mode
+  characterization, K-iteration prediction, and §10 cross-regime sensitivity analysis
 - `.planning/phases/25-parallel-scan-acceleration-research/results/lipschitz_lle_distribution.csv` —
-  101 lines; columns: param_vector_id, omega_2, omega_3, kappa, beta, zeta,
-  lambda_hat (GMSR), lambda_hat_qr (Benettin), max_singular_value, num_trials_sigma_gt_1
+  401 lines; columns: regime, param_vector_id, omega_2, omega_3, kappa, beta, zeta,
+  lambda_hat_qr (Benettin), lambda_hat_gmsr (GMSR), max_singular_value, num_trials_sigma_gt_1
 - `.planning/phases/25-parallel-scan-acceleration-research/results/jacobian_spectral_radius_per_trial.csv` —
-  42,001 lines; per-trial spectral radius and max singular value for all 100×420 trials
+  168,001 lines; per-trial spectral radius and max singular value for all 4×100×420 trials
 
 ## Decisions Made
 
@@ -152,12 +163,26 @@ Each task committed atomically:
   Benettin et al. (1980) definition.
 - **Committed in:** de8c8aa (Task 1 commit, final version)
 
+**3. [Amendment] Cross-regime scan extension (2026-04-27)**
+
+- **Reason:** Single-regime scan (round_robin only) insufficient to make K
+  prediction defensible for production PRL paradigm (block reversals, GRW drift).
+- **Scope:** Added 3 new input regime generators (grw, oddball, reversal) and
+  refactored main() to iterate over all 4. Added incremental CSV writing to
+  survive OS resource exhaustion crashes. Added resume logic (skips completed
+  regime/vec_id pairs).
+- **Result:** 400 total vectors, 168,000 Jacobians; all 400 pass (lambda_qr < 0);
+  verdict PASS-WITH-FAILURE-MODES confirmed; K=8-15 confirmed for all regimes.
+- **Files modified:** `scratch/lipschitz_scan.py`, both CSVs, THEORETICAL_VALIDATION.md
+- **Commits:** `d5b4c36` (feat) + docs commit
+
 ---
 
-**Total deviations:** 2 auto-fixed (2 methodological bugs in LLE estimation)
+**Total deviations:** 2 auto-fixed bugs + 1 amendment (cross-regime extension)
 **Impact on plan:** Both fixes were essential for correct LLE estimation. The
 plan's selection of GMSR as primary was incorrect for HGF's precision-
-accumulating dynamics. Benettin QR is the correct method. No scope creep.
+accumulating dynamics. Benettin QR is the correct method. Amendment extended
+evidence base as requested; no regression.
 
 ## Issues Encountered
 
