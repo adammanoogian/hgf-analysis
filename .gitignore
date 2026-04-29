@@ -74,6 +74,9 @@ jax_cache/
 # Phase 25: cloned ELK reference implementation (do not commit into hgf-analysis)
 .planning/phases/25-parallel-scan-acceleration-research/scratch/elk/
 
+# Claude Code harness state (per-machine lockfiles, not source)
+.claude/
+
 # Temporary
 *.tmp
 *.bak
