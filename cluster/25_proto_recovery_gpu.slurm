@@ -28,8 +28,8 @@
 #SBATCH --job-name=25-recovery-cmp
 #SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/recovery_%j.out
 #SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/recovery_%j.err
-#SBATCH --time=08:00:00
-#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
@@ -80,6 +80,10 @@ fi
 # =============================================================================
 export JAX_ENABLE_X64=1
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
+
+# Surface compile events in stderr so we can see whether NUTS compiles once
+# per backend or once-per-(participant, chain).
+export JAX_LOG_COMPILES=1
 
 # JAX compilation cache (Lustre scratch, shared across nodes)
 export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared_25recovery"

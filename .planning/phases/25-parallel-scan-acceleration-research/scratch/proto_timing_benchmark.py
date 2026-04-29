@@ -83,10 +83,15 @@ from prl_hgf.fitting.parallel_scan_proto import (
 # Configuration
 # ---------------------------------------------------------------------------
 
-SHAPES: list[tuple[int, int]] = [(50, 420), (300, 420), (50, 2000)]
+SHAPES: list[tuple[int, int]] = [(50, 420), (100, 420), (50, 2000)]
 SEED = 2504
 KAPPA_FIXED = 1.0
 N_TIMED_RUNS = 3   # median over this many timed reps
+
+# Bumped from 20 to 50 (25-04 GPU run hit max_iter=20 cap at production T=420
+# cold/linear inits; need to know actual K).  cached init still converges in 1.
+MAX_ITER = 50
+TOL = 1e-5
 
 # CPU fast-mode: use a small P per shape to validate all 9 cells end-to-end
 # without prohibitive runtime (sequential pyhgf JIT per participant is ~1-3s CPU).
@@ -362,22 +367,31 @@ def time_one_participant(
     else:
         raise ValueError(f"Unknown init_strat: {init_strat!r}")
 
-    # Warm-up: JIT compile (first call)
+    # FIRST CALL: includes JIT compile (cold cache).  Time it separately so
+    # we can split compile-wall from steady-state run-wall in the JSON.
+    t0 = time.perf_counter()
     ll_par_w, diag_w = parallel_scan_likelihood(
-        theta, choices, rewards, max_iter=20, tol=1e-5, init_trajectory=init_traj
+        theta, choices, rewards,
+        max_iter=MAX_ITER, tol=TOL, init_trajectory=init_traj,
     )
+    par_first_call = time.perf_counter() - t0
+
+    t0 = time.perf_counter()
     ll_seq_w = sequential_likelihood(theta, choices, rewards)
+    seq_first_call = time.perf_counter() - t0
 
     par_walls: list[float] = []
     seq_walls: list[float] = []
     k_list: list[int] = []
     rel_errs: list[float] = []
+    final_err_list: list[float] = []
+    converged_list: list[bool] = []
 
     for _ in range(n_runs):
         t0 = time.perf_counter()
         ll_par, diag = parallel_scan_likelihood(
             theta, choices, rewards,
-            max_iter=20, tol=1e-5,
+            max_iter=MAX_ITER, tol=TOL,
             init_trajectory=init_traj,
         )
         par_walls.append(time.perf_counter() - t0)
@@ -387,6 +401,8 @@ def time_one_participant(
         seq_walls.append(time.perf_counter() - t0)
 
         k_list.append(diag["K_iters"])
+        final_err_list.append(diag.get("final_convergence_delta", float("nan")))
+        converged_list.append(bool(diag.get("converged", False)))
         rel_errs.append(
             float(abs(float(ll_par) - float(ll_seq)) / (abs(float(ll_seq)) + 1e-12))
         )
@@ -396,8 +412,17 @@ def time_one_participant(
     return {
         "par_wall_seconds": par_med,
         "seq_wall_seconds": seq_med,
+        "par_first_call_seconds": par_first_call,
+        "seq_first_call_seconds": seq_first_call,
+        "par_compile_overhead_seconds": max(par_first_call - par_med, 0.0),
+        "seq_compile_overhead_seconds": max(seq_first_call - seq_med, 0.0),
         "speedup": seq_med / par_med if par_med > 0 else float("inf"),
         "K_observed": int(np.max(k_list)),
+        "K_max_iter_cap": MAX_ITER,
+        "K_hit_cap": bool(int(np.max(k_list)) >= MAX_ITER),
+        "final_convergence_delta": float(np.max(final_err_list))
+        if final_err_list else float("nan"),
+        "converged_all_runs": all(converged_list),
         "rel_err": float(np.max(rel_errs)),
     }
 
@@ -450,8 +475,14 @@ for P, T in SHAPES:
         # Aggregate timing across all P participants
         par_walls_all: list[float] = []
         seq_walls_all: list[float] = []
+        par_first_all: list[float] = []
+        seq_first_all: list[float] = []
+        par_compile_all: list[float] = []
+        seq_compile_all: list[float] = []
         k_all: list[int] = []
         rel_err_all: list[float] = []
+        final_err_all: list[float] = []
+        converged_all: list[bool] = []
 
         for p_idx in range(P_actual):
             cell = time_one_participant(
@@ -462,16 +493,25 @@ for P, T in SHAPES:
             )
             par_walls_all.append(cell["par_wall_seconds"])
             seq_walls_all.append(cell["seq_wall_seconds"])
+            par_first_all.append(cell["par_first_call_seconds"])
+            seq_first_all.append(cell["seq_first_call_seconds"])
+            par_compile_all.append(cell["par_compile_overhead_seconds"])
+            seq_compile_all.append(cell["seq_compile_overhead_seconds"])
             k_all.append(cell["K_observed"])
             rel_err_all.append(cell["rel_err"])
+            final_err_all.append(cell["final_convergence_delta"])
+            converged_all.append(cell["converged_all_runs"])
 
             # Progress dot every 10 participants (or always if P_actual < 10)
             if (p_idx + 1) % 10 == 0 or p_idx == P_actual - 1:
+                cap_marker = "*" if cell["K_hit_cap"] else " "
                 print(f"    [{p_idx+1}/{P_actual}] p{p_idx}: "
-                      f"par={cell['par_wall_seconds']:.4f}s  "
+                      f"par={cell['par_wall_seconds']:.4f}s "
+                      f"(1st={cell['par_first_call_seconds']:.2f}s "
+                      f"compile_oh={cell['par_compile_overhead_seconds']:.2f}s)  "
                       f"seq={cell['seq_wall_seconds']:.4f}s  "
                       f"speedup={cell['speedup']:.3f}x  "
-                      f"K={cell['K_observed']}  "
+                      f"K={cell['K_observed']}{cap_marker}  "
                       f"rel_err={cell['rel_err']:.2e}")
 
         # Aggregate: sum walls (total cohort throughput), max K and rel_err
@@ -480,6 +520,16 @@ for P, T in SHAPES:
         max_k = int(np.max(k_all))
         max_rel_err = float(np.max(rel_err_all))
         speedup = total_seq / total_par if total_par > 0 else float("inf")
+        par_compile_med = float(np.median(par_compile_all))
+        seq_compile_med = float(np.median(seq_compile_all))
+        par_first_med = float(np.median(par_first_all))
+        seq_first_med = float(np.median(seq_first_all))
+        n_hit_cap = sum(1 for k in k_all if k >= MAX_ITER)
+        # Filter NaN final-errors (tracing-mode placeholder) before aggregating
+        finite_final_err = [e for e in final_err_all if np.isfinite(e)]
+        max_final_err = (
+            float(np.max(finite_final_err)) if finite_final_err else float("nan")
+        )
 
         shape_entry: dict = {
             "P": P,
@@ -489,8 +539,16 @@ for P, T in SHAPES:
             "init_strategy": init_strat,
             "par_wall_seconds": total_par,
             "seq_wall_seconds": total_seq,
+            "par_first_call_median_seconds": par_first_med,
+            "seq_first_call_median_seconds": seq_first_med,
+            "par_compile_overhead_median_seconds": par_compile_med,
+            "seq_compile_overhead_median_seconds": seq_compile_med,
             "speedup": speedup,
             "K_observed": max_k,
+            "K_max_iter_cap": MAX_ITER,
+            "n_participants_hit_cap": n_hit_cap,
+            "max_final_convergence_delta": max_final_err,
+            "all_converged": all(converged_all),
             "rel_err": max_rel_err,
             "hardware": _hardware,
         }
@@ -498,6 +556,11 @@ for P, T in SHAPES:
         print(f"\n  CELL SUMMARY (P={P}, T={T}, init={init_strat}):")
         print(f"    total_par={total_par:.3f}s  total_seq={total_seq:.3f}s  "
               f"speedup={speedup:.3f}x  K_max={max_k}  rel_err_max={max_rel_err:.2e}")
+        print(f"    compile_overhead: par_med={par_compile_med:.3f}s  "
+              f"seq_med={seq_compile_med:.3f}s  "
+              f"first_call: par_med={par_first_med:.3f}s seq_med={seq_first_med:.3f}s")
+        print(f"    convergence: max_delta={max_final_err:.2e}  "
+              f"hit_cap={n_hit_cap}/{P_actual}  all_converged={all(converged_all)}")
 
         # Rel-err check
         if max_rel_err >= 1e-5:
@@ -512,14 +575,38 @@ for P, T in SHAPES:
 
 print("\n" + "=" * 72)
 print("BENCHMARK COMPLETE")
-print(f"Total cells: {len(results['shapes'])} / 9")
+print(f"Total cells: {len(results['shapes'])} / {len(SHAPES) * 3}")
 print(f"Output: {OUTPUT_PATH}")
 print("=" * 72)
 
-# Final validation
-all_rel_errs = [s["rel_err"] for s in results["shapes"]]
-assert all(e < 1e-5 for e in all_rel_errs), (
-    f"NUMERICAL AGREEMENT FAILED at some cells: "
-    f"max rel_err = {max(all_rel_errs):.2e} (target < 1e-5)"
+# Final validation: log per-cell rel_err + K but do not crash on a single
+# bad cell (the JSON is already written incrementally).
+print("\nPer-cell summary:")
+print(
+    f"  {'shape':>14}  {'init':>7}  {'K':>4}  {'rel_err':>10}  "
+    f"{'speedup':>8}  {'compile_oh':>10}"
 )
-print(f"All {len(results['shapes'])} cells: rel_err < 1e-5. OK")
+for s in results["shapes"]:
+    shape_str = f"P={s['P']},T={s['T']}"
+    print(
+        f"  {shape_str:>14}  {s['init_strategy']:>7}  "
+        f"{s['K_observed']:>4}  {s['rel_err']:>10.2e}  "
+        f"{s['speedup']:>7.3f}x  "
+        f"{s.get('par_compile_overhead_median_seconds', 0.0):>9.3f}s"
+    )
+
+bad_cells = [s for s in results["shapes"] if s["rel_err"] >= 1e-5]
+if bad_cells:
+    print(
+        f"\nWARNING: {len(bad_cells)} cell(s) failed numerical agreement "
+        "(rel_err >= 1e-5):"
+    )
+    for s in bad_cells:
+        print(
+            f"  P={s['P']}, T={s['T']}, init={s['init_strategy']}: "
+            f"rel_err={s['rel_err']:.2e} K={s['K_observed']} "
+            f"hit_cap={s.get('n_participants_hit_cap', 0)}/{s['P_actual']}"
+        )
+    sys.exit(1)
+else:
+    print(f"\nAll {len(results['shapes'])} cells: rel_err < 1e-5. OK")

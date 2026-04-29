@@ -27,8 +27,8 @@
 #SBATCH --job-name=25-proto-timing
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --time=04:00:00
-#SBATCH --mem=32G
+#SBATCH --time=06:00:00
+#SBATCH --mem=64G
 #SBATCH --cpus-per-task=4
 #SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_%j.out
 #SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_%j.err
@@ -80,8 +80,18 @@ fi
 export JAX_ENABLE_X64=1
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
 
-# JAX compilation cache (Lustre scratch, shared across nodes)
-export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared_25proto"
+# Surface every XLA compile event in stderr so we can see exactly where the
+# wall-clock goes (compile vs run) under the 25-04-rerun benchmark.
+export JAX_LOG_COMPILES=1
+# Also surface compile cache hits/misses so we can verify the prototype
+# refactor really collapses to one compile per (T, init) cell.
+export JAX_DEBUG_LOG_MODULES="jax._src.compilation_cache,jax._src.dispatch"
+
+# JAX compilation cache (Lustre scratch, shared across nodes).  Bumped to a
+# fresh dir name so the post-refactor benchmark gets a clean cold-cache run
+# (the prior shared_25proto dir holds artifacts keyed by the pre-refactor
+# per-participant scan_fn closures and is no longer relevant).
+export JAX_COMPILATION_CACHE_DIR="/scratch/${_PROJECT}/${USER}/.jax_cache_gpu/shared_25proto_v2"
 export JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES=0
 export JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0
 mkdir -p "$JAX_COMPILATION_CACHE_DIR" 2>/dev/null || unset JAX_COMPILATION_CACHE_DIR

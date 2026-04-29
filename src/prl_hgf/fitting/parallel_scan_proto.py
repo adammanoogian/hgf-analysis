@@ -213,50 +213,126 @@ def _diagonal_matmul_recursive(
 
 
 # ---------------------------------------------------------------------------
-# pyhgf network build helper
+# pyhgf static-network singleton + JAX-traced theta injection
 # ---------------------------------------------------------------------------
+#
+# Pattern mirrors src/prl_hgf/fitting/hierarchical.py::_single_logp_3level
+# (lines ~398-443).  The pyhgf Network is built ONCE with placeholder
+# defaults; ``scan_fn`` and ``base_attrs`` are cached at module level.  Per-
+# call evaluation performs a shallow-copy of ``base_attrs`` and writes JAX-
+# traced (omega_2, omega_3, kappa) into the relevant nodes, which keeps
+# theta in the autodiff trace and removes the per-call ``build_3level_network``
+# / JIT-recompile that dominated 25-04 timing on GPU.
 
-def _build_hgf_closures(
-    theta: dict[str, jax.Array],
-) -> tuple:
-    """Build pyhgf scan_fn and initial base_attrs for given theta.
+# Belief and volatility node indices (production constants from hierarchical.py).
+_BELIEF_NODES: tuple[int, ...] = (1, 3, 5)
+_VOLATILITY_NODE: int = 6
 
-    Creates a fresh 3-level 3-branch HGF network, runs a dummy one-trial
-    forward pass to populate net.scan_fn, then rebuilds a clean network to
-    obtain the pristine initial attributes.
+# Module-level singletons (lazily initialized; see _get_static_network).
+_SCAN_FN: object | None = None
+_BASE_ATTRS: dict | None = None
 
-    Parameters
-    ----------
-    theta : dict
-        HGF parameters: omega_2, omega_3, kappa (beta and zeta used
-        separately for LL computation).
+
+def _get_static_network() -> tuple:
+    """Return cached (scan_fn, base_attrs) for the 3-level pick_best_cue HGF.
+
+    Lazily builds the pyhgf Network on first call with placeholder defaults
+    (omega_2=-4.0, omega_3=-4.0, kappa=1.0).  Per-call code must then inject
+    actual theta values via :func:`_inject_theta` before invoking ``scan_fn``;
+    the placeholder values are overwritten and never reach the LL.
 
     Returns
     -------
     scan_fn : callable
-        pyhgf beliefs_propagation Partial (time-invariant closure over
+        pyhgf ``beliefs_propagation`` Partial (time-invariant closure over
         edges and update_sequence).
     base_attrs : dict
-        Pristine initial attributes dict with theta injected.
+        Pristine attributes dict with placeholder theta values.
+
+    Notes
+    -----
+    The pyhgf scan_fn closure is time-invariant for pick_best_cue (no scan
+    over parameters), so a single scan_fn serves all theta injections.  This
+    is the key optimization that lets ``jax.jit`` cache the parallel-scan
+    log-likelihood across participants instead of recompiling per call.
     """
+    global _SCAN_FN, _BASE_ATTRS
+    if _SCAN_FN is not None and _BASE_ATTRS is not None:
+        return _SCAN_FN, _BASE_ATTRS
+
     from prl_hgf.models.hgf_3level import build_3level_network
 
-    omega_2 = float(theta["omega_2"])
-    omega_3 = float(theta["omega_3"])
-    kappa = float(theta.get("kappa", 1.0))
-
-    # Build and trigger scan_fn creation
-    net = build_3level_network(omega_2=omega_2, omega_3=omega_3, kappa=kappa)
+    # Build with placeholders; theta is injected per-call by _inject_theta.
+    net = build_3level_network(omega_2=-4.0, omega_3=-4.0, kappa=1.0)
     _dummy = np.zeros((1, 3), dtype=np.float64)
     _dobs = np.zeros((1, 3), dtype=np.int32)
     net.input_data(input_data=_dummy, observed=_dobs)
-    scan_fn = net.scan_fn
+    _SCAN_FN = net.scan_fn
 
-    # Rebuild clean to get pristine initial attributes
-    net_clean = build_3level_network(omega_2=omega_2, omega_3=omega_3, kappa=kappa)
-    base_attrs = net_clean.attributes
+    net_clean = build_3level_network(omega_2=-4.0, omega_3=-4.0, kappa=1.0)
+    _BASE_ATTRS = net_clean.attributes
+    return _SCAN_FN, _BASE_ATTRS
 
-    return scan_fn, base_attrs
+
+def _inject_theta(base_attrs: dict, theta: dict[str, jax.Array]) -> dict:
+    """Inject JAX-traced theta into a shallow copy of base_attrs.
+
+    Mirrors the production pattern in
+    ``hierarchical.py::_single_logp_3level`` (lines ~411-430): only the
+    nodes whose static values are replaced are dict-copied; everything else
+    references the same object as ``base_attrs``.  Safe under ``jax.grad``
+    and ``jax.jit`` because no Python ``float()`` is called on traced arrays.
+
+    Parameters
+    ----------
+    base_attrs : dict
+        Reference attributes dict (graph structure, static parameters)
+        from :func:`_get_static_network`.
+    theta : dict
+        ``{omega_2, omega_3, kappa}`` (each may be a JAX scalar or 0-d array;
+        ``kappa`` defaults to 1.0 if absent).  ``beta`` and ``zeta`` are NOT
+        injected here — they enter the LL computation directly.
+
+    Returns
+    -------
+    dict
+        New attributes dict with theta written into nodes 1, 3, 5, 6.
+    """
+    omega_2 = jnp.asarray(theta["omega_2"], dtype=jnp.float64)
+    omega_3 = jnp.asarray(theta["omega_3"], dtype=jnp.float64)
+    kappa = jnp.asarray(theta.get("kappa", 1.0), dtype=jnp.float64)
+
+    new_attrs = dict(base_attrs)
+
+    # omega_2 and kappa parents-side into level-1 belief nodes (1, 3, 5)
+    for idx in _BELIEF_NODES:
+        node = dict(new_attrs[idx])
+        node["tonic_volatility"] = omega_2
+        node["volatility_coupling_parents"] = jnp.array([kappa])
+        new_attrs[idx] = node
+
+    # omega_3 + kappa children-side into volatility node 6
+    node6 = dict(new_attrs[_VOLATILITY_NODE])
+    node6["tonic_volatility"] = omega_3
+    node6["volatility_coupling_children"] = jnp.array([kappa, kappa, kappa])
+    new_attrs[_VOLATILITY_NODE] = node6
+
+    return new_attrs
+
+
+# Backward-compat shim: legacy callers (e.g. earlier versions of
+# scratch/proto_timing_benchmark.py) imported _build_hgf_closures(theta).
+# The new path is _get_static_network() + _inject_theta(base_attrs, theta).
+def _build_hgf_closures(theta: dict[str, jax.Array]) -> tuple:
+    """Deprecated: returns ``(scan_fn, theta_injected_attrs)`` for legacy callers.
+
+    .. deprecated::
+        Use :func:`_get_static_network` + :func:`_inject_theta` instead.
+        This shim concretizes theta via ``jnp.asarray`` rather than
+        ``float()``, so it preserves traced arrays under ``jax.grad``.
+    """
+    scan_fn, base_attrs = _get_static_network()
+    return scan_fn, _inject_theta(base_attrs, theta)
 
 
 def _build_scan_inputs_jax(
@@ -447,11 +523,12 @@ def sequential_likelihood(
     """
     from jax import lax
 
-    scan_fn, base_attrs = _build_hgf_closures(theta)
+    scan_fn, base_attrs = _get_static_network()
+    attrs = _inject_theta(base_attrs, theta)
     n_trials = len(choices)
     scan_inputs_jax = _build_scan_inputs_jax(choices, rewards)
 
-    _, node_traj = lax.scan(scan_fn, base_attrs, scan_inputs_jax)
+    _, node_traj = lax.scan(scan_fn, attrs, scan_inputs_jax)
 
     # expected_mean from binary INPUT nodes (0, 2, 4) — sigmoid probability
     mu1 = jnp.stack(
@@ -463,8 +540,8 @@ def sequential_likelihood(
         axis=1,
     )  # (T, 3)
 
-    beta_val = jnp.array(float(theta["beta"]), dtype=jnp.float64)
-    zeta_val = jnp.array(float(theta["zeta"]), dtype=jnp.float64)
+    beta_val = jnp.asarray(theta["beta"], dtype=jnp.float64)
+    zeta_val = jnp.asarray(theta["zeta"], dtype=jnp.float64)
     choices_jax = jnp.array(choices, dtype=jnp.int32)
 
     prev = jnp.concatenate([jnp.array([-1], dtype=jnp.int32), choices_jax[:-1]])
@@ -574,7 +651,8 @@ def parallel_scan_likelihood(
     """
     from jax import lax
 
-    scan_fn, base_attrs = _build_hgf_closures(theta)
+    scan_fn, base_attrs_ph = _get_static_network()
+    base_attrs = _inject_theta(base_attrs_ph, theta)
     n_trials = len(choices)
     scan_inputs_jax = _build_scan_inputs_jax(choices, rewards)
 
@@ -693,11 +771,21 @@ def parallel_scan_likelihood(
         yt_new = jnp.clip(yt_new, -clip_val, clip_val)
         yt_new = jnp.where(jnp.isnan(yt_new), 0.0, yt_new)
 
-        err = float(jnp.max(jnp.abs(yt_new - yt)))
-        err_trace.append(err)
+        err_jax = jnp.max(jnp.abs(yt_new - yt))
         K_observed = k + 1
-        yt = yt_new
 
+        # Dual-mode convergence check: under eager use the concrete value
+        # to break early; under tracing (jax.grad / jax.jit) skip the
+        # break and let the Python for-loop unroll all max_iter iterations.
+        # This keeps the prototype both fast in benchmarks and differentiable.
+        if isinstance(err_jax, jax.core.Tracer):
+            err_trace.append(float("nan"))  # placeholder; concrete err unavailable
+            yt = yt_new
+            continue
+
+        err = float(err_jax)
+        err_trace.append(err)
+        yt = yt_new
         if err < tol:
             break
 
@@ -733,8 +821,8 @@ def parallel_scan_likelihood(
 
     mu1 = jnp.stack([mu1_c0_pred, mu1_c1_pred, mu1_c2_pred], axis=1)  # (T, 3)
 
-    beta_val = jnp.array(float(theta["beta"]), dtype=jnp.float64)
-    zeta_val = jnp.array(float(theta["zeta"]), dtype=jnp.float64)
+    beta_val = jnp.asarray(theta["beta"], dtype=jnp.float64)
+    zeta_val = jnp.asarray(theta["zeta"], dtype=jnp.float64)
     choices_jax = jnp.array(choices, dtype=jnp.int32)
 
     prev = jnp.concatenate([jnp.array([-1], dtype=jnp.int32), choices_jax[:-1]])
@@ -744,10 +832,13 @@ def parallel_scan_likelihood(
     log_lik = jnp.sum(lp[jnp.arange(n_trials), choices_jax])
     log_lik = jnp.where(jnp.isnan(log_lik), -jnp.inf, log_lik)
 
-    # Diagnostics: trajectory quality vs sequential reference
-    traj_rel_err = float(
-        jnp.max(jnp.abs(yt - yt_seq) / (jnp.abs(yt_seq) + 1e-12))
-    )
+    # Diagnostics: trajectory quality vs sequential reference (eager only;
+    # under tracing the concrete float is unavailable so we record nan).
+    traj_rel_err_jax = jnp.max(jnp.abs(yt - yt_seq) / (jnp.abs(yt_seq) + 1e-12))
+    if isinstance(traj_rel_err_jax, jax.core.Tracer):
+        traj_rel_err = float("nan")
+    else:
+        traj_rel_err = float(traj_rel_err_jax)
 
     diagnostics = {
         "K_iters": K_observed,
