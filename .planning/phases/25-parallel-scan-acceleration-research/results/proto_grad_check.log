@@ -1,0 +1,170 @@
+Trial 0: theta = [-5.8377969711574265, -6.904134002521683, 1.336141412226608, 3.0374845249768367, -0.4433967557838998]
+  PARALLEL grad FAILED: ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+  Traceback (truncated):
+Traceback (most recent call last):
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 180, in main
+    g_par = grad_par(theta_flat)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 111, in loss_par
+    log_lik, _diag = parallel_scan_likelihood(theta, choices, rewards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 577, in parallel_scan_likelihood
+    scan_fn, base_attrs = _build_hgf_closures(theta)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 244, in _build_hgf_closures
+    omega_2 = float(theta["omega_2"])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+Trial 1: theta = [-4.746863030764132, -5.502523041237491, 0.9925585548993915, 3.378809761883286, -0.7354654167144541]
+  PARALLEL grad FAILED: ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+  Traceback (truncated):
+Traceback (most recent call last):
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 180, in main
+    g_par = grad_par(theta_flat)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 111, in loss_par
+    log_lik, _diag = parallel_scan_likelihood(theta, choices, rewards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 577, in parallel_scan_likelihood
+    scan_fn, base_attrs = _build_hgf_closures(theta)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 244, in _build_hgf_closures
+    omega_2 = float(theta["omega_2"])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+Trial 2: theta = [-2.8352867201380305, -3.0546724891941963, 1.3883555187141496, 3.0960850374118984, -0.697151088638122]
+  PARALLEL grad FAILED: ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+  Traceback (truncated):
+Traceback (most recent call last):
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 180, in main
+    g_par = grad_par(theta_flat)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 111, in loss_par
+    log_lik, _diag = parallel_scan_likelihood(theta, choices, rewards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 577, in parallel_scan_likelihood
+    scan_fn, base_attrs = _build_hgf_closures(theta)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 244, in _build_hgf_closures
+    omega_2 = float(theta["omega_2"])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+Trial 3: theta = [-5.33356366391004, -4.798548238843615, 0.6708346905424905, 3.7888965306264843, 0.3733062303758077]
+  PARALLEL grad FAILED: ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+  Traceback (truncated):
+Traceback (most recent call last):
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 180, in main
+    g_par = grad_par(theta_flat)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 111, in loss_par
+    log_lik, _diag = parallel_scan_likelihood(theta, choices, rewards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 577, in parallel_scan_likelihood
+    scan_fn, base_attrs = _build_hgf_closures(theta)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 244, in _build_hgf_closures
+    omega_2 = float(theta["omega_2"])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+Trial 4: theta = [-2.3155869726407463, -4.281275342507588, 1.4477083177584364, 2.8058495961776875, -0.9156519482126422]
+  PARALLEL grad FAILED: ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+  Traceback (truncated):
+Traceback (most recent call last):
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 180, in main
+    g_par = grad_par(theta_flat)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\.planning\phases\25-parallel-scan-acceleration-research\scratch\proto_grad_check.py", line 111, in loss_par
+    log_lik, _diag = parallel_scan_likelihood(theta, choices, rewards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 577, in parallel_scan_likelihood
+    scan_fn, base_attrs = _build_hgf_closures(theta)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aman0087\Documents\Github\hgf-analysis\src\prl_hgf\fitting\parallel_scan_proto.py", line 244, in _build_hgf_closures
+    omega_2 = float(theta["omega_2"])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+jax.errors.ConcretizationTypeError: Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]
+The problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.
+
+See https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+
+SUMMARY: {
+  "n_trials": 5,
+  "n_failures": 5,
+  "max_rel_err": null,
+  "rel_errs": [],
+  "failures": [
+    {
+      "trial": 0,
+      "backend": "parallel",
+      "exception": "ConcretizationTypeError",
+      "message": "Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]\nThe problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.\n\nSee https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError"
+    },
+    {
+      "trial": 1,
+      "backend": "parallel",
+      "exception": "ConcretizationTypeError",
+      "message": "Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]\nThe problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.\n\nSee https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError"
+    },
+    {
+      "trial": 2,
+      "backend": "parallel",
+      "exception": "ConcretizationTypeError",
+      "message": "Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]\nThe problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.\n\nSee https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError"
+    },
+    {
+      "trial": 3,
+      "backend": "parallel",
+      "exception": "ConcretizationTypeError",
+      "message": "Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]\nThe problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.\n\nSee https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError"
+    },
+    {
+      "trial": 4,
+      "backend": "parallel",
+      "exception": "ConcretizationTypeError",
+      "message": "Abstract tracer value encountered where concrete value is expected: traced array with shape float64[]\nThe problem arose with the `float` function. If trying to convert the data type of a value, try using `x.astype(float)` or `jnp.array(x, float)` instead.\n\nSee https://jax.readthedocs.io/en/latest/errors.html#jax.errors.ConcretizationTypeError"
+    }
+  ],
+  "verdict": "FAIL"
+}
