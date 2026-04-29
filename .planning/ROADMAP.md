@@ -610,6 +610,92 @@ Plans:
 
 ---
 
+### Phase 26: CCDS + Scheme D Canonical Layout Migration
+
+**Goal:** Migrate hgf-analysis to the canonical CCDS + Scheme D repo layout (data/raw|interim|processed/, models/{mle,bayesian}/, reports/{figures,tables}/, tests/{unit,integration,scientific}/, scripts/0N_<stage>/) in four reversible waves: hygiene, config rename, directory moves, and Scheme D pipeline restructure.
+**Depends on:** Phase 25 (no code-level dependency; sequencing only — avoid touching the same files mid-Phase-25 prototype work)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Wave 1: Hygiene (root clutter, CHANGELOG, logs/, closure-guard scaffold, pre-push hook)
+- [ ] 26-02-PLAN.md — Wave 2: config.py rename + caller migration (alias-free, hard ImportError)
+- [ ] 26-03-PLAN.md — Wave 3: Directory moves (output/figures/results/validation -> CCDS) + pyproject.toml three-tier markers
+- [ ] 26-04-PLAN.md — Wave 4: Scheme D scripts/ restructure + cluster SLURM updates + Wave-4 closure-guard assertions
+
+**Details:**
+
+Migrate `hgf-analysis` to the canonical CCDS + Scheme D layout described in
+`../project_utils/templates/guides/CCDS_SCHEME_D_LAYOUT.md`. Worked example:
+`rlwm_trauma_analysis` Phases 29 + 31. Tackled as four sequenced waves so each
+wave is reversible and can ship independently:
+
+**Wave 1 — low-risk hygiene (no path breakage)**
+- Delete root clutter: `_t2_verify.py`, `bash.exe.stackdump`, `slurm-54768408.out`,
+  root `__pycache__/`
+- Add `CHANGELOG.md` (per `templates/config/CHANGELOG_TEMPLATE.md`)
+- Add `logs/` directory + gitignore entry
+- Add closure-guard test scaffold at `tests/integration/test_phase_structure.py`
+  (initially passing trivially; gains assertions as later waves land)
+- Add `.git/hooks/pre-push` blocking `.planning/` from upstream
+
+**Wave 2 — `config.py` rename (alias-free per canonical guidance)**
+- Introduce CCDS path constants: `DATA_RAW_DIR`, `DATA_INTERIM_DIR`,
+  `DATA_PROCESSED_DIR`, `MODELS_DIR`, `MODELS_MLE_DIR`, `MODELS_BAYESIAN_DIR`,
+  `REPORTS_DIR`, `REPORTS_FIGURES_DIR`, `REPORTS_TABLES_DIR`, `LOGS_DIR`
+- Migrate every caller to the new names
+- Hard-`del` legacy `OUTPUT_DIR`, `FIGURES_DIR`, `RESULTS_DIR`, `VALIDATION_DIR`,
+  `GROUP_ANALYSIS_DIR` — let `ImportError` flush out stragglers (canonical §5
+  forbids deprecation warnings)
+- Auto-scaffold all canonical dirs at config import time
+
+**Wave 3 — directory moves**
+- `git mv output/* data/processed/` (or `models/` for fitted artifacts)
+- `git mv figures/* reports/figures/` (and reports/figures/ becomes the canonical
+  home for `hgf_viewer.html`; update `viz/export.py::_DEFAULT_TEMPLATE_PATH`)
+- `git mv validation/* tests/scientific/`
+- Split `results/` into `models/` (fits, .nc) and `reports/` (figures, tables)
+- Update `pyproject.toml`:
+  - `testpaths = ["tests"]`
+  - Three-tier markers: `unit`, `integration`, `scientific` (replace
+    `slow`/`integration`/`requires_pymc`)
+  - `extend-exclude` and `per-file-ignores` updated for new tree
+- Update `.gitignore` for new paths
+
+**Wave 4 — Scheme D pipeline restructure**
+- Restage flat `scripts/` (currently `03_simulate_participants.py` …
+  `14_2_aggregate_variants.py`) into six numbered stage folders with intra-stage
+  numbering reset:
+  - `01_data_preprocessing/` (parse jsPsych / clean inputs — likely small here)
+  - `02_descriptives/` (learning curves, summaries)
+  - `03_pre_analysis/` (parameter recovery, prior pred, power)
+  - `04_main_analysis/{a_mle, b_bayesian}/` (parallel-alternative subletters,
+    not numbers — VB-Laplace = `a_mle`, BlackJAX NUTS = `b_bayesian`)
+  - `05_post_analysis_checks/` (NUTS diagnostics, PPC, recovery surface)
+  - `06_inference/` (group analysis, BMS, paper tables, recommendation writer)
+- Each stage `__init__.py` carries the digit-prefix import warning (canonical §2)
+- Update `cluster/*.slurm` to point at new script paths
+- Extend the closure-guard test from Wave 1 with stage-existence + legacy-dir-
+  absence + no-hardcoded-legacy-paths assertions (canonical §7)
+
+**Pitfalls / risks**
+- Phase 25 prototype work (`scratch/reproduce_reference.py`,
+  `scratch/elk/`) lives under `.planning/phases/25-*/` and is unaffected by
+  layout changes — confirmed before each wave.
+- M3 cluster has stale `pip install -e .` (per Phase 14.1-03 incident); after
+  Wave 4, re-run `pip install -e .` on the cluster before resubmitting any SLURM job.
+- `figures/hgf_viewer.html` is referenced by `src/prl_hgf/viz/export.py`
+  via `config.PROJECT_ROOT / "figures" / "hgf_viewer.html"` — Wave 3 must
+  update that line in lockstep with the `git mv`.
+- `data/viz_fixtures/` is the only currently-tracked subdir of `data/` — its
+  whitelist in `.gitignore` (`!data/viz_fixtures/`) survives the move.
+
+**Effort**: 4 waves; estimate ~1 dev-day per wave for Waves 1-3 + 1-2 days for
+Wave 4 (highest blast radius — touches every script + cluster/ + closure-guard test).
+**Plans**: TBD (run `/gsd:plan-phase 26` to break down)
+
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
