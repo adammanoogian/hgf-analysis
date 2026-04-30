@@ -186,7 +186,7 @@ def test_valueerror_for_bad_model_name() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_2level_smoke_3_agents_finite_output(caplog: pytest.LogCaptureFixture) -> None:
     """2-level Laplace smoke: 3 agents, all outputs finite, dims correct."""
     config = load_pat_rl_config()
@@ -234,7 +234,7 @@ def test_2level_smoke_3_agents_finite_output(caplog: pytest.LogCaptureFixture) -
     # compilation (which would cause tracer-state contamination in the same process).
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_3level_smoke_3_agents_finite_output() -> None:
     """3-level Laplace smoke: 3 agents, all 5 params + beta finite, dims correct."""
     config = load_pat_rl_config()
@@ -275,7 +275,7 @@ def test_3level_smoke_3_agents_finite_output() -> None:
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_laplace_recovery_sanity_omega2_2level() -> None:
     """Recovery sanity: posterior-mean omega_2 within 0.5 of truth for >=4/5 agents."""
     config = load_pat_rl_config()
@@ -384,7 +384,7 @@ def test_pick_best_cue_regression_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_laplace_fit_emits_participant_id_dim() -> None:
     """Full orchestrator: idata.posterior dims must include 'participant_id' not 'participant'.
 
@@ -423,7 +423,7 @@ def test_laplace_fit_emits_participant_id_dim() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_fit_vb_laplace_model_b_smoke() -> None:
     """5-agent Laplace smoke for Model B: posterior contains b and gamma.
 
@@ -469,7 +469,7 @@ def test_fit_vb_laplace_model_b_smoke() -> None:
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_model_d_lambda_recovery_smoke() -> None:
     """SC3 gate: Model D lambda posterior mean within 0.3 of truth at 5 agents.
 
@@ -559,7 +559,7 @@ def test_model_d_lambda_recovery_smoke() -> None:
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_model_d_lambda_recovery_smoke_epsilon2_coupled() -> None:
     """M7 bridge: lambda recovery under the Plan 20-04 ε₂-coupled generator.
 
@@ -645,7 +645,7 @@ def test_model_d_lambda_recovery_smoke_epsilon2_coupled() -> None:
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_fit_vb_laplace_model_c_smoke() -> None:
     """5-agent Laplace smoke for Model C: posterior contains b, gamma, alpha.
 

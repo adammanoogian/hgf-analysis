@@ -99,7 +99,6 @@ markers = [
     "unit: fast isolated tests (< 1s, no I/O, no heavy deps)",
     "integration: cross-module tests (< 60s, structure guards)",
     "scientific: slow validation (> 60s, parameter recovery, regression)",
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "requires_pymc: tests that require PyMC installation",
 ]
 filterwarnings = [

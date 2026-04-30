@@ -6,7 +6,7 @@ The backend is set before any matplotlib import to ensure it takes effect.
 All tests share a single module-scoped ``explorer`` fixture to amortise
 the expensive JAX JIT warm-up (~5-10 s) across the full test session.
 
-Mark: ``@pytest.mark.slow`` — JAX JIT compilation makes these tests slow
+Mark: ``@pytest.mark.scientific`` — JAX JIT compilation makes these tests slow
 on first run.  Exclude with ``pytest -m "not slow"`` for fast CI loops.
 """
 
@@ -29,7 +29,7 @@ from prl_hgf.gui.explorer import PROFILES, ParamExplorer
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.slow
+@pytest.mark.scientific
 def explorer() -> ParamExplorer:
     """Instantiate ParamExplorer once per module (JAX warm-up is expensive).
 
@@ -47,7 +47,7 @@ def explorer() -> ParamExplorer:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_explorer_has_all_sliders(explorer: ParamExplorer) -> None:
     """ParamExplorer._sliders must have exactly the expected 7 keys."""
     expected = {"omega_2", "omega_3", "kappa", "beta", "zeta", "mu_1_0", "mu_3_0"}
@@ -59,7 +59,7 @@ def test_explorer_has_all_sliders(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_sliders_continuous_update_false(explorer: ParamExplorer) -> None:
     """Every slider must have continuous_update=False (fire only on release)."""
     for name, slider in explorer._sliders.items():
@@ -73,7 +73,7 @@ def test_sliders_continuous_update_false(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_initial_beliefs_cached(explorer: ParamExplorer) -> None:
     """After init, _cached_beliefs_ must contain all three cue belief keys."""
     assert explorer._cached_beliefs_ is not None, (
@@ -90,7 +90,7 @@ def test_initial_beliefs_cached(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_initial_choice_probs_cached(explorer: ParamExplorer) -> None:
     """After init, _cached_choice_probs_ must have shape (n_trials, 3) summing to 1."""
     cp = explorer._cached_choice_probs_
@@ -111,7 +111,7 @@ def test_initial_choice_probs_cached(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_hgf_param_triggers_forward_pass(explorer: ParamExplorer) -> None:
     """Changing omega_2 slider must produce different p_reward_cue0 beliefs."""
     # Capture state before change
@@ -137,7 +137,7 @@ def test_hgf_param_triggers_forward_pass(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_response_param_skips_forward_pass(explorer: ParamExplorer) -> None:
     """Changing beta must reuse cached beliefs (same dict object) but update choice probs."""
     # Force a forward pass first to ensure cache is fresh
@@ -176,7 +176,7 @@ def test_response_param_skips_forward_pass(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_preset_loads_values(explorer: ParamExplorer) -> None:
     """Triggering post-concussion preset sets all slider values from PROFILES."""
     preset_name = "post-concussion"
@@ -196,7 +196,7 @@ def test_preset_loads_values(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_model_toggle_hides_3level_sliders(explorer: ParamExplorer) -> None:
     """Selecting 2-level model must set display='none' on omega_3, kappa, mu_3_0."""
     explorer._model_toggle.value = "2-level"
@@ -214,7 +214,7 @@ def test_model_toggle_hides_3level_sliders(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_model_toggle_shows_3level_sliders(explorer: ParamExplorer) -> None:
     """Selecting 3-level model must set display='' on omega_3, kappa, mu_3_0."""
     explorer._model_toggle.value = "3-level"
@@ -232,7 +232,7 @@ def test_model_toggle_shows_3level_sliders(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_ground_truth_probs_shape(explorer: ParamExplorer) -> None:
     """_gt_probs must have shape (420, 3) with all values in [0, 1]."""
     gt = explorer._gt_probs
@@ -248,7 +248,7 @@ def test_ground_truth_probs_shape(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_figure_has_four_axes(explorer: ParamExplorer) -> None:
     """The explorer figure must have exactly 4 axes."""
     assert len(explorer._axes) == 4, (
@@ -261,7 +261,7 @@ def test_figure_has_four_axes(explorer: ParamExplorer) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_effective_lr_shape(explorer: ParamExplorer) -> None:
     """_cached_lr_ must have shape (420, 3) with values in (0, 1]."""
     lr = explorer._cached_lr_

@@ -3,7 +3,7 @@
 Tests use a small configuration (2 participants/group instead of 30) to keep
 runtime reasonable (~60-90 s) while still exercising the full batch pipeline.
 
-All tests are marked ``@pytest.mark.slow`` since they invoke pyhgf network
+All tests are marked ``@pytest.mark.scientific`` since they invoke pyhgf network
 operations which trigger JAX JIT compilation on the first call.
 
 Run all:  ``pytest tests/test_batch.py -v``
@@ -84,7 +84,7 @@ def _small_config(n_per_group: int = 2) -> AnalysisConfig:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_output_shape():
     """Batch DataFrame has correct number of rows and all expected columns."""
     cfg = _small_config(n_per_group=2)
@@ -104,7 +104,7 @@ def test_batch_output_shape():
     assert not missing, f"Missing columns in output: {sorted(missing)}"
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_column_values():
     """Column value domains match specification."""
     cfg = _small_config(n_per_group=2)
@@ -152,7 +152,7 @@ def test_batch_column_values():
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_group_param_differences():
     """Psilocybin group shows larger omega_2 shift than placebo at post_dose.
 
@@ -181,7 +181,7 @@ def test_batch_group_param_differences():
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_session_deltas_visible():
     """Psilocybin group omega_2 is higher at post_dose than at baseline.
 
@@ -217,7 +217,7 @@ def test_batch_session_deltas_visible():
         )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_reproducible():
     """Two runs with the same config produce identical DataFrames."""
     cfg = _small_config(n_per_group=2)
@@ -232,7 +232,7 @@ def test_batch_reproducible():
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_csv_output(tmp_path):
     """CSV output is saved correctly and readable with correct row count."""
     cfg = _small_config(n_per_group=2)

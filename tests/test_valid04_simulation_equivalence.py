@@ -48,7 +48,7 @@ ZETA = 0.5
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_valid04_choice_range() -> None:
     """Quick sanity check: both paths produce valid choices for one replicate.
 
@@ -108,7 +108,7 @@ def test_valid04_choice_range() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_valid04_simulation_equivalence() -> None:
     """VALID-04: KS-based statistical equivalence over 100 replicates.
 

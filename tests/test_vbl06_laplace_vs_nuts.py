@@ -466,7 +466,7 @@ def test_apply_hard_gates_omega_2_only() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_cli_compare_skip_flag(tmp_path: Path) -> None:
     """Run CLI 'run --skip-nuts-comparison' on a tiny fake sim_df; exits 0.
 

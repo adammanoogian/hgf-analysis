@@ -115,7 +115,7 @@ def test_run_group_bms_shape():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_compute_subject_waic_smoke():
     """compute_subject_waic should return a finite float for a 2-level model."""
     import arviz as az

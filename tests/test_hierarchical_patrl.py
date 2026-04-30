@@ -227,7 +227,7 @@ def test_build_arrays_raises_on_missing_columns() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_5participant_smoke_fit_2level() -> None:
     """5-participant CPU smoke: 2-level PAT-RL HGF, finite posterior, low divergences.
 
@@ -273,7 +273,7 @@ def test_5participant_smoke_fit_2level() -> None:
     )
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_5participant_smoke_fit_3level() -> None:
     """5-participant CPU smoke: 3-level PAT-RL HGF, finite posterior, low divergences.
 

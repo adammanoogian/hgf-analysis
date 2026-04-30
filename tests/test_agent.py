@@ -196,7 +196,7 @@ class TestSampleParticipantParams:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 class TestSimulateAgent:
     """Tests for simulate_agent() — involve JAX JIT compilation (~5-8s/test)."""
 

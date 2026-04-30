@@ -8,7 +8,7 @@ Tests cover:
 - Summary row extraction schema
 - Diagnostic flag logic (flag_fit)
 
-Tests that run MCMC sampling are marked ``@pytest.mark.slow`` (consistent
+Tests that run MCMC sampling are marked ``@pytest.mark.scientific`` (consistent
 with test_batch.py convention).  Tests that only check Ops or gradients do
 NOT need the slow marker.
 
@@ -87,7 +87,7 @@ def _simulated_data():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_2level_op_finite_logp(_simulated_data):
     """2-level Op returns a finite log-probability at canonical parameters."""
     from prl_hgf.fitting.ops import build_logp_ops_2level
@@ -113,7 +113,7 @@ def test_2level_op_finite_logp(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_3level_op_finite_logp(_simulated_data):
     """3-level Op returns a finite log-probability at canonical parameters."""
     from prl_hgf.fitting.ops import build_logp_ops_3level
@@ -141,7 +141,7 @@ def test_3level_op_finite_logp(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_2level_grad_finite(_simulated_data):
     """All gradient components of the 2-level Op are finite at realistic parameters.
 
@@ -180,7 +180,7 @@ def test_2level_grad_finite(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_omega2_positive_returns_neginf(_simulated_data):
     """2-level Op returns -inf when omega_2 is positive (NaN guard activated).
 
@@ -211,7 +211,7 @@ def test_omega2_positive_returns_neginf(_simulated_data):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_single_fit_2level():
     """Single-participant 2-level MCMC fit converges with expected schema.
 
@@ -303,7 +303,7 @@ def test_single_fit_2level():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_extract_summary_rows_schema():
     """extract_summary_rows returns list[dict] matching FIT-04 schema."""
     import sys
