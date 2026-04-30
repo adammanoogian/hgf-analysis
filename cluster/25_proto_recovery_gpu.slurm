@@ -26,8 +26,8 @@
 # =============================================================================
 
 #SBATCH --job-name=25-recovery-cmp
-#SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/recovery_%j.out
-#SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/recovery_%j.err
+#SBATCH --output=logs/phase25/recovery_%j.out
+#SBATCH --error=logs/phase25/recovery_%j.err
 #SBATCH --time=12:00:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
@@ -43,7 +43,7 @@ cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
 mkdir -p cluster/logs
-mkdir -p .planning/phases/25-parallel-scan-acceleration-research/results
+mkdir -p logs/phase25
 export PYTHONUNBUFFERED=1
 
 # Activate ds_env
@@ -145,7 +145,7 @@ echo ""
 # =============================================================================
 # Recovery run: sequential first (baseline), then proto
 # =============================================================================
-RESULTS_DIR=".planning/phases/25-parallel-scan-acceleration-research/results"
+RESULTS_DIR="logs/phase25"
 SEQ_NC="${RESULTS_DIR}/recovery_chains_sequential.nc"
 PRO_NC="${RESULTS_DIR}/recovery_chains_proto.nc"
 

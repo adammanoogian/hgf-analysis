@@ -124,6 +124,11 @@ stage_files "reports/tables/group_analysis/*.csv" "group analysis CSVs"
 # Figures
 stage_files "reports/figures/*.png" "analysis figures"
 
+# Phase 25 cluster outputs (parallel-scan acceleration research)
+stage_files "logs/phase25/*.json" "phase25 research JSONs"
+stage_files "logs/phase25/*.out" "phase25 stdout logs"
+stage_files "logs/phase25/*.err" "phase25 stderr logs"
+
 echo ""
 
 # Check if there's anything to commit

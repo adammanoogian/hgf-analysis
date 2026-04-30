@@ -6,7 +6,7 @@
 #   1. Verifies GPU device is available (fails early if CPU-only).
 #   2. Runs reproduce_reference.py with JAX_ENABLE_X64=1 (mandatory).
 #   3. Writes results JSON to:
-#      .planning/phases/25-parallel-scan-acceleration-research/results/
+#      logs/phase25/
 #      reproduction_benchmark.json (overwrites CPU run; GPU JSON is authoritative).
 #   4. Logs stdout to results/reproduction_gpu_<JOBID>.out.
 #   5. Auto-commits and pushes results to git (mirrors Phase 14 pattern).
@@ -24,8 +24,8 @@
 # =============================================================================
 
 #SBATCH --job-name=25-reproduce-ref
-#SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_%j.out
-#SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_%j.err
+#SBATCH --output=logs/phase25/reproduction_gpu_%j.out
+#SBATCH --error=logs/phase25/reproduction_gpu_%j.err
 #SBATCH --time=00:30:00
 #SBATCH --mem=8G
 #SBATCH --gres=gpu:1
@@ -41,7 +41,7 @@ cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
 mkdir -p cluster/logs
-mkdir -p .planning/phases/25-parallel-scan-acceleration-research/results
+mkdir -p logs/phase25
 export PYTHONUNBUFFERED=1
 
 # Activate ds_env
@@ -134,7 +134,7 @@ EXIT_CODE=$?
 echo ""
 echo "============================================================"
 
-RESULTS_JSON=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_benchmark.json"
+RESULTS_JSON="logs/phase25/reproduction_benchmark.json"
 
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "REPRODUCTION COMPLETE (PASS)"
@@ -145,7 +145,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     fi
 else
     echo "REPRODUCTION FAILED (exit code: $EXIT_CODE)"
-    echo "Check: .planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.err"
+    echo "Check: logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.err"
 fi
 
 echo ""
@@ -159,8 +159,8 @@ echo "============================================================"
 echo ""
 echo "Pushing reproduction results to git..."
 
-_LOG_OUT=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.out"
-_LOG_ERR=".planning/phases/25-parallel-scan-acceleration-research/results/reproduction_gpu_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add "$RESULTS_JSON" 2>/dev/null

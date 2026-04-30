@@ -30,8 +30,8 @@
 #SBATCH --time=06:00:00
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=4
-#SBATCH --output=.planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_%j.out
-#SBATCH --error=.planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_%j.err
+#SBATCH --output=logs/phase25/proto_timing_%j.out
+#SBATCH --error=logs/phase25/proto_timing_%j.err
 
 # =============================================================================
 # Environment Setup (mirrors cluster/14_benchmark_gpu.slurm)
@@ -41,7 +41,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p .planning/phases/25-parallel-scan-acceleration-research/results
+mkdir -p logs/phase25
 mkdir -p results/diagnostics
 export PYTHONUNBUFFERED=1
 
@@ -146,7 +146,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     fi
 else
     echo "BENCHMARK FAILED (exit code: $EXIT_CODE)"
-    echo "Check: .planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_${SLURM_JOB_ID}.err"
+    echo "Check: logs/phase25/proto_timing_${SLURM_JOB_ID}.err"
     echo "Partial results (if any):"
     cat results/diagnostics/hgf_pscan_proto.json 2>/dev/null | python -m json.tool 2>/dev/null || true
 fi
@@ -160,8 +160,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing benchmark results to git..."
-_LOG_OUT=".planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_${SLURM_JOB_ID}.out"
-_LOG_ERR=".planning/phases/25-parallel-scan-acceleration-research/results/proto_timing_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/phase25/proto_timing_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/phase25/proto_timing_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add results/diagnostics/hgf_pscan_proto.json 2>/dev/null
