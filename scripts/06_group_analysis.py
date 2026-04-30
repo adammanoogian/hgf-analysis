@@ -94,7 +94,11 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from config import GROUP_ANALYSIS_DIR, RESULTS_DIR  # noqa: E402
+from config import (  # noqa: E402
+    DATA_PROCESSED_DIR,
+    MODELS_BAYESIAN_DIR,
+    REPORTS_TABLES_DIR,
+)
 from prl_hgf.analysis.effect_sizes import (  # noqa: E402
     cohens_d,
     compute_effect_sizes_table,
@@ -119,6 +123,8 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+GROUP_ANALYSIS_OUT = REPORTS_TABLES_DIR / "group_analysis"
 
 # Parameters of interest for each model variant
 _PARAMS_2LEVEL = ["omega_2", "beta", "zeta"]
@@ -214,8 +220,8 @@ def _parse_args() -> argparse.Namespace:
 def _resolve_fit_path(model: str) -> Path | None:
     """Return path to fit-results CSV for *model*, or None if not found."""
     candidates = [
-        RESULTS_DIR / f"fit_results_hgf_{model}.csv",
-        RESULTS_DIR / f"fit_results_{model}.csv",
+        MODELS_BAYESIAN_DIR / f"fit_results_hgf_{model}.csv",
+        MODELS_BAYESIAN_DIR / f"fit_results_{model}.csv",
         _PROJECT_ROOT / "data" / "fitted" / f"hgf_{model}_results.csv",
     ]
     for p in candidates:
@@ -227,8 +233,8 @@ def _resolve_fit_path(model: str) -> Path | None:
 def _resolve_sim_path() -> Path | None:
     """Return path to simulated-data CSV, or None if not found."""
     candidates = [
-        RESULTS_DIR / "simulated_data.csv",
-        RESULTS_DIR / "batch_simulation.csv",
+        DATA_PROCESSED_DIR / "simulated_data.csv",
+        DATA_PROCESSED_DIR / "batch_simulation.csv",
         _PROJECT_ROOT / "data" / "simulated" / "batch_simulation.csv",
         _PROJECT_ROOT / "data" / "simulated" / "simulated_participants.csv",
     ]
@@ -276,8 +282,8 @@ def _resolve_patrl_sim_path_06(sim_path: Path | None) -> Path:
     if sim_path is not None:
         return sim_path
     candidates = [
-        RESULTS_DIR / "patrl" / "sim_df.csv",
-        RESULTS_DIR / "patrl_smoke" / "sim_df.csv",
+        DATA_PROCESSED_DIR / "patrl" / "sim_df.csv",
+        DATA_PROCESSED_DIR / "patrl_smoke" / "sim_df.csv",
         _PROJECT_ROOT / "output" / "patrl_smoke" / "sim_df.csv",
     ]
     for p in candidates:
@@ -296,14 +302,14 @@ def _resolve_patrl_idata_dir_06(idata_dir: Path | None) -> Path:
     if idata_dir is not None:
         return idata_dir
     candidates = [
-        RESULTS_DIR / "patrl" / "idata",
-        RESULTS_DIR / "patrl_smoke" / "idata",
+        MODELS_BAYESIAN_DIR / "patrl" / "idata",
+        MODELS_BAYESIAN_DIR / "patrl_smoke" / "idata",
         _PROJECT_ROOT / "output" / "patrl_smoke" / "idata",
     ]
     for p in candidates:
         if p.exists():
             return p
-    return RESULTS_DIR / "patrl" / "idata"
+    return MODELS_BAYESIAN_DIR / "patrl" / "idata"
 
 
 def _load_patrl_posterior_means_06(
@@ -506,9 +512,7 @@ def _compute_prl_v2_metrics(
     else:
         cor_val = float("nan")
 
-    cor_passes = bool(
-        not np.isnan(cor_val) and abs(cor_val) < _PRL_V2_COR_THRESHOLD
-    )
+    cor_passes = bool(not np.isnan(cor_val) and abs(cor_val) < _PRL_V2_COR_THRESHOLD)
     rows.append(
         {
             "contrast": "cor_omega2_beta",
@@ -576,7 +580,9 @@ def _print_prl_v2_gate_report(
     """Print PRL-V2 gate report to stdout."""
     print("=" * 60)
     print("PRL-V2 GATE REPORT (Option A — 2x2 factorial)")
-    print(f"d threshold: >= {_PRL_V2_D_THRESHOLD}  |  |cor| threshold: < {_PRL_V2_COR_THRESHOLD}")
+    print(
+        f"d threshold: >= {_PRL_V2_D_THRESHOLD}  |  |cor| threshold: < {_PRL_V2_COR_THRESHOLD}"
+    )
     print("=" * 60)
 
     factorial = summary_df[summary_df["contrast_type"] == "factorial"]
@@ -603,9 +609,7 @@ def _print_prl_v2_gate_report(
         print("  Supplementary pairwise (not gated):")
         for _, row in pairwise.iterrows():
             val = float(row["d_or_cor"])
-            print(
-                f"    {row['param']}: d({row['contrast']}) = {val:.3f}"
-            )
+            print(f"    {row['param']}: d({row['contrast']}) = {val:.3f}")
         print()
 
     print(f"PRL-V2 OVERALL: {'PASS' if gate_pass else 'FAIL'}")
@@ -643,7 +647,10 @@ def _plot_phenotype_separability(
 
     phenotypes = sorted(estimates_df["phenotype"].unique().tolist())
     params = ["omega_2", "beta"]
-    param_labels = {"omega_2": "ω₂ (tonic volatility)", "beta": "β (inverse temperature)"}
+    param_labels = {
+        "omega_2": "ω₂ (tonic volatility)",
+        "beta": "β (inverse temperature)",
+    }
 
     rng = np.random.default_rng(seed=20)
 
@@ -740,7 +747,7 @@ def _run_phenotype_separability(args: argparse.Namespace) -> None:
     print(f"fit-method: {args.fit_method}")
     print("=" * 60)
 
-    out_dir = RESULTS_DIR / "patrl" / "group_analysis"
+    out_dir = REPORTS_TABLES_DIR / "group_analysis_patrl"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Load sim_df
@@ -910,7 +917,7 @@ def main() -> None:
     model = f"hgf_{args.model}"
     params = _PARAMS_3LEVEL if args.model == "3level" else _PARAMS_2LEVEL
 
-    GROUP_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
+    GROUP_ANALYSIS_OUT.mkdir(parents=True, exist_ok=True)
 
     print("=" * 60)
     print("Phase 6 — Group-Level HGF Parameter Analysis")
@@ -923,7 +930,7 @@ def main() -> None:
         print(
             f"\nERROR: Fit results for model '{model}' not found.\n"
             "Run scripts/04_fit_participants.py first.\n"
-            f"Expected at: {RESULTS_DIR / f'fit_results_{model}.csv'}"
+            f"Expected at: {MODELS_BAYESIAN_DIR / f'fit_results_{model}.csv'}"
         )
         sys.exit(1)
 
@@ -940,14 +947,16 @@ def main() -> None:
     print("\nBuilding wide-form estimates table...")
     estimates_wide = build_estimates_wide(fit_df, model=model, exclude_flagged=True)
     n_participants = estimates_wide["participant_id"].nunique()
-    print(f"  {len(estimates_wide)} participant-session rows ({n_participants} participants)")
+    print(
+        f"  {len(estimates_wide)} participant-session rows ({n_participants} participants)"
+    )
 
-    estimates_path = GROUP_ANALYSIS_DIR / f"estimates_wide_{model}.csv"
+    estimates_path = GROUP_ANALYSIS_OUT / f"estimates_wide_{model}.csv"
     estimates_wide.to_csv(estimates_path, index=False)
     print(f"  Saved: {estimates_path}")
 
     # Canonical filename (manuscript reads estimates_wide.csv)
-    canonical_estimates_path = GROUP_ANALYSIS_DIR / "estimates_wide.csv"
+    canonical_estimates_path = GROUP_ANALYSIS_OUT / "estimates_wide.csv"
     estimates_wide.to_csv(canonical_estimates_path, index=False)
     print(f"  Saved (canonical): {canonical_estimates_path}")
 
@@ -957,19 +966,21 @@ def main() -> None:
     available_params = [p for p in params if p in estimates_wide.columns]
 
     if len(available_params) == 0:
-        print(f"  WARNING: None of {params} found in estimates_wide. Skipping effect sizes.")
+        print(
+            f"  WARNING: None of {params} found in estimates_wide. Skipping effect sizes."
+        )
     else:
         effect_df = compute_effect_sizes_table(
             estimates_wide,
             params=available_params,
             sessions=available_sessions,
         )
-        effect_path = GROUP_ANALYSIS_DIR / f"effect_sizes_{model}.csv"
+        effect_path = GROUP_ANALYSIS_OUT / f"effect_sizes_{model}.csv"
         effect_df.to_csv(effect_path, index=False)
         print(f"  Saved: {effect_path}")
 
         # Canonical filename (manuscript reads effect_sizes.csv)
-        canonical_effect_path = GROUP_ANALYSIS_DIR / "effect_sizes.csv"
+        canonical_effect_path = GROUP_ANALYSIS_OUT / "effect_sizes.csv"
         effect_df.to_csv(canonical_effect_path, index=False)
         print(f"  Saved (canonical): {canonical_effect_path}")
         print(effect_df.to_string(index=False))
@@ -996,7 +1007,7 @@ def main() -> None:
         # combined group_contrasts.csv (canonical filename for manuscript)
         all_contrasts: list[pd.DataFrame] = []
         for param, res in group_results.items():
-            contrasts_path = GROUP_ANALYSIS_DIR / f"contrasts_{model}_{param}.csv"
+            contrasts_path = GROUP_ANALYSIS_OUT / f"contrasts_{model}_{param}.csv"
             res["contrasts"].to_csv(contrasts_path, index=False)
             print(f"  Saved contrasts: {contrasts_path}")
             print(res["contrasts"].to_string(index=False))
@@ -1008,9 +1019,7 @@ def main() -> None:
 
             # Power-validation: report whether omega_2 HDI excludes zero
             if param == "omega_2" and "hdi_excludes_zero" in res["contrasts"].columns:
-                excludes_rows = res["contrasts"][
-                    res["contrasts"]["hdi_excludes_zero"]
-                ]
+                excludes_rows = res["contrasts"][res["contrasts"]["hdi_excludes_zero"]]
                 n_sessions = len(res["contrasts"])
                 n_excludes = len(excludes_rows)
                 print(
@@ -1023,9 +1032,11 @@ def main() -> None:
         if all_contrasts:
             combined_contrasts = pd.concat(all_contrasts, ignore_index=True)
             # Save canonical filename (manuscript reads group_contrasts.csv)
-            canonical_contrasts_path = GROUP_ANALYSIS_DIR / "group_contrasts.csv"
+            canonical_contrasts_path = GROUP_ANALYSIS_OUT / "group_contrasts.csv"
             combined_contrasts.to_csv(canonical_contrasts_path, index=False)
-            print(f"\n  Saved combined contrasts (canonical): {canonical_contrasts_path}")
+            print(
+                f"\n  Saved combined contrasts (canonical): {canonical_contrasts_path}"
+            )
 
     # --- 4b. Phase-stratified analysis (exploratory) ---
     print("\nPhase-stratified analysis (stable vs volatile)...")
@@ -1040,16 +1051,14 @@ def main() -> None:
             phase_df = None
 
         if phase_df is not None:
-            phase_path = GROUP_ANALYSIS_DIR / "phase_stratified.csv"
+            phase_path = GROUP_ANALYSIS_OUT / "phase_stratified.csv"
             phase_df.to_csv(phase_path, index=False)
             print(f"  Saved: {phase_path}")
 
             # Summarise by group x phase
-            summary = (
-                phase_df
-                .groupby(["group", "phase_label"])[["win_stay_rate", "lose_shift_rate"]]
-                .agg(["mean", "std"])
-            )
+            summary = phase_df.groupby(["group", "phase_label"])[
+                ["win_stay_rate", "lose_shift_rate"]
+            ].agg(["mean", "std"])
             print("\n  Win-Stay and Lose-Shift by Group x Phase:")
             print(summary.to_string())
 
@@ -1108,13 +1117,13 @@ def main() -> None:
                 continue
 
             # Raincloud
-            rc_path = GROUP_ANALYSIS_DIR / f"raincloud_{param}.png"
+            rc_path = GROUP_ANALYSIS_OUT / f"raincloud_{param}.png"
             fig = plot_raincloud(estimates_wide, outcome=param, save_path=rc_path)
             plt.close(fig)
             print(f"  Saved: {rc_path}")
 
             # Interaction
-            int_path = GROUP_ANALYSIS_DIR / f"interaction_{param}.png"
+            int_path = GROUP_ANALYSIS_OUT / f"interaction_{param}.png"
             fig = plot_interaction(estimates_wide, outcome=param, save_path=int_path)
             plt.close(fig)
             print(f"  Saved: {int_path}")
@@ -1126,7 +1135,7 @@ def main() -> None:
     print(f"Model: {model}")
     print(f"Participants analysed: {n_participants}")
     print(f"Parameters: {available_params}")
-    print(f"Outputs saved to: {GROUP_ANALYSIS_DIR}")
+    print(f"Outputs saved to: {GROUP_ANALYSIS_OUT}")
     print("=" * 60)
 
 

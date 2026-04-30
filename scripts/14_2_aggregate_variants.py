@@ -50,10 +50,10 @@ from typing import Any
 # when this script is launched from outside a configured environment.
 try:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from config import PROJECT_ROOT, RESULTS_DIR  # noqa: E402
+    from config import MODELS_DIR, PROJECT_ROOT  # noqa: E402
 except Exception:  # noqa: BLE001
     PROJECT_ROOT = Path(__file__).resolve().parent.parent
-    RESULTS_DIR = PROJECT_ROOT / "results"
+    MODELS_DIR = PROJECT_ROOT / "models"
 
 
 # ---------------------------------------------------------------------------
@@ -99,17 +99,11 @@ _RE_WARMUP_START = re.compile(
     r"\[hierarchical t=[\d.]+s\] starting window_adaptation "
     r"\(num_steps=(\d+), target_accept=([\d.]+)\)"
 )
-_RE_WARMUP_DONE = re.compile(
-    r"window_adaptation complete in ([\d.]+)s"
-)
-_RE_SAMPLE_DONE = re.compile(
-    r"sample_loop complete in ([\d.]+)s"
-)
+_RE_WARMUP_DONE = re.compile(r"window_adaptation complete in ([\d.]+)s")
+_RE_SAMPLE_DONE = re.compile(r"sample_loop complete in ([\d.]+)s")
 
 # Diagnostic summary lines (from _log_nuts_diagnostics, commit 0055408)
-_RE_DIAG_LINE = re.compile(
-    r"\[diag (warmup|sample)\] (\S+):\s*(.*)"
-)
+_RE_DIAG_LINE = re.compile(r"\[diag (warmup|sample)\] (\S+):\s*(.*)")
 _RE_DIAG_FIELDS = re.compile(r"(\w+)=([\-\d.eE]+)")
 
 # Variant 4 chunking
@@ -121,6 +115,7 @@ _RE_CHUNK_SUMMARY = re.compile(
 # ---------------------------------------------------------------------------
 # Parsers
 # ---------------------------------------------------------------------------
+
 
 def _parse_diag_block(text: str, label: str) -> dict[str, float]:
     """Extract key=value pairs from all [diag <label>] lines in `text`.
@@ -202,21 +197,24 @@ def parse_log(path: Path) -> dict[str, Any]:
         node_str = rec.get("node", "")
         if isinstance(node_str, str) and len(node_str) >= 3:
             rec["partition"] = _NODE_PARTITION_PREFIX.get(
-                node_str[:3], "unknown",
+                node_str[:3],
+                "unknown",
             )
 
     # fit_batch_hierarchical entry
     m = _RE_FBH_ENTERED.search(text)
     if m:
-        rec.update({
-            "model": m.group(1),
-            "sampler": m.group(2),
-            "n_chains": int(m.group(3)),
-            "n_tune": int(m.group(4)),
-            "n_draws": int(m.group(5)),
-            "target_accept": float(m.group(6)),
-            "P_at_entry": int(m.group(7)),
-        })
+        rec.update(
+            {
+                "model": m.group(1),
+                "sampler": m.group(2),
+                "n_chains": int(m.group(3)),
+                "n_tune": int(m.group(4)),
+                "n_draws": int(m.group(5)),
+                "target_accept": float(m.group(6)),
+                "P_at_entry": int(m.group(7)),
+            }
+        )
     m = _RE_COHORT.search(text)
     if m:
         rec["P_cohort"] = int(m.group(1))
@@ -247,7 +245,9 @@ def parse_log(path: Path) -> dict[str, Any]:
     rec.update({f"sample_{k}": v for k, v in _parse_diag_block(text, "sample").items()})
 
     # Outcome flags
-    rec["completed_warmup"] = "warmup_window_adaptation_s" in rec or "window_adaptation_s" in rec
+    rec["completed_warmup"] = (
+        "warmup_window_adaptation_s" in rec or "window_adaptation_s" in rec
+    )
     rec["completed_sample"] = "sample_loop_s" in rec
     combined = text + "\n" + err_text
     if "DUE TO TIME LIMIT" in combined:
@@ -310,8 +310,10 @@ _CSV_COLUMNS = [
 
 
 def _to_csv_row(rec: dict[str, Any]) -> dict[str, str]:
-    return {col: ("" if col not in rec or rec[col] is None else str(rec[col]))
-            for col in _CSV_COLUMNS}
+    return {
+        col: ("" if col not in rec or rec[col] is None else str(rec[col]))
+        for col in _CSV_COLUMNS
+    }
 
 
 def _emit_markdown(records: list[dict[str, Any]]) -> str:
@@ -336,12 +338,14 @@ def _emit_markdown(records: list[dict[str, Any]]) -> str:
         "node",
         "log",
     ]
-    out = ["# Phase 14.2 variant comparison",
-           "",
-           f"{len(rows)} bench runs aggregated.",
-           "",
-           "| " + " | ".join(md_cols) + " |",
-           "|" + "|".join(["---"] * len(md_cols)) + "|"]
+    out = [
+        "# Phase 14.2 variant comparison",
+        "",
+        f"{len(rows)} bench runs aggregated.",
+        "",
+        "| " + " | ".join(md_cols) + " |",
+        "|" + "|".join(["---"] * len(md_cols)) + "|",
+    ]
     for r in rows:
         chunk = (
             f"{r.get('chunk_id', '?')}/{r.get('chunk_count', '?')}"
@@ -377,12 +381,15 @@ def _emit_markdown(records: list[dict[str, Any]]) -> str:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Aggregate Phase 14.2 variant-comparison bench logs.",
     )
     parser.add_argument(
-        "logs", nargs="*", type=Path,
+        "logs",
+        nargs="*",
+        type=Path,
         help=(
             "Specific .out files to parse.  If omitted, defaults to "
             "cluster/logs/bench14*.out (excludes failed-import logs by "
@@ -390,12 +397,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
-        "--output-dir", type=Path,
-        default=RESULTS_DIR / "diagnostics",
+        "--output-dir",
+        type=Path,
+        default=MODELS_DIR / "diagnostics",
         help="Directory to write variant_comparison.csv and .md.",
     )
     parser.add_argument(
-        "--min-lines", type=int, default=30,
+        "--min-lines",
+        type=int,
+        default=30,
         help=(
             "Skip log files shorter than this (filters out env-failure logs "
             "that died before any diagnostics — default 30)."
@@ -418,7 +428,9 @@ def main() -> int:
     skipped: list[str] = []
     for path in log_paths:
         try:
-            line_count = sum(1 for _ in path.open("r", encoding="utf-8", errors="replace"))
+            line_count = sum(
+                1 for _ in path.open("r", encoding="utf-8", errors="replace")
+            )
         except OSError as exc:
             skipped.append(f"{path}: {exc}")
             continue

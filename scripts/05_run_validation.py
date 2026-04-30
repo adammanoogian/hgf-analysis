@@ -2,7 +2,7 @@
 
 Loads simulation data and fitting results, computes recovery metrics and
 scatter plots, runs random-effects BMS (Rigoux et al. 2014), and saves
-all outputs to results/validation/.
+all outputs to models/validation/.
 
 Usage
 -----
@@ -82,7 +82,7 @@ import logging  # noqa: E402
 
 import pandas as pd  # noqa: E402
 
-from config import RESULTS_DIR, VALIDATION_DIR  # noqa: E402
+from config import DATA_PROCESSED_DIR, MODELS_BAYESIAN_DIR, MODELS_DIR  # noqa: E402
 from prl_hgf.analysis.bms import (  # noqa: E402
     compute_batch_waic,
     plot_exceedance_probabilities,
@@ -98,6 +98,8 @@ from prl_hgf.analysis.recovery import (  # noqa: E402
     compute_recovery_metrics,
     compute_recovery_metrics_patrl,
 )
+
+VALIDATION_OUT = MODELS_DIR / "validation"
 
 _MODEL_NAMES = ["hgf_2level", "hgf_3level"]
 _MODEL_NAMES_PATRL = ["hgf_2level_patrl", "hgf_3level_patrl"]
@@ -161,10 +163,7 @@ def _parse_args() -> argparse.Namespace:
         "--sim-path",
         default=None,
         type=Path,
-        help=(
-            "Path to simulated data CSV. "
-            "Default: results/simulated_data.csv"
-        ),
+        help=("Path to simulated data CSV. Default: results/simulated_data.csv"),
     )
     parser.add_argument(
         "--fit-path-2level",
@@ -210,8 +209,8 @@ def _resolve_sim_path(args_path: Path | None) -> Path:
         return args_path
 
     candidates = [
-        RESULTS_DIR / "simulated_data.csv",
-        RESULTS_DIR / "batch_simulation.csv",
+        DATA_PROCESSED_DIR / "simulated_data.csv",
+        DATA_PROCESSED_DIR / "batch_simulation.csv",
         _PROJECT_ROOT / "data" / "simulated" / "batch_simulation.csv",
         _PROJECT_ROOT / "data" / "simulated" / "simulated_participants.csv",
     ]
@@ -234,7 +233,7 @@ def _resolve_fit_path(model: str, args_path: Path | None) -> Path | None:
         return args_path if args_path.exists() else None
 
     candidates = [
-        RESULTS_DIR / f"fit_results_{model}.csv",
+        MODELS_BAYESIAN_DIR / f"fit_results_{model}.csv",
         _PROJECT_ROOT / "data" / "fitted" / f"{model}_results.csv",
     ]
     for p in candidates:
@@ -303,9 +302,7 @@ def _load_idata_from_nc(
             idata_map[(pid, grp, sess)] = None
             n_missing += 1
 
-    print(
-        f"  idata ({model}): loaded {n_loaded}, missing {n_missing}"
-    )
+    print(f"  idata ({model}): loaded {n_loaded}, missing {n_missing}")
     return idata_map
 
 
@@ -473,8 +470,8 @@ def _resolve_patrl_sim_path(args_path: Path | None) -> Path:
     if args_path is not None:
         return args_path
     candidates = [
-        RESULTS_DIR / "patrl" / "sim_df.csv",
-        RESULTS_DIR / "patrl_smoke" / "sim_df.csv",
+        DATA_PROCESSED_DIR / "patrl" / "sim_df.csv",
+        DATA_PROCESSED_DIR / "patrl_smoke" / "sim_df.csv",
         _PROJECT_ROOT / "output" / "patrl_smoke" / "sim_df.csv",
     ]
     for p in candidates:
@@ -494,15 +491,15 @@ def _resolve_patrl_idata_dir(args_path: Path | None) -> Path:
     if args_path is not None:
         return args_path
     candidates = [
-        RESULTS_DIR / "patrl" / "idata",
-        RESULTS_DIR / "patrl_smoke" / "idata",
+        MODELS_BAYESIAN_DIR / "patrl" / "idata",
+        MODELS_BAYESIAN_DIR / "patrl_smoke" / "idata",
         _PROJECT_ROOT / "output" / "patrl_smoke" / "idata",
     ]
     for p in candidates:
         if p.exists():
             return p
     # Return default even if it doesn't exist yet; caller will handle missing files
-    return RESULTS_DIR / "patrl" / "idata"
+    return MODELS_BAYESIAN_DIR / "patrl" / "idata"
 
 
 def _load_patrl_idata(
@@ -643,9 +640,7 @@ def _build_patrl_recovery_fit_df(
         ]
         if c in sim_df.columns
     ]
-    true_wide = (
-        sim_df.groupby("participant_id")[true_cols].first().reset_index()
-    )
+    true_wide = sim_df.groupby("participant_id")[true_cols].first().reset_index()
 
     rows: list[dict] = []
     model_map = idata_dict.get(model, {})
@@ -719,9 +714,7 @@ def _run_recovery_patrl(
 
     for model in _MODEL_NAMES_PATRL:
         if model not in idata_dict or not idata_dict[model]:
-            log.warning(
-                "_run_recovery_patrl: no idata for model=%s — skipping", model
-            )
+            log.warning("_run_recovery_patrl: no idata for model=%s — skipping", model)
             continue
 
         log.info("--- PAT-RL Recovery: %s ---", model)
@@ -902,7 +895,7 @@ def _main_patrl(args: argparse.Namespace) -> None:
     print(f"r-threshold: {args.r_threshold}")
     print("=" * 60)
 
-    out_dir = RESULTS_DIR / "patrl" / "validation"
+    out_dir = MODELS_DIR / "validation" / "patrl"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Load sim_df
@@ -943,7 +936,9 @@ def _main_patrl(args: argparse.Namespace) -> None:
 
     # 4. Run recovery loop
     print("\n=== PAT-RL Recovery Analysis ===")
-    metrics_by_model = _run_recovery_patrl(sim_df, idata_dict, out_dir, args.r_threshold)
+    metrics_by_model = _run_recovery_patrl(
+        sim_df, idata_dict, out_dir, args.r_threshold
+    )
 
     if not metrics_by_model:
         print("\nERROR: Recovery failed for all models.")
@@ -970,7 +965,7 @@ def main() -> None:
     """Run full Phase 5 validation pipeline."""
     args = _parse_args()
 
-    VALIDATION_DIR.mkdir(parents=True, exist_ok=True)
+    VALIDATION_OUT.mkdir(parents=True, exist_ok=True)
 
     # -----------------------------------------------------------------------
     # PAT-RL branch (Phase 20 PRL-V1 gate)
@@ -1020,7 +1015,7 @@ def main() -> None:
             recovery_results[model] = result
             recovery_df, metrics_df, corr_df = result
             _save_recovery_outputs(
-                recovery_df, metrics_df, corr_df, model, VALIDATION_DIR
+                recovery_df, metrics_df, corr_df, model, VALIDATION_OUT
             )
 
     # --- 5. WAIC computation ---
@@ -1040,7 +1035,11 @@ def main() -> None:
             fit_cfg = None
 
         # Resolve idata directory
-        idata_dir = args.idata_dir if args.idata_dir is not None else RESULTS_DIR / "idata"
+        idata_dir = (
+            args.idata_dir
+            if args.idata_dir is not None
+            else MODELS_BAYESIAN_DIR / "idata"
+        )
 
         # Build idata_dict: {model_name: {(pid, grp, sess): idata}}
         idata_dict: dict[str, dict[tuple, object]] = {}
@@ -1070,7 +1069,7 @@ def main() -> None:
                     idata_dict=idata_dict,
                     model_names=_MODEL_NAMES,
                 )
-                waic_path = VALIDATION_DIR / "waic_results.csv"
+                waic_path = VALIDATION_OUT / "waic_results.csv"
                 waic_df.to_csv(waic_path, index=False)
                 print(f"  Saved: {waic_path}")
                 print(f"  WAIC rows: {len(waic_df)}")
@@ -1086,7 +1085,7 @@ def main() -> None:
     # --- 6. BMS ---
     if waic_df is not None and len(waic_df) > 0:
         print("\n=== Bayesian Model Comparison ===")
-        _run_bms(waic_df, VALIDATION_DIR)
+        _run_bms(waic_df, VALIDATION_OUT)
     elif not args.skip_waic:
         print("\n  BMS skipped (no WAIC results available).")
 
@@ -1100,13 +1099,9 @@ def main() -> None:
         passing = metrics_df[metrics_df["passes_threshold"] == True]  # noqa: E712
         failing = metrics_df[metrics_df["passes_threshold"] == False]  # noqa: E712
         if len(passing) > 0:
-            print(
-                f"  PASS (|r| >= 0.7): {', '.join(passing['parameter'].tolist())}"
-            )
+            print(f"  PASS (|r| >= 0.7): {', '.join(passing['parameter'].tolist())}")
         if len(failing) > 0:
-            print(
-                f"  FAIL (|r| < 0.7):  {', '.join(failing['parameter'].tolist())}"
-            )
+            print(f"  FAIL (|r| < 0.7):  {', '.join(failing['parameter'].tolist())}")
 
         # High correlation warnings
         arr = corr_df.to_numpy()
@@ -1121,15 +1116,12 @@ def main() -> None:
                     )
 
         if model == "hgf_3level":
-            print(
-                "  NOTE: omega_3 recovery known to be poor — "
-                "interpret with caution."
-            )
+            print("  NOTE: omega_3 recovery known to be poor — interpret with caution.")
 
     if waic_df is not None:
-        print(f"\nWAIC results: {len(waic_df)} rows saved to {VALIDATION_DIR}")
+        print(f"\nWAIC results: {len(waic_df)} rows saved to {VALIDATION_OUT}")
 
-    print(f"\nAll outputs saved to: {VALIDATION_DIR}")
+    print(f"\nAll outputs saved to: {VALIDATION_OUT}")
     print("=" * 60)
 
 

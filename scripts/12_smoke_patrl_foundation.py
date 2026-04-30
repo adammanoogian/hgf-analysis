@@ -63,7 +63,7 @@ if str(_PROJECT_ROOT / "src") not in sys.path:
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from config import OUTPUT_DIR  # noqa: E402
+from config import MODELS_DIR  # noqa: E402
 from prl_hgf.analysis.export_trajectories import (  # noqa: E402
     export_subject_parameters,
     export_subject_trajectories,
@@ -404,13 +404,21 @@ def _fit(
         return idata, None
     if method == "laplace":
         idata = _fit_laplace(
-            sim_df, level, n_pseudo_draws, seed, config,
+            sim_df,
+            level,
+            n_pseudo_draws,
+            seed,
+            config,
             response_model=response_model,
         )
         return idata, None
     # method == "both": primary = laplace, secondary = blackjax
     idata_lap = _fit_laplace(
-        sim_df, level, n_pseudo_draws, seed, config,
+        sim_df,
+        level,
+        n_pseudo_draws,
+        seed,
+        config,
         response_model=response_model,
     )
     idata_nuts = _fit_blackjax(sim_df, level, n_tune, n_draws, seed, config)
@@ -557,8 +565,7 @@ def _sanity_check(
         )
         if frac >= 0.20:
             raise RuntimeError(
-                f"NUTS divergence fraction {frac:.3f} >= 0.20 gate.  "
-                f"Expected < 0.20."
+                f"NUTS divergence fraction {frac:.3f} >= 0.20 gate.  Expected < 0.20."
             )
     elif method == "laplace":
         converged = bool(
@@ -585,8 +592,7 @@ def _sanity_check(
         )
     else:
         raise ValueError(
-            f"method must be one of {{'blackjax', 'laplace', 'both'}}, "
-            f"got {method!r}"
+            f"method must be one of {{'blackjax', 'laplace', 'both'}}, got {method!r}"
         )
 
 
@@ -617,15 +623,11 @@ def _log_recovery_table(
     for pid in participant_ids:
         true_p = true_params.get(pid, {})
 
-        omega2_post = float(
-            post["omega_2"].sel(participant_id=pid).mean().values
-        )
+        omega2_post = float(post["omega_2"].sel(participant_id=pid).mean().values)
 
         # log_beta is sampled; beta may be a deterministic added downstream
         if "beta" in post:
-            beta_post = float(
-                post["beta"].sel(participant_id=pid).mean().values
-            )
+            beta_post = float(post["beta"].sel(participant_id=pid).mean().values)
         else:
             log_beta_post = float(
                 post["log_beta"].sel(participant_id=pid).mean().values
@@ -641,8 +643,7 @@ def _log_recovery_table(
         # PRL-V1/V2 gate time.
         if not (np.isfinite(omega2_post) and np.isfinite(beta_post)):
             logger.warning(
-                "  %s  SKIPPED (divergent Laplace MAP): "
-                "omega_2_post=%r, beta_post=%r",
+                "  %s  SKIPPED (divergent Laplace MAP): omega_2_post=%r, beta_post=%r",
                 pid,
                 omega2_post,
                 beta_post,
@@ -743,8 +744,7 @@ def main() -> int:
         phenotypes_filter = [_pharg]
     else:
         logger.error(
-            "--phenotypes=%r is not 'all' or a valid phenotype name.  "
-            "Valid names: %s",
+            "--phenotypes=%r is not 'all' or a valid phenotype name.  Valid names: %s",
             args.phenotypes,
             sorted(_VALID_PHENOTYPES),
         )
@@ -774,7 +774,9 @@ def main() -> int:
     print("PAT-RL foundation smoke — Phase 18/19/20")
     print("=" * 60)
     print(f"  level={args.level}  n_per_phenotype={n_per_phenotype}")
-    print(f"  phenotypes={'all (4)' if phenotypes_filter is None else phenotypes_filter}")
+    print(
+        f"  phenotypes={'all (4)' if phenotypes_filter is None else phenotypes_filter}"
+    )
     print(f"  total_agents={_n_total_estimate}")
     print(f"  n_tune={args.n_tune}  n_draws={args.n_draws}  seed={args.seed}")
     print(f"  fit_method={method}")
@@ -786,7 +788,7 @@ def main() -> int:
         print("  mode=DRY-RUN (simulate + forward pass only; fit skipped)")
 
     output_dir: Path = (
-        args.output_dir if args.output_dir is not None else OUTPUT_DIR / "patrl_smoke"
+        args.output_dir if args.output_dir is not None else MODELS_DIR / "patrl_smoke"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info("Output directory: %s", output_dir)
@@ -829,9 +831,7 @@ def main() -> int:
             "sim_df['phenotype'] contains NA values; expected all non-empty strings."
         )
         # Log per-phenotype participant counts (Plan 20-05).
-        phenotype_counts = (
-            sim_df.groupby("phenotype")["participant_id"].nunique()
-        )
+        phenotype_counts = sim_df.groupby("phenotype")["participant_id"].nunique()
         for ptype, count in phenotype_counts.items():
             logger.info(
                 "Phenotype '%s': %d participants (%d trial rows)",

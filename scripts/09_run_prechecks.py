@@ -62,7 +62,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import RESULTS_DIR  # noqa: E402
+from config import MODELS_DIR  # noqa: E402
 from prl_hgf.env.task_config import load_config  # noqa: E402
 from prl_hgf.power.precheck import (  # noqa: E402
     build_eligibility_table,
@@ -72,7 +72,7 @@ from prl_hgf.power.precheck import (  # noqa: E402
     run_trial_sweep,
 )
 
-_DEFAULT_OUTPUT_DIR = RESULTS_DIR / "power" / "prechecks"
+_DEFAULT_OUTPUT_DIR = MODELS_DIR / "power" / "prechecks"
 
 
 # ---------------------------------------------------------------------------
@@ -153,9 +153,7 @@ def _print_eligibility_table(eligibility_df) -> None:
     print("\n" + "=" * 70)
     print("PRE-03: Parameter Eligibility Table")
     print("=" * 70)
-    print(
-        f"{'Parameter':<12} {'r':>6}  {'Status':<30}  Reason"
-    )
+    print(f"{'Parameter':<12} {'r':>6}  {'Status':<30}  Reason")
     print("-" * 70)
     for _, row in eligibility_df.iterrows():
         reason_short = row["reason"][:60] if len(row["reason"]) > 60 else row["reason"]
@@ -240,15 +238,11 @@ def main() -> None:
     print(f"Saved: {metrics_path}")
 
     # --- 7. Summary banner
-    n_eligible = int(
-        (eligibility_df["status"] == "power-eligible").sum()
-    )
+    n_eligible = int((eligibility_df["status"] == "power-eligible").sum())
     n_exploratory = int(
         (eligibility_df["status"] == "exploratory -- upper bound").sum()
     )
-    n_excluded = int(
-        (eligibility_df["status"] == "excluded").sum()
-    )
+    n_excluded = int((eligibility_df["status"] == "excluded").sum())
 
     print("\n" + "=" * 70)
     print("Phase 9 Precheck — Summary")
@@ -302,9 +296,7 @@ def _run_trial_sweep(args, config, eligibility_df, output_dir: Path) -> None:
     )
 
     if min_trials is not None:
-        print(
-            f"Minimum trial count for all power-eligible parameters: {min_trials}"
-        )
+        print(f"Minimum trial count for all power-eligible parameters: {min_trials}")
     else:
         print(
             "WARNING: No trial count satisfies r >= 0.7 for all power-eligible "

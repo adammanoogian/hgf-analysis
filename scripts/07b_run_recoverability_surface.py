@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power" / "prechecks",
+        default=_cfg.MODELS_DIR / "power" / "prechecks",
         help="Output directory for recoverability_surface.csv.",
     )
     return parser.parse_args()

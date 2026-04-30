@@ -228,7 +228,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help=(
-            "Override output directory. Defaults to RESULTS_DIR / 'power'. "
+            "Override output directory. Defaults to MODELS_DIR / 'power'. "
             "Use this in tests to redirect output to a tmp directory."
         ),
     )
@@ -374,9 +374,7 @@ class _GpuMonitor:
         """Mean GPU utilisation percentage across all samples."""
         if not self.samples:
             return 0.0
-        return float(
-            sum(s["gpu_util_pct"] for s in self.samples) / len(self.samples)
-        )
+        return float(sum(s["gpu_util_pct"] for s in self.samples) / len(self.samples))
 
     @property
     def vram_total_mb(self) -> float:
@@ -439,9 +437,7 @@ def _update_state_md(
         for idx, line in enumerate(lines):
             if line.startswith("| "):
                 last_table_line_idx = idx
-        insert_pos = header_pos + len(
-            "\n".join(lines[: last_table_line_idx + 1])
-        )
+        insert_pos = header_pos + len("\n".join(lines[: last_table_line_idx + 1]))
         text = text[: insert_pos + 1] + row + text[insert_pos + 1 :]
 
     state_md_path.write_text(text, encoding="utf-8")
@@ -471,7 +467,8 @@ def _get_cache_stats(cache_dir: str | None) -> dict:
     real_files = [f for f in files if f.is_file()]
     info["n_files"] = len(real_files)
     info["total_size_mb"] = round(
-        sum(f.stat().st_size for f in real_files) / (1024 * 1024), 2,
+        sum(f.stat().st_size for f in real_files) / (1024 * 1024),
+        2,
     )
     return info
 
@@ -499,16 +496,18 @@ def _query_gpu_table() -> list[dict]:
     for line in smi.stdout.strip().splitlines():
         parts = [p.strip() for p in line.split(",")]
         if len(parts) >= 8:
-            rows.append({
-                "index": int(parts[0]),
-                "name": parts[1],
-                "vram_total_mb": int(parts[2]),
-                "vram_used_mb": int(parts[3]),
-                "vram_free_mb": int(parts[4]),
-                "gpu_util_pct": int(parts[5]),
-                "temp_c": int(parts[6]),
-                "pci_bus": parts[7],
-            })
+            rows.append(
+                {
+                    "index": int(parts[0]),
+                    "name": parts[1],
+                    "vram_total_mb": int(parts[2]),
+                    "vram_used_mb": int(parts[3]),
+                    "vram_free_mb": int(parts[4]),
+                    "gpu_util_pct": int(parts[5]),
+                    "temp_c": int(parts[6]),
+                    "pci_bus": parts[7],
+                }
+            )
     return rows
 
 
@@ -534,6 +533,7 @@ def _get_ptxas_release() -> str | None:
 def _get_xla_env() -> dict:
     """Capture XLA/JAX-related environment variables."""
     import os
+
     keys = [
         "JAX_COMPILATION_CACHE_DIR",
         "JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES",
@@ -553,8 +553,10 @@ def _print_gpu_table(gpus: list[dict]) -> None:
     if not gpus:
         print("  nvidia-smi: unavailable")
         return
-    print(f"\n  {'GPU':<5} {'Name':<20} {'VRAM Used/Total':>18} {'Util':>6} {'Temp':>6}")
-    print(f"  {'-'*5} {'-'*20} {'-'*18} {'-'*6} {'-'*6}")
+    print(
+        f"\n  {'GPU':<5} {'Name':<20} {'VRAM Used/Total':>18} {'Util':>6} {'Temp':>6}"
+    )
+    print(f"  {'-' * 5} {'-' * 20} {'-' * 18} {'-' * 6} {'-' * 6}")
     for g in gpus:
         print(
             f"  {g['index']:<5} {g['name']:<20} "
@@ -757,6 +759,7 @@ def _run_smoke_test(
 
     # --- 5. JAX/jaxlib version ---
     import jaxlib
+
     results["jax_version"] = jax.__version__
     results["jaxlib_version"] = jaxlib.__version__
     print(f"\n  JAX {jax.__version__}, jaxlib {jaxlib.__version__}")
@@ -776,8 +779,7 @@ def _run_smoke_test(
         raise ValueError(msg)
     if model_smoke not in ("hgf_2level", "hgf_3level"):
         msg = (
-            f"PRL_SMOKE_MODEL must be 'hgf_2level' or 'hgf_3level', "
-            f"got {model_smoke!r}"
+            f"PRL_SMOKE_MODEL must be 'hgf_2level' or 'hgf_3level', got {model_smoke!r}"
         )
         raise ValueError(msg)
     results["model_name"] = model_smoke
@@ -934,12 +936,8 @@ def _run_smoke_test(
     # --- Cache after warm JIT ---
     cache_after_warm = _get_cache_stats(cache_dir)
     results["cache_after_warm"] = cache_after_warm
-    warm_new_files = (
-        cache_after_warm["n_files"] - cache_after_cold["n_files"]
-    )
-    warm_new_mb = (
-        cache_after_warm["total_size_mb"] - cache_after_cold["total_size_mb"]
-    )
+    warm_new_files = cache_after_warm["n_files"] - cache_after_cold["n_files"]
+    warm_new_mb = cache_after_warm["total_size_mb"] - cache_after_cold["total_size_mb"]
     print(f"  Cache delta: +{warm_new_files} files, +{warm_new_mb:.1f} MB")
     if warm_new_files > 0:
         print("  WARNING: warm JIT wrote NEW cache entries — cache miss detected")
@@ -977,7 +975,9 @@ def _run_smoke_test(
 
     print("GATES:")
     print(f"  Cold JIT < 600s:    {'PASS' if cold_ok else 'FAIL'} ({jit_cold_s:.0f}s)")
-    print(f"  Cache speedup > 3x: {'PASS' if cache_ok else 'FAIL'} ({cache_speedup:.1f}x)")
+    print(
+        f"  Cache speedup > 3x: {'PASS' if cache_ok else 'FAIL'} ({cache_speedup:.1f}x)"
+    )
     print(f"  Warm JIT < 120s:    {'PASS' if warm_ok else 'FAIL'} ({jit_warm_s:.0f}s)")
     print(f"  Overall:            {'ALL PASS' if all_pass else 'FAIL'}")
 
@@ -1002,12 +1002,13 @@ def _run_smoke_test(
             print("       and CUDA driver version.")
             if gpus_post_warm:
                 max_vram_pct = max(
-                    g["vram_used_mb"] / g["vram_total_mb"] * 100
-                    for g in gpus_post_warm
+                    g["vram_used_mb"] / g["vram_total_mb"] * 100 for g in gpus_post_warm
                 )
                 if max_vram_pct > 90:
-                    print(f"       WARNING: VRAM at {max_vram_pct:.0f}% — "
-                          "memory pressure likely causing slowdown.")
+                    print(
+                        f"       WARNING: VRAM at {max_vram_pct:.0f}% — "
+                        "memory pressure likely causing slowdown."
+                    )
 
     print("=" * 60)
 
@@ -1083,9 +1084,10 @@ def _run_benchmark(
     # already set externally (SLURM-level env injection).  In production
     # benchmark mode without the flag, behaviour is unchanged — the env
     # var and jax.config update are no-ops when not requested.
-    if getattr(args, "diagnostic_mode", False) or os.environ.get(
-        "JAX_LOG_COMPILES"
-    ) == "1":
+    if (
+        getattr(args, "diagnostic_mode", False)
+        or os.environ.get("JAX_LOG_COMPILES") == "1"
+    ):
         os.environ.setdefault("JAX_LOG_COMPILES", "1")
         jax.config.update("jax_explain_cache_misses", True)
 
@@ -1133,8 +1135,10 @@ def _run_benchmark(
     cache_dir = os.environ.get("JAX_COMPILATION_CACHE_DIR")
     cache_before = _get_cache_stats(cache_dir)
     results["cache_before"] = cache_before
-    print(f"\n  JAX cache: {cache_before['n_files']} files, "
-          f"{cache_before['total_size_mb']} MB in {cache_dir}")
+    print(
+        f"\n  JAX cache: {cache_before['n_files']} files, "
+        f"{cache_before['total_size_mb']} MB in {cache_dir}"
+    )
 
     # Always vectorized: enables jit_model_args for trace cache reuse
     chain_method_bench = "vectorized"
@@ -1167,10 +1171,9 @@ def _run_benchmark(
     # and reproducible regardless of chunk_count (same RNG-seeded cohort).
     if args.participant_chunk_count > 1:
         from prl_hgf.power.iteration import subset_cohort_by_chunk
+
         n_total_ps = (
-            sim_warm[["participant_id", "group", "session"]]
-            .drop_duplicates()
-            .shape[0]
+            sim_warm[["participant_id", "group", "session"]].drop_duplicates().shape[0]
         )
         sim_warm = subset_cohort_by_chunk(
             sim_warm,
@@ -1178,9 +1181,7 @@ def _run_benchmark(
             args.participant_chunk_count,
         )
         n_chunk_ps = (
-            sim_warm[["participant_id", "group", "session"]]
-            .drop_duplicates()
-            .shape[0]
+            sim_warm[["participant_id", "group", "session"]].drop_duplicates().shape[0]
         )
         print(
             f"Variant 4 chunking: chunk {args.participant_chunk_id} of "
@@ -1230,7 +1231,8 @@ def _run_benchmark(
         cache_after_cold["n_files"] - cache_before["n_files"]
     )
     results["cache_delta_cold_mb"] = round(
-        cache_after_cold["total_size_mb"] - cache_before["total_size_mb"], 2,
+        cache_after_cold["total_size_mb"] - cache_before["total_size_mb"],
+        2,
     )
     print(
         f"  Cache delta (cold): +{results['cache_delta_cold_n_files']} files, "
@@ -1367,9 +1369,7 @@ def _run_benchmark(
     print(f"\nBenchmark saved to: {bench_path}")
 
     # --- Append decision to STATE.md ---
-    state_md_path = (
-        Path(__file__).resolve().parent.parent / ".planning" / "STATE.md"
-    )
+    state_md_path = Path(__file__).resolve().parent.parent / ".planning" / "STATE.md"
     _update_state_md(
         state_md_path,
         gate_result["decision"],
@@ -1394,11 +1394,17 @@ def _run_benchmark(
     print()
     print("DECISION GATE (BENCH-02):")
     print("  Formula: per_iter_s * 600 / 3600 > 50")
-    print(f"  {per_iteration_s:.1f}s * 600 / 3600 = {gate_result['gpu_hours_per_chunk']:.1f} GPU-hrs/chunk")
+    print(
+        f"  {per_iteration_s:.1f}s * 600 / 3600 = {gate_result['gpu_hours_per_chunk']:.1f} GPU-hrs/chunk"
+    )
     if gate_result["decision"] == "gpu":
-        print(f"  {gate_result['gpu_hours_per_chunk']:.1f} <= 50 → RECOMMEND GPU (mgpu partition)")
+        print(
+            f"  {gate_result['gpu_hours_per_chunk']:.1f} <= 50 → RECOMMEND GPU (mgpu partition)"
+        )
     else:
-        print(f"  {gate_result['gpu_hours_per_chunk']:.1f} > 50 → RECOMMEND CPU (comp partition)")
+        print(
+            f"  {gate_result['gpu_hours_per_chunk']:.1f} > 50 → RECOMMEND CPU (comp partition)"
+        )
     print("=" * 60)
 
 
@@ -1468,8 +1474,7 @@ def _run_p_scan_probe(
     n_total_draws = n_chains * n_draws
 
     csv_path = Path(
-        ".planning/phases/21-benchmark-bottleneck-diagnosis/"
-        "jit_scaling_sweep.csv"
+        ".planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv"
     )
     csv_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1662,8 +1667,7 @@ def _run_vb_laplace_probe(
     from prl_hgf.fitting.fit_vb_laplace_patrl import fit_vb_laplace_patrl
 
     json_path = Path(
-        ".planning/phases/21-benchmark-bottleneck-diagnosis/"
-        "vb_laplace_vs_nuts_jit.json"
+        ".planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json"
     )
     json_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1775,9 +1779,7 @@ def _run_vb_laplace_probe(
             "bottleneck_verdict",
             {
                 "bottleneck_layer": "undetermined",
-                "evidence": (
-                    "Filled by plan 21-07 after all probes complete."
-                ),
+                "evidence": ("Filled by plan 21-07 after all probes complete."),
             },
         )
         data.setdefault("hlo_op_counts", {})
@@ -1788,9 +1790,7 @@ def _run_vb_laplace_probe(
             "per_p_scaling": {},
             "bottleneck_verdict": {
                 "bottleneck_layer": "undetermined",
-                "evidence": (
-                    "Filled by plan 21-07 after all probes complete."
-                ),
+                "evidence": ("Filled by plan 21-07 after all probes complete."),
             },
             "hlo_op_counts": {},
         }
@@ -1895,10 +1895,14 @@ def main() -> None:
         output_dir = (
             args.output_dir
             if args.output_dir is not None
-            else _cfg.RESULTS_DIR / "power"
+            else _cfg.MODELS_DIR / "power"
         )
         _run_p_scan_probe(
-            base_config, power_config, output_dir, args.p_scan, args,
+            base_config,
+            power_config,
+            output_dir,
+            args.p_scan,
+            args,
         )
         return
 
@@ -1906,10 +1910,14 @@ def main() -> None:
         output_dir = (
             args.output_dir
             if args.output_dir is not None
-            else _cfg.RESULTS_DIR / "power"
+            else _cfg.MODELS_DIR / "power"
         )
         _run_vb_laplace_probe(
-            base_config, power_config, output_dir, args.probe_p, args,
+            base_config,
+            power_config,
+            output_dir,
+            args.probe_p,
+            args,
         )
         return
 
@@ -1934,9 +1942,7 @@ def main() -> None:
     task_ids = chunk_task_ids(args.chunk_id, power_config.n_chunks, grid_size)
 
     output_dir = (
-        args.output_dir
-        if args.output_dir is not None
-        else _cfg.RESULTS_DIR / "power"
+        args.output_dir if args.output_dir is not None else _cfg.MODELS_DIR / "power"
     )
 
     out_path = output_dir / f"job_{args.job_id}_chunk_{args.chunk_id:04d}.parquet"
@@ -1976,9 +1982,7 @@ def main() -> None:
                     }
                 )
         write_parquet_batch(rows, out_path)
-        print(
-            f"Dry run: wrote {len(rows)} placeholder rows to {out_path}"
-        )
+        print(f"Dry run: wrote {len(rows)} placeholder rows to {out_path}")
         return
 
     # Build independent RNGs for all task IDs in this chunk (spawn once)
@@ -2017,15 +2021,10 @@ def main() -> None:
         all_results.extend(results)
 
         if (i + 1) % 50 == 0:
-            print(
-                f"  Progress: {i + 1}/{len(task_ids)} iterations complete"
-            )
+            print(f"  Progress: {i + 1}/{len(task_ids)} iterations complete")
 
     write_parquet_batch(all_results, out_path)
-    print(
-        f"Wrote {len(all_results)} rows ({len(task_ids)} iterations) "
-        f"to {out_path}"
-    )
+    print(f"Wrote {len(all_results)} rows ({len(task_ids)} iterations) to {out_path}")
 
 
 if __name__ == "__main__":

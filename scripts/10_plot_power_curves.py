@@ -106,7 +106,9 @@ def plot_precheck_recovery(
 
     for param in params:
         sub = df[df["parameter"] == param].set_index("trial_count")
-        r_vals = [sub.loc[t, "r"] if t in sub.index else float("nan") for t in trial_counts]
+        r_vals = [
+            sub.loc[t, "r"] if t in sub.index else float("nan") for t in trial_counts
+        ]
 
         color = _PARAM_COLORS.get(param)
         marker = _PARAM_MARKERS.get(param, "o")
@@ -216,7 +218,9 @@ def plot_power_a(
     ax.axhline(0.90, color="gray", linestyle=":", linewidth=1.2, label="90% power")
 
     # Annotate N where d=0.5 crosses 80%
-    _annotate_crossing(ax, grouped, effect_size=0.5, power_level=0.80, n_levels=n_levels)
+    _annotate_crossing(
+        ax, grouped, effect_size=0.5, power_level=0.80, n_levels=n_levels
+    )
 
     ax.set_xlabel("N per group")
     ax.set_ylabel(f"P(BF > {bf_threshold:.0f})")
@@ -571,7 +575,9 @@ def _draw_precheck_panel(
 
     for param in params:
         sub = df[df["parameter"] == param].set_index("trial_count")
-        r_vals = [sub.loc[t, "r"] if t in sub.index else float("nan") for t in trial_counts]
+        r_vals = [
+            sub.loc[t, "r"] if t in sub.index else float("nan") for t in trial_counts
+        ]
 
         color = _PARAM_COLORS.get(param)
         marker = _PARAM_MARKERS.get(param, "o")
@@ -651,7 +657,9 @@ def _draw_power_a_panel(
 
     ax.axhline(0.80, color="gray", linestyle="--", linewidth=1.0, label="80%")
     ax.axhline(0.90, color="gray", linestyle=":", linewidth=1.0, label="90%")
-    _annotate_crossing(ax, grouped, effect_size=0.5, power_level=0.80, n_levels=n_levels)
+    _annotate_crossing(
+        ax, grouped, effect_size=0.5, power_level=0.80, n_levels=n_levels
+    )
 
     ax.set_xlabel("N per group", fontsize=9)
     ax.set_ylabel(f"P(BF > {bf_threshold:.0f})", fontsize=9)
@@ -774,19 +782,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power",
+        default=_cfg.MODELS_DIR / "power",
         help="Directory containing power_master.csv, power_a_summary.csv, power_b_summary.csv.",
     )
     parser.add_argument(
         "--precheck-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power" / "prechecks",
+        default=_cfg.MODELS_DIR / "power" / "prechecks",
         help="Directory containing trial_sweep_results.csv from Phase 9.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power",
+        default=_cfg.MODELS_DIR / "power",
         help="Directory where figures will be saved.",
     )
     parser.add_argument(
@@ -845,23 +853,21 @@ def main() -> None:
         print(f"Loaded precheck sweep: {len(precheck_sweep_df)} rows")
     else:
         print(f"Warning: {precheck_csv} not found — Panel A will be empty.")
-        precheck_sweep_df = pd.DataFrame(
-            columns=["trial_count", "parameter", "r"]
-        )
+        precheck_sweep_df = pd.DataFrame(columns=["trial_count", "parameter", "r"])
 
     print(f"BF threshold: {bf_threshold}")
 
     # VIZ-01: Precheck recovery
     precheck_path = output_dir / "fig_precheck_recovery.png"
-    fig_precheck = plot_precheck_recovery(
-        precheck_sweep_df, save_path=precheck_path
-    )
+    fig_precheck = plot_precheck_recovery(precheck_sweep_df, save_path=precheck_path)
     plt.close(fig_precheck)
     print(f"Saved: {precheck_path}")
 
     # VIZ-02: Power A
     power_a_path = output_dir / "fig_power_a.png"
-    fig_a = plot_power_a(power_a_df, master_df, bf_threshold=bf_threshold, save_path=power_a_path)
+    fig_a = plot_power_a(
+        power_a_df, master_df, bf_threshold=bf_threshold, save_path=power_a_path
+    )
     plt.close(fig_a)
     print(f"Saved: {power_a_path}")
 
@@ -873,7 +879,9 @@ def main() -> None:
 
     # VIZ-04 (individual): Sensitivity heatmap
     heatmap_path = output_dir / "fig_sensitivity_heatmap.png"
-    fig_hmap = plot_sensitivity_heatmap(master_df, bf_threshold=bf_threshold, save_path=heatmap_path)
+    fig_hmap = plot_sensitivity_heatmap(
+        master_df, bf_threshold=bf_threshold, save_path=heatmap_path
+    )
     plt.close(fig_hmap)
     print(f"Saved: {heatmap_path}")
 

@@ -229,17 +229,21 @@ def _section_sample_size(
         )
     else:
         recommended_n = int(crossing["n_per_group"].min())
-        achieved_power = float(crossing[crossing["n_per_group"] == recommended_n]["p_bf_exceeds"].iloc[0])
+        achieved_power = float(
+            crossing[crossing["n_per_group"] == recommended_n]["p_bf_exceeds"].iloc[0]
+        )
         crossing_note = (
             f"P(BF > {bf_threshold:.0f}) = **{achieved_power:.1%}** at N = {recommended_n}/group. "
             f"Power target {power_target:.0%} is achieved."
         )
 
     # Look up BMS power at recommended_n (from power_b / master)
-    bms_rows = master_df[
-        master_df["n_per_group"] == recommended_n
-    ].drop_duplicates(subset=["n_per_group", "iteration"])
-    p_bms = float(bms_rows["bms_correct"].mean()) if not bms_rows.empty else float("nan")
+    bms_rows = master_df[master_df["n_per_group"] == recommended_n].drop_duplicates(
+        subset=["n_per_group", "iteration"]
+    )
+    p_bms = (
+        float(bms_rows["bms_correct"].mean()) if not bms_rows.empty else float("nan")
+    )
 
     section = textwrap.dedent(f"""\
         ## 2. Recommended Sample Size
@@ -284,9 +288,7 @@ def _section_trial_count(precheck_sweep_df: pd.DataFrame | None) -> str:
             """)
 
     # Exclude omega_3 (exploratory) from the passing criterion
-    non_omega3 = precheck_sweep_df[
-        precheck_sweep_df["parameter"] != "omega_3"
-    ].copy()
+    non_omega3 = precheck_sweep_df[precheck_sweep_df["parameter"] != "omega_3"].copy()
 
     if non_omega3.empty:
         return textwrap.dedent("""\
@@ -644,7 +646,7 @@ def parse_args() -> argparse.Namespace:
         Parsed arguments with attributes: input_dir, precheck_dir,
         output_dir, bf_threshold, power_target.
     """
-    default_power_dir = _cfg.RESULTS_DIR / "power"
+    default_power_dir = _cfg.MODELS_DIR / "power"
     parser = argparse.ArgumentParser(
         description=(
             "Generate results/power/recommendation.md from pre-computed "
@@ -660,7 +662,7 @@ def parse_args() -> argparse.Namespace:
         default=default_power_dir,
         help="Directory containing power_master.csv, power_a_summary.csv, power_b_summary.csv.",
     )
-    default_precheck_dir = _cfg.RESULTS_DIR / "power" / "prechecks"
+    default_precheck_dir = _cfg.MODELS_DIR / "power" / "prechecks"
     parser.add_argument(
         "--precheck-dir",
         type=Path,

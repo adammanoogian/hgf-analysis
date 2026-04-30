@@ -45,13 +45,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power",
+        default=_cfg.MODELS_DIR / "power",
         help="Directory containing .parquet files from the power sweep.",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=_cfg.RESULTS_DIR / "power",
+        default=_cfg.MODELS_DIR / "power",
         help="Directory where summary CSVs will be written.",
     )
     return parser.parse_args()
