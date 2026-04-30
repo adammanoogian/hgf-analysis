@@ -3,6 +3,9 @@ output/
 figures/
 logs/
 
+# GSD planning audit trail — local-only, not pushed (per user policy)
+.planning/
+
 # Data (not committed - too large / sensitive)
 data/*
 # ...but viz_fixtures/ ships schema-round-trip inputs (Phase 22+) -- commit them

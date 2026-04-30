@@ -1,7 +1,0 @@
-HloModule jit_integer_pow, entry_computation_layout={(f64[])->f64[]}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
-
-ENTRY main.3 {
-  Arg_0.1 = f64[] parameter(0), metadata={op_name="args[0]"}
-  ROOT multiply.2 = f64[] multiply(Arg_0.1, Arg_0.1), metadata={op_name="jit(integer_pow)/jit(main)/integer_pow[y=2]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=1090}
-}
-

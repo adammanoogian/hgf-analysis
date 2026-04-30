@@ -1,6 +1,0 @@
-HloModule jit__where, entry_computation_layout={()->()}
-
-ENTRY main.2 {
-  ROOT tuple.1 = () tuple()
-}
-

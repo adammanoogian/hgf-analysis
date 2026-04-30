@@ -1,2 +1,0 @@
-kKernel	, kernel = loop_subtract_fusion, launch dimensions = blocks: {1, 1, 1}, threads/block: {768, 1, 1}, cluster_dim = nullopt
-kKernel	, kernel = wrapped_negate, launch dimensions = blocks: {18, 1, 1}, threads/block: {1024, 1, 1}, cluster_dim = nullopt

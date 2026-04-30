@@ -1,4 +1,0 @@
-kCopy  	
-kKernel	, kernel = wrapped_negate, launch dimensions = blocks: {4, 1, 1}, threads/block: {1024, 1, 1}, cluster_dim = nullopt
-kCopy  	
-kKernel	, kernel = wrapped_negate_1, launch dimensions = blocks: {450, 1, 1}, threads/block: {256, 1, 1}, cluster_dim = nullopt

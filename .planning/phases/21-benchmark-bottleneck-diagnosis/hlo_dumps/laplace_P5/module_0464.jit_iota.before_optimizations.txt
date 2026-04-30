@@ -1,6 +1,0 @@
-HloModule jit_iota, entry_computation_layout={()->s64[1,1]{1,0}}, allow_spmd_sharding_propagation_to_output={true}
-
-ENTRY main.2 {
-  ROOT constant.1 = s64[1,1]{1,0} constant({ {0} })
-}
-

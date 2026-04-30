@@ -1,7 +1,0 @@
-HloModule jit_iota, entry_computation_layout={()->s64[120,120]{1,0}}, allow_spmd_sharding_propagation_to_output={true}
-
-ENTRY main.3 {
-  iota.1 = s64[120]{0} iota(), iota_dimension=0, metadata={op_name="jit(iota)/jit(main)/iota[dtype=int64 shape=(120, 120) dimension=1]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=388}
-  ROOT broadcast.2 = s64[120,120]{1,0} broadcast(iota.1), dimensions={1}, metadata={op_name="jit(iota)/jit(main)/iota[dtype=int64 shape=(120, 120) dimension=1]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/fit_vb_laplace_patrl.py" source_line=388}
-}
-
