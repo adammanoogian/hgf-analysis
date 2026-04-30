@@ -423,6 +423,23 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def test_compare_results_identical() -> None:
+    """Trivial smoke: identical inputs pass the 1% tolerance gate."""
+    import json
+    import tempfile
+
+    payload = {"platform": "cpu", "n_per_group": 2, "results": {"omega2": [0.5, 0.6]}}
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False
+    ) as f_a, tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False
+    ) as f_b:
+        json.dump(payload, f_a)
+        json.dump(payload, f_b)
+        path_a, path_b = Path(f_a.name), Path(f_b.name)
+    assert compare_results(path_a=path_a, path_b=path_b, rtol=0.01)
+
+
 if __name__ == "__main__":
     parser = _build_parser()
     args = parser.parse_args()

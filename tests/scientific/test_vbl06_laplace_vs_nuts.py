@@ -485,5 +485,25 @@ def main() -> int:
         return 0 if all_pass else 1
 
 
+def test_hard_gates_pass_on_within_tolerance() -> None:
+    """Trivial smoke: differences below tolerance pass the hard gates."""
+    import pandas as pd
+
+    df = pd.DataFrame(
+        {
+            "subject": [0, 1],
+            "param": ["omega_2", "omega_2"],
+            "mean_laplace": [0.5, 0.6],
+            "mean_nuts": [0.55, 0.65],
+            "diff_mean": [0.05, 0.05],
+            "log_sd_laplace": [0.1, 0.1],
+            "log_sd_nuts": [0.1, 0.1],
+            "diff_log_sd": [0.0, 0.0],
+        }
+    )
+    all_pass, _ = _apply_hard_gates(df)
+    assert all_pass
+
+
 if __name__ == "__main__":
     sys.exit(main())

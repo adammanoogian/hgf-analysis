@@ -1,6 +1,6 @@
 """Unit tests for VALID-03 cross-platform comparison logic.
 
-These tests exercise :func:`~validation.valid03_cross_platform.compare_results`
+These tests exercise :func:`~tests.scientific.test_valid03_cross_platform.compare_results`
 with synthetic JSON data.  They do NOT run MCMC — the actual cross-platform
 fit is a manual validation step on the cluster.
 
@@ -18,11 +18,11 @@ import json
 import sys
 from pathlib import Path
 
-# Make the project root importable so we can import the validation module.
+# Make the project root importable so we can import from tests.scientific.
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from validation.valid03_cross_platform import compare_results  # noqa: E402
+from tests.scientific.test_valid03_cross_platform import compare_results  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Helpers

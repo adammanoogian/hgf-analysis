@@ -33,7 +33,7 @@ from prl_hgf.fitting.laplace_idata import (  # noqa: E402
     _PARAM_ORDER_2LEVEL,
     build_idata_from_laplace,
 )
-from validation.vbl06_laplace_vs_nuts import (  # noqa: E402
+from tests.scientific.test_vbl06_laplace_vs_nuts import (  # noqa: E402
     _apply_hard_gates,
     compare_posteriors,
 )
