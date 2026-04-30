@@ -472,7 +472,7 @@ def _resolve_patrl_sim_path(args_path: Path | None) -> Path:
     candidates = [
         DATA_PROCESSED_DIR / "patrl" / "sim_df.csv",
         DATA_PROCESSED_DIR / "patrl_smoke" / "sim_df.csv",
-        _PROJECT_ROOT / "output" / "patrl_smoke" / "sim_df.csv",
+        _PROJECT_ROOT / "models" / "patrl_smoke" / "sim_df.csv",
     ]
     for p in candidates:
         if p.exists():
@@ -493,7 +493,7 @@ def _resolve_patrl_idata_dir(args_path: Path | None) -> Path:
     candidates = [
         MODELS_BAYESIAN_DIR / "patrl" / "idata",
         MODELS_BAYESIAN_DIR / "patrl_smoke" / "idata",
-        _PROJECT_ROOT / "output" / "patrl_smoke" / "idata",
+        _PROJECT_ROOT / "models" / "patrl_smoke" / "idata",
     ]
     for p in candidates:
         if p.exists():

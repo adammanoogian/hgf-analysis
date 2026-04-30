@@ -60,7 +60,7 @@ def aggregate_parquets(results_dir: Path) -> pd.DataFrame:
     --------
     >>> from pathlib import Path
     >>> from prl_hgf.power.curves import aggregate_parquets
-    >>> df = aggregate_parquets(Path("results/power"))  # doctest: +SKIP
+    >>> df = aggregate_parquets(Path("models/power"))  # doctest: +SKIP
     """
     parquet_files = sorted(results_dir.glob("*.parquet"))
     if not parquet_files:

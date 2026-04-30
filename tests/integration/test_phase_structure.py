@@ -239,14 +239,215 @@ def test_config_does_not_expose_legacy_aliases(name: str) -> None:
 
 
 # ============================================================
-# WAVE 3 — Directory layout (added by Plan 26-03; placeholder below)
+# WAVE 3 — Directory layout (active)
 # ============================================================
-# Plan 26-03 will append:
-#   - test_ccds_top_level_exists (data/raw, data/processed, reports/figures,
-#                                 reports/tables, models/, …)
-#   - test_legacy_dir_absent (output, figures, validation, cluster/logs,
-#                             results)
-#   - test_no_hardcoded_legacy_paths (grep audit on scripts/, src/)
+
+CCDS_TOP_LEVEL = [
+    "data",
+    "data/raw",
+    "data/processed",
+    "models",
+    "models/mle",
+    "models/bayesian",
+    "reports",
+    "reports/figures",
+    "reports/tables",
+    "tests",
+    "tests/integration",
+    "tests/scientific",
+    "logs",
+]
+
+
+@pytest.mark.parametrize("relpath", CCDS_TOP_LEVEL)
+def test_ccds_top_level_exists(relpath: str) -> None:
+    """Required CCDS directories must exist after Wave 3."""
+    assert (REPO_ROOT / relpath).is_dir(), (
+        f"Missing required CCDS directory: {relpath}\n"
+        f"See templates/guides/CCDS_SCHEME_D_LAYOUT.md §1."
+    )
+
+
+# Top-level legacy dirs that Wave 3 removes. Re-creation must fail this test.
+LEGACY_TOP_DIRS = [
+    "output",
+    "figures",
+    "results",
+    "validation",
+]
+
+
+@pytest.mark.parametrize("legacy_dir", LEGACY_TOP_DIRS)
+def test_legacy_top_dir_absent(legacy_dir: str) -> None:
+    """Legacy top-level directories must not have crept back in."""
+    path = REPO_ROOT / legacy_dir
+    assert not path.exists(), (
+        f"Legacy directory resurrected: {legacy_dir}\n"
+        f"Move its contents to the canonical location and remove this dir.\n"
+        f"See Phase 26 Plan 26-03."
+    )
+
+
+# ---- Hardcoded legacy path strings -----------------------------------
+# Blocker 2 fix: now greps *.py + *.slurm + *.sh and includes cluster/ in
+# the search roots. Cluster phase-25 files are explicitly excluded since
+# they reference .planning/ scratch paths that are not migration targets.
+
+LEGACY_PATH_LITERAL_PATTERNS = [
+    r"['\"]output/",
+    r"['\"]figures/",
+    r"['\"]results/",
+    r"Path\(['\"]output/",
+    r"Path\(['\"]figures/",
+    r"Path\(['\"]results/",
+    r"PROJECT_ROOT / ['\"]output['\"]",
+    r"PROJECT_ROOT / ['\"]figures['\"]",
+    r"PROJECT_ROOT / ['\"]results['\"]",
+]
+
+# Shell-logic patterns specific to *.slurm + *.sh files (Blocker 2 fix).
+# Cover the bare-path forms (`mkdir -p results/power`, `--output figures/`,
+# `git add results/...`) that don't use Python string-literal quoting.
+LEGACY_SHELL_PATH_PATTERNS = [
+    r"\bresults/power\b",
+    r"\bresults/validation\b",
+    r"\bresults/group_analysis\b",
+    r"\bvalidation/(valid03|vbl06)_",
+    # bare `figures/` in shell logic (e.g., `git add figures/*.png`); the
+    # pattern is anchored to a non-`reports/` left context so we don't
+    # match the legitimate `reports/figures/`:
+    r"(?<!reports/)\bfigures/\w",
+]
+
+W3_GREP_ROOTS = ["scripts", "src", "tests", "cluster"]
+# Exclude __pycache__ + tool caches + the closure-guard test itself
+# (which legitimately contains the patterns as REGEXES inside string
+# literals, which would otherwise self-match and fail).
+W3_GREP_EXCLUDE_DIRS = {
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "legacy",
+    "_legacy",
+}
+W3_GREP_EXCLUDE_FILES = {
+    "test_phase_structure.py",  # this file
+}
+# Cluster files that are part of the Phase 25 parallel stack; they
+# reference .planning/ scratch paths that are NOT migration targets.
+W3_GREP_EXCLUDE_CLUSTER_PREFIXES = ("25_",)
+
+
+def _w3_grep_files(roots: list[str], extensions: tuple[str, ...]) -> list[Path]:
+    """Walk roots collecting files with any of the given extensions.
+
+    Phase-25 cluster files are skipped — their script references point at
+    .planning/ scratch paths.
+    """
+    files: list[Path] = []
+    for root in roots:
+        root_path = REPO_ROOT / root
+        if not root_path.is_dir():
+            continue
+        for ext in extensions:
+            for p in root_path.rglob(f"*{ext}"):
+                if any(part in W3_GREP_EXCLUDE_DIRS for part in p.parts):
+                    continue
+                if p.name in W3_GREP_EXCLUDE_FILES:
+                    continue
+                # Skip phase-25 cluster files only when scanning cluster/:
+                if root == "cluster" and any(
+                    p.name.startswith(prefix)
+                    for prefix in W3_GREP_EXCLUDE_CLUSTER_PREFIXES
+                ):
+                    continue
+                files.append(p)
+    return files
+
+
+@pytest.mark.parametrize("pattern", LEGACY_PATH_LITERAL_PATTERNS)
+def test_no_hardcoded_legacy_paths(pattern: str) -> None:
+    """No active script may contain Python legacy path string literals.
+
+    Greps *.py only — for shell-logic legacy paths in cluster/*.slurm and
+    cluster/*.sh, see test_no_hardcoded_legacy_paths_cluster below.
+    """
+    import re
+
+    rx = re.compile(pattern)
+    hits: list[str] = []
+    # Python-only roots (cluster files have their own check below):
+    py_roots = [r for r in W3_GREP_ROOTS if r != "cluster"]
+    for f in _w3_grep_files(py_roots, (".py",)):
+        for lineno, line in enumerate(
+            f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1
+        ):
+            if rx.search(line):
+                rel = f.relative_to(REPO_ROOT).as_posix()
+                hits.append(f"{rel}:{lineno}: {line.strip()}")
+    assert not hits, (
+        f"Hardcoded legacy path pattern {pattern!r} found in active code:\n"
+        + "\n".join(hits[:25])
+        + (f"\n... ({len(hits) - 25} more)" if len(hits) > 25 else "")
+        + "\n\nMove the path constant to config.py and import from there."
+    )
+
+
+@pytest.mark.parametrize("pattern", LEGACY_SHELL_PATH_PATTERNS)
+def test_no_hardcoded_legacy_paths_cluster(pattern: str) -> None:
+    """No active cluster shell script may contain bare legacy paths.
+
+    Blocker 2 fix: covers cluster/*.slurm + cluster/*.sh + cluster/*.py.
+    Phase-25 files are skipped (their .planning/ scratch references are
+    not migration targets).
+    """
+    import re
+
+    rx = re.compile(pattern)
+    hits: list[str] = []
+    for f in _w3_grep_files(["cluster"], (".slurm", ".sh", ".py")):
+        for lineno, line in enumerate(
+            f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1
+        ):
+            # Skip comment-only lines for shell-script patterns to reduce
+            # false positives on historical commentary. The Wave-3 closure
+            # guard's primary purpose is to catch RUNTIME shell logic that
+            # points at a missing path; stale path references in comments are
+            # a documentation concern handled separately.
+            stripped = line.lstrip()
+            if stripped.startswith("#"):
+                continue
+            if rx.search(line):
+                rel = f.relative_to(REPO_ROOT).as_posix()
+                hits.append(f"{rel}:{lineno}: {line.strip()}")
+    assert not hits, (
+        f"Hardcoded legacy shell path pattern {pattern!r} found in cluster files:\n"
+        + "\n".join(hits[:25])
+        + (f"\n... ({len(hits) - 25} more)" if len(hits) > 25 else "")
+        + "\n\nUpdate to canonical: results/power -> models/power; "
+        "results/validation -> models/validation; "
+        "results/group_analysis -> reports/tables/group_analysis; "
+        "validation/<x>.py -> tests/scientific/test_<x>.py; "
+        "figures/ -> reports/figures/."
+    )
+
+
+# ---- Viz template path lockstep update -------------------------------
+
+
+def test_viz_template_path_uses_reports_figures() -> None:
+    """src/prl_hgf/viz/export.py must read template from reports/figures/."""
+    p = REPO_ROOT / "src" / "prl_hgf" / "viz" / "export.py"
+    text = p.read_text(encoding="utf-8")
+    assert 'PROJECT_ROOT / "reports" / "figures" / "hgf_viewer.html"' in text, (
+        "viz/export.py::_DEFAULT_TEMPLATE_PATH not updated to reports/figures/. "
+        "See Phase 26 Plan 26-03 Task 2."
+    )
+    assert 'PROJECT_ROOT / "figures" / "hgf_viewer.html"' not in text, (
+        "viz/export.py still references the legacy figures/ path. "
+        "Update _DEFAULT_TEMPLATE_PATH to reports/figures/."
+    )
 
 
 # ============================================================

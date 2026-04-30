@@ -41,7 +41,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 # Activate ds_env
@@ -215,7 +215,7 @@ echo ""
 echo "Pushing smoke test results to git..."
 _SMOKE_LOG_OUT="cluster/logs/smoke16_${SLURM_JOB_ID}.out"
 _SMOKE_LOG_ERR="cluster/logs/smoke16_${SLURM_JOB_ID}.err"
-_SMOKE_JSON="results/power/smoke_test.json"
+_SMOKE_JSON="models/power/smoke_test.json"
 
 git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_SMOKE_JSON}" 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then

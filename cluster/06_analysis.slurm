@@ -82,7 +82,7 @@ done
 echo ""
 echo "============================================================"
 echo "Group analysis complete. End: $(date)"
-echo "Results: results/group_analysis/"
+echo "Results: reports/tables/group_analysis/"
 echo "============================================================"
 
 if [[ "$ALL_SUCCESS" != "true" ]]; then

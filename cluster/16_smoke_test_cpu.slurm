@@ -23,7 +23,7 @@
 #   sbatch --export=PRL_ENABLE_X64=1 cluster/16_smoke_test_cpu.slurm   # fp64
 #
 # Output:
-#   results/power/smoke_test_cpu_${PRECISION}.json   (fp32 or fp64)
+#   models/power/smoke_test_cpu_${PRECISION}.json   (fp32 or fp64)
 #   cluster/logs/smoke16cpu_${SLURM_JOB_ID}.out/.err
 # =============================================================================
 
@@ -43,7 +43,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 _PROJECT="${PROJECT:-fc37}"
@@ -135,7 +135,7 @@ print(f'jax_enable_x64 (pre-run): {jax.config.jax_enable_x64}')
 echo ""
 
 # Loop over requested models (default runs 2-level then 3-level).  Each
-# invocation writes results/power/smoke_test.json which we then rename
+# invocation writes models/power/smoke_test.json which we then rename
 # to carry the model name alongside precision + MCMC scale, so multiple
 # runs in one SLURM job don't clobber each other.
 OVERALL_EXIT=0
@@ -162,9 +162,9 @@ for _MODEL in ${PRL_SMOKE_MODELS}; do
     fi
 
     # Rename per-model so fp32/fp64 × scale × model don't clobber
-    _RESULT_JSON="results/power/smoke_test_cpu_${PRECISION}_${_MODEL}_${MCMC_SUFFIX}.json"
-    if [[ -f "results/power/smoke_test.json" ]]; then
-        mv "results/power/smoke_test.json" "${_RESULT_JSON}"
+    _RESULT_JSON="models/power/smoke_test_cpu_${PRECISION}_${_MODEL}_${MCMC_SUFFIX}.json"
+    if [[ -f "models/power/smoke_test.json" ]]; then
+        mv "models/power/smoke_test.json" "${_RESULT_JSON}"
         echo "Renamed results → ${_RESULT_JSON}"
         _ALL_RESULT_JSONS+=("${_RESULT_JSON}")
     fi
