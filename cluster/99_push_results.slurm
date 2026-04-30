@@ -115,14 +115,14 @@ stage_files() {
 stage_files "data/fitted/*.csv" "fitting results"
 
 # Validation outputs
-stage_files "results/validation/*.csv" "validation CSVs"
-stage_files "results/validation/*.png" "validation plots"
+stage_files "models/validation/*.csv" "validation CSVs"
+stage_files "models/validation/*.png" "validation plots"
 
 # Group analysis outputs
-stage_files "results/group_analysis/*.csv" "group analysis CSVs"
+stage_files "reports/tables/group_analysis/*.csv" "group analysis CSVs"
 
 # Figures
-stage_files "figures/*.png" "analysis figures"
+stage_files "reports/figures/*.png" "analysis figures"
 
 echo ""
 

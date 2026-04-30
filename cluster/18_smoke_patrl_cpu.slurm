@@ -15,16 +15,16 @@
 # Separate JAX compilation cache path (.jax_cache_cpu/patrl/...) avoids
 # collision with the pick_best_cue CPU cache.
 #
-# Output (git-tracked under results/ so artifacts auto-push to origin):
-#   results/patrl_smoke/${SLURM_JOB_ID}/   (trajectory CSVs, param summary,
+# Output (git-tracked under models/ so artifacts auto-push to origin):
+#   models/patrl_smoke/${SLURM_JOB_ID}/    (trajectory CSVs, param summary,
 #                                            idata_{laplace,nuts}.nc,
 #                                            laplace_vs_nuts_diff.csv)
 #   cluster/logs/patrl18smoke_${SLURM_JOB_ID}.out/.err
 #
 # Defaults to --fit-method both (dual NUTS + Laplace fit) per the Option C
 # decision in .planning/quick/004-.../VB_LAPLACE_FEASIBILITY.md.  The .nc
-# files are required by validation/vbl06_laplace_vs_nuts.py for the offline
-# comparison harness.  Override via PRL_PATRL_SMOKE_METHOD at submission time.
+# files are required by tests/scientific/test_vbl06_laplace_vs_nuts.py for
+# the offline comparison harness.  Override via PRL_PATRL_SMOKE_METHOD at submission time.
 # =============================================================================
 
 #SBATCH --job-name=prl_patrl18smoke
@@ -43,7 +43,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/patrl_smoke
+mkdir -p cluster/logs models/patrl_smoke
 export PYTHONUNBUFFERED=1
 
 _PROJECT="${PROJECT:-fc37}"
@@ -83,7 +83,7 @@ export PRL_PATRL_SMOKE_TUNE="${PRL_PATRL_SMOKE_TUNE:-500}"
 export PRL_PATRL_SMOKE_DRAWS="${PRL_PATRL_SMOKE_DRAWS:-500}"
 export PRL_PATRL_SMOKE_SEED="${PRL_PATRL_SMOKE_SEED:-42}"
 # Default to dual fit (NUTS + Laplace) so idata_nuts.nc + idata_laplace.nc
-# both land in results/ for the offline vbl06 comparison harness.
+# both land in models/ for the offline vbl06 comparison harness.
 # Override with PRL_PATRL_SMOKE_METHOD=blackjax to skip Laplace.
 export PRL_PATRL_SMOKE_METHOD="${PRL_PATRL_SMOKE_METHOD:-both}"
 
@@ -119,7 +119,7 @@ python scripts/12_smoke_patrl_foundation.py \
     --n-draws "${PRL_PATRL_SMOKE_DRAWS}" \
     --seed "${PRL_PATRL_SMOKE_SEED}" \
     --fit-method "${PRL_PATRL_SMOKE_METHOD}" \
-    --output-dir "results/patrl_smoke/${SLURM_JOB_ID:-local}"
+    --output-dir "models/patrl_smoke/${SLURM_JOB_ID:-local}"
 
 EXIT_CODE=$?
 
@@ -144,11 +144,12 @@ echo ""
 echo "Pushing PAT-RL smoke results to git..."
 _LOG_OUT="cluster/logs/patrl18smoke_${SLURM_JOB_ID}.out"
 _LOG_ERR="cluster/logs/patrl18smoke_${SLURM_JOB_ID}.err"
-_OUT_DIR="results/patrl_smoke/${SLURM_JOB_ID}"
+_OUT_DIR="models/patrl_smoke/${SLURM_JOB_ID}"
 
-# results/ is git-tracked (unlike output/ which is gitignored).  Stage CSVs
-# AND .nc InferenceData files so validation/vbl06_laplace_vs_nuts.py can
-# consume the outputs locally via git pull (no scp required).
+# models/ is git-tracked via .gitkeep (unlike output/ which was gitignored).
+# Stage CSVs AND .nc InferenceData files so
+# tests/scientific/test_vbl06_laplace_vs_nuts.py can consume the outputs
+# locally via git pull (no scp required).
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add "${_OUT_DIR}"/*.csv "${_OUT_DIR}"/*.nc 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then

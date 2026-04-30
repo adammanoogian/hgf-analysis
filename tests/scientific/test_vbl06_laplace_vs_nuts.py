@@ -11,7 +11,7 @@ Soft warning (log-only): sd_laplace / sd_nuts outside [0.5, 2.0] for
 any parameter.
 
 Mirrors the structural convention of
-``validation/valid03_cross_platform.py``.
+``tests/scientific/test_valid03_cross_platform.py``.
 """
 
 from __future__ import annotations
@@ -20,6 +20,10 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.scientific
 
 # Make the project root and src/ importable when running this file directly.
 _project_root = str(Path(__file__).resolve().parent.parent)

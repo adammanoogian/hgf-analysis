@@ -13,18 +13,18 @@ Usage
 -----
 Run on CPU (forces CPU even if GPU is present)::
 
-    JAX_PLATFORM_NAME=cpu python validation/valid03_cross_platform.py run \\
-        --output results/valid03_cpu.json
+    JAX_PLATFORM_NAME=cpu python tests/scientific/test_valid03_cross_platform.py run \\
+        --output models/power/valid03_cpu.json
 
 Run on GPU (default on GPU node; uses whatever JAX detects)::
 
-    python validation/valid03_cross_platform.py run \\
-        --output results/valid03_gpu.json
+    python tests/scientific/test_valid03_cross_platform.py run \\
+        --output models/power/valid03_gpu.json
 
 Compare results (1% relative error threshold)::
 
-    python validation/valid03_cross_platform.py compare \\
-        results/valid03_cpu.json results/valid03_gpu.json
+    python tests/scientific/test_valid03_cross_platform.py compare \\
+        models/power/valid03_cpu.json models/power/valid03_gpu.json
 
 **Dev-machine behaviour:** On a CPU-only machine both runs execute on CPU and
 produce identical results (trivially pass). This is by design — the MCMC
@@ -43,6 +43,10 @@ import json
 import sys
 import time
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.scientific
 
 # Make the project root and src/ importable when running this file directly.
 # Project root is needed for ``from config import CONFIGS_DIR`` in task_config.

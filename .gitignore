@@ -1,7 +1,14 @@
 # Generated artifacts
-output/
-figures/
 logs/
+
+# CCDS canonical (Phase 26 Wave 3): models/ is gitignored (heavy artifacts);
+# tracked via .gitkeep markers. reports/ is tracked (small CSV/MD outputs
+# are paper-ready and version-worthy).
+models/
+results/
+!models/.gitkeep
+!models/mle/.gitkeep
+!models/bayesian/.gitkeep
 
 # GSD planning audit trail — local-only, not pushed (per user policy)
 .planning/

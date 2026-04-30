@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAT-RL HGF Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif; background: #F3F4F6; font-size: 20px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px;
+    background: #D1D5DB; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
+  input[type=radio] { cursor: pointer; }
+  button { border: none; font-family: inherit; cursor: pointer; }
+  button:hover { filter: brightness(0.95); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ── Color palette ──────────────────────────────────────────────────────────────
+const C = {
+  l3:   { fill:"#FAECE7", stroke:"#993C1D", text:"#7a2a10" },  // coral  – volatility
+  l2:   { fill:"#E1F5EE", stroke:"#0F6E56", text:"#0a5040" },  // teal   – belief
+  l1:   { fill:"#E6F1FB", stroke:"#185FA5", text:"#0d3d7a" },  // blue   – input
+  resp: { fill:"#EEEDFE", stroke:"#534AB7", text:"#3a2d90" },  // purple – response
+  ev:   { fill:"#F0FAF5", stroke:"#1B7A56", text:"#0a5040" },  // mid-teal – EV
+  prm:  { fill:"#FFFBEF", stroke:"#9A7820", text:"#6b5200" },  // gold   – parameters
+  dhr:  { fill:"#E8F5E9", stroke:"#388E3C", text:"#1B5E20" },  // green  – ΔHR
+  hl:   { fill:"#FFF3CC", stroke:"#CC8800", text:"#7a5000" },  // amber  – highlight
+  eVal:"#185FA5", eVol:"#993C1D", eEV:"#1B7A56", eRsp:"#534AB7", ePrm:"#9A7820", eDHR:"#388E3C",
+};
+
+// Phenotype colors
+const PC = {
+  balanced:             '#1D9E75',
+  reward_blunted:       '#378ADD',
+  threat_hypervigilant: '#993C1D',
+  both_disrupted:       '#534AB7',
+};
+
+// ── ANS Phenotypes (replaces anxiety hypotheses) ────────────────────────────────
+const PHENOS = [
+  {
+    id:"balanced",
+    label:"① Balanced",
+    color: PC.balanced,
+    ans:"Healthy SNS / PNS reciprocity",
+    params:"γ < 0  ·  ω₂ low  ·  b ≈ 0",
+    hlN:[], hlE:["dhr_resp"], hlP:["gamma"],
+  },
+  {
+    id:"reward_blunted",
+    label:"② Reward blunted",
+    color: PC.reward_blunted,
+    ans:"Blunted parasympathetic reward drive",
+    params:"β ↓  ·  ω₂ normal  ·  b ≈ 0",
+    hlN:["resp"], hlE:["ev_resp"], hlP:["beta","b"],
+  },
+  {
+    id:"threat_hypervigilant",
+    label:"③ Threat hypervigilant",
+    color: PC.threat_hypervigilant,
+    ans:"Sympathetic hyperactivation",
+    params:"ω₂ ↑  ·  μ₃⁰ ↑  ·  b ↓  ·  |γ| ↑",
+    hlN:["belief","vol"], hlE:["val","dhr_resp"], hlP:["omega2","mu3_0","b","gamma"],
+  },
+  {
+    id:"both_disrupted",
+    label:"④ Both disrupted",
+    color: PC.both_disrupted,
+    ans:"SNS dominant + PNS blunted",
+    params:"β ↓  ·  ω₂ ↑  ·  μ₃⁰ ↑  ·  b ↓↓",
+    hlN:["belief","vol","resp"], hlE:["val","ev_resp"], hlP:["omega2","mu3_0","beta","b"],
+  },
+];
+
+// ── Node / edge info ───────────────────────────────────────────────────────────
+const INFO = {
+  input:  { title:"u — Binary state observation (node 0 in pyhgf)", body:"Binary-state input node. Value = 1 (dangerous) or 0 (safe) on each trial. This is what you pass to net.input_data(input_data=u[:,None]) — the HGF processes it to update belief μ₂.\n\nIMPORTANT — u vs choices: u drives the HGF belief update. The participant's approach/avoid CHOICES are fitted separately via the response model log-likelihood (model_a/b/c_logp). These are two distinct likelihoods.\n\nMultiple overlapping nodes represent the trial sequence across 5 phases (380 trials). Hazard rate: h=0.03 (stable), h=0.10 (volatile)." },
+  belief: { title:"μ₂ — Belief about danger (node 1, BELIEF_NODE)", body:"Continuous-state node. Holds posterior belief about the hidden state in log-odds space: μ₂ > 0 → dangerous; μ₂ < 0 → safe. P(dangerous) = σ(μ₂).\n\nUpdate equation: μ₂[k] ~ N(μ₂[k-1], exp(κ·μ₃[k] + ω₂))\n\nSNS/PNS link: a high-ω₂ (SNS-dominant) agent has broader update steps — the belief node swings more per trial. μ₂ is the bridge between HGF belief updating and EV computation in the response model." },
+  vol:    { title:"μ₃ — Volatility estimate (node 2, VOLATILITY_NODE)", body:"Continuous-state node. Tracks how fast the hidden state switches. Higher μ₃ → HGF expects more frequent reversals → learning rate of μ₂ increases.\n\nUpdate equation: μ₃[k] ~ N(μ₃[k-1], ϑ)\n\nSNS/PNS link: SNS-dominant phenotypes (③ ④) maintain elevated μ₃ even in stable phases — each oddball renews sympathetic arousal rather than being filtered. This is the v/n misattribution signature. Only present in 3-level HGF." },
+  ev_box: { title:"EV — Expected value of approach (response_patrl.py)", body:"EV = (1 − P_d) · Vᵣ − P_d · Vₛ\n\nwhere P_d = σ(μ₂), Vᵣ = reward magnitude {1,3}, Vₛ = shock magnitude {1,3}.\n\nThis is computed by expected_value(mu2, reward_mag, shock_mag) in response_patrl.py. EV > 0 → approach preferred; EV < 0 → avoid preferred." },
+  dhr:    { title:"ΔHR — Anticipatory bradycardia (autonomic input)", body:"Trial-level change in heart rate during the anticipation window. ΔHR < 0 = bradycardia — a parasympathetic (vagal) pre-response.\n\nIn Models B and C this PNS signal feeds into the decision logit (γ·ΔHR) and/or scales EV sensitivity (α·ΔHR). In Model D it directly modulates the learning rate via ω_eff(t) = ω + λ·ΔHR.\n\nHealthy phenotype (①): λ < 0 — vagal engagement tightens the precision window, smaller μ₂ update on bradycardia trials. Dysregulated (③): λ ≈ 0 — autonomic state does not reconfigure learning." },
+  resp:   { title:"Response model = Decision model (response_patrl.py)", body:"Binary choice: approach (1) or avoid (0). This IS the decision model.\n\nModel A: P(approach) = σ( β · EV + b )\nModel B: P(approach) = σ( β · EV + b + γ · ΔHR )\nModel C: P(approach) = σ( (β + α·ΔHR) · EV + b + γ · ΔHR )\n\nSNS/PNS framing:\n• β ↓ = blunted PNS reward drive (phenotype ②)\n• b ↓ = SNS-driven habitual avoidance (phenotype ③ ④)\n• γ < 0 = vagal→avoidance coupling; healthy if modest, disrupted if absent\n• α < 0 = PNS attenuates threat sensitivity in real-time (broken in ③)" },
+  omega2: { title:"ω₂ — Tonic volatility (log-scale, node 1)", body:"Log-scale baseline volatility for the level-2 belief node. Higher (less negative) ω₂ → broader priors → faster belief updating after each observation.\n\nIn pyhgf: node_parameters={'tonic_volatility': omega_2} on node 1.\n\nEffective learning rate ∝ exp(ω₂ + κ·μ₃).\n\nSNS link: ω₂ ↑ is the computational signature of chronic SNS hyperactivation — the nervous system maintains a high-uncertainty, high-reactivity state." },
+  omega3: { title:"ω₃ — Meta-volatility (node 2)", body:"Baseline volatility for the level-3 volatility node. Controls how rapidly μ₃ itself can change.\n\n⚠️ Known poor recovery with binary data — interpret group-level ω₃ effects cautiously. Primary hypotheses focus on ω₂ and κ." },
+  kappa:  { title:"κ — Volatility coupling (node 2 → node 1)", body:"Scales how strongly the level-3 volatility estimate modulates the level-2 learning rate.\n\nIn pyhgf: volatility_children=([BELIEF_NODE], [kappa])\n\nEffective LR ∝ exp(ω₂ + κ·μ₃). κ=0: 2-level behavior (fixed LR). κ=1 (default): full modulation.\n\nSNS link: ↓κ = reduced adaptive tracking = staying in fixed high-alert mode regardless of true environmental stability." },
+  mu3_0:  { title:"μ₃⁰ — Initial volatility prior mean (node 2)", body:"Starting value of the volatility estimate before any data. Higher μ₃⁰ → agent begins with high volatility assumption → starts with a fast learning rate.\n\nSNS phenotypes (③ ④) use μ₃⁰ ↑ — they enter each session already primed with elevated uncertainty." },
+  beta:   { title:"β — Inverse temperature (decision precision)", body:"Scales how strongly EV differences translate into choice probability. Higher β → EV more sharply drives approach vs avoid. Lower β → stochastic choices.\n\nPNS link: β ↓ is the computational signature of blunted parasympathetic reward engagement (phenotype ②) — the agent knows the environment is safe but does not act on it." },
+  b:      { title:"b — Approach bias intercept", body:"Constant offset on the approach logit, independent of EV. b > 0 → baseline tendency to approach. b < 0 → baseline avoidance bias.\n\nSNS link: b ↓ (more negative) = habitual SNS-driven avoidance that persists even when the environment is objectively safe and EV(approach) > 0." },
+  gamma:  { title:"γ — Direct ΔHR → logit coupling (Models B, C)", body:"Adds the autonomic signal directly to the approach logit: +γ·ΔHR. Since anticipatory bradycardia is negative (ΔHR < 0), γ < 0 means bradycardia increases avoidance.\n\nPNS link: healthy phenotype (①) has modest γ < 0 — vagal signal appropriately shapes the decision. Disrupted phenotypes (③ ④) may show γ ≈ 0 — the PNS signal is present (bradycardia occurs) but does not reconfigure the decision, consistent with broken cardiac→cortical feedback." },
+  alpha:  { title:"α — ΔHR × EV interaction scaling (Model C only)", body:"Scales how much ΔHR modulates EV sensitivity: effective β becomes (β + α·ΔHR). When ΔHR < 0 and α < 0, EV sensitivity decreases — the agent is less responsive to whether approach is actually good or bad.\n\nPNS link: healthy phenotype has α_shk < 0 — bradycardia attenuates threat sensitivity in real-time. SNS-dominant phenotype (③): α_shk ≈ 0 — the PNS signal exists but does not reconfigure the threat response." },
+  vrew:   { title:"Vᵣ — Reward magnitude", body:"Trial-level reward magnitude for approach. Two levels: low (1) and high (3). Drawn uniformly from the 2×2 magnitude grid. Higher Vᵣ → higher EV when environment is safe → stronger pull toward approach." },
+  vshk:   { title:"Vₛ — Shock magnitude", body:"Trial-level shock magnitude for approach. Two levels: low (1) and high (3). Higher Vₛ → more negative EV when environment is dangerous → stronger pull toward avoidance." },
+  val:    { title:"Value coupling: μ₂ ↔ u (pyhgf value_children)", body:"Downward: belief μ₂ generates prediction for binary input u. Upward: precision-weighted PE ε₂ propagates from u back to μ₂. This is the core Bayesian updating step.\n\nSolid blue arrow = value coupling. Thickness scales with ω₂. In pyhgf: value_children=INPUT_NODE on node 1." },
+  kappa_e:{ title:"Volatility coupling: μ₃ → μ₂ (pyhgf volatility_children)", body:"The level-3 node modulates the effective precision (learning rate) of the level-2 belief node. Coupling strength κ. Dashed coral = volatility coupling. Thickness scales with κ.\n\nOnly present in 3-level model. In pyhgf: volatility_children=([BELIEF_NODE], [kappa]) on node 2." },
+  ev_resp:{ title:"EV → response model (belief-to-decision pathway)", body:"The computed expected value of approach feeds directly into the decision logit. This is the core pathway from HGF beliefs (μ₂) through EV to the action (approach/avoid).\n\nThickness scales with β (how strongly EV differences drive choices). PNS link: blunted β (phenotype ②) means this pathway is attenuated — beliefs and EV do not translate into approach." },
+  dhr_ev: { title:"ΔHR → EV scaling (Model C: α·ΔHR·EV term)", body:"Autonomic (PNS) signal modulates how strongly EV influences the decision. In healthy agents, bradycardia may attenuate threat sensitivity (α_shk < 0) — the PNS reconfigures the value computation in real time." },
+  dhr_resp:{ title:"ΔHR → logit (Models B, C: γ·ΔHR term)", body:"Direct effect of anticipatory bradycardia on the approach logit. Healthy phenotype (①): modest γ < 0 — vagal signal appropriately signals caution. SNS-dominant (③ ④): disrupted or absent γ — the PNS signal occurs but is not heard by the decision system." },
+};
+
+// ── SVG geometry ───────────────────────────────────────────────────────────────
+const hexPts=(cx,cy,r)=>Array.from({length:6},(_,i)=>{const a=(Math.PI/3)*i-Math.PI/6;return`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)}`;}).join(" ");
+const diamPts=(cx,cy,rx,ry)=>`${cx},${cy-ry} ${cx+rx},${cy} ${cx},${cy+ry} ${cx-rx},${cy}`;
+const retract=(x1,y1,x2,y2,d)=>{const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);return len<1?[x2,y2]:[x2-(dx/len)*d,y2-(dy/len)*d];};
+
+// ── Main component ─────────────────────────────────────────────────────────────
+function App() {
+  const [hgfLevel, setHgfLevel] = useState("3level");
+  const [respModel, setRespModel] = useState("C");
+  const omega2 = -3.0, omega3 = -4.0, kappa = 1.0, mu3_0 = 1.0;
+  const beta = 2.0, b = 0.0, gamma = -0.3, alpha = -0.1;
+  const [phenoId, setPhenoId] = useState("balanced");
+  const [sel,    setSel]    = useState(null);
+
+  const pheno = PHENOS.find(p => p.id === phenoId);
+  const is3  = hgfLevel === "3level";
+  const isMM = hgfLevel === "2level_mm";
+  const hasDHR   = respModel === "B" || respModel === "C";
+  const hasAlpha = respModel === "C";
+
+  const hlN = id => pheno.hlN.includes(id);
+  const hlE = id => pheno.hlE.includes(id);
+  const hlP = id => pheno.hlP.includes(id);
+
+  // Edge widths from sliders
+  const wVal  = 1.2 + Math.max(0, omega2+8)*0.38;
+  const wVol  = 0.7 + kappa*2.6;
+  const wEV   = 0.8 + beta*0.55;
+  const wDHR  = 1.0 + Math.abs(gamma)*2.8 + Math.abs(alpha)*2.0;
+
+  // Layout
+  const CX=350, SW_D=700, SW_EQ=310, SW=SW_D+SW_EQ;
+  const GX=175, PX=90;
+  const EQX = SW_D + 22;
+  const rowV = 85;
+  const rowB = is3 ? 245 : 165;
+  const rowI = is3 ? 390 : 305;
+  const evY  = rowI + 92;
+  const respY = evY + 104;
+  const SH   = respY + 104;
+
+  const click = (id,e) => { e&&e.stopPropagation(); setSel(p=>p===id?null:id); };
+  const nC = (id,base) => hlN(id) ? C.hl : (sel===id ? {...base,stroke:"#2563EB"} : base);
+  const eC = (id,def)  => hlE(id) ? "#CC7700" : def;
+  const pC = id        => hlP(id) ? C.hl : C.prm;
+
+  const displayInfo = (sel && INFO[sel]) ? INFO[sel] : null;
+
+  const PSq = ({x,y,pid,label,disabled}) => {
+    const cc = disabled ? {fill:"#F9FAFB",stroke:"#D1D5DB",text:"#9CA3AF"} : pC(pid);
+    return(<g onClick={disabled?undefined:e=>click(pid,e)} style={{cursor:disabled?"default":"pointer",opacity:disabled?0.45:1}}>
+      {sel===pid&&!disabled&&<rect x={x-18} y={y-18} width={36} height={36} rx={6} fill="none" stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.6}/>}
+      <rect x={x-13} y={y-13} width={26} height={26} rx={3} fill={cc.fill} stroke={cc.stroke} strokeWidth={sel===pid?2.2:1.5}/>
+      <text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={cc.text}>{label}</text>
+    </g>);
+  };
+
+  const AM = ({id,color}) => (<marker id={id} markerWidth={8} markerHeight={6} refX={7} refY={3} orient="auto"><polygon points="0,0 8,3 0,6" fill={color}/></marker>);
+
+  const formula = respModel==="A"
+    ? "P(approach) = σ( β · EV  +  b )"
+    : respModel==="B"
+    ? "P(approach) = σ( β · EV  +  b  +  γ · ΔHR )"
+    : "P(approach) = σ( (β + α·ΔHR) · EV  +  b  +  γ · ΔHR )";
+
+  const EqLine = ({x,y,text,isMath,isNote,color}) => (
+    <text x={x} y={y}
+      fontFamily={isMath ? "STIX Two Text,Georgia,serif" : "inherit"}
+      fontSize={isMath ? 17 : isNote ? 14 : 15}
+      fontWeight={isMath ? 600 : 400}
+      fill={color || (isMath ? "#111827" : isNote ? "#9CA3AF" : "#4B5563")}>
+      {text}
+    </text>
+  );
+
+  const EqHeader = ({x,y,text,color}) => (
+    <text x={x} y={y} fontSize={14} fontWeight={800} letterSpacing={0.8} fill={color||"#374151"}>
+      {text}
+    </text>
+  );
+
+  return (
+    <div style={{display:"flex",height:"100vh",fontFamily:"'Source Sans 3','Source Sans Pro',sans-serif",fontSize:20,background:"#F3F4F6",overflow:"hidden"}} onClick={()=>setSel(null)}>
+
+      {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
+      <div style={{width:278,background:"#fff",borderRight:"1px solid #E5E7EB",padding:"18px 16px",overflowY:"auto",flexShrink:0}} onClick={e=>e.stopPropagation()}>
+
+
+        <Blk title="HGF LEVEL">
+          {[{id:"2level",label:"2-level",note:"ω₂ only · fixed learning rate"},
+            {id:"3level",label:"3-level",note:"ω₂ + ω₃ + κ · adaptive learning rate"},
+            {id:"2level_mm",label:"2-level multimodal",note:"ω₂ only · two observation channels"}].map(m=>(
+            <label key={m.id} style={{display:"flex",gap:8,marginBottom:8,cursor:"pointer"}}>
+              <input type="radio" checked={hgfLevel===m.id} onChange={()=>{setHgfLevel(m.id);setSel(null);}} style={{marginTop:2}}/>
+              <div>
+                <div style={{fontWeight:hgfLevel===m.id?700:400,color:hgfLevel===m.id?"#111":"#6B7280"}}>{m.label}</div>
+                <div style={{fontSize:15,color:"#9CA3AF"}}>{m.note}</div>
+              </div>
+            </label>
+          ))}
+        </Blk>
+
+        <Blk title="RESPONSE MODEL">
+          {[{id:"A",label:"Model A",note:"β·EV + b  (beliefs only)"},
+            {id:"B",label:"Model B",note:"+ γ·ΔHR  (direct autonomic)"},
+            {id:"C",label:"Model C",note:"+ α·ΔHR·EV  (EV scaling)"},
+          ].map(m=>(
+            <label key={m.id} style={{display:"flex",gap:8,marginBottom:7,cursor:"pointer"}}>
+              <input type="radio" checked={respModel===m.id} onChange={()=>{setRespModel(m.id);setSel(null);}} style={{marginTop:2}}/>
+              <div>
+                <div style={{fontWeight:respModel===m.id?700:400,color:respModel===m.id?"#111":"#6B7280"}}>{m.label}</div>
+                <div style={{fontSize:15,color:"#9CA3AF"}}>{m.note}</div>
+              </div>
+            </label>
+          ))}
+        </Blk>
+
+        <Blk title="ANS PHENOTYPES  (2×2)">
+          {PHENOS.map(p=>(
+            <button key={p.id} onClick={()=>{setPhenoId(p.id);setSel(null);}} style={{
+              display:"block",width:"100%",textAlign:"left",padding:"7px 10px",marginBottom:4,
+              borderRadius:6,border:`1.5px solid ${phenoId===p.id?p.color:"#E5E7EB"}`,
+              background:phenoId===p.id?p.color+"14":"#FAFAFA",
+              color:phenoId===p.id?p.color:"#374151",fontWeight:phenoId===p.id?700:400,fontSize:18,
+            }}>
+              <div>{p.label}</div>
+              {p.ans&&<div style={{fontSize:15,opacity:0.78,marginTop:1}}>{p.ans}</div>}
+              {p.params&&<div style={{fontSize:13,fontFamily:"STIX Two Text,Georgia,serif",marginTop:3,opacity:0.65}}>{p.params}</div>}
+            </button>
+          ))}
+        </Blk>
+
+        <Blk title="NOTATION">
+          {[{sh:"hex",c:C.l3,t:"Volatility node (μ₃) — hidden state"},
+            {sh:"cir",c:C.l2,t:"Belief node μ₂ — P(dangerous)"},
+            {sh:"dia",c:C.l1,t:"Observation u (binary state)"},
+            {sh:"sq", c:C.prm,t:"Fixed parameter"},
+            {sh:"dia",c:C.dhr,t:"ΔHR / magnitude input"}].map((it,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+              <svg width={18} height={18} viewBox="0 0 18 18">
+                {it.sh==="hex"&&<polygon points={hexPts(9,9,7)} fill={it.c.fill} stroke={it.c.stroke} strokeWidth={1.5}/>}
+                {it.sh==="cir"&&<circle cx={9} cy={9} r={7} fill={it.c.fill} stroke={it.c.stroke} strokeWidth={1.5}/>}
+                {it.sh==="dia"&&<polygon points={diamPts(9,9,7,6)} fill={it.c.fill} stroke={it.c.stroke} strokeWidth={1.5}/>}
+                {it.sh==="sq" &&<rect x={2} y={2} width={14} height={14} rx={2} fill={it.c.fill} stroke={it.c.stroke} strokeWidth={1.5}/>}
+              </svg>
+              <span style={{fontSize:16,color:"#6B7280"}}>{it.t}</span>
+            </div>
+          ))}
+          <div style={{height:4}}/>
+          {[{dash:false,col:C.eVal,t:"Value coupling (solid)"},
+            {dash:true, col:C.eVol,t:"Volatility coupling (dashed)"},
+            {dash:true, col:C.eRsp,t:"→ decision pathway"},
+            {dash:true, col:C.eDHR,t:"ΔHR / PNS autonomic path"}].map((it,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+              <svg width={22} height={10} viewBox="0 0 22 10">
+                <defs><marker id={`lm${i}`} markerWidth={6} markerHeight={5} refX={5} refY={2.5} orient="auto"><polygon points="0,0 6,2.5 0,5" fill={it.col}/></marker></defs>
+                <line x1={1} y1={5} x2={16} y2={5} stroke={it.col} strokeWidth={2} strokeDasharray={it.dash?"4,2":"none"} markerEnd={`url(#lm${i})`}/>
+              </svg>
+              <span style={{fontSize:16,color:"#6B7280"}}>{it.t}</span>
+            </div>
+          ))}
+        </Blk>
+      </div>
+
+      {/* ── Main ────────────────────────────────────────────────────────────── */}
+      <div style={{flex:1,padding:20,display:"flex",flexDirection:"column",gap:12,overflowY:"auto"}}>
+
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #E5E7EB",padding:"14px 10px",
+          boxShadow:"0 1px 4px rgba(0,0,0,0.06)",flex:"0 0 auto",overflowX:"auto"}}
+          onClick={e=>e.stopPropagation()}>
+
+          <svg viewBox={`0 0 ${SW} ${SH}`} style={{width:"100%",maxWidth:SW,display:"block",margin:"0 auto"}}>
+            <defs>
+              <AM id="av"    color={C.eVal}/>  <AM id="av2"   color="#0a2d60"/>
+              <AM id="avo"   color={C.eVol}/>  <AM id="avo2"  color="#CC7700"/>
+              <AM id="ap"    color={C.ePrm}/>
+              <AM id="ar"    color={C.eRsp}/>  <AM id="ar2"   color="#CC7700"/>
+              <AM id="adhr"  color={C.eDHR}/>  <AM id="adhr2" color="#CC7700"/>
+              <AM id="aev"   color={C.eEV}/>
+              <AM id="atl3"  color={C.l3.stroke}/>
+              <AM id="atl2"  color={C.l2.stroke}/>
+            </defs>
+
+            {/* ── Level background bands ─────────────────────────────────── */}
+            {is3&&<rect x={8} y={rowV-35} width={SW_D-16} height={96} rx={10} fill={C.l3.stroke} opacity={0.07}/>}
+            <rect x={8} y={rowB-40} width={SW_D-16} height={90} rx={10} fill={C.l2.stroke} opacity={0.07}/>
+            <rect x={8} y={rowI-32} width={SW_D-16} height={88} rx={10} fill={C.l1.stroke} opacity={0.07}/>
+            <rect x={8} y={rowI+50} width={SW_D-16} height={evY-rowI-10} rx={8} fill={C.ev.stroke} opacity={0.05}/>
+            <rect x={8} y={evY+30} width={SW_D-16} height={respY+76-evY-30} rx={10} fill={C.resp.stroke} opacity={0.06}/>
+
+            {/* ── Equations panel background ────────────────────────────── */}
+            <rect x={SW_D+2} y={8} width={SW_EQ-4} height={SH-16} rx={10} fill="#F8FAFC"/>
+            <line x1={SW_D+2} y1={20} x2={SW_D+2} y2={SH-20} stroke="#E5E7EB" strokeWidth={1}/>
+            <text x={SW_D+SW_EQ/2} y={26} textAnchor="middle" fontSize={14} fontWeight={800}
+              fill="#9CA3AF" letterSpacing={1.2}>GENERATIVE MODEL EQUATIONS</text>
+
+            {/* ── EQUATIONS: Level 3 ──────────────────────────────────────── */}
+            {is3&&(<>
+              <EqHeader x={EQX} y={rowV-28} text="LEVEL 3 — VOLATILITY" color={C.l3.stroke}/>
+              <EqLine x={EQX} y={rowV-10} text="μ₃[k] ~ N( μ₃[k-1],  ϑ )" isMath/>
+              <EqLine x={EQX} y={rowV+12} text="Evolving estimate of env. volatility"/>
+              <EqLine x={EQX} y={rowV+34} text="LR of μ₂ ∝ exp( κ · μ₃ + ω₂ )"/>
+            </>)}
+
+            {/* ── EQUATIONS: Level 2 ──────────────────────────────────────── */}
+            <EqHeader x={EQX} y={rowB-32} text="LEVEL 2 — BELIEF" color={C.l2.stroke}/>
+            <EqLine x={EQX} y={rowB-14} text="μ₂[k] ~ N( μ₂[k-1],  exp(κ·μ₃ + ω₂) )" isMath/>
+            <EqLine x={EQX} y={rowB+8}  text="P(dangerous) = σ( μ₂ )"/>
+            <EqLine x={EQX} y={rowB+30} text="Updated via precision-weighted PE ε₂"/>
+            {!is3&&<EqLine x={EQX} y={rowB+50} text={isMM?"multimodal: 2 obs · ω₂ only, no κ":"2-level: ω₂ only, no κ adaptation"} isNote/>}
+
+            {/* ── EQUATIONS: Level 1 ──────────────────────────────────────── */}
+            <EqHeader x={EQX} y={rowI-28} text={isMM?"OBSERVATION MODEL (MULTIMODAL)":"OBSERVATION MODEL"} color={C.l1.stroke}/>
+            {isMM ? (<>
+              <EqLine x={EQX} y={rowI-10} text="p(u₁=1 | μ₂) = σ( μ₂ )   → dangerous" isMath/>
+              <EqLine x={EQX} y={rowI+14} text="p(u₂=1 | μ₂) = σ( μ₂ )   → secondary" isMath/>
+              <EqLine x={EQX} y={rowI+38} text="Both u₁, u₂ update shared belief μ₂"/>
+              <EqLine x={EQX} y={rowI+80} text="input_idxs = (0, 1)   input shape (T, 2)" isNote/>
+            </>) : (<>
+              <EqLine x={EQX} y={rowI-10} text="p(u=1 | μ₂) = σ( μ₂ )   → dangerous" isMath/>
+              <EqLine x={EQX} y={rowI+14} text="p(u=0 | μ₂) = 1 − σ(μ₂) → safe" isMath/>
+              <EqLine x={EQX} y={rowI+38} text="u ∈ {0,1}:  HGF input, drives belief update"/>
+            </>)}
+
+            {/* ── EQUATIONS: EV + Response ────────────────────────────────── */}
+            <EqHeader x={EQX} y={rowI+106} text="EXPECTED VALUE" color={C.ev.stroke}/>
+            <EqLine x={EQX} y={rowI+124} text="EV = (1−P_d)·Vᵣ  −  P_d·Vₛ" isMath/>
+            <EqLine x={EQX} y={rowI+148} text="P_d = σ(μ₂),  Vᵣ,Vₛ ∈ {1, 3}"/>
+
+            <EqHeader x={EQX} y={rowI+174} text={`RESPONSE MODEL (MODEL ${respModel})`} color={C.resp.stroke}/>
+            {respModel==="A"&&<>
+              <EqLine x={EQX} y={rowI+192} text="P(app) = σ( β·EV + b )" isMath/>
+              <EqLine x={EQX} y={rowI+216} text="Beliefs only; no autonomic covariate"/>
+            </>}
+            {respModel==="B"&&<>
+              <EqLine x={EQX} y={rowI+192} text="P(app) = σ( β·EV + b + γ·ΔHR )" isMath/>
+              <EqLine x={EQX} y={rowI+216} text="+ direct PNS (γ·ΔHR) → logit"/>
+            </>}
+            {respModel==="C"&&<>
+              <EqLine x={EQX} y={rowI+192} text="P(app) = σ( (β+α·ΔHR)·EV + b + γ·ΔHR )" isMath/>
+              <EqLine x={EQX} y={rowI+216} text="+ α·ΔHR modulates EV sensitivity (PNS)"/>
+              <EqLine x={EQX} y={rowI+240} text="+ γ·ΔHR direct autonomic shift"/>
+            </>}
+            <EqLine x={EQX} y={rowI+264} text="Fits observed choices (NOT u)" color="#CC8800"/>
+
+            {/* ── LEVEL 3: Volatility node ──────────────────────────────── */}
+            {is3&&(()=>{
+              const nc=nC("vol",C.l3);
+              const [kex,key]=retract(CX,rowV,CX,rowB,27);
+              const [ksx,ksy]=retract(CX,rowB,CX,rowV,33);
+              const hlK=hlE("kappa_e"),colK=eC("kappa_e",C.eVol),swK=hlK?wVol+1.8:wVol;
+              const kmx=(ksx+kex)/2,kmy=(ksy+key)/2;
+              const tMidX3=Math.round((GX+20+CX-33)/2);
+              return(<>
+                <text x={18} y={rowV-22} fontSize={14} fontWeight={700} fill={C.l3.stroke} opacity={0.8}>LEVEL 3</text>
+
+                {/* Ghost μ₃[k-1] node */}
+                <polygon points={hexPts(GX,rowV,18)} fill={C.l3.fill} stroke={C.l3.stroke} strokeWidth={1.2} opacity={0.28}/>
+                <text x={GX} y={rowV+1} textAnchor="middle" dominantBaseline="middle"
+                  fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={600} fill={C.l3.text} opacity={0.35}>μ₃</text>
+                <text x={GX} y={rowV+30} textAnchor="middle" fontSize={12} fill="#9CA3AF">[k−1]</text>
+
+                {/* Temporal evolution arrow */}
+                <line x1={GX+20} y1={rowV} x2={CX-33} y2={rowV}
+                  stroke={C.l3.stroke} strokeWidth={1.4} strokeDasharray="5,3"
+                  markerEnd="url(#atl3)" opacity={0.48}/>
+
+                {/* ω₃ param */}
+                <line x1={PX+13} y1={rowV-20} x2={tMidX3} y2={rowV}
+                  stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+                <PSq x={PX} y={rowV-20} pid="omega3" label="ω₃"/>
+
+                {/* μ₃⁰ param */}
+                <line x1={PX+13} y1={rowV+20} x2={tMidX3} y2={rowV}
+                  stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+                <PSq x={PX} y={rowV+20} pid="mu3_0" label="μ₃⁰"/>
+
+                {/* κ coupling arrow */}
+                <g onClick={e=>click("kappa_e",e)} style={{cursor:"pointer"}}>
+                  <line x1={ksx} y1={ksy} x2={kex} y2={key} stroke="transparent" strokeWidth={16}/>
+                  <line x1={ksx} y1={ksy} x2={kex} y2={key} stroke={colK} strokeWidth={swK}
+                    strokeDasharray={hlK?"none":"8,4"} markerEnd={hlK?"url(#avo2)":"url(#avo)"} opacity={0.88}/>
+                </g>
+                <line x1={PX+13} y1={kmy} x2={CX-3} y2={kmy}
+                  stroke={C.ePrm} strokeWidth={0.8} strokeDasharray="4,3" opacity={0.35}/>
+                <PSq x={PX} y={kmy} pid="kappa" label="κ"/>
+
+                {/* vol hexagon */}
+                <g onClick={e=>click("vol",e)} style={{cursor:"pointer"}}>
+                  {(hlN("vol")||sel==="vol")&&<polygon points={hexPts(CX,rowV,40)} fill="none" stroke={hlN("vol")?"#CC7700":"#2563EB"} strokeWidth={2} strokeDasharray={hlN("vol")?"none":"5,3"} opacity={0.55}/>}
+                  <polygon points={hexPts(CX,rowV,30)} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                  <text x={CX} y={rowV-4} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={nc.text}>μ₃</text>
+                  <text x={CX} y={rowV+10} textAnchor="middle" fontSize={14} fill={nc.text} opacity={0.75}>vol</text>
+                </g>
+              </>);
+            })()}
+
+            {/* ── LEVEL 2: Belief node ──────────────────────────────────── */}
+            {(()=>{
+              const nc=nC("belief",C.l2);
+              const tMidX2=Math.round((GX+18+CX-26)/2);
+              return(<>
+                <text x={18} y={rowB-26} fontSize={14} fontWeight={700} fill={C.l2.stroke} opacity={0.8}>LEVEL 2</text>
+
+                {/* Ghost μ₂[k-1] node */}
+                <circle cx={GX} cy={rowB} r={16} fill={C.l2.fill} stroke={C.l2.stroke} strokeWidth={1.2} opacity={0.28}/>
+                <text x={GX} y={rowB+1} textAnchor="middle" dominantBaseline="middle"
+                  fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={600} fill={C.l2.text} opacity={0.35}>μ₂</text>
+                <text x={GX} y={rowB+30} textAnchor="middle" fontSize={12} fill="#9CA3AF">[k−1]</text>
+
+                {/* Temporal evolution arrow */}
+                <line x1={GX+18} y1={rowB} x2={CX-26} y2={rowB}
+                  stroke={C.l2.stroke} strokeWidth={1.4} strokeDasharray="5,3"
+                  markerEnd="url(#atl2)" opacity={0.48}/>
+
+                {/* ω₂ param */}
+                <g onClick={e=>click("omega2",e)} style={{cursor:"pointer"}}>
+                  <line x1={PX+13} y1={rowB-20} x2={tMidX2} y2={rowB}
+                    stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+                  <PSq x={PX} y={rowB-20} pid="omega2" label="ω₂"/>
+                </g>
+
+                <g onClick={e=>click("belief",e)} style={{cursor:"pointer"}}>
+                  <circle cx={CX} cy={rowB} r={31} fill="none" stroke={C.l2.stroke} strokeWidth={1} strokeDasharray="5,3" opacity={0.25}/>
+                  {(hlN("belief")||sel==="belief")&&<circle cx={CX} cy={rowB} r={34} fill="none" stroke={hlN("belief")?"#CC7700":"#2563EB"} strokeWidth={2} strokeDasharray={hlN("belief")?"none":"5,3"} opacity={0.55}/>}
+                  <circle cx={CX} cy={rowB} r={24} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                  <text x={CX} y={rowB-3} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={nc.text}>μ₂</text>
+                  <text x={CX} y={rowB+11} textAnchor="middle" fontSize={14} fill={nc.text} opacity={0.75}>P(danger)</text>
+                </g>
+              </>);
+            })()}
+
+            {/* ── Value coupling ────────────────────────────────────────── */}
+            {(()=>{
+              const hl=hlE("val"),col=eC("val",C.eVal),sw=hl?wVal+1.5:wVal;
+              if(isMM){
+                const u1x=CX-70, u2x=CX+70;
+                const [e1x,e1y]=retract(CX,rowB,u1x,rowI,22);
+                const [e2x,e2y]=retract(CX,rowB,u2x,rowI,22);
+                const [s1x,s1y]=retract(u1x,rowI,CX,rowB,22);
+                const [s2x,s2y]=retract(u2x,rowI,CX,rowB,22);
+                return(<g onClick={e=>click("val",e)} style={{cursor:"pointer"}}>
+                  <line x1={s1x} y1={s1y} x2={e1x} y2={e1y} stroke="transparent" strokeWidth={14}/>
+                  <line x1={s1x} y1={s1y} x2={e1x} y2={e1y} stroke={col} strokeWidth={sw}
+                    markerEnd={hl?"url(#av2)":"url(#av)"} opacity={0.88}/>
+                  <line x1={s2x} y1={s2y} x2={e2x} y2={e2y} stroke="transparent" strokeWidth={14}/>
+                  <line x1={s2x} y1={s2y} x2={e2x} y2={e2y} stroke={col} strokeWidth={sw}
+                    markerEnd={hl?"url(#av2)":"url(#av)"} opacity={0.88}/>
+                </g>);
+              }
+              return(<g onClick={e=>click("val",e)} style={{cursor:"pointer"}}>
+                <line x1={CX} y1={rowB+25} x2={CX} y2={rowI-25} stroke="transparent" strokeWidth={14}/>
+                <line x1={CX} y1={rowB+25} x2={CX} y2={rowI-25} stroke={col} strokeWidth={sw}
+                  markerEnd={hl?"url(#av2)":"url(#av)"} opacity={0.88}/>
+              </g>);
+            })()}
+
+            {/* ── LEVEL 1: Binary input ─────────────────────────────────── */}
+            {(()=>{
+              const nc=nC("input",C.l1);
+              const offsets=[{dx:-14,dy:3,op:0.25},{dx:-7,dy:1.5,op:0.45},{dx:0,dy:0,op:1}];
+
+              if(isMM){
+                const u1x=CX-70, u2x=CX+70;
+                return(<>
+                  <text x={18} y={rowI-22} fontSize={14} fontWeight={700} fill={C.l1.stroke} opacity={0.8}>LEVEL 1 — MULTIMODAL</text>
+                  {offsets.slice(0,2).map((o,i)=>(
+                    <polygon key={i} points={diamPts(u1x+o.dx,rowI+o.dy,22,17)}
+                      fill={C.l1.fill} stroke={C.l1.stroke} strokeWidth={1.5} opacity={o.op}/>
+                  ))}
+                  <g onClick={e=>click("input",e)} style={{cursor:"pointer"}}>
+                    {sel==="input"&&<polygon points={diamPts(u1x,rowI,28,22)} fill="none" stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.5}/>}
+                    <polygon points={diamPts(u1x,rowI,22,17)} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                    <text x={u1x} y={rowI+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={nc.text}>u₁</text>
+                  </g>
+                  <text x={u1x} y={rowI+28} textAnchor="middle" fontSize={13} fill="#6B7280">primary obs.</text>
+                  {offsets.slice(0,2).map((o,i)=>(
+                    <polygon key={i+10} points={diamPts(u2x+o.dx,rowI+o.dy,22,17)}
+                      fill={C.l1.fill} stroke={C.l1.stroke} strokeWidth={1.5} opacity={o.op}/>
+                  ))}
+                  <g onClick={e=>click("input",e)} style={{cursor:"pointer"}}>
+                    <polygon points={diamPts(u2x,rowI,22,17)} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                    <text x={u2x} y={rowI+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={nc.text}>u₂</text>
+                  </g>
+                  <text x={u2x} y={rowI+28} textAnchor="middle" fontSize={13} fill="#6B7280">secondary obs.</text>
+                  <text x={CX} y={rowI+44} textAnchor="middle" fontSize={14} fill="#9CA3AF">both drive shared μ₂</text>
+                  <path d={`M${u1x+22},${rowI} L${CX},${rowI-6} L${u2x-22},${rowI}`}
+                    fill="none" stroke={C.l1.stroke} strokeWidth={0.8} opacity={0.3} strokeDasharray="3,2"/>
+                </>);
+              }
+
+              return(<>
+                <text x={18} y={rowI-22} fontSize={14} fontWeight={700} fill={C.l1.stroke} opacity={0.8}>LEVEL 1</text>
+                {offsets.slice(0,2).map((o,i)=>(
+                  <polygon key={i} points={diamPts(CX+o.dx,rowI+o.dy,24,19)}
+                    fill={C.l1.fill} stroke={C.l1.stroke} strokeWidth={1.5} opacity={o.op}/>
+                ))}
+                <g onClick={e=>click("input",e)} style={{cursor:"pointer"}}>
+                  {sel==="input"&&<polygon points={diamPts(CX,rowI,30,24)} fill="none" stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.5}/>}
+                  <polygon points={diamPts(CX,rowI,24,19)} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                  <text x={CX} y={rowI+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={16} fontWeight={700} fill={nc.text}>u</text>
+                </g>
+                <text x={CX-6} y={rowI+32} textAnchor="middle" fontSize={15} fill="#6B7280" fontWeight={500}>safe (0) / dangerous (1)</text>
+              </>);
+            })()}
+
+            {/* ── Belief → EV curved path ───────────────────────────────── */}
+            {(()=>{
+              const bRight=CX+24, evRight=CX+165;
+              const y1=rowB, y2=evY;
+              return(<g onClick={e=>click("ev_box",e)} style={{cursor:"pointer"}}>
+                <path d={`M${bRight},${y1} L${evRight},${y1} L${evRight},${y2}`}
+                  stroke={C.eEV} strokeWidth={1.5} strokeDasharray="6,3" fill="none" opacity={0.7}
+                  markerEnd="url(#aev)"/>
+                <line x1={bRight} y1={y1} x2={evRight} y2={y1} stroke="transparent" strokeWidth={10}/>
+                <text x={evRight+8} y={(y1+y2)/2} fontSize={14} fill={C.eEV} opacity={0.8} fontFamily="STIX Two Text,Georgia,serif">μ₂</text>
+                <text x={evRight+8} y={(y1+y2)/2+12} fontSize={12} fill={C.eEV} opacity={0.6}>beliefs</text>
+              </g>);
+            })()}
+
+            {/* ── EV computation section ────────────────────────────────── */}
+            {(()=>{
+              const bx=168, bw=SW_D-168-30, nc=nC("ev_box",C.ev);
+              return(<>
+                <line x1={28} y1={rowI+68} x2={SW_D-28} y2={rowI+68} stroke="#E5E7EB" strokeWidth={1}/>
+                <g onClick={e=>click("vrew",e)} style={{cursor:"pointer"}}>
+                  <polygon points={diamPts(88,evY,20,15)} fill={C.dhr.fill} stroke={C.dhr.stroke} strokeWidth={1.5}/>
+                  <text x={88} y={evY+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={C.dhr.text}>Vᵣ</text>
+                  <text x={88} y={evY+22} textAnchor="middle" fontSize={14} fill="#9CA3AF">reward</text>
+                  <line x1={108} y1={evY} x2={bx-4} y2={evY} stroke={C.eEV} strokeWidth={1.2} strokeDasharray="4,2" markerEnd="url(#aev)" opacity={0.7}/>
+                </g>
+                <g onClick={e=>click("vshk",e)} style={{cursor:"pointer"}}>
+                  <polygon points={diamPts(SW_D-88,evY,20,15)} fill={C.dhr.fill} stroke={C.dhr.stroke} strokeWidth={1.5}/>
+                  <text x={SW_D-88} y={evY+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={C.dhr.text}>Vₛ</text>
+                  <text x={SW_D-88} y={evY+22} textAnchor="middle" fontSize={14} fill="#9CA3AF">shock</text>
+                  <line x1={SW_D-108} y1={evY} x2={bx+bw+4} y2={evY} stroke={C.eEV} strokeWidth={1.2} strokeDasharray="4,2" markerEnd="url(#aev)" opacity={0.7}/>
+                </g>
+                <g onClick={e=>click("ev_box",e)} style={{cursor:"pointer"}}>
+                  {sel==="ev_box"&&<rect x={bx-6} y={evY-28} width={bw+12} height={68} rx={12} fill="none" stroke="#2563EB" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.55}/>}
+                  <rect x={bx} y={evY-22} width={bw} height={58} rx={10} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.6}/>
+                  <text x={SW_D/2} y={evY} textAnchor="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={nc.text}>
+                    EV  =  (1 − P_d) · Vᵣ  −  P_d · Vₛ
+                  </text>
+                  <text x={SW_D/2} y={evY+18} textAnchor="middle" fontSize={15} fill={nc.text} opacity={0.75}>
+                    P_d = σ(μ₂)  ·  expected value of approach
+                  </text>
+                </g>
+              </>);
+            })()}
+
+            {/* ── EV → response arrow ───────────────────────────────────── */}
+            {(()=>{
+              const hl=hlE("ev_resp"),col=eC("ev_resp",C.eRsp),sw=hl?wEV+1.2:wEV;
+              const y1=evY+40, y2=respY-26;
+              return(<g onClick={e=>click("ev_resp",e)} style={{cursor:"pointer"}}>
+                <line x1={CX} y1={y1} x2={CX} y2={y2} stroke="transparent" strokeWidth={14}/>
+                <line x1={CX} y1={y1} x2={CX} y2={y2} stroke={col} strokeWidth={sw}
+                  markerEnd={hl?"url(#ar2)":"url(#ar)"} opacity={0.85}/>
+                <text x={CX+6} y={(y1+y2)/2+4} fontSize={12} fill={col} opacity={0.75}>decision</text>
+              </g>);
+            })()}
+
+            {/* ── ΔHR input node ─────────────────────────────────────────── */}
+            {hasDHR&&(()=>{
+              const dhx=SW_D-75, dhy=(evY+respY)/2-4;
+              const hlDHR=hlN("dhr");
+              const nc=nC("dhr",C.dhr);
+              const hlRsp=hlE("dhr_resp"),hlEV=hlE("dhr_ev");
+              const [rx,ry]=retract(dhx,dhy,CX+170,respY,14);
+              const [ex,ey]=retract(dhx,dhy,CX+170,evY,14);
+              return(<>
+                <g onClick={e=>click("dhr_resp",e)} style={{cursor:"pointer"}}>
+                  <line x1={dhx-20} y1={dhy} x2={rx} y2={ry} stroke="transparent" strokeWidth={12}/>
+                  <line x1={dhx-20} y1={dhy} x2={rx} y2={ry}
+                    stroke={hlRsp?"#CC7700":C.eDHR} strokeWidth={hlRsp?wDHR+1.5:wDHR}
+                    strokeDasharray={hlRsp?"none":"6,3"} markerEnd={hlRsp?"url(#adhr2)":"url(#adhr)"} opacity={0.8}/>
+                  <text x={(dhx-20+rx)/2+8} y={(dhy+ry)/2+14} fontSize={14} fill={C.eDHR} fontFamily="STIX Two Text,Georgia,serif" fontWeight={hlRsp?800:600}>γ</text>
+                </g>
+                {hasAlpha&&<g onClick={e=>click("dhr_ev",e)} style={{cursor:"pointer"}}>
+                  <line x1={dhx-20} y1={dhy} x2={ex} y2={ey} stroke="transparent" strokeWidth={12}/>
+                  <line x1={dhx-20} y1={dhy} x2={ex} y2={ey}
+                    stroke={hlEV?"#CC7700":C.eDHR} strokeWidth={hlEV?wDHR+1.5:wDHR/1.5}
+                    strokeDasharray={hlEV?"none":"5,3"} markerEnd={hlEV?"url(#adhr2)":"url(#adhr)"} opacity={0.65}/>
+                  <text x={(dhx-20+ex)/2+8} y={(dhy+ey)/2-6} fontSize={14} fill={C.eDHR} fontFamily="STIX Two Text,Georgia,serif" fontWeight={hlEV?800:600}>α</text>
+                </g>}
+                <g onClick={e=>click("dhr",e)} style={{cursor:"pointer"}}>
+                  {(hlDHR||sel==="dhr")&&<polygon points={diamPts(dhx,dhy,32,26)} fill="none" stroke={hlDHR?"#CC7700":"#2563EB"} strokeWidth={2} strokeDasharray={hlDHR?"none":"4,2"} opacity={0.55}/>}
+                  <polygon points={diamPts(dhx,dhy,24,19)} fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                  <text x={dhx} y={dhy+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={nc.text}>ΔHR</text>
+                  {hlDHR&&<text x={dhx} y={dhy-28} textAnchor="middle" fontSize={26} fontWeight={800} fill="#CC8800">↑</text>}
+                </g>
+                <text x={dhx} y={dhy+32} textAnchor="middle" fontSize={14} fill="#9CA3AF">PNS (vagal)</text>
+              </>);
+            })()}
+
+            {/* ── Response model ────────────────────────────────────────── */}
+            <line x1={28} y1={respY-45} x2={SW_D-28} y2={respY-45} stroke="#D1D5DB" strokeWidth={1.5} strokeDasharray="9,5"/>
+            <text x={SW_D/2} y={respY-32} textAnchor="middle" fontSize={14} fill="#9CA3AF" fontWeight={600} letterSpacing={1.5}>RESPONSE / DECISION MODEL</text>
+
+            {(()=>{
+              const ry=respY, bx=110;
+              const respPs=[
+                {pid:"beta",  label:"β", val:beta.toFixed(1)},
+                {pid:"b",     label:"b", val:b.toFixed(2)},
+                ...(hasDHR   ? [{pid:"gamma",label:"γ",val:gamma.toFixed(2)}] : []),
+                ...(hasAlpha ? [{pid:"alpha",label:"α",val:alpha.toFixed(2)}] : []),
+              ];
+              return(<>{respPs.map((p,i)=>{
+                const py=ry-2+i*26;
+                return(<g key={p.pid} onClick={e=>click(p.pid,e)} style={{cursor:"pointer"}}>
+                  <line x1={PX+13} y1={py} x2={bx} y2={py}
+                    stroke={C.ePrm} strokeWidth={1.0} strokeDasharray="3,2" opacity={0.48}/>
+                  <PSq x={PX} y={py} pid={p.pid} label={p.label}/>
+                </g>);
+              })}</>);
+            })()}
+
+            {(()=>{
+              const ry=respY, nc=nC("resp",C.resp), bx=110, bw=SW_D-110-25;
+              return(<g onClick={e=>click("resp",e)} style={{cursor:"pointer"}}>
+                {(hlN("resp")||sel==="resp")&&<rect x={bx-7} y={ry-26} width={bw+14} height={76} rx={13}
+                  fill="none" stroke={hlN("resp")?"#CC7700":"#2563EB"} strokeWidth={2}
+                  strokeDasharray={hlN("resp")?"none":"5,3"} opacity={0.55}/>}
+                <rect x={bx} y={ry-20} width={bw} height={66} rx={10}
+                  fill={nc.fill} stroke={nc.stroke} strokeWidth={1.8}/>
+                <text x={bx+bw/2} y={ry+1} textAnchor="middle" fontFamily="STIX Two Text,Georgia,serif"
+                  fontSize={16} fontWeight={700} fill={nc.text}>{formula}</text>
+                <text x={bx+bw/2} y={ry+18} textAnchor="middle" fontSize={15}
+                  fill={nc.text} opacity={0.65}>approach (1) / avoid (0)</text>
+              </g>);
+            })()}
+
+          </svg>
+        </div>
+
+        {/* Info panel — only when a node/edge is clicked */}
+        {displayInfo&&<div style={{background:"#fff",borderRadius:10,padding:"13px 17px",
+          border:"1.5px solid #E5E7EB",
+          boxShadow:"0 1px 4px rgba(0,0,0,0.05)",flex:"0 0 auto"}}>
+          <div style={{fontWeight:700,fontSize:20,marginBottom:5,color:"#111827"}}>
+            {displayInfo.title}
+          </div>
+          <div style={{fontSize:18,color:"#4B5563",lineHeight:1.68,whiteSpace:"pre-line"}}>
+            {displayInfo.body}
+          </div>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Helper components ──────────────────────────────────────────────────────────
+function Blk({title,children}){
+  return<div style={{marginBottom:18}}>
+    <div style={{fontSize:14,fontWeight:800,letterSpacing:1.2,color:"#9CA3AF",textTransform:"uppercase",marginBottom:8}}>{title}</div>
+    {children}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

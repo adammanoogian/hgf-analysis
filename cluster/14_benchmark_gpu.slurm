@@ -6,7 +6,7 @@
 #   1. JAX compilation cache warm/cold test (BENCH-05)
 #   2. Full batched iteration timing (BENCH-01, BENCH-04)
 #   3. Decision gate: GPU vs CPU comp recommendation (BENCH-02)
-#   4. Writes results/power/benchmark_batched.json
+#   4. Writes models/power/benchmark_batched.json
 #   5. Appends decision to .planning/STATE.md
 #
 # Usage:
@@ -31,7 +31,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 # Activate ds_env
@@ -218,10 +218,10 @@ echo "============================================================"
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "BENCHMARK COMPLETE"
     echo ""
-    if [[ -f results/power/benchmark_batched.json ]]; then
+    if [[ -f models/power/benchmark_batched.json ]]; then
         echo "Results:"
-        cat results/power/benchmark_batched.json | python -m json.tool 2>/dev/null || \
-            cat results/power/benchmark_batched.json
+        cat models/power/benchmark_batched.json | python -m json.tool 2>/dev/null || \
+            cat models/power/benchmark_batched.json
     fi
 else
     echo "BENCHMARK FAILED (exit code: $EXIT_CODE)"
@@ -242,7 +242,7 @@ _LOG_OUT="cluster/logs/bench14_${SLURM_JOB_ID}.out"
 _LOG_ERR="cluster/logs/bench14_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add results/power/benchmark_batched.json 2>/dev/null
+git add models/power/benchmark_batched.json 2>/dev/null
 git add .planning/STATE.md 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then
     git commit -m "bench phase14 gpu sampler=${SAMPLER} (job ${SLURM_JOB_ID})"
