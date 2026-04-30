@@ -31,6 +31,12 @@ ROOT_CLUTTER_FORBIDDEN = [
     "_t2_verify.py",
     "bash.exe.stackdump",
     "slurm-54768408.out",
+]
+
+# __pycache__ at repo root is a Python runtime artifact that is always
+# gitignored — checking existence is too strict (pytest itself triggers
+# config.py bytecode compilation).  We assert it is NOT committed instead.
+ROOT_CLUTTER_GITIGNORED_ONLY = [
     "__pycache__",  # root-level only; nested __pycache__/ are fine
 ]
 
@@ -39,8 +45,23 @@ ROOT_CLUTTER_FORBIDDEN = [
 def test_root_clutter_absent(name: str) -> None:
     """Root-level scratch / OS-stackdump / SLURM-out must not return."""
     assert not (REPO_ROOT / name).exists(), (
-        f"Root clutter resurrected: {name}. "
-        f"See Phase 26 Plan 26-01 task 1."
+        f"Root clutter resurrected: {name}. See Phase 26 Plan 26-01 task 1."
+    )
+
+
+@pytest.mark.parametrize("name", ROOT_CLUTTER_GITIGNORED_ONLY)
+def test_root_clutter_gitignored(name: str) -> None:
+    """Runtime artefacts must be gitignored (may exist on disk, must not be tracked)."""
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", name],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+    )
+    assert result.returncode == 0, (
+        f"Root artefact {name!r} is NOT gitignored.\n"
+        f"Add it to .gitignore to prevent accidental commits."
     )
 
 
@@ -71,12 +92,150 @@ def test_gitignore_has_logs_line() -> None:
 
 
 # ============================================================
-# WAVE 2 — Config aliases (added by Plan 26-02; placeholder below)
+# WAVE 2 — Config aliases (active)
 # ============================================================
-# Plan 26-02 will append:
-#   - test_no_legacy_alias_imports (OUTPUT_DIR, FIGURES_DIR, RESULTS_DIR,
-#                                   VALIDATION_DIR, GROUP_ANALYSIS_DIR)
-#   - test_config_exposes_ccds_constants (DATA_RAW_DIR, …, REPORTS_DIR, …)
+
+LEGACY_ALIAS_IMPORT_PATTERNS = [
+    r"from config import .*\bOUTPUT_DIR\b",
+    r"from config import .*\bFIGURES_DIR\b",
+    r"from config import .*\bRESULTS_DIR\b",
+    r"from config import .*\bVALIDATION_DIR\b",
+    r"from config import .*\bGROUP_ANALYSIS_DIR\b",
+]
+
+# Also forbid attribute-access on the alias module:
+LEGACY_ALIAS_ATTR_PATTERNS = [
+    r"\b_cfg\.OUTPUT_DIR\b",
+    r"\b_cfg\.FIGURES_DIR\b",
+    r"\b_cfg\.RESULTS_DIR\b",
+    r"\b_cfg\.VALIDATION_DIR\b",
+    r"\b_cfg\.GROUP_ANALYSIS_DIR\b",
+    r"\bconfig\.OUTPUT_DIR\b",
+    r"\bconfig\.FIGURES_DIR\b",
+    r"\bconfig\.RESULTS_DIR\b",
+    r"\bconfig\.VALIDATION_DIR\b",
+    r"\bconfig\.GROUP_ANALYSIS_DIR\b",
+]
+
+W2_GREP_ROOTS = ["scripts", "src", "tests", "validation"]
+W2_GREP_EXCLUDE = {
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "legacy",
+    "_legacy",
+}
+
+
+def _w2_grep_files(roots: list[str], exclude: set[str]) -> list[Path]:
+    files: list[Path] = []
+    for root in roots:
+        root_path = REPO_ROOT / root
+        if not root_path.is_dir():
+            continue
+        for p in root_path.rglob("*.py"):
+            if any(part in exclude for part in p.parts):
+                continue
+            files.append(p)
+    return files
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    LEGACY_ALIAS_IMPORT_PATTERNS + LEGACY_ALIAS_ATTR_PATTERNS,
+)
+def test_no_legacy_alias_imports(pattern: str) -> None:
+    """No active code may import or reference the removed legacy aliases."""
+    import re
+
+    rx = re.compile(pattern)
+    hits: list[str] = []
+    for f in _w2_grep_files(W2_GREP_ROOTS, W2_GREP_EXCLUDE):
+        for lineno, line in enumerate(
+            f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1
+        ):
+            if rx.search(line):
+                rel = f.relative_to(REPO_ROOT).as_posix()
+                hits.append(f"{rel}:{lineno}: {line.strip()}")
+    assert not hits, (
+        f"Legacy alias pattern {pattern!r} found in active code:\n"
+        + "\n".join(hits[:25])
+        + (f"\n... ({len(hits) - 25} more)" if len(hits) > 25 else "")
+        + "\nMigrate to the canonical CCDS constant per "
+        "templates/guides/CCDS_SCHEME_D_LAYOUT.md §5."
+    )
+
+
+# Net-new CCDS canonical constants. NOTE: DATA_DIR is intentionally
+# OMITTED from this parametrize list — it is a TRANSITIONAL ALIAS retained
+# through Wave 2 for backward compat with scripts/03_*.py and scripts/04_*.py.
+# Wave 3 may further reduce DATA_DIR's usage; until then, omitting it from
+# the closure guard prevents the test from forcing premature DATA_DIR
+# removal.
+CCDS_REQUIRED_CONSTANTS = [
+    "DATA_RAW_DIR",
+    "DATA_INTERIM_DIR",
+    "DATA_PROCESSED_DIR",
+    "MODELS_DIR",
+    "MODELS_MLE_DIR",
+    "MODELS_BAYESIAN_DIR",
+    "REPORTS_DIR",
+    "REPORTS_FIGURES_DIR",
+    "REPORTS_TABLES_DIR",
+    "LOGS_DIR",
+]
+
+
+@pytest.mark.parametrize("name", CCDS_REQUIRED_CONSTANTS)
+def test_config_exposes_ccds_constants(name: str) -> None:
+    """config.py must expose every canonical CCDS path constant."""
+    import importlib
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    _prev_no_write = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True  # prevent __pycache__ at repo root
+    try:
+        config = importlib.import_module("config")
+        assert hasattr(config, name), (
+            f"config.py missing required CCDS constant: {name}\n"
+            f"See templates/guides/CCDS_SCHEME_D_LAYOUT.md §5."
+        )
+    finally:
+        sys.dont_write_bytecode = _prev_no_write
+        if str(REPO_ROOT) in sys.path:
+            sys.path.remove(str(REPO_ROOT))
+
+
+REMOVED_LEGACY_CONSTANTS = [
+    "OUTPUT_DIR",
+    "FIGURES_DIR",
+    "RESULTS_DIR",
+    "VALIDATION_DIR",
+    "GROUP_ANALYSIS_DIR",
+]
+
+
+@pytest.mark.parametrize("name", REMOVED_LEGACY_CONSTANTS)
+def test_config_does_not_expose_legacy_aliases(name: str) -> None:
+    """Removed legacy constants must NOT be re-introduced as aliases."""
+    import importlib
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    _prev_no_write = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True  # prevent __pycache__ at repo root
+    try:
+        config = importlib.import_module("config")
+        assert not hasattr(config, name), (
+            f"Legacy constant {name} reintroduced in config.py.\n"
+            f"Hard-`del` it (canonical §5 forbids deprecation aliases)."
+        )
+    finally:
+        sys.dont_write_bytecode = _prev_no_write
+        if str(REPO_ROOT) in sys.path:
+            sys.path.remove(str(REPO_ROOT))
 
 
 # ============================================================
