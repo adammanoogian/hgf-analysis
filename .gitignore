@@ -1,6 +1,7 @@
 # Generated artifacts
 output/
 figures/
+logs/
 
 # Data (not committed - too large / sensitive)
 data/*
