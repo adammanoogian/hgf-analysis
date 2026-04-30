@@ -21,7 +21,7 @@ from pathlib import Path
 
 # Ensure project root is on sys.path so imports work on cluster
 # without an editable install.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import config as _cfg
 from prl_hgf.power.curves import aggregate_parquets, compute_power_a, compute_power_b

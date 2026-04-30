@@ -21,8 +21,8 @@
 #   - prl_hgf package installed (pip install -e .)
 #
 # Usage:
-#   bash scripts/smoke_test.sh           # Run and clean up outputs
-#   bash scripts/smoke_test.sh --keep    # Run and keep outputs
+#   bash scripts/_maintenance/smoke_test.sh           # Run and clean up outputs
+#   bash scripts/_maintenance/smoke_test.sh --keep    # Run and keep outputs
 # =============================================================================
 
 set -euo pipefail
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: bash scripts/smoke_test.sh [--keep]"
+            echo "Usage: bash scripts/_maintenance/smoke_test.sh [--keep]"
             echo ""
             echo "Options:"
             echo "  --keep    Keep output files after smoke test"
@@ -169,32 +169,32 @@ run_step() {
 # Step 1: Simulate
 run_step \
     "03_simulate_participants" \
-    "python scripts/03_simulate_participants.py" \
+    "python scripts/03_pre_analysis/01_simulate_participants.py" \
     "data/simulated/simulated_participants.csv"
 
 # Step 2: Fit hgf_2level
 run_step \
     "04_fit (hgf_2level)" \
-    "python scripts/04_fit_participants.py --model hgf_2level" \
+    "python scripts/04_main_analysis/b_bayesian/01_fit_participants.py --model hgf_2level" \
     "data/fitted/hgf_2level_results.csv"
 
 # Step 3: Fit hgf_3level
 run_step \
     "04_fit (hgf_3level)" \
-    "python scripts/04_fit_participants.py --model hgf_3level" \
+    "python scripts/04_main_analysis/b_bayesian/01_fit_participants.py --model hgf_3level" \
     "data/fitted/hgf_3level_results.csv"
 
 # Step 4: Validation (recovery will be skipped due to <30 participants, that's OK)
 run_step \
     "05_validation (--skip-waic)" \
-    "python scripts/05_run_validation.py --skip-waic" \
-    "results/validation"
+    "python scripts/05_post_analysis_checks/01_run_validation.py --skip-waic" \
+    "models/validation"
 
 # Step 5: Group analysis (bambi models will be skipped due to <6 participants, that's OK)
 run_step \
     "06_group_analysis (2level)" \
-    "python scripts/06_group_analysis.py --model 2level --skip-plots" \
-    "results/group_analysis"
+    "python scripts/06_inference/01_run_group_analysis.py --model 2level --skip-plots" \
+    "reports/tables/group_analysis"
 
 # =============================================================================
 # Summary
@@ -225,16 +225,16 @@ if [[ "$KEEP_OUTPUTS" == "false" ]]; then
     rm -rf data/simulated/simulated_participants.csv
     rm -rf data/fitted/hgf_2level_results.csv
     rm -rf data/fitted/hgf_3level_results.csv
-    rm -rf results/validation
-    rm -rf results/group_analysis
+    rm -rf models/validation
+    rm -rf reports/tables/group_analysis
     echo "Outputs cleaned."
 else
     echo "Outputs kept (--keep flag)."
     echo "  data/simulated/simulated_participants.csv"
     echo "  data/fitted/hgf_2level_results.csv"
     echo "  data/fitted/hgf_3level_results.csv"
-    echo "  results/validation/"
-    echo "  results/group_analysis/"
+    echo "  models/validation/"
+    echo "  reports/tables/group_analysis/"
 fi
 
 echo ""

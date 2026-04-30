@@ -36,7 +36,7 @@ from pathlib import Path
 
 # Ensure project root is on sys.path so imports work on cluster
 # without an editable install.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 # Pre-parse --enable-x64 before importing jax so JAX_ENABLE_X64 takes effect.
 # Config must be set before any jnp array is created, so env var is the
@@ -1369,7 +1369,7 @@ def _run_benchmark(
     print(f"\nBenchmark saved to: {bench_path}")
 
     # --- Append decision to STATE.md ---
-    state_md_path = Path(__file__).resolve().parent.parent / ".planning" / "STATE.md"
+    state_md_path = Path(__file__).resolve().parent.parent.parent / ".planning" / "STATE.md"
     _update_state_md(
         state_md_path,
         gate_result["decision"],

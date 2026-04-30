@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import importlib.util
 import tempfile
@@ -176,7 +176,7 @@ def stage_figures(master_df, power_a_df, power_b_df, output_dir):
     # Import the plotting script
     spec = importlib.util.spec_from_file_location(
         "plot_power",
-        str(Path(__file__).parent / "10_plot_power_curves.py"),
+        str(Path(__file__).parent.parent / "03_pre_analysis" / "06_plot_power_curves.py"),
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -222,7 +222,7 @@ def stage_recommendation(master_df, power_a_df, power_b_df, output_dir):
     """Generate recommendation.md."""
     spec = importlib.util.spec_from_file_location(
         "write_rec",
-        str(Path(__file__).parent / "11_write_recommendation.py"),
+        str(Path(__file__).parent.parent / "03_pre_analysis" / "07_write_recommendation.py"),
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

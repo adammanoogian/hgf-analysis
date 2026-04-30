@@ -26,7 +26,9 @@ import pandas as pd  # noqa: E402
 # Load plotting module via importlib
 # ---------------------------------------------------------------------------
 
-_SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "10_plot_power_curves.py"
+_SCRIPT_PATH = (
+    Path(__file__).parent.parent / "scripts" / "03_pre_analysis" / "06_plot_power_curves.py"
+)
 
 spec = importlib.util.spec_from_file_location("plot_power", str(_SCRIPT_PATH))
 mod = importlib.util.module_from_spec(spec)

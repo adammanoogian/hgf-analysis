@@ -451,10 +451,121 @@ def test_viz_template_path_uses_reports_figures() -> None:
 
 
 # ============================================================
-# WAVE 4 — Scheme D pipeline (added by Plan 26-04; placeholder below)
+# WAVE 4 — Scheme D pipeline (active)
 # ============================================================
-# Plan 26-04 will append:
-#   - test_canonical_stage_exists (scripts/01_data_preprocessing, …,
-#                                  scripts/06_inference, scripts/utils)
-#   - test_digit_prefix_init_has_warning_comment
-#   - test_no_flat_numbered_scripts (no scripts/0N_*.py at top of scripts/)
+
+CANONICAL_STAGES = [
+    "scripts/01_data_preprocessing",
+    "scripts/02_descriptives",
+    "scripts/03_pre_analysis",
+    "scripts/04_main_analysis",
+    "scripts/04_main_analysis/a_mle",
+    "scripts/04_main_analysis/b_bayesian",
+    "scripts/05_post_analysis_checks",
+    "scripts/06_inference",
+    "scripts/utils",
+    "scripts/_maintenance",
+]
+
+
+@pytest.mark.parametrize("stage_dir", CANONICAL_STAGES)
+def test_canonical_stage_exists(stage_dir: str) -> None:
+    """Each Scheme D stage folder must exist (canonical §2 hard rule #1)."""
+    assert (REPO_ROOT / stage_dir).is_dir(), (
+        f"Missing canonical stage: {stage_dir}\n"
+        f"See templates/guides/CCDS_SCHEME_D_LAYOUT.md §2 + Plan 26-04."
+    )
+
+
+# Stages whose name starts with a digit need the dotted-import warning
+DIGIT_PREFIX_STAGES = [
+    "scripts/01_data_preprocessing",
+    "scripts/02_descriptives",
+    "scripts/03_pre_analysis",
+    "scripts/04_main_analysis",
+    "scripts/05_post_analysis_checks",
+    "scripts/06_inference",
+]
+
+
+@pytest.mark.parametrize("stage_dir", DIGIT_PREFIX_STAGES)
+def test_digit_prefix_init_has_warning_comment(stage_dir: str) -> None:
+    """Every digit-prefix __init__.py must warn against dotted imports.
+
+    Python forbids identifiers starting with a digit; importing
+    ``scripts.03_pre_analysis.X`` is a SyntaxError. The first 5 lines of
+    __init__.py must remind future-you (canonical §2).
+    """
+    init = REPO_ROOT / stage_dir / "__init__.py"
+    assert init.is_file(), f"Missing __init__.py for {stage_dir}"
+    first_lines = init.read_text(encoding="utf-8").splitlines()[:5]
+    has_warning = any(
+        "DO NOT" in line.upper() or "do not import" in line.lower()
+        for line in first_lines
+    )
+    assert has_warning, (
+        f"{stage_dir}/__init__.py missing dotted-import warning.\n"
+        f"Add as the first non-empty line:\n"
+        f"  # DO NOT import as `scripts.{Path(stage_dir).name}.X`. "
+        f"Use relative imports inside this stage, or move shared code "
+        f"to scripts/utils/."
+    )
+
+
+def test_no_flat_numbered_scripts() -> None:
+    """No ``scripts/<NN>_*.py`` may exist at the top of ``scripts/``.
+
+    The flat layout is forbidden per canonical §2: every digit-prefix
+    script must live inside a stage folder.
+    """
+    import re
+
+    flat_re = re.compile(r"^\d+[a-z_].*\.py$")
+    flat_hits: list[str] = []
+    for p in (REPO_ROOT / "scripts").iterdir():
+        if p.is_file() and flat_re.match(p.name):
+            flat_hits.append(p.name)
+    assert not flat_hits, (
+        f"Flat numbered scripts at scripts/ root (forbidden — see "
+        f"canonical §2 + Plan 26-04 mapping table):\n"
+        + "\n".join(flat_hits)
+    )
+
+
+# Cluster SLURM path-resolution audit
+def test_cluster_slurm_paths_resolve() -> None:
+    """Every ``python scripts/...`` reference in cluster/*.slurm must exist on disk.
+
+    Catches cases where a slurm file references the old flat path
+    after a future re-organization (or a partial Wave-4 revert).
+    """
+    import re
+
+    cluster_dir = REPO_ROOT / "cluster"
+    if not cluster_dir.is_dir():
+        pytest.skip("cluster/ not present")
+    rx = re.compile(r"python\s+(scripts/[\w/\-\.]+\.py)")
+    bad: list[str] = []
+    for f in cluster_dir.glob("*.slurm"):
+        # Skip phase-25 cluster files — they reference .planning/ scratch
+        if f.name.startswith("25_"):
+            continue
+        for lineno, line in enumerate(
+            f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1
+        ):
+            for match in rx.finditer(line):
+                rel = match.group(1)
+                if not (REPO_ROOT / rel).is_file():
+                    bad.append(f"{f.name}:{lineno}: {rel} (does not exist)")
+    assert not bad, (
+        "Cluster SLURM references missing scripts:\n" + "\n".join(bad)
+        + "\nUpdate the path per Plan 26-04 mapping table."
+    )
+
+
+def test_cluster_logs_dir_absent() -> None:
+    """cluster/logs/ removed in favor of top-level logs/ (canonical §1)."""
+    assert not (REPO_ROOT / "cluster" / "logs").exists(), (
+        "cluster/logs/ resurrected. Use top-level logs/ instead "
+        "(canonical §1)."
+    )

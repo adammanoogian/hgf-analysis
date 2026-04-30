@@ -74,7 +74,7 @@ from pathlib import Path
 # Ensure project root is on sys.path so that config.py is importable when
 # running as a script.
 # ---------------------------------------------------------------------------
-_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 

@@ -49,10 +49,10 @@ from typing import Any
 # Importing config is convenient but optional — fall back to repo-relative paths
 # when this script is launched from outside a configured environment.
 try:
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     from config import MODELS_DIR, PROJECT_ROOT  # noqa: E402
 except Exception:  # noqa: BLE001
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     MODELS_DIR = PROJECT_ROOT / "models"
 
 

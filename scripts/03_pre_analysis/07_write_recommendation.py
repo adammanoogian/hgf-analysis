@@ -27,7 +27,7 @@ import textwrap
 from pathlib import Path
 
 # Ensure project root is on sys.path so imports work without editable install.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import pandas as pd
 
