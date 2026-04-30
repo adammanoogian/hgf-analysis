@@ -97,7 +97,7 @@ echo "============================================================"
 echo "Wave 1: Simulate Participants"
 echo "============================================================"
 
-python scripts/03_simulate_participants.py
+python scripts/03_pre_analysis/01_simulate_participants.py
 if [[ $? -ne 0 ]]; then
     echo "ERROR: Simulation failed. Aborting pipeline."
     exit 1
@@ -219,11 +219,11 @@ echo ""
 echo "View logs:"
 for i in "${!FIT_JOBIDS[@]}"; do
     model=$(echo $MODELS | cut -d' ' -f$((i+1)))
-    echo "  tail -f cluster/logs/fit_mcmc_${FIT_JOBIDS[$i]}.out   # $model"
+    echo "  tail -f logs/fit_mcmc_${FIT_JOBIDS[$i]}.out   # $model"
 done
-[[ -n "$VALID_JOBID" ]] && echo "  tail -f cluster/logs/validation_${VALID_JOBID}.out"
-echo "  tail -f cluster/logs/analysis_${ANALYSIS_JOBID}.out"
-[[ -n "$PUSH_JOBID" ]] && echo "  tail -f cluster/logs/push_results_${PUSH_JOBID}.out"
+[[ -n "$VALID_JOBID" ]] && echo "  tail -f logs/validation_${VALID_JOBID}.out"
+echo "  tail -f logs/analysis_${ANALYSIS_JOBID}.out"
+[[ -n "$PUSH_JOBID" ]] && echo "  tail -f logs/push_results_${PUSH_JOBID}.out"
 echo ""
 echo "Cancel all:"
 ALL_IDS="${FIT_JOBIDS[*]}"

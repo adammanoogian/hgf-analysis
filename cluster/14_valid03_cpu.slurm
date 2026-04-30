@@ -10,8 +10,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_v03cpu
-#SBATCH --output=cluster/logs/valid03_cpu_%j.out
-#SBATCH --error=cluster/logs/valid03_cpu_%j.err
+#SBATCH --output=logs/valid03_cpu_%j.out
+#SBATCH --error=logs/valid03_cpu_%j.err
 #SBATCH --time=04:00:00
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=8
@@ -23,7 +23,7 @@
 module load miniforge3
 
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 _PROJECT="${PROJECT:-fc37}"
@@ -47,8 +47,8 @@ echo "Start:    $(date)"
 echo "============================================================"
 echo ""
 
-python validation/valid03_cross_platform.py run \
-    --output results/power/valid03_cpu.json \
+python tests/scientific/test_valid03_cross_platform.py run \
+    --output models/power/valid03_cpu.json \
     --n-per-group 3 \
     --seed 42 \
     --n-chains 2 \
@@ -58,8 +58,8 @@ python validation/valid03_cross_platform.py run \
 EXIT_CODE=$?
 
 echo ""
-if [[ $EXIT_CODE -eq 0 && -f results/power/valid03_cpu.json ]]; then
-    echo "CPU fit saved to results/power/valid03_cpu.json"
+if [[ $EXIT_CODE -eq 0 && -f models/power/valid03_cpu.json ]]; then
+    echo "CPU fit saved to models/power/valid03_cpu.json"
 else
     echo "CPU fit FAILED (exit code: $EXIT_CODE)"
 fi

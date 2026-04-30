@@ -7,7 +7,7 @@
 # cluster/21_submit_pscan_chain.sh for P in {5, 20, 50}.
 #
 # Roles:
-#   - cold: invokes scripts/08_run_power_iteration.py --p-scan ${PROBE_P}
+#   - cold: invokes scripts/03_pre_analysis/03_run_power_iteration.py --p-scan ${PROBE_P}
 #           --diagnostic-mode. _run_p_scan_probe (from 21-02) runs two
 #           in-process calls and writes a CSV row with cold_jit_s +
 #           same_proc_warm_s filled; next_proc_warm_s remains empty.
@@ -48,8 +48,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_diag21_pscan
-#SBATCH --output=cluster/logs/diag21_pscan_%j.out
-#SBATCH --error=cluster/logs/diag21_pscan_%j.err
+#SBATCH --output=logs/diag21_pscan_%j.out
+#SBATCH --error=logs/diag21_pscan_%j.err
 #SBATCH --time=00:30:00
 #SBATCH --mem=128G
 #SBATCH --gres=gpu:1
@@ -235,7 +235,7 @@ echo "XLA_FLAGS=${XLA_FLAGS}"
 # _run_p_scan_probe writes to stdout AND stderr. JAX_LOG_COMPILES messages
 # go to stderr via Python's logging module. Capture both streams so the
 # log file has everything for post-hoc parsing by 21-06 / 21-07.
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --p-scan "${PROBE_P}" \
     --diagnostic-mode \
     --chunk-id 0 \
@@ -349,8 +349,8 @@ echo ""
 echo "========================================"
 echo "Phase 21 p-scan probe: git auto-push"
 echo "========================================"
-_LOG_OUT="cluster/logs/diag21_pscan_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/diag21_pscan_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/diag21_pscan_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/diag21_pscan_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add .planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv 2>/dev/null

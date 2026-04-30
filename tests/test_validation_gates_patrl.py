@@ -90,12 +90,12 @@ def test_sc9_no_new_scripts_audit() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_sc11_phase_18_19_regression_suite_green() -> None:
     """SC11: Full Phase 18/19 regression suite must exit 0.
 
     Runs the canonical regression set as a subprocess and asserts returncode
-    == 0.  Marked ``@pytest.mark.slow`` — exclude from fast CI with
+    == 0.  Marked ``@pytest.mark.scientific`` — exclude from fast CI with
     ``pytest -m 'not slow'``.
 
     Cluster equivalent::

@@ -24,8 +24,8 @@
 # =============================================================================
 
 #SBATCH --job-name=push_results
-#SBATCH --output=cluster/logs/push_results_%j.out
-#SBATCH --error=cluster/logs/push_results_%j.err
+#SBATCH --output=logs/push_results_%j.out
+#SBATCH --error=logs/push_results_%j.err
 #SBATCH --time=00:15:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
@@ -115,14 +115,14 @@ stage_files() {
 stage_files "data/fitted/*.csv" "fitting results"
 
 # Validation outputs
-stage_files "results/validation/*.csv" "validation CSVs"
-stage_files "results/validation/*.png" "validation plots"
+stage_files "models/validation/*.csv" "validation CSVs"
+stage_files "models/validation/*.png" "validation plots"
 
 # Group analysis outputs
-stage_files "results/group_analysis/*.csv" "group analysis CSVs"
+stage_files "reports/tables/group_analysis/*.csv" "group analysis CSVs"
 
 # Figures
-stage_files "figures/*.png" "analysis figures"
+stage_files "reports/figures/*.png" "analysis figures"
 
 echo ""
 

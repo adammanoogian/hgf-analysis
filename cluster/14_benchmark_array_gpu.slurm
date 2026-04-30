@@ -19,15 +19,15 @@
 #
 # Auto-push is disabled inside the array tasks to avoid 6 concurrent
 # `git push` races.  After the array completes, run:
-#   git add cluster/logs/bench14arr_${SLURM_ARRAY_JOB_ID}_*.{out,err} \
+#   git add logs/bench14arr_${SLURM_ARRAY_JOB_ID}_*.{out,err} \
 #           results/power/benchmark_batched_chunk_*.json
 #   git commit -m "bench14 array: ${SLURM_ARRAY_JOB_ID}"
 #   git push origin main
 # =============================================================================
 
 #SBATCH --job-name=prl_bench14arr
-#SBATCH --output=cluster/logs/bench14arr_%A_%a.out
-#SBATCH --error=cluster/logs/bench14arr_%A_%a.err
+#SBATCH --output=logs/bench14arr_%A_%a.out
+#SBATCH --error=logs/bench14arr_%A_%a.err
 #SBATCH --array=0-5
 #SBATCH --time=02:00:00
 #SBATCH --mem=32G
@@ -43,7 +43,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 _PROJECT="${PROJECT:-fc37}"
@@ -128,7 +128,7 @@ echo "Start:          $(date)"
 echo "============================================================"
 echo ""
 
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_ARRAY_JOB_ID:-bench14arr}_${SLURM_ARRAY_TASK_ID:-0}" \

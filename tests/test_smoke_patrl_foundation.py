@@ -409,7 +409,7 @@ class TestPhase20SmokeModelDispatch:
 
     Runs a 2-agent healthy cohort fit for each response model and checks that
     the posterior InferenceData contains the expected variables.  All marked
-    ``@pytest.mark.slow`` and guarded by ``RUN_SMOKE_TESTS=1``.
+    ``@pytest.mark.scientific`` and guarded by ``RUN_SMOKE_TESTS=1``.
 
     The NUTS path for Models B/C is cluster-only (blackjax not in ds_env);
     documented in 20-02-SUMMARY.md.

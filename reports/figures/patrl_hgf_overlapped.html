@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAT-RL HGF — All Anxiety Hypotheses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #F3F4F6; }
+  button { border: none; font-family: inherit; cursor: pointer; transition: all 0.14s; }
+  button:hover { filter: brightness(0.93); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ── Color palette ──────────────────────────────────────────────────────────────
+const C = {
+  l3:   { fill:"#FAECE7", stroke:"#993C1D", text:"#7a2a10" },
+  l2:   { fill:"#E1F5EE", stroke:"#0F6E56", text:"#0a5040" },
+  l1:   { fill:"#E6F1FB", stroke:"#185FA5", text:"#0d3d7a" },
+  resp: { fill:"#EEEDFE", stroke:"#534AB7", text:"#3a2d90" },
+  ev:   { fill:"#F0FAF5", stroke:"#1B7A56", text:"#0a5040" },
+  prm:  { fill:"#FFFBEF", stroke:"#9A7820", text:"#6b5200" },
+  dhr:  { fill:"#E8F5E9", stroke:"#388E3C", text:"#1B5E20" },
+  eVal:"#185FA5", eVol:"#993C1D", eEV:"#1B7A56", eRsp:"#534AB7", ePrm:"#9A7820", eDHR:"#388E3C",
+};
+
+// ── Four anxiety hypotheses ────────────────────────────────────────────────────
+const HYPS = [
+  { id:"H1", label:"H1: ↑ω₂", fullLabel:"H1: Anxiety ↑ω₂", sub:"Over-learning of threat",
+    color:"#0F6E56", dir:"up",
+    hlN:["belief"], hlE:["val"], hlP:["omega2"],
+    desc:"Higher tonic volatility (ω₂ closer to 0) → broader priors → faster belief updating after each observation. Faster threat acquisition in dangerous context, slower extinction in safe context. Signature: steeper μ₂ trajectories, larger ε₂ PEs, more trials to asymptote post-reversal. Linked to heightened amygdala-driven learning rates." },
+  { id:"H2", label:"H2: ↓κ", fullLabel:"H2: Anxiety ↓κ", sub:"Reduced volatility tracking",
+    color:"#993C1D", dir:"down",
+    hlN:["vol"], hlE:["kappa_e"], hlP:["kappa"],
+    desc:"Lower κ decouples μ₃ (volatility) from μ₂ (belief). Anxious individuals remain in fixed high-alert fast-updating mode regardless of environmental stability. Signature: persistently elevated LR; poor stable vs. volatile run discrimination (h=0.03 vs h=0.10). Linked to inflexible prefrontal–amygdala uncertainty gating." },
+  { id:"H3", label:"H3: ↓b", fullLabel:"H3: Anxiety ↓b", sub:"Stronger avoidance bias",
+    color:"#534AB7", dir:"down",
+    hlN:["resp"], hlE:["ev_resp"], hlP:["b"],
+    desc:"More negative intercept b → avoids even when EV(approach) > 0. Captures trait avoidance beyond belief-driven decision-making. Signature: avoidance rate exceeds what EV alone predicts; persists across objectively safe contexts and stable-phase runs." },
+  { id:"H4", label:"H4: ↑ΔHR", fullLabel:"H4: Anxiety ↑ΔHR coupling", sub:"Autonomic → decision link",
+    color:"#388E3C", dir:"up",
+    hlN:["dhr","resp"], hlE:["dhr_ev","dhr_resp","ev_resp"], hlP:["gamma","alpha"],
+    desc:"Anticipatory bradycardia (ΔHR < 0) more strongly drives avoidance. Larger |γ| (direct ΔHR→logit) and/or |α| (ΔHR×EV interaction). Bodily threat signal overrides rational EV computation. Signature: better fit Model C vs. A in anxious group; bradycardia variance predicts avoidance above and beyond EV." },
+];
+
+// ── SVG geometry ───────────────────────────────────────────────────────────────
+const hexPts=(cx,cy,r)=>Array.from({length:6},(_,i)=>{const a=(Math.PI/3)*i-Math.PI/6;return`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)}`;}).join(" ");
+const diamPts=(cx,cy,rx,ry)=>`${cx},${cy-ry} ${cx+rx},${cy} ${cx},${cy+ry} ${cx-rx},${cy}`;
+const retract=(x1,y1,x2,y2,d)=>{const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);return len<1?[x2,y2]:[x2-(dx/len)*d,y2-(dy/len)*d];};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const AM=({id,color})=>(<marker id={id} markerWidth={8} markerHeight={6} refX={7} refY={3} orient="auto"><polygon points="0,0 8,3 0,6" fill={color}/></marker>);
+const PSq=({x,y,label})=>(<g><rect x={x-13} y={y-13} width={26} height={26} rx={3} fill={C.prm.fill} stroke={C.prm.stroke} strokeWidth={1.5}/><text x={x} y={y+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={C.prm.text}>{label}</text></g>);
+
+// ── Main App ───────────────────────────────────────────────────────────────────
+function App() {
+  const [activeHyps, setActiveHyps] = useState(new Set(["H1","H2","H3","H4"]));
+
+  const toggle = id => setActiveHyps(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const nodeRings = nodeId => HYPS.filter(h => activeHyps.has(h.id) && h.hlN.includes(nodeId));
+  const edgeHyps  = edgeId => HYPS.filter(h => activeHyps.has(h.id) && h.hlE.includes(edgeId));
+
+  // Layout — diagram (SW_D) + equations panel (SW_EQ)
+  const SW_D=700, SW_EQ=310, SW=SW_D+SW_EQ, CX=350;
+  const GX=175, PX=90;   // ghost k-1 node x-centre; param-square x-centre (left column)
+  const EQX = SW_D + 22;
+  const rowV=85, rowB=245, rowI=390;
+  const evY=480, respY=584, SH=700;
+  const dhx=SW_D-75, dhy=(evY+respY)/2-4;
+
+  const DirBadges = ({rings,bx,by}) =>
+    rings.map((h,i)=>(
+      <text key={h.id} x={bx+i*17} y={by} textAnchor="middle" fontSize={22} fontWeight={900} fill={h.color} opacity={0.9}>
+        {h.dir==="up"?"↑":"↓"}
+      </text>
+    ));
+
+  const VEdgeHL = ({edgeId, x, y1, y2}) => {
+    const ehs = edgeHyps(edgeId);
+    if (!ehs.length) return null;
+    const n = ehs.length;
+    return ehs.map((h,i)=>{
+      const off = n===1 ? 0 : (i-(n-1)/2)*4.5;
+      return <line key={h.id} x1={x+off} y1={y1} x2={x+off} y2={y2}
+        stroke={h.color} strokeWidth={3} opacity={0.78} markerEnd={`url(#ah_${h.id})`}/>;
+    });
+  };
+
+  const DiagEdgeHL = ({edgeId, x1, y1, x2, y2}) => {
+    const ehs = edgeHyps(edgeId);
+    if (!ehs.length) return null;
+    return ehs.map((h,i)=>(
+      <line key={h.id} x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke={h.color} strokeWidth={3} opacity={0.72-i*0.08} markerEnd={`url(#ah_${h.id})`}/>
+    ));
+  };
+
+  const EqLine = ({x,y,text,isMath,isNote,color}) => (
+    <text x={x} y={y}
+      fontFamily={isMath?"STIX Two Text,Georgia,serif":"inherit"}
+      fontSize={isMath?17:isNote?14:15}
+      fontWeight={isMath?600:400}
+      fill={color||(isMath?"#111827":isNote?"#9CA3AF":"#4B5563")}>
+      {text}
+    </text>
+  );
+  const EqHeader = ({x,y,text,color}) => (
+    <text x={x} y={y} fontSize={14} fontWeight={800} letterSpacing={0.8} fill={color||"#374151"}>{text}</text>
+  );
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",minHeight:"100vh",
+      fontFamily:"'Source Sans 3','Source Sans Pro',sans-serif",background:"#F3F4F6",padding:16,gap:12}}>
+
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div style={{background:"#fff",borderRadius:12,padding:"14px 20px",
+        boxShadow:"0 1px 6px rgba(0,0,0,0.08)",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+        <div style={{flexShrink:0}}>
+          <div style={{fontWeight:800,fontSize:22,color:"#111827"}}>PAT-RL HGF — Anxiety Hypotheses Overview</div>
+          <div style={{fontSize:16,color:"#9CA3AF",marginTop:2}}>3-level HGF · Model C · all hypotheses simultaneous · click pills to toggle</div>
+        </div>
+        <div style={{display:"flex",gap:7,marginLeft:"auto",flexWrap:"wrap",alignItems:"center"}}>
+          {HYPS.map(h=>{
+            const on=activeHyps.has(h.id);
+            return(
+              <button key={h.id} onClick={()=>toggle(h.id)} style={{
+                padding:"6px 15px",borderRadius:20,fontSize:18,fontWeight:700,
+                background:on?h.color:"#F3F4F6",color:on?"#fff":"#9CA3AF",
+                border:`2px solid ${on?h.color:"#E5E7EB"}`,
+                boxShadow:on?`0 2px 8px ${h.color}44`:"none",
+              }}>
+                {h.label}
+                {h.sub&&<span style={{fontWeight:400,fontSize:15,marginLeft:5,opacity:0.8}}>{h.sub}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Diagram ───────────────────────────────────────────────────────── */}
+      <div style={{background:"#fff",borderRadius:12,border:"1px solid #E5E7EB",
+        padding:"16px 12px",boxShadow:"0 1px 4px rgba(0,0,0,0.06)",overflowX:"auto"}}>
+
+        <svg viewBox={`0 0 ${SW} ${SH}`} style={{width:"100%",maxWidth:SW,display:"block",margin:"0 auto"}}>
+          <defs>
+            <AM id="av" color={C.eVal}/> <AM id="avo" color={C.eVol}/>
+            <AM id="aev" color={C.eEV}/> <AM id="adhr" color={C.eDHR}/>
+            <AM id="ar" color={C.eRsp}/> <AM id="ap" color={C.ePrm}/>
+            <AM id="atl3" color={C.l3.stroke}/>
+            <AM id="atl2" color={C.l2.stroke}/>
+            {HYPS.map(h=><AM key={h.id} id={`ah_${h.id}`} color={h.color}/>)}
+          </defs>
+
+          {/* ── Level background bands ──────────────────────────────────── */}
+          <rect x={8} y={rowV-35} width={SW_D-16} height={96} rx={10} fill={C.l3.stroke} opacity={0.07}/>
+          <rect x={8} y={rowB-40} width={SW_D-16} height={90} rx={10} fill={C.l2.stroke} opacity={0.07}/>
+          <rect x={8} y={rowI-32} width={SW_D-16} height={88} rx={10} fill={C.l1.stroke} opacity={0.07}/>
+          <rect x={8} y={rowI+50} width={SW_D-16} height={evY-rowI-10} rx={8} fill={C.ev.stroke} opacity={0.05}/>
+          <rect x={8} y={evY+32}  width={SW_D-16} height={respY+78-evY-32} rx={10} fill={C.resp.stroke} opacity={0.06}/>
+
+          {/* ── Equations panel ─────────────────────────────────────────── */}
+          <rect x={SW_D+2} y={8} width={SW_EQ-4} height={SH-16} rx={10} fill="#F8FAFC"/>
+          <line x1={SW_D+2} y1={20} x2={SW_D+2} y2={SH-20} stroke="#E5E7EB" strokeWidth={1}/>
+          <text x={SW_D+SW_EQ/2} y={26} textAnchor="middle" fontSize={14} fontWeight={800} fill="#9CA3AF" letterSpacing={1.2}>
+            GENERATIVE MODEL EQUATIONS
+          </text>
+
+          {/* Level 3 */}
+          <EqHeader x={EQX} y={rowV-28} text="LEVEL 3 — VOLATILITY" color={C.l3.stroke}/>
+          <EqLine x={EQX} y={rowV-10} text="μ₃[k] ~ N( μ₃[k-1],  ϑ )" isMath/>
+          <EqLine x={EQX} y={rowV+12} text="Evolving estimate of env. volatility"/>
+          <EqLine x={EQX} y={rowV+34} text="LR of μ₂ ∝ exp( κ · μ₃ + ω₂ )"/>
+
+          {/* Level 2 */}
+          <EqHeader x={EQX} y={rowB-32} text="LEVEL 2 — BELIEF" color={C.l2.stroke}/>
+          <EqLine x={EQX} y={rowB-14} text="μ₂[k] ~ N( μ₂[k-1],  exp(κ·μ₃ + ω₂) )" isMath/>
+          <EqLine x={EQX} y={rowB+8}  text="P(dangerous) = σ( μ₂ )"/>
+          <EqLine x={EQX} y={rowB+30} text="Updated via precision-weighted PE ε₂"/>
+
+          {/* Level 1 */}
+          <EqHeader x={EQX} y={rowI-28} text="OBSERVATION MODEL" color={C.l1.stroke}/>
+          <EqLine x={EQX} y={rowI-10} text="p(u=1 | μ₂) = σ( μ₂ )   → dangerous" isMath/>
+          <EqLine x={EQX} y={rowI+14} text="p(u=0 | μ₂) = 1−σ(μ₂)  → safe" isMath/>
+          <EqLine x={EQX} y={rowI+38} text="u ∈ {0,1}: HGF input, drives belief update"/>
+          <EqLine x={EQX} y={rowI+60} text="Choices (≠ u) fit response model logp" color="#CC8800"/>
+          <EqLine x={EQX} y={rowI+80} text="h=0.03 (stable)   h=0.10 (volatile)" isNote/>
+
+          {/* EV + Response — anchored to rowI so they never crowd obs */}
+          <EqHeader x={EQX} y={rowI+106} text="EXPECTED VALUE" color={C.ev.stroke}/>
+          <EqLine x={EQX} y={rowI+124} text="EV = (1−P_d)·Vᵣ  −  P_d·Vₛ" isMath/>
+          <EqLine x={EQX} y={rowI+148} text="P_d = σ(μ₂),   Vᵣ,Vₛ ∈ {1, 3}"/>
+
+          <EqHeader x={EQX} y={rowI+174} text="RESPONSE / DECISION MODEL (C)" color={C.resp.stroke}/>
+          <EqLine x={EQX} y={rowI+192} text="P(app) = σ( (β+α·ΔHR)·EV + b + γ·ΔHR )" isMath/>
+          <EqLine x={EQX} y={rowI+216} text="α·ΔHR modulates EV sensitivity"/>
+          <EqLine x={EQX} y={rowI+240} text="γ·ΔHR = direct autonomic shift"/>
+          <EqLine x={EQX} y={rowI+264} text="Fits observed choices (NOT u)" color="#CC8800"/>
+
+          {/* ── Level labels ─────────────────────────────────────────────── */}
+          <text x={18} y={rowV-22} fontSize={14} fontWeight={700} fill={C.l3.stroke} opacity={0.8}>LEVEL 3</text>
+          <text x={18} y={rowB-26} fontSize={14} fontWeight={700} fill={C.l2.stroke} opacity={0.8}>LEVEL 2</text>
+          <text x={18} y={rowI-22} fontSize={14} fontWeight={700} fill={C.l1.stroke} opacity={0.8}>LEVEL 1</text>
+
+          {/* ── Level 3: ghost k-1, temporal arrow, params (far left) ────── */}
+          {(()=>{
+            const tMidX3=Math.round((GX+20+CX-33)/2);
+            return(<>
+              {/* Ghost μ₃[k-1] */}
+              <polygon points={hexPts(GX,rowV,18)} fill={C.l3.fill} stroke={C.l3.stroke} strokeWidth={1.2} opacity={0.28}/>
+              <text x={GX} y={rowV+1} textAnchor="middle" dominantBaseline="middle"
+                fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={600} fill={C.l3.text} opacity={0.35}>μ₃</text>
+              <text x={GX} y={rowV+30} textAnchor="middle" fontSize={12} fill="#9CA3AF">[k−1]</text>
+              {/* Temporal evolution arrow */}
+              <line x1={GX+20} y1={rowV} x2={CX-33} y2={rowV}
+                stroke={C.l3.stroke} strokeWidth={1.4} strokeDasharray="5,3"
+                markerEnd="url(#atl3)" opacity={0.48}/>
+              {/* ω₃ param — far left */}
+              <line x1={PX+13} y1={rowV-20} x2={tMidX3} y2={rowV}
+                stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+              <PSq x={PX} y={rowV-20} label="ω₃"/>
+              {/* μ₃⁰ param — far left */}
+              <line x1={PX+13} y1={rowV+20} x2={tMidX3} y2={rowV}
+                stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+              <PSq x={PX} y={rowV+20} label="μ₃⁰"/>
+            </>);
+          })()}
+
+          {/* ── κ edge ───────────────────────────────────────────────────── */}
+          {(()=>{
+            const [kex,key]=retract(CX,rowV,CX,rowB,27);
+            const [ksx,ksy]=retract(CX,rowB,CX,rowV,33);
+            const kmy=(ksy+key)/2;
+            const ehs = edgeHyps("kappa_e"); const n=ehs.length;
+            return(<>
+              <line x1={ksx} y1={ksy} x2={kex} y2={key} stroke={C.eVol} strokeWidth={1.2} strokeDasharray="8,4" markerEnd="url(#avo)" opacity={0.35}/>
+              {ehs.map((h,i)=>{const off=n===1?0:(i-(n-1)/2)*4.5; return <line key={h.id} x1={ksx+off} y1={ksy} x2={kex+off} y2={key} stroke={h.color} strokeWidth={3} opacity={0.78} markerEnd={`url(#ah_${h.id})`}/>;  })}
+              {/* κ param square — left column, long connector to coupling arrow */}
+              <line x1={PX+13} y1={kmy} x2={CX-3} y2={kmy}
+                stroke={C.ePrm} strokeWidth={0.8} strokeDasharray="4,3" opacity={0.35}/>
+              <PSq x={PX} y={kmy} label="κ"/>
+            </>);
+          })()}
+
+          {/* ── Volatility node (μ₃) ─────────────────────────────────────── */}
+          {(()=>{
+            const rings = nodeRings("vol");
+            return(<>
+              {rings.map((h,i)=><polygon key={h.id} points={hexPts(CX,rowV,30+9+i*7)} fill="none" stroke={h.color} strokeWidth={2.4} opacity={0.62}/>)}
+              <polygon points={hexPts(CX,rowV,30)} fill={C.l3.fill} stroke={C.l3.stroke} strokeWidth={1.8}/>
+              <text x={CX} y={rowV-4} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={C.l3.text}>μ₃</text>
+              <text x={CX} y={rowV+10} textAnchor="middle" fontSize={14} fill={C.l3.text} opacity={0.75}>vol</text>
+              <DirBadges rings={rings} bx={CX+46} by={rowV-20}/>
+            </>);
+          })()}
+
+          {/* ── Belief node (μ₂) ─────────────────────────────────────────── */}
+          {(()=>{
+            const rings = nodeRings("belief");
+            const tMidX2=Math.round((GX+18+CX-26)/2);
+            return(<>
+              {/* Ghost μ₂[k-1] */}
+              <circle cx={GX} cy={rowB} r={16} fill={C.l2.fill} stroke={C.l2.stroke} strokeWidth={1.2} opacity={0.28}/>
+              <text x={GX} y={rowB+1} textAnchor="middle" dominantBaseline="middle"
+                fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={600} fill={C.l2.text} opacity={0.35}>μ₂</text>
+              <text x={GX} y={rowB+30} textAnchor="middle" fontSize={12} fill="#9CA3AF">[k−1]</text>
+              {/* Temporal evolution arrow */}
+              <line x1={GX+18} y1={rowB} x2={CX-26} y2={rowB}
+                stroke={C.l2.stroke} strokeWidth={1.4} strokeDasharray="5,3"
+                markerEnd="url(#atl2)" opacity={0.48}/>
+              {/* ω₂ param — far left */}
+              <line x1={PX+13} y1={rowB-20} x2={tMidX2} y2={rowB}
+                stroke={C.ePrm} strokeWidth={1.2} strokeDasharray="3,2" markerEnd="url(#ap)"/>
+              <PSq x={PX} y={rowB-20} label="ω₂"/>
+              <circle cx={CX} cy={rowB} r={31} fill="none" stroke={C.l2.stroke} strokeWidth={1} strokeDasharray="5,3" opacity={0.18}/>
+              {rings.map((h,i)=><circle key={h.id} cx={CX} cy={rowB} r={34+i*7} fill="none" stroke={h.color} strokeWidth={2.4} opacity={0.62}/>)}
+              <circle cx={CX} cy={rowB} r={24} fill={C.l2.fill} stroke={C.l2.stroke} strokeWidth={1.8}/>
+              <text x={CX} y={rowB-3} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={C.l2.text}>μ₂</text>
+              <text x={CX} y={rowB+11} textAnchor="middle" fontSize={14} fill={C.l2.text} opacity={0.75}>P(danger)</text>
+              <DirBadges rings={rings} bx={CX+44} by={rowB-30}/>
+            </>);
+          })()}
+
+          {/* ── Value coupling (val) ─────────────────────────────────────── */}
+          <line x1={CX} y1={rowB+25} x2={CX} y2={rowI-25} stroke={C.eVal} strokeWidth={1.2} markerEnd="url(#av)" opacity={0.4}/>
+          <VEdgeHL edgeId="val" x={CX} y1={rowB+25} y2={rowI-25}/>
+
+          {/* ── Binary input (overlapping trial nodes) ───────────────────── */}
+          {(()=>{
+            const offsets=[{dx:-14,dy:3,op:0.25},{dx:-7,dy:1.5,op:0.45},{dx:0,dy:0,op:1}];
+            return(<>
+              {offsets.slice(0,2).map((o,i)=>(
+                <polygon key={i} points={diamPts(CX+o.dx,rowI+o.dy,24,19)}
+                  fill={C.l1.fill} stroke={C.l1.stroke} strokeWidth={1.5} opacity={o.op}/>
+              ))}
+              <polygon points={diamPts(CX,rowI,24,19)} fill={C.l1.fill} stroke={C.l1.stroke} strokeWidth={1.8}/>
+              <text x={CX} y={rowI+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={16} fontWeight={700} fill={C.l1.text}>u</text>
+              <text x={CX-6} y={rowI+32} textAnchor="middle" fontSize={15} fill="#6B7280" fontWeight={500}>safe (0) / dangerous (1)</text>
+              <text x={CX-6} y={rowI+44} textAnchor="middle" fontSize={14} fill="#9CA3AF">trial sequence · Vᵣ, Vₛ ∈ {"{1,3}"}</text>
+
+            </>);
+          })()}
+
+          {/* ── Belief → EV bent path ────────────────────────────────────── */}
+          {(()=>{
+            const bRight=CX+24, evRight=CX+165;
+            return(<>
+              <path d={`M${bRight},${rowB} L${evRight},${rowB} L${evRight},${evY}`}
+                stroke={C.eEV} strokeWidth={1.5} strokeDasharray="6,3" fill="none" opacity={0.55} markerEnd="url(#aev)"/>
+              <text x={evRight+9} y={(rowB+evY)/2} fontSize={14} fill={C.eEV} opacity={0.75} fontFamily="STIX Two Text,Georgia,serif">μ₂</text>
+              <text x={evRight+9} y={(rowB+evY)/2+12} fontSize={12} fill={C.eEV} opacity={0.6}>beliefs</text>
+            </>);
+          })()}
+
+          {/* ── Separator + EV section ───────────────────────────────────── */}
+          <line x1={28} y1={rowI+68} x2={SW_D-28} y2={rowI+68} stroke="#E5E7EB" strokeWidth={1}/>
+
+          {(()=>{
+            const bx=168, bw=SW_D-168-30;
+            return(<>
+              <polygon points={diamPts(88,evY,20,15)} fill={C.dhr.fill} stroke={C.dhr.stroke} strokeWidth={1.5}/>
+              <text x={88} y={evY+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={C.dhr.text}>Vᵣ</text>
+              <text x={88} y={evY+22} textAnchor="middle" fontSize={14} fill="#9CA3AF">reward</text>
+              <line x1={108} y1={evY} x2={bx-4} y2={evY} stroke={C.eEV} strokeWidth={1.2} strokeDasharray="4,2" markerEnd="url(#aev)" opacity={0.55}/>
+              <polygon points={diamPts(SW_D-88,evY,20,15)} fill={C.dhr.fill} stroke={C.dhr.stroke} strokeWidth={1.5}/>
+              <text x={SW_D-88} y={evY+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={C.dhr.text}>Vₛ</text>
+              <text x={SW_D-88} y={evY+22} textAnchor="middle" fontSize={14} fill="#9CA3AF">shock</text>
+              <line x1={SW_D-108} y1={evY} x2={bx+bw+4} y2={evY} stroke={C.eEV} strokeWidth={1.2} strokeDasharray="4,2" markerEnd="url(#aev)" opacity={0.55}/>
+              <rect x={bx} y={evY-22} width={bw} height={58} rx={10} fill={C.ev.fill} stroke={C.ev.stroke} strokeWidth={1.6}/>
+              <text x={SW_D/2} y={evY} textAnchor="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={18} fontWeight={700} fill={C.ev.text}>EV  =  (1 − P_d) · Vᵣ  −  P_d · Vₛ</text>
+              <text x={SW_D/2} y={evY+18} textAnchor="middle" fontSize={15} fill={C.ev.text} opacity={0.75}>P_d = σ(μ₂)  ·  expected value of approach</text>
+            </>);
+          })()}
+
+          {/* ── EV → Response (decision pathway) ───────────────────────── */}
+          <line x1={CX} y1={evY+40} x2={CX} y2={respY-26} stroke={C.eRsp} strokeWidth={1.2} markerEnd="url(#ar)" opacity={0.38}/>
+          <VEdgeHL edgeId="ev_resp" x={CX} y1={evY+40} y2={respY-26}/>
+          {(()=>{const ehs=edgeHyps("ev_resp"); return ehs.length>0?<text x={CX+7} y={(evY+40+respY-26)/2+4} fontSize={12} fill={ehs[0].color} opacity={0.75}>decision</text>:null;})()}
+
+          {/* ── ΔHR node ─────────────────────────────────────────────────── */}
+          {(()=>{
+            const rings=nodeRings("dhr");
+            const [rx,ry]=retract(dhx,dhy,CX+170,respY,14);
+            const [ex,ey]=retract(dhx,dhy,CX+170,evY,14);
+            const x0=dhx-20;
+            return(<>
+              <line x1={x0} y1={dhy} x2={rx} y2={ry} stroke={C.eDHR} strokeWidth={1.2} strokeDasharray="6,3" markerEnd="url(#adhr)" opacity={0.35}/>
+              <line x1={x0} y1={dhy} x2={ex} y2={ey} stroke={C.eDHR} strokeWidth={1.2} strokeDasharray="5,3" markerEnd="url(#adhr)" opacity={0.28}/>
+              <DiagEdgeHL edgeId="dhr_resp" x1={x0} y1={dhy} x2={rx} y2={ry}/>
+              <DiagEdgeHL edgeId="dhr_ev"   x1={x0} y1={dhy} x2={ex} y2={ey}/>
+              <text x={(x0+rx)/2+8} y={(dhy+ry)/2+14} fontSize={15} fill={C.eDHR} fontFamily="STIX Two Text,Georgia,serif" fontWeight={700} opacity={0.75}>γ</text>
+              <text x={(x0+ex)/2+8} y={(dhy+ey)/2-6}  fontSize={15} fill={C.eDHR} fontFamily="STIX Two Text,Georgia,serif" fontWeight={700} opacity={0.75}>α</text>
+              {rings.map((h,i)=><polygon key={h.id} points={diamPts(dhx,dhy,24+9+i*7,19+7+i*6)} fill="none" stroke={h.color} strokeWidth={2.4} opacity={0.62}/>)}
+              <polygon points={diamPts(dhx,dhy,24,19)} fill={C.dhr.fill} stroke={C.dhr.stroke} strokeWidth={1.8}/>
+              <text x={dhx} y={dhy+1} textAnchor="middle" dominantBaseline="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={15} fontWeight={700} fill={C.dhr.text}>ΔHR</text>
+              <text x={dhx} y={dhy+32} textAnchor="middle" fontSize={14} fill="#9CA3AF">bradycardia</text>
+              <DirBadges rings={rings} bx={dhx+36} by={dhy-20}/>
+            </>);
+          })()}
+
+          {/* ── Response model ───────────────────────────────────────────── */}
+          <line x1={28} y1={respY-45} x2={SW_D-28} y2={respY-45} stroke="#D1D5DB" strokeWidth={1.5} strokeDasharray="9,5"/>
+          <text x={SW_D/2} y={respY-32} textAnchor="middle" fontSize={14} fill="#9CA3AF" fontWeight={600} letterSpacing={1.5}>RESPONSE / DECISION MODEL</text>
+
+          {/* ── Response params — left column ─────────────────────────────── */}
+          {["β","b","γ","α"].map((lbl,i)=>(
+            <g key={lbl}>
+              <line x1={PX+13} y1={respY-2+i*26} x2={110} y2={respY-2+i*26}
+                stroke={C.ePrm} strokeWidth={1.0} strokeDasharray="3,2" opacity={0.48}/>
+              <PSq x={PX} y={respY-2+i*26} label={lbl}/>
+            </g>
+          ))}
+
+          {/* ── Response model box (original shape) ──────────────────────── */}
+          {(()=>{
+            const rings=nodeRings("resp"); const bx=110, bw=SW_D-110-25;
+            return(<>
+              {rings.map((h,i)=>{const exp=9+i*7; return <rect key={h.id} x={bx-exp} y={respY-20-exp} width={bw+exp*2} height={66+exp*2} rx={10+exp} fill="none" stroke={h.color} strokeWidth={2.4} opacity={0.62}/>;  })}
+              <rect x={bx} y={respY-20} width={bw} height={66} rx={10} fill={C.resp.fill} stroke={C.resp.stroke} strokeWidth={1.8}/>
+              <text x={bx+bw/2} y={respY+1} textAnchor="middle" fontFamily="STIX Two Text,Georgia,serif" fontSize={16} fontWeight={700} fill={C.resp.text}>
+                P(approach) = σ( (β + α·ΔHR) · EV  +  b  +  γ · ΔHR )
+              </text>
+              <text x={bx+bw/2} y={respY+18} textAnchor="middle" fontSize={15} fill={C.resp.text} opacity={0.65}>approach (1) / avoid (0) · Model C</text>
+              <DirBadges rings={rings} bx={bx-14} by={respY-28}/>
+            </>);
+          })()}
+
+          {/* Color legend removed — pills + description cards below serve this purpose */}
+
+        </svg>
+      </div>
+
+      {/* ── Hypothesis description cards ──────────────────────────────────── */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {HYPS.map(h=>{
+          const on=activeHyps.has(h.id);
+          return(
+            <div key={h.id} onClick={()=>toggle(h.id)} style={{
+              background:"#fff",borderRadius:10,padding:"13px 16px",
+              border:`2px solid ${on?h.color:"#E5E7EB"}`,
+              opacity:on?1:0.42,cursor:"pointer",
+              boxShadow:on?`0 2px 10px ${h.color}28`:"none",
+              transition:"all 0.14s",
+            }}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <div style={{width:11,height:11,borderRadius:3,background:h.color,flexShrink:0}}/>
+                <div style={{fontWeight:800,fontSize:20,color:on?h.color:"#9CA3AF"}}>{h.fullLabel}</div>
+                <div style={{fontSize:15,color:"#9CA3AF",marginLeft:2,fontStyle:"italic"}}>{h.sub}</div>
+              </div>
+              <div style={{fontSize:16,color:"#4B5563",lineHeight:1.68}}>{h.desc}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{textAlign:"center",fontSize:15,color:"#9CA3AF",paddingBottom:8}}>
+        PAT-RL HGF · Colored rings = hypothesis highlight · Concentric rings = multiple hypotheses · Parallel edge lines = same edge, different hypotheses
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

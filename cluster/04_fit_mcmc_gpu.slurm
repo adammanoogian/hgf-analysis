@@ -22,8 +22,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_fit
-#SBATCH --output=cluster/logs/fit_mcmc_%j.out
-#SBATCH --error=cluster/logs/fit_mcmc_%j.err
+#SBATCH --output=logs/fit_mcmc_%j.out
+#SBATCH --error=logs/fit_mcmc_%j.err
 #SBATCH --time=12:00:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:A40:1
@@ -119,7 +119,7 @@ if [[ "$MODEL_COUNT" -gt 1 ]]; then
     echo ""
     for i in "${!JOBIDS[@]}"; do
         model=$(echo $MODEL | cut -d' ' -f$((i+1)))
-        echo "  tail -f cluster/logs/fit_mcmc_${JOBIDS[$i]}.out   # $model"
+        echo "  tail -f logs/fit_mcmc_${JOBIDS[$i]}.out   # $model"
     done
     exit 0
 fi
@@ -132,7 +132,7 @@ echo "Fitting: $MODEL (GPU-accelerated MCMC)"
 echo "Started: $(date)"
 echo "============================================================"
 
-CMD="python scripts/04_fit_participants.py --model $MODEL"
+CMD="python scripts/04_main_analysis/b_bayesian/01_fit_participants.py --model $MODEL"
 [[ -n "$INPUT" ]] && CMD="$CMD --input $INPUT"
 
 echo "Command: $CMD"
@@ -144,7 +144,7 @@ EXIT_CODE=$?
 if [[ $EXIT_CODE -ne 0 ]]; then
     echo ""
     echo "*** ERROR: Model $MODEL FAILED with exit code $EXIT_CODE ***"
-    echo "*** Check stderr log: cluster/logs/fit_mcmc_${SLURM_JOB_ID}.err ***"
+    echo "*** Check stderr log: logs/fit_mcmc_${SLURM_JOB_ID}.err ***"
     echo ""
 fi
 

@@ -2,7 +2,7 @@
 # =============================================================================
 # SLURM Job: Phase 21 — VB-Laplace JIT Probe (BENCH-DIAG-02)
 # =============================================================================
-# Runs the --vb-laplace-probe entry point in scripts/08_run_power_iteration.py
+# Runs the --vb-laplace-probe entry point in scripts/03_pre_analysis/03_run_power_iteration.py
 # sequentially for P ∈ {5, 20} inside a single 30-minute GPU job.
 #
 # Captures:
@@ -23,8 +23,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_diag21_laplace
-#SBATCH --output=cluster/logs/diag21_laplace_%j.out
-#SBATCH --error=cluster/logs/diag21_laplace_%j.err
+#SBATCH --output=logs/diag21_laplace_%j.out
+#SBATCH --error=logs/diag21_laplace_%j.err
 #SBATCH --time=00:30:00
 #SBATCH --mem=128G
 #SBATCH --gres=gpu:1
@@ -189,7 +189,7 @@ for P in 5 20; do
 
     # Tee stdout+stderr so JAX_LOG_COMPILES events land in both the SLURM log
     # and the per-P archival log (consumed by 21-06 cache forensics).
-    python scripts/08_run_power_iteration.py \
+    python scripts/03_pre_analysis/03_run_power_iteration.py \
         --vb-laplace-probe \
         --probe-p "${P}" \
         --diagnostic-mode \
@@ -222,8 +222,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing Phase 21 Laplace probe artifacts to git..."
-_LOG_OUT="cluster/logs/diag21_laplace_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/diag21_laplace_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/diag21_laplace_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/diag21_laplace_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json 2>/dev/null

@@ -13,8 +13,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_v03cmp
-#SBATCH --output=cluster/logs/valid03_compare_%j.out
-#SBATCH --error=cluster/logs/valid03_compare_%j.err
+#SBATCH --output=logs/valid03_compare_%j.out
+#SBATCH --error=logs/valid03_compare_%j.err
 #SBATCH --time=00:05:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
@@ -41,20 +41,20 @@ echo "============================================================"
 echo ""
 
 # Check both files exist
-if [[ ! -f results/power/valid03_cpu.json ]]; then
-    echo "ERROR: results/power/valid03_cpu.json not found"
+if [[ ! -f models/power/valid03_cpu.json ]]; then
+    echo "ERROR: models/power/valid03_cpu.json not found"
     echo "Run 14_valid03_cpu.slurm first"
     exit 1
 fi
-if [[ ! -f results/power/valid03_gpu.json ]]; then
-    echo "ERROR: results/power/valid03_gpu.json not found"
+if [[ ! -f models/power/valid03_gpu.json ]]; then
+    echo "ERROR: models/power/valid03_gpu.json not found"
     echo "Run 14_valid03_gpu.slurm first"
     exit 1
 fi
 
-python validation/valid03_cross_platform.py compare \
-    results/power/valid03_cpu.json \
-    results/power/valid03_gpu.json \
+python tests/scientific/test_valid03_cross_platform.py compare \
+    models/power/valid03_cpu.json \
+    models/power/valid03_gpu.json \
     --rtol 0.01
 
 EXIT_CODE=$?

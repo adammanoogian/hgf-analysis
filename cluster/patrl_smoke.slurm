@@ -3,7 +3,7 @@
 # SLURM Job: Plan 20-05 — PAT-RL SC5 Cohort Smoke (40 × 4 = 160 agents, CPU)
 # =============================================================================
 # SC5: 4 phenotypes × 40 agents = 160-agent cohort for PRL-V1/V2 formal gates
-# (Phase 20-07). Invokes scripts/12_smoke_patrl_foundation.py with the
+# (Phase 20-07). Invokes scripts/03_pre_analysis/08_smoke_patrl_foundation.py with the
 # production-scale cohort defaults.
 #
 # Usage:
@@ -15,7 +15,7 @@
 #   results/patrl_smoke/${SLURM_JOB_ID}/   (trajectory CSVs, param summary,
 #                                            idata_{laplace,nuts}.nc,
 #                                            laplace_vs_nuts_diff.csv)
-#   cluster/logs/patrl_smoke_${SLURM_JOB_ID}.out/.err
+#   logs/patrl_smoke_${SLURM_JOB_ID}.out/.err
 #
 # Default fit method is 'both' (dual NUTS + Laplace) consistent with the
 # 18_smoke_patrl_cpu.slurm policy set in Plans 18-06/19-05.
@@ -23,8 +23,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_patrl_smoke
-#SBATCH --output=cluster/logs/patrl_smoke_%j.out
-#SBATCH --error=cluster/logs/patrl_smoke_%j.err
+#SBATCH --output=logs/patrl_smoke_%j.out
+#SBATCH --error=logs/patrl_smoke_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=64G
 #SBATCH --partition=comp
@@ -112,7 +112,7 @@ print(f'jax_enable_x64 (pre-run): {jax.config.jax_enable_x64}')
 "
 echo ""
 
-python scripts/12_smoke_patrl_foundation.py \
+python scripts/03_pre_analysis/08_smoke_patrl_foundation.py \
     --level "${PRL_PATRL_SMOKE_LEVEL}" \
     --n-participants "${PRL_PATRL_SMOKE_N}" \
     --phenotypes "${PRL_PATRL_SMOKE_PHENOTYPES}" \
@@ -133,7 +133,7 @@ elif [[ $EXIT_CODE -eq 2 ]]; then
     echo "  Install: pip install blackjax>=1.2.4"
 else
     echo "PAT-RL SMOKE FAILED (exit code: $EXIT_CODE)"
-    echo "  Check: cluster/logs/patrl_smoke_${SLURM_JOB_ID}.err"
+    echo "  Check: logs/patrl_smoke_${SLURM_JOB_ID}.err"
 fi
 echo "End:           $(date)"
 echo "============================================================"
@@ -143,8 +143,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing PAT-RL smoke results to git..."
-_LOG_OUT="cluster/logs/patrl_smoke_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/patrl_smoke_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/patrl_smoke_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/patrl_smoke_${SLURM_JOB_ID}.err"
 _OUT_DIR="results/patrl_smoke/${SLURM_JOB_ID}"
 
 # results/ is git-tracked; stage CSVs AND .nc InferenceData files.

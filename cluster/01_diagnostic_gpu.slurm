@@ -13,8 +13,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_diag
-#SBATCH --output=cluster/logs/diagnostic_%j.out
-#SBATCH --error=cluster/logs/diagnostic_%j.err
+#SBATCH --output=logs/diagnostic_%j.out
+#SBATCH --error=logs/diagnostic_%j.err
 #SBATCH --time=00:30:00
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1

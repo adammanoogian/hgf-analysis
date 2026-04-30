@@ -148,7 +148,7 @@ fi
 # =============================================================================
 # Job submission
 # =============================================================================
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 
 echo "============================================================"
 echo "Power Analysis Pipeline"
@@ -218,11 +218,11 @@ echo "  Wave 1: $SWEEP_JOBID (GPU)"
 [[ -n "$PUSH_JOBID" ]] && echo "  Wave 3: $PUSH_JOBID (push)"
 echo ""
 echo "  squeue -u $USER"
-echo "  tail -f cluster/logs/power_${SWEEP_JOBID}_*.out"
-[[ -n "$POSTPROC_JOBID" ]] && echo "  tail -f cluster/logs/postprocess_${POSTPROC_JOBID}.out"
+echo "  tail -f logs/power_${SWEEP_JOBID}_*.out"
+[[ -n "$POSTPROC_JOBID" ]] && echo "  tail -f logs/postprocess_${POSTPROC_JOBID}.out"
 echo ""
 if [[ "$BENCHMARK" == "1" ]]; then
     echo "After benchmark completes:"
-    echo "  cat results/power/benchmark.json"
+    echo "  cat models/power/benchmark.json"
 fi
 echo "============================================================"

@@ -24,7 +24,9 @@ import pandas as pd
 # Import the script module via importlib
 # ---------------------------------------------------------------------------
 
-_SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "11_write_recommendation.py"
+_SCRIPT_PATH = (
+    Path(__file__).parent.parent / "scripts" / "03_pre_analysis" / "07_write_recommendation.py"
+)
 
 spec = importlib.util.spec_from_file_location("write_rec", str(_SCRIPT_PATH))
 assert spec is not None and spec.loader is not None, (

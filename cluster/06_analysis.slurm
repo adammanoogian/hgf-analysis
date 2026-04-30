@@ -15,8 +15,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_analysis
-#SBATCH --output=cluster/logs/analysis_%j.out
-#SBATCH --error=cluster/logs/analysis_%j.err
+#SBATCH --output=logs/analysis_%j.out
+#SBATCH --error=logs/analysis_%j.err
 #SBATCH --time=02:00:00
 #SBATCH --mem=32G
 #SBATCH --partition=comp
@@ -67,7 +67,7 @@ for model in 2level 3level; do
     echo "Started: $(date)"
     echo "============================================================"
 
-    python scripts/06_group_analysis.py --model $model --skip-plots --draws $DRAWS
+    python scripts/06_inference/01_run_group_analysis.py --model $model --skip-plots --draws $DRAWS
     EXIT_CODE=$?
 
     if [[ $EXIT_CODE -ne 0 ]]; then
@@ -82,7 +82,7 @@ done
 echo ""
 echo "============================================================"
 echo "Group analysis complete. End: $(date)"
-echo "Results: results/group_analysis/"
+echo "Results: reports/tables/group_analysis/"
 echo "============================================================"
 
 if [[ "$ALL_SUCCESS" != "true" ]]; then

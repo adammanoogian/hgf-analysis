@@ -1,7 +1,0 @@
-HloModule jit__reduce_sum, entry_computation_layout={(f64[1,20]{1,0})->f64[1,20,192]{2,1,0}}, allow_spmd_sharding_propagation_to_parameters={true}, allow_spmd_sharding_propagation_to_output={true}
-
-ENTRY main.3 {
-  Arg_0.1 = f64[1,20]{1,0} parameter(0)
-  ROOT broadcast.2 = f64[1,20,192]{2,1,0} broadcast(Arg_0.1), dimensions={0,1}, metadata={op_name="jit(_reduce_sum)/jit(main)/broadcast_in_dim[shape=(1, 20, 192) broadcast_dimensions=(0, np.int64(1))]" source_file="/fs04/fc37/adam/projects/psilocybin-prl-analyses/src/prl_hgf/fitting/hierarchical_patrl.py" source_line=429}
-}
-

@@ -14,8 +14,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_valid
-#SBATCH --output=cluster/logs/validation_%j.out
-#SBATCH --error=cluster/logs/validation_%j.err
+#SBATCH --output=logs/validation_%j.out
+#SBATCH --error=logs/validation_%j.err
 #SBATCH --time=04:00:00
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
@@ -78,13 +78,13 @@ echo ""
 echo "Running parameter recovery validation..."
 echo ""
 
-python scripts/05_run_validation.py --skip-waic
+python scripts/05_post_analysis_checks/01_run_validation.py --skip-waic
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -ne 0 ]]; then
     echo ""
     echo "*** ERROR: Validation FAILED with exit code $EXIT_CODE ***"
-    echo "*** Check stderr log: cluster/logs/validation_${SLURM_JOB_ID}.err ***"
+    echo "*** Check stderr log: logs/validation_${SLURM_JOB_ID}.err ***"
 fi
 
 echo ""

@@ -7,7 +7,7 @@ browser-openable HTML string.
 Architecture (three mechanics, each load-bearing):
 
 1. **String-surgery JSON injection** (Strategy B from research §2):
-   the template ``figures/hgf_viewer.html`` ships with valid default
+   the template ``reports/figures/hgf_viewer.html`` ships with valid default
    JSON payloads baked into ``<script type="application/json"
    id="viz-X">`` marker tags. ``_inject_markers`` regex-replaces the
    content between the marker open/close tags -- preserving the
@@ -26,7 +26,7 @@ Architecture (three mechanics, each load-bearing):
    with ``TemplateSyntaxError``. Both ``Environment`` instances in this
    module set ``variable_start_string="<<"`` /
    ``variable_end_string=">>"`` (neither token appears anywhere in the
-   template), and ``figures/hgf_viewer.html`` uses ``<< react_inlined
+   template), and ``reports/figures/hgf_viewer.html`` uses ``<< react_inlined
    | safe >>`` for the three CDN inlining lines accordingly. The
    ``{% %}`` statement delimiters keep their default form (no JSX
    collision -- the template uses ``{%`` only on the three Jinja2 if/
@@ -112,7 +112,7 @@ def _inject_markers(template: str, payload: dict[str, str]) -> str:
     Parameters
     ----------
     template
-        The raw template string (loaded from ``figures/hgf_viewer.html``).
+        The raw template string (loaded from ``reports/figures/hgf_viewer.html``).
     payload
         Mapping of short marker name (e.g. ``"network-spec"``, NOT
         ``"viz-network-spec"``) to the already-serialized JSON string
@@ -289,7 +289,7 @@ def _render_offline_template(template: str) -> str:
 # Path constants -- no scattered hardcoded paths"). This replaces the
 # previous draft's ``Path(__file__).resolve().parents[3]`` hand-counted
 # index, which silently broke under any packaging move.
-_DEFAULT_TEMPLATE_PATH: Path = PROJECT_ROOT / "figures" / "hgf_viewer.html"
+_DEFAULT_TEMPLATE_PATH: Path = PROJECT_ROOT / "reports" / "figures" / "hgf_viewer.html"
 
 # Import-time existence assertion -- a misconfigured/moved template
 # fails loudly with a specific FileNotFoundError at
@@ -297,9 +297,9 @@ _DEFAULT_TEMPLATE_PATH: Path = PROJECT_ROOT / "figures" / "hgf_viewer.html"
 if not _DEFAULT_TEMPLATE_PATH.exists():
     raise FileNotFoundError(
         f"HGF viewer template missing at import time: {_DEFAULT_TEMPLATE_PATH}. "
-        f"Expected: config.PROJECT_ROOT / 'figures' / 'hgf_viewer.html'. "
+        f"Expected: config.PROJECT_ROOT / 'reports' / 'figures' / 'hgf_viewer.html'. "
         f"Has the template been moved, or has config.PROJECT_ROOT shifted? "
-        f"(Plan 23-02 lands this file; check git log -- figures/hgf_viewer.html)"
+        f"(Plan 23-02 lands this file; check git log -- reports/figures/hgf_viewer.html)"
     )
 
 
@@ -333,7 +333,7 @@ def render_viewer_html(
         network dependency. Use this for the "distribute one file"
         workflow.
     template_path
-        Override the default ``figures/hgf_viewer.html`` location. For
+        Override the default ``reports/figures/hgf_viewer.html`` location. For
         testing.
     fetch_timeout
         Passed through to CDN fetch helpers when ``offline_mode=False``.

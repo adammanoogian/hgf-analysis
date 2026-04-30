@@ -17,8 +17,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_bench14cpu
-#SBATCH --output=cluster/logs/bench14cpu_%j.out
-#SBATCH --error=cluster/logs/bench14cpu_%j.err
+#SBATCH --output=logs/bench14cpu_%j.out
+#SBATCH --error=logs/bench14cpu_%j.err
 #SBATCH --time=24:00:00
 #SBATCH --mem=128G
 #SBATCH --partition=comp
@@ -32,7 +32,7 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
-mkdir -p cluster/logs results/power
+mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
 _PROJECT="${PROJECT:-fc37}"
@@ -126,7 +126,7 @@ echo ""
 echo "Running batched hierarchical benchmark..."
 echo ""
 
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_JOB_ID:-bench14cpu}" \
@@ -147,14 +147,14 @@ echo "============================================================"
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "BENCHMARK COMPLETE"
     echo ""
-    if [[ -f results/power/benchmark_batched.json ]]; then
+    if [[ -f models/power/benchmark_batched.json ]]; then
         echo "Results:"
-        cat results/power/benchmark_batched.json | python -m json.tool 2>/dev/null || \
-            cat results/power/benchmark_batched.json
+        cat models/power/benchmark_batched.json | python -m json.tool 2>/dev/null || \
+            cat models/power/benchmark_batched.json
     fi
 else
     echo "BENCHMARK FAILED (exit code: $EXIT_CODE)"
-    echo "Check: cluster/logs/bench14cpu_${SLURM_JOB_ID}.err"
+    echo "Check: logs/bench14cpu_${SLURM_JOB_ID}.err"
 fi
 
 echo ""
@@ -167,11 +167,11 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing benchmark results to git..."
-_LOG_OUT="cluster/logs/bench14cpu_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/bench14cpu_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/bench14cpu_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/bench14cpu_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add results/power/benchmark_batched.json 2>/dev/null
+git add models/power/benchmark_batched.json 2>/dev/null
 git add .planning/STATE.md 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then
     git commit -m "bench phase14 cpu sampler=${SAMPLER} mtd=${MAX_TREE_DEPTH} (job ${SLURM_JOB_ID})"

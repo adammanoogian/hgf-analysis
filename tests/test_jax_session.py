@@ -10,7 +10,7 @@ Tests cover:
 5. **Beta effect** — higher inverse temperature leads to more exploitation of
    the best cue.
 
-All tests are marked ``@pytest.mark.slow`` because they compile the JAX scan
+All tests are marked ``@pytest.mark.scientific`` because they compile the JAX scan
 on first call (XLA JIT compilation takes ~5-30 s).
 
 Run::
@@ -77,7 +77,7 @@ _DEFAULT_PARAMS = {
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_session_jax_output_shapes() -> None:
     """simulate_session_jax returns correct output shapes for a full session.
 
@@ -122,7 +122,7 @@ def test_session_jax_output_shapes() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_session_jax_deterministic() -> None:
     """Same PRNG seed produces bit-identical output across two calls."""
     cue_probs_arr, _ = _make_cue_probs()
@@ -145,7 +145,7 @@ def test_session_jax_deterministic() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_session_jax_different_seeds_differ() -> None:
     """Different PRNG seeds produce non-identical choice sequences."""
     cue_probs_arr, _ = _make_cue_probs()
@@ -171,7 +171,7 @@ def test_session_jax_different_seeds_differ() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_session_jax_stickiness_sentinel() -> None:
     """zeta=0 with the -1 sentinel does not crash and produces varied choices.
 
@@ -215,7 +215,7 @@ def test_session_jax_stickiness_sentinel() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_session_jax_beta_effect() -> None:
     """Higher beta leads to more exploitation of the best cue.
 
@@ -300,7 +300,7 @@ def _small_config(n_per_group: int = 1) -> AnalysisConfig:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_cohort_jax_output_shapes() -> None:
     """simulate_cohort_jax returns correct shapes for P=3 participants.
 
@@ -340,7 +340,7 @@ def test_cohort_jax_output_shapes() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_cohort_jax_deterministic() -> None:
     """Two calls with the same master seed produce bit-identical cohort output."""
     cue_probs_arr, _ = _make_cue_probs()
@@ -376,7 +376,7 @@ def test_cohort_jax_deterministic() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_cohort_jax_distinct_participants() -> None:
     """Participants with different keys produce different choice sequences.
 
@@ -408,7 +408,7 @@ def test_cohort_jax_distinct_participants() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_batch_diverged_column_present() -> None:
     """simulate_batch output DataFrame contains a boolean 'diverged' column."""
     cfg = _small_config(n_per_group=1)

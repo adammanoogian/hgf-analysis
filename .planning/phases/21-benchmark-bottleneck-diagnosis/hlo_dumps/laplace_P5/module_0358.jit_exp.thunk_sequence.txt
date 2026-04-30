@@ -1,2 +1,0 @@
-kKernel	, kernel = wrapped_exponential, launch dimensions = blocks: {1, 1, 1}, threads/block: {4, 1, 1}, cluster_dim = nullopt
-kKernel	, kernel = loop_multiply_fusion, launch dimensions = blocks: {24, 1, 1}, threads/block: {4, 1, 1}, cluster_dim = nullopt

@@ -598,11 +598,11 @@ def test_simulate_patrl_cohort_legacy_phenotype_name_kwarg() -> None:
     pd.testing.assert_frame_equal(df_legacy, df_new, check_exact=True)
 
 
-@pytest.mark.slow
+@pytest.mark.scientific
 def test_simulate_patrl_cohort_full_160_scale() -> None:
     """Full 160-agent cohort (40 per phenotype × 4 phenotypes) runs in <5 min on CPU.
 
-    This is the SC5 production-scale test.  Marked @pytest.mark.slow; run with
+    This is the SC5 production-scale test.  Marked @pytest.mark.scientific; run with
     ``pytest --run-slow`` or ``pytest -m slow``.
 
     Asserts:
