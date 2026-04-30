@@ -27,7 +27,7 @@ PROJECT_ROOT = Path(__file__).parent
 # Data hierarchy
 # ---------------------------------------------------------------------------
 
-DATA_DIR = PROJECT_ROOT / "data"           # transitional alias; Wave 3 scope
+DATA_DIR = PROJECT_ROOT / "data"  # transitional alias; Wave 3 scope
 DATA_RAW_DIR = PROJECT_ROOT / "data" / "raw"
 DATA_INTERIM_DIR = PROJECT_ROOT / "data" / "interim"
 DATA_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
