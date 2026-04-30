@@ -24,12 +24,12 @@
 #
 # Output:
 #   models/power/smoke_test_cpu_${PRECISION}.json   (fp32 or fp64)
-#   cluster/logs/smoke16cpu_${SLURM_JOB_ID}.out/.err
+#   logs/smoke16cpu_${SLURM_JOB_ID}.out/.err
 # =============================================================================
 
 #SBATCH --job-name=prl_smoke16cpu
-#SBATCH --output=cluster/logs/smoke16cpu_%j.out
-#SBATCH --error=cluster/logs/smoke16cpu_%j.err
+#SBATCH --output=logs/smoke16cpu_%j.out
+#SBATCH --error=logs/smoke16cpu_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=64G
 #SBATCH --partition=comp
@@ -150,7 +150,7 @@ for _MODEL in ${PRL_SMOKE_MODELS}; do
     echo "############################################################"
     echo ""
 
-    python scripts/08_run_power_iteration.py \
+    python scripts/03_pre_analysis/03_run_power_iteration.py \
         --smoke-test \
         --chunk-id 0 \
         --job-id "${SLURM_JOB_ID:-smoke16cpu}" \
@@ -182,7 +182,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     echo "CPU SMOKE TEST PASSED (BlackJAX NUTS, ${PRECISION}, models: ${PRL_SMOKE_MODELS})"
 else
     echo "CPU SMOKE TEST FAILED (exit code: $EXIT_CODE, ${PRECISION})"
-    echo "  Check: cluster/logs/smoke16cpu_${SLURM_JOB_ID}.err"
+    echo "  Check: logs/smoke16cpu_${SLURM_JOB_ID}.err"
 fi
 echo "End:       $(date)"
 echo "============================================================"
@@ -192,8 +192,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing CPU smoke test results to git..."
-_SMOKE_LOG_OUT="cluster/logs/smoke16cpu_${SLURM_JOB_ID}.out"
-_SMOKE_LOG_ERR="cluster/logs/smoke16cpu_${SLURM_JOB_ID}.err"
+_SMOKE_LOG_OUT="logs/smoke16cpu_${SLURM_JOB_ID}.out"
+_SMOKE_LOG_ERR="logs/smoke16cpu_${SLURM_JOB_ID}.err"
 
 git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_ALL_RESULT_JSONS[@]}" 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then

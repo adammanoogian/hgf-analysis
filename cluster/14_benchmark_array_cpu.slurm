@@ -13,15 +13,15 @@
 #   sbatch --export=ALL,MAX_TREE_DEPTH=8 cluster/14_benchmark_array_cpu.slurm
 #
 # Manual flush after array completes:
-#   git add cluster/logs/bench14arrcpu_${SLURM_ARRAY_JOB_ID}_*.{out,err} \
+#   git add logs/bench14arrcpu_${SLURM_ARRAY_JOB_ID}_*.{out,err} \
 #           results/power/benchmark_batched_chunk_*.json
 #   git commit -m "bench14 array cpu: ${SLURM_ARRAY_JOB_ID}"
 #   git push origin main
 # =============================================================================
 
 #SBATCH --job-name=prl_bench14arrcpu
-#SBATCH --output=cluster/logs/bench14arrcpu_%A_%a.out
-#SBATCH --error=cluster/logs/bench14arrcpu_%A_%a.err
+#SBATCH --output=logs/bench14arrcpu_%A_%a.out
+#SBATCH --error=logs/bench14arrcpu_%A_%a.err
 #SBATCH --array=0-5
 #SBATCH --time=04:00:00
 #SBATCH --mem=32G
@@ -109,7 +109,7 @@ echo ""
 python -c "import jax; print(f'JAX devices: {jax.devices()} backend: {jax.default_backend()}')"
 echo ""
 
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_ARRAY_JOB_ID:-bench14arrcpu}_${SLURM_ARRAY_TASK_ID:-0}" \

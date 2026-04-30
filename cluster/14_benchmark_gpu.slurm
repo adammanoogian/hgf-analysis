@@ -15,8 +15,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_bench14
-#SBATCH --output=cluster/logs/bench14_%j.out
-#SBATCH --error=cluster/logs/bench14_%j.err
+#SBATCH --output=logs/bench14_%j.out
+#SBATCH --error=logs/bench14_%j.err
 #SBATCH --time=24:00:00
 #SBATCH --mem=128G
 #SBATCH --gres=gpu:1
@@ -197,7 +197,7 @@ echo ""
 echo "Running batched hierarchical benchmark..."
 echo ""
 
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_JOB_ID:-bench14}" \
@@ -225,7 +225,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     fi
 else
     echo "BENCHMARK FAILED (exit code: $EXIT_CODE)"
-    echo "Check: cluster/logs/bench14_${SLURM_JOB_ID}.err"
+    echo "Check: logs/bench14_${SLURM_JOB_ID}.err"
 fi
 
 echo ""
@@ -238,8 +238,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing benchmark results to git..."
-_LOG_OUT="cluster/logs/bench14_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/bench14_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/bench14_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/bench14_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add models/power/benchmark_batched.json 2>/dev/null

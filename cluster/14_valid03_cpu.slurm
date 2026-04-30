@@ -10,8 +10,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_v03cpu
-#SBATCH --output=cluster/logs/valid03_cpu_%j.out
-#SBATCH --error=cluster/logs/valid03_cpu_%j.err
+#SBATCH --output=logs/valid03_cpu_%j.out
+#SBATCH --error=logs/valid03_cpu_%j.err
 #SBATCH --time=04:00:00
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=8

@@ -24,8 +24,8 @@
 # =============================================================================
 
 #SBATCH --job-name=push_results
-#SBATCH --output=cluster/logs/push_results_%j.out
-#SBATCH --error=cluster/logs/push_results_%j.err
+#SBATCH --output=logs/push_results_%j.out
+#SBATCH --error=logs/push_results_%j.err
 #SBATCH --time=00:15:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1

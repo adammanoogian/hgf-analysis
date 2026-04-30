@@ -2,7 +2,7 @@
 # =============================================================================
 # SLURM Job: Phase 21 — NUTS (PAT-RL) JIT Probe (BENCH-DIAG-02, plan 21-04)
 # =============================================================================
-# Runs the --p-scan entry point in scripts/08_run_power_iteration.py
+# Runs the --p-scan entry point in scripts/03_pre_analysis/03_run_power_iteration.py
 # sequentially for P ∈ {5, 20} inside a single 30-minute GPU job.
 #
 # This is the logp-graph-vs-sampler isolation test's OTHER HALF. Plan 21-03's
@@ -42,8 +42,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_diag21_nuts
-#SBATCH --output=cluster/logs/diag21_nuts_%j.out
-#SBATCH --error=cluster/logs/diag21_nuts_%j.err
+#SBATCH --output=logs/diag21_nuts_%j.out
+#SBATCH --error=logs/diag21_nuts_%j.err
 #SBATCH --time=00:30:00
 #SBATCH --mem=128G
 #SBATCH --gres=gpu:1
@@ -213,7 +213,7 @@ for P in 5 20; do
     # _run_p_scan_probe writes to stdout AND stderr. JAX_LOG_COMPILES messages
     # go to stderr via Python's logging module. Capture both streams so the
     # log file has everything for post-hoc parsing.
-    python scripts/08_run_power_iteration.py \
+    python scripts/03_pre_analysis/03_run_power_iteration.py \
         --p-scan "${P}" \
         --diagnostic-mode \
         --chunk-id 0 \
@@ -337,8 +337,8 @@ echo ""
 echo "========================================"
 echo "Phase 21 NUTS probe: git auto-push"
 echo "========================================"
-_LOG_OUT="cluster/logs/diag21_nuts_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/diag21_nuts_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/diag21_nuts_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/diag21_nuts_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json 2>/dev/null

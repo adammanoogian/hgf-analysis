@@ -16,8 +16,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_postprocess
-#SBATCH --output=cluster/logs/postprocess_%j.out
-#SBATCH --error=cluster/logs/postprocess_%j.err
+#SBATCH --output=logs/postprocess_%j.out
+#SBATCH --error=logs/postprocess_%j.err
 #SBATCH --time=01:00:00
 #SBATCH --mem=32G
 #SBATCH --partition=comp
@@ -58,7 +58,7 @@ echo "============================================================"
 echo "Step 1/3: Aggregate Power Results"
 echo "============================================================"
 
-python scripts/09_aggregate_power.py
+python scripts/03_pre_analysis/04_aggregate_power.py
 STEP1_EXIT=$?
 
 if [[ $STEP1_EXIT -ne 0 ]]; then
@@ -76,7 +76,7 @@ echo "============================================================"
 echo "Step 2/3: Generate Publication Figures"
 echo "============================================================"
 
-python scripts/10_plot_power_curves.py
+python scripts/03_pre_analysis/06_plot_power_curves.py
 STEP2_EXIT=$?
 
 if [[ $STEP2_EXIT -ne 0 ]]; then
@@ -93,7 +93,7 @@ echo "============================================================"
 echo "Step 3/3: Write Recommendation"
 echo "============================================================"
 
-python scripts/11_write_recommendation.py
+python scripts/03_pre_analysis/07_write_recommendation.py
 STEP3_EXIT=$?
 
 if [[ $STEP3_EXIT -ne 0 ]]; then

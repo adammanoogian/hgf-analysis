@@ -5,7 +5,7 @@
 # Cluster entry point for the Phase 18 PAT-RL foundation smoke:
 #   simulate -> fit -> export -> sanity-check
 #
-# Runs scripts/12_smoke_patrl_foundation.py with production-scale MCMC
+# Runs scripts/03_pre_analysis/08_smoke_patrl_foundation.py with production-scale MCMC
 # defaults on the CPU partition (mirrors cluster/16_smoke_test_cpu.slurm
 # environment setup exactly).  Override MCMC scale at submission:
 #
@@ -19,7 +19,7 @@
 #   models/patrl_smoke/${SLURM_JOB_ID}/    (trajectory CSVs, param summary,
 #                                            idata_{laplace,nuts}.nc,
 #                                            laplace_vs_nuts_diff.csv)
-#   cluster/logs/patrl18smoke_${SLURM_JOB_ID}.out/.err
+#   logs/patrl18smoke_${SLURM_JOB_ID}.out/.err
 #
 # Defaults to --fit-method both (dual NUTS + Laplace fit) per the Option C
 # decision in .planning/quick/004-.../VB_LAPLACE_FEASIBILITY.md.  The .nc
@@ -28,8 +28,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_patrl18smoke
-#SBATCH --output=cluster/logs/patrl18smoke_%j.out
-#SBATCH --error=cluster/logs/patrl18smoke_%j.err
+#SBATCH --output=logs/patrl18smoke_%j.out
+#SBATCH --error=logs/patrl18smoke_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=64G
 #SBATCH --partition=comp
@@ -112,7 +112,7 @@ print(f'jax_enable_x64 (pre-run): {jax.config.jax_enable_x64}')
 "
 echo ""
 
-python scripts/12_smoke_patrl_foundation.py \
+python scripts/03_pre_analysis/08_smoke_patrl_foundation.py \
     --level "${PRL_PATRL_SMOKE_LEVEL}" \
     --n-participants "${PRL_PATRL_SMOKE_N}" \
     --n-tune "${PRL_PATRL_SMOKE_TUNE}" \
@@ -132,7 +132,7 @@ elif [[ $EXIT_CODE -eq 2 ]]; then
     echo "  Install: pip install blackjax>=1.2.4"
 else
     echo "PAT-RL SMOKE FAILED (exit code: $EXIT_CODE)"
-    echo "  Check: cluster/logs/patrl18smoke_${SLURM_JOB_ID}.err"
+    echo "  Check: logs/patrl18smoke_${SLURM_JOB_ID}.err"
 fi
 echo "End:       $(date)"
 echo "============================================================"
@@ -142,8 +142,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing PAT-RL smoke results to git..."
-_LOG_OUT="cluster/logs/patrl18smoke_${SLURM_JOB_ID}.out"
-_LOG_ERR="cluster/logs/patrl18smoke_${SLURM_JOB_ID}.err"
+_LOG_OUT="logs/patrl18smoke_${SLURM_JOB_ID}.out"
+_LOG_ERR="logs/patrl18smoke_${SLURM_JOB_ID}.err"
 _OUT_DIR="models/patrl_smoke/${SLURM_JOB_ID}"
 
 # models/ is git-tracked via .gitkeep (unlike output/ which was gitignored).

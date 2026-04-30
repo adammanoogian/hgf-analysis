@@ -25,8 +25,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_smoke16
-#SBATCH --output=cluster/logs/smoke16_%j.out
-#SBATCH --error=cluster/logs/smoke16_%j.err
+#SBATCH --output=logs/smoke16_%j.out
+#SBATCH --error=logs/smoke16_%j.err
 #SBATCH --time=02:00:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
@@ -182,7 +182,7 @@ echo ""
 # =============================================================================
 # Run Smoke Test
 # =============================================================================
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --smoke-test \
     --chunk-id 0 \
     --job-id "${SLURM_JOB_ID:-smoke16}"
@@ -201,7 +201,7 @@ if [[ $EXIT_CODE -eq 0 ]]; then
     echo "  Safe to proceed to full benchmark (14_benchmark_gpu.slurm)."
 else
     echo "SMOKE TEST FAILED (exit code: $EXIT_CODE)"
-    echo "  Check: cluster/logs/smoke16_${SLURM_JOB_ID}.err"
+    echo "  Check: logs/smoke16_${SLURM_JOB_ID}.err"
     echo "  Most likely fix: pip install -r cluster/requirements-gpu.txt"
 fi
 echo ""
@@ -213,8 +213,8 @@ echo "============================================================"
 # =============================================================================
 echo ""
 echo "Pushing smoke test results to git..."
-_SMOKE_LOG_OUT="cluster/logs/smoke16_${SLURM_JOB_ID}.out"
-_SMOKE_LOG_ERR="cluster/logs/smoke16_${SLURM_JOB_ID}.err"
+_SMOKE_LOG_OUT="logs/smoke16_${SLURM_JOB_ID}.out"
+_SMOKE_LOG_ERR="logs/smoke16_${SLURM_JOB_ID}.err"
 _SMOKE_JSON="models/power/smoke_test.json"
 
 git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_SMOKE_JSON}" 2>/dev/null

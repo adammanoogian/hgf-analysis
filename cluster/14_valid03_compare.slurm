@@ -13,8 +13,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_v03cmp
-#SBATCH --output=cluster/logs/valid03_compare_%j.out
-#SBATCH --error=cluster/logs/valid03_compare_%j.err
+#SBATCH --output=logs/valid03_compare_%j.out
+#SBATCH --error=logs/valid03_compare_%j.err
 #SBATCH --time=00:05:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1

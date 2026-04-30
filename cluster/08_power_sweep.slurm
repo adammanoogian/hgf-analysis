@@ -34,8 +34,8 @@
 # =============================================================================
 
 #SBATCH --job-name=prl_power
-#SBATCH --output=cluster/logs/power_%A_%a.out
-#SBATCH --error=cluster/logs/power_%A_%a.err
+#SBATCH --output=logs/power_%A_%a.out
+#SBATCH --error=logs/power_%A_%a.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=128G
 # BlackJAX vmap fallback on single GPU (default).  For pmap chain
@@ -198,7 +198,7 @@ else
 fi
 echo ""
 
-python scripts/08_run_power_iteration.py \
+python scripts/03_pre_analysis/03_run_power_iteration.py \
     --chunk-id "${SLURM_ARRAY_TASK_ID}" \
     --job-id "${SLURM_ARRAY_JOB_ID}" \
     --fit-chains 4 \
@@ -212,7 +212,7 @@ EXIT_CODE=$?
 if [[ $EXIT_CODE -ne 0 ]]; then
     echo ""
     echo "*** ERROR: Task ${SLURM_ARRAY_TASK_ID} FAILED with exit code $EXIT_CODE ***"
-    echo "*** Check: cluster/logs/power_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.err ***"
+    echo "*** Check: logs/power_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.err ***"
     echo ""
 fi
 
