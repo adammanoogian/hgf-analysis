@@ -749,7 +749,7 @@ def _run_smoke_test(
     cache_dir = os.environ.get("JAX_COMPILATION_CACHE_DIR")
     cache_before = _get_cache_stats(cache_dir)
     results["cache_before"] = cache_before
-    print(f"\n  JAX cache (before):")
+    print("\n  JAX cache (before):")
     print(f"    dir:    {cache_before['cache_dir']}")
     print(f"    exists: {cache_before['cache_exists']}")
     print(f"    files:  {cache_before['n_files']}")
@@ -787,7 +787,7 @@ def _run_smoke_test(
     # integration_steps dropping below the max_tree_depth cap.
     results["kappa_frozen_at"] = 1.0
 
-    print(f"\nSmoke test config:")
+    print("\nSmoke test config:")
     print(f"  N per group:            {n_smoke}")
     print(f"  Participant-sessions:   {n_participant_sessions}")
     print(f"  Chains:                 {n_chains_smoke}")
@@ -920,7 +920,7 @@ def _run_smoke_test(
         f"  warm1 - warm2 = {warm1_minus_warm2:.2f}s "
         "(estimate of Python retrace + XLA compile cost per call)"
     )
-    print(f"  warm2 ≈ pure sampling execute time")
+    print("  warm2 ≈ pure sampling execute time")
 
     gpus_post_warm = _query_gpu_table()
     results["gpu_post_warm_jit"] = gpus_post_warm

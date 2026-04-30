@@ -37,7 +37,6 @@ if "--enable-x64" in sys.argv:
 os.environ.setdefault("JAX_PLATFORMS", "cpu")
 
 import jax  # noqa: E402
-
 import numpy as np  # noqa: E402
 
 from prl_hgf.env.task_config import load_config  # noqa: E402

@@ -17,7 +17,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import importlib.util
-import shutil
 import tempfile
 
 import matplotlib
@@ -25,12 +24,10 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
-import config as _cfg
 from prl_hgf.env.task_config import load_config
-from prl_hgf.power.config import PowerConfig, load_power_config, make_power_config
+from prl_hgf.power.config import load_power_config, make_power_config
 from prl_hgf.power.curves import compute_power_a, compute_power_b
 from prl_hgf.power.iteration import run_power_iteration
 from prl_hgf.power.schema import write_parquet_batch
@@ -255,7 +252,7 @@ def main() -> None:
     print("SMOKE TEST: Full v1.1 Power Analysis Pipeline")
     print("=" * 70)
     print(f"  n_per_group  = {N_PER_GROUP} ({N_PER_GROUP * 2} total participants)")
-    print(f"  sessions     = 3 (baseline, post_dose, follow_up)")
+    print("  sessions     = 3 (baseline, post_dose, follow_up)")
     print(f"  fits/iter    = {N_PER_GROUP * 2 * 3 * 2} "
           f"({N_PER_GROUP * 2} x 3 sessions x 2 models)")
     print(f"  MCMC         = {N_CHAINS} chains x {N_DRAWS} draws x {N_TUNE} tune")
@@ -292,7 +289,7 @@ def main() -> None:
         )
 
     # Stage 3: Write parquet
-    parquet_path = stage_write_parquet(results, output_dir)
+    stage_write_parquet(results, output_dir)
 
     # Stage 4: Aggregate
     master_df, power_a_df, power_b_df = stage_aggregate(output_dir)
@@ -369,7 +366,7 @@ def main() -> None:
     total_est_h = per_fit_s * total_fits / 3600
     print(f"\n  TOTAL ESTIMATED: {total_est_h:.1f}h wall (single core)")
     print(f"  With 3 GPU chunks: ~{total_est_h / 3:.1f}h/chunk")
-    print(f"  (GPU expected 5-10x faster than CPU)")
+    print("  (GPU expected 5-10x faster than CPU)")
 
     # Cleanup note
     print(f"\nSmoke test outputs in: {output_dir}")
