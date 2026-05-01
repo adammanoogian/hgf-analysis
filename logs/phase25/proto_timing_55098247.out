@@ -1,0 +1,404 @@
+Verifying prl_hgf editable install...
+prl_hgf import OK
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+============================================================
+Phase 25-04 HGF Prototype GPU Timing Benchmark
+============================================================
+Job ID:  55098247
+Node:    m3t100
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/shared_25proto_v2
+Start:   Fri May  1 07:30:14 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+Running 9-cell timing benchmark (3 shapes x 3 init strategies)...
+Results written incrementally to logs/phase25/proto_timing.json
+
+========================================================================
+25-04 Timing Benchmark: parallel-scan vs sequential
+========================================================================
+Hardware: GPU:Tesla T4
+JAX version: 0.4.31
+Shapes: [(50, 420), (100, 420), (50, 2000)]
+Init strategies: cold, linear, cached
+N timed runs per cell: 3
+CPU/GPU mode: full shapes (GPU)
+Output: /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+
+========================================================================
+Shape: P=50, T=420
+========================================================================
+
+  Init strategy: cold
+    [10/50] p9: par=0.7210s (1st=0.73s compile_oh=0.01s)  seq=0.0855s  speedup=0.119x  K=12   rel_err=2.75e-10
+    [20/50] p19: par=0.6678s (1st=0.67s compile_oh=0.00s)  seq=0.0857s  speedup=0.128x  K=11   rel_err=1.14e-08
+    [30/50] p29: par=0.6817s (1st=0.67s compile_oh=0.00s)  seq=0.0885s  speedup=0.130x  K=11   rel_err=7.88e-11
+    [40/50] p39: par=0.7930s (1st=0.80s compile_oh=0.01s)  seq=0.0870s  speedup=0.110x  K=13   rel_err=3.40e-10
+    [50/50] p49: par=0.6654s (1st=0.67s compile_oh=0.00s)  seq=0.0857s  speedup=0.129x  K=11   rel_err=4.47e-12
+
+  CELL SUMMARY (P=50, T=420, init=cold):
+    total_par=39.903s  total_seq=4.442s  speedup=0.111x  K_max=21  rel_err_max=4.79e-08
+    compile_overhead: par_med=0.000s  seq_med=0.001s  first_call: par_med=0.770s seq_med=0.086s
+    convergence: max_delta=9.97e-06  hit_cap=0/50  all_converged=True
+  Written 1 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: linear
+    [10/50] p9: par=0.7066s (1st=0.69s compile_oh=0.00s)  seq=0.0876s  speedup=0.124x  K=11   rel_err=5.97e-10
+    [20/50] p19: par=0.6695s (1st=0.67s compile_oh=0.00s)  seq=0.0866s  speedup=0.129x  K=11   rel_err=6.91e-09
+    [30/50] p29: par=0.5670s (1st=0.57s compile_oh=0.00s)  seq=0.0865s  speedup=0.153x  K=9   rel_err=1.87e-09
+    [40/50] p39: par=0.7242s (1st=0.73s compile_oh=0.00s)  seq=0.1017s  speedup=0.140x  K=12   rel_err=1.64e-08
+    [50/50] p49: par=0.6565s (1st=0.63s compile_oh=0.00s)  seq=0.0877s  speedup=0.134x  K=10   rel_err=1.97e-10
+
+  CELL SUMMARY (P=50, T=420, init=linear):
+    total_par=40.775s  total_seq=4.618s  speedup=0.113x  K_max=50  rel_err_max=6.21e-04
+    compile_overhead: par_med=0.000s  seq_med=0.000s  first_call: par_med=0.754s seq_med=0.087s
+    convergence: max_delta=5.46e-01  hit_cap=1/50  all_converged=False
+  WARNING: rel_err 6.21e-04 >= 1e-5 threshold!
+  Written 2 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: cached
+    [10/50] p9: par=0.1452s (1st=0.14s compile_oh=0.00s)  seq=0.0870s  speedup=0.599x  K=1   rel_err=1.22e-16
+    [20/50] p19: par=0.1443s (1st=0.14s compile_oh=0.00s)  seq=0.0862s  speedup=0.597x  K=1   rel_err=0.00e+00
+    [30/50] p29: par=0.1463s (1st=0.15s compile_oh=0.00s)  seq=0.0873s  speedup=0.597x  K=1   rel_err=0.00e+00
+    [40/50] p39: par=0.1440s (1st=0.14s compile_oh=0.00s)  seq=0.0861s  speedup=0.598x  K=1   rel_err=1.44e-16
+    [50/50] p49: par=0.1441s (1st=0.14s compile_oh=0.00s)  seq=0.0862s  speedup=0.598x  K=1   rel_err=1.40e-16
+
+  CELL SUMMARY (P=50, T=420, init=cached):
+    total_par=7.258s  total_seq=4.333s  speedup=0.597x  K_max=1  rel_err_max=1.45e-16
+    compile_overhead: par_med=0.000s  seq_med=0.000s  first_call: par_med=0.145s seq_med=0.087s
+    convergence: max_delta=4.44e-15  hit_cap=0/50  all_converged=True
+  Written 3 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+========================================================================
+Shape: P=100, T=420
+========================================================================
+
+  Init strategy: cold
+    [10/100] p9: par=0.7608s (1st=0.73s compile_oh=0.00s)  seq=0.0861s  speedup=0.113x  K=12   rel_err=1.89e-09
+    [20/100] p19: par=0.8060s (1st=1.50s compile_oh=0.69s)  seq=0.0907s  speedup=0.113x  K=13   rel_err=9.17e-10
+    [30/100] p29: par=0.6669s (1st=0.68s compile_oh=0.01s)  seq=0.0856s  speedup=0.128x  K=11   rel_err=9.80e-11
+    [40/100] p39: par=0.8772s (1st=0.88s compile_oh=0.00s)  seq=0.0865s  speedup=0.099x  K=15   rel_err=3.57e-09
+    [50/100] p49: par=0.6739s (1st=0.68s compile_oh=0.01s)  seq=0.0860s  speedup=0.128x  K=11   rel_err=2.09e-10
+    [60/100] p59: par=0.6736s (1st=0.67s compile_oh=0.00s)  seq=0.0861s  speedup=0.128x  K=11   rel_err=7.26e-11
+    [70/100] p69: par=0.6890s (1st=0.68s compile_oh=0.00s)  seq=0.1033s  speedup=0.150x  K=11   rel_err=1.07e-09
+    [80/100] p79: par=0.7338s (1st=0.72s compile_oh=0.00s)  seq=0.1012s  speedup=0.138x  K=12   rel_err=5.32e-11
+    [90/100] p89: par=0.6861s (1st=0.71s compile_oh=0.02s)  seq=0.0946s  speedup=0.138x  K=11   rel_err=2.01e-09
+    [100/100] p99: par=0.6163s (1st=0.61s compile_oh=0.00s)  seq=0.0857s  speedup=0.139x  K=10   rel_err=3.61e-10
+
+  CELL SUMMARY (P=100, T=420, init=cold):
+    total_par=79.281s  total_seq=9.009s  speedup=0.114x  K_max=24  rel_err_max=3.14e-08
+    compile_overhead: par_med=0.001s  seq_med=0.001s  first_call: par_med=0.768s seq_med=0.087s
+    convergence: max_delta=9.94e-06  hit_cap=0/100  all_converged=True
+  Written 4 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: linear
+    [10/100] p9: par=0.6958s (1st=0.69s compile_oh=0.00s)  seq=0.0877s  speedup=0.126x  K=11   rel_err=4.44e-09
+    [20/100] p19: par=0.7686s (1st=0.77s compile_oh=0.00s)  seq=0.0860s  speedup=0.112x  K=13   rel_err=5.67e-10
+    [30/100] p29: par=0.6119s (1st=0.63s compile_oh=0.02s)  seq=0.0860s  speedup=0.141x  K=10   rel_err=2.89e-10
+    [40/100] p39: par=0.8786s (1st=0.87s compile_oh=0.00s)  seq=0.0863s  speedup=0.098x  K=15   rel_err=3.06e-09
+    [50/100] p49: par=0.6125s (1st=0.61s compile_oh=0.00s)  seq=0.0859s  speedup=0.140x  K=10   rel_err=2.19e-09
+    [60/100] p59: par=0.6645s (1st=0.66s compile_oh=0.00s)  seq=0.0858s  speedup=0.129x  K=11   rel_err=2.08e-11
+    [70/100] p69: par=0.6831s (1st=0.68s compile_oh=0.00s)  seq=0.0936s  speedup=0.137x  K=11   rel_err=1.01e-09
+    [80/100] p79: par=0.7053s (1st=0.72s compile_oh=0.01s)  seq=0.0874s  speedup=0.124x  K=11   rel_err=1.55e-10
+    [90/100] p89: par=0.6954s (1st=0.66s compile_oh=0.00s)  seq=0.0875s  speedup=0.126x  K=11   rel_err=4.26e-09
+    [100/100] p99: par=0.5597s (1st=0.56s compile_oh=0.00s)  seq=0.0858s  speedup=0.153x  K=9   rel_err=1.68e-09
+
+  CELL SUMMARY (P=100, T=420, init=linear):
+    total_par=76.245s  total_seq=8.747s  speedup=0.115x  K_max=24  rel_err_max=3.36e-08
+    compile_overhead: par_med=0.001s  seq_med=0.000s  first_call: par_med=0.731s seq_med=0.086s
+    convergence: max_delta=9.82e-06  hit_cap=0/100  all_converged=True
+  Written 5 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: cached
+    [10/100] p9: par=0.1411s (1st=0.14s compile_oh=0.00s)  seq=0.0854s  speedup=0.606x  K=1   rel_err=0.00e+00
+    [20/100] p19: par=0.1410s (1st=0.14s compile_oh=0.00s)  seq=0.0856s  speedup=0.607x  K=1   rel_err=0.00e+00
+    [30/100] p29: par=0.1409s (1st=0.14s compile_oh=0.00s)  seq=0.0854s  speedup=0.606x  K=1   rel_err=1.14e-16
+    [40/100] p39: par=0.1422s (1st=0.14s compile_oh=0.00s)  seq=0.0857s  speedup=0.603x  K=1   rel_err=2.20e-16
+    [50/100] p49: par=0.1412s (1st=0.14s compile_oh=0.00s)  seq=0.0854s  speedup=0.605x  K=1   rel_err=0.00e+00
+    [60/100] p59: par=0.1410s (1st=0.14s compile_oh=0.00s)  seq=0.0854s  speedup=0.605x  K=1   rel_err=0.00e+00
+    [70/100] p69: par=0.1460s (1st=0.15s compile_oh=0.00s)  seq=0.0871s  speedup=0.596x  K=1   rel_err=0.00e+00
+    [80/100] p79: par=0.1409s (1st=0.14s compile_oh=0.00s)  seq=0.0853s  speedup=0.605x  K=1   rel_err=0.00e+00
+    [90/100] p89: par=0.1451s (1st=0.14s compile_oh=0.00s)  seq=0.0867s  speedup=0.597x  K=1   rel_err=0.00e+00
+    [100/100] p99: par=0.1412s (1st=0.14s compile_oh=0.00s)  seq=0.0854s  speedup=0.605x  K=1   rel_err=0.00e+00
+
+  CELL SUMMARY (P=100, T=420, init=cached):
+    total_par=14.236s  total_seq=8.584s  speedup=0.603x  K_max=1  rel_err_max=2.20e-16
+    compile_overhead: par_med=0.000s  seq_med=0.000s  first_call: par_med=0.141s seq_med=0.086s
+    convergence: max_delta=4.44e-15  hit_cap=0/100  all_converged=True
+  Written 6 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+========================================================================
+Shape: P=50, T=2000
+========================================================================
+
+  Init strategy: cold
+    [10/50] p9: par=1.1769s (1st=1.17s compile_oh=0.00s)  seq=0.3624s  speedup=0.308x  K=14   rel_err=4.15e-10
+    [20/50] p19: par=1.3142s (1st=1.25s compile_oh=0.00s)  seq=0.3630s  speedup=0.276x  K=16   rel_err=9.49e-09
+    [30/50] p29: par=1.1447s (1st=1.14s compile_oh=0.00s)  seq=0.3612s  speedup=0.316x  K=14   rel_err=1.14e-10
+    [40/50] p39: par=1.4221s (1st=1.42s compile_oh=0.00s)  seq=0.3615s  speedup=0.254x  K=19   rel_err=2.80e-08
+    [50/50] p49: par=1.0356s (1st=1.04s compile_oh=0.00s)  seq=0.3624s  speedup=0.350x  K=12   rel_err=1.24e-10
+
+  CELL SUMMARY (P=50, T=2000, init=cold):
+    total_par=77.247s  total_seq=18.862s  speedup=0.244x  K_max=50  rel_err_max=3.41e-08
+    compile_overhead: par_med=0.000s  seq_med=0.000s  first_call: par_med=1.393s seq_med=0.358s
+    convergence: max_delta=9.92e-06  hit_cap=1/50  all_converged=True
+  Written 7 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: linear
+    [10/50] p9: par=1.1547s (1st=1.14s compile_oh=0.00s)  seq=0.3618s  speedup=0.313x  K=14   rel_err=3.38e-10
+    [20/50] p19: par=1.2665s (1st=1.31s compile_oh=0.05s)  seq=0.3617s  speedup=0.286x  K=16   rel_err=8.25e-09
+    [30/50] p29: par=1.0922s (1st=1.09s compile_oh=0.00s)  seq=0.3636s  speedup=0.333x  K=13   rel_err=1.20e-09
+    [40/50] p39: par=1.4282s (1st=1.42s compile_oh=0.00s)  seq=0.3614s  speedup=0.253x  K=19   rel_err=2.12e-08
+    [50/50] p49: par=1.0429s (1st=1.03s compile_oh=0.00s)  seq=0.3620s  speedup=0.347x  K=12   rel_err=4.00e-11
+
+  CELL SUMMARY (P=50, T=2000, init=linear):
+    total_par=77.740s  total_seq=19.101s  speedup=0.246x  K_max=50  rel_err_max=5.57e-05
+    compile_overhead: par_med=0.004s  seq_med=0.000s  first_call: par_med=1.410s seq_med=0.361s
+    convergence: max_delta=5.95e-01  hit_cap=1/50  all_converged=False
+  WARNING: rel_err 5.57e-05 >= 1e-5 threshold!
+  Written 8 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+  Init strategy: cached
+    [10/50] p9: par=0.4226s (1st=0.42s compile_oh=0.00s)  seq=0.3589s  speedup=0.849x  K=1   rel_err=0.00e+00
+    [20/50] p19: par=0.4183s (1st=0.42s compile_oh=0.00s)  seq=0.3594s  speedup=0.859x  K=1   rel_err=0.00e+00
+    [30/50] p29: par=0.4201s (1st=0.42s compile_oh=0.00s)  seq=0.3602s  speedup=0.857x  K=1   rel_err=1.95e-16
+    [40/50] p39: par=0.4186s (1st=0.42s compile_oh=0.00s)  seq=0.3594s  speedup=0.859x  K=1   rel_err=0.00e+00
+    [50/50] p49: par=0.4189s (1st=0.42s compile_oh=0.00s)  seq=0.3577s  speedup=0.854x  K=1   rel_err=0.00e+00
+
+  CELL SUMMARY (P=50, T=2000, init=cached):
+    total_par=21.029s  total_seq=17.964s  speedup=0.854x  K_max=1  rel_err_max=3.28e-16
+    compile_overhead: par_med=0.000s  seq_med=0.002s  first_call: par_med=0.417s seq_med=0.362s
+    convergence: max_delta=4.88e-15  hit_cap=0/50  all_converged=True
+  Written 9 cells to /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+
+========================================================================
+BENCHMARK COMPLETE
+Total cells: 9 / 9
+Output: /fs04/fc37/adam/projects/hgf-analysis/logs/phase25/proto_timing.json
+========================================================================
+
+Per-cell summary:
+           shape     init     K     rel_err   speedup  compile_oh
+      P=50,T=420     cold    21    4.79e-08    0.111x      0.000s
+      P=50,T=420   linear    50    6.21e-04    0.113x      0.000s
+      P=50,T=420   cached     1    1.45e-16    0.597x      0.000s
+     P=100,T=420     cold    24    3.14e-08    0.114x      0.001s
+     P=100,T=420   linear    24    3.36e-08    0.115x      0.001s
+     P=100,T=420   cached     1    2.20e-16    0.603x      0.000s
+     P=50,T=2000     cold    50    3.41e-08    0.244x      0.000s
+     P=50,T=2000   linear    50    5.57e-05    0.246x      0.004s
+     P=50,T=2000   cached     1    3.28e-16    0.854x      0.000s
+
+WARNING: 2 cell(s) failed numerical agreement (rel_err >= 1e-5):
+  P=50, T=420, init=linear: rel_err=6.21e-04 K=50 hit_cap=1/50
+  P=50, T=2000, init=linear: rel_err=5.57e-05 K=50 hit_cap=1/50
+
+============================================================
+BENCHMARK FAILED (exit code: 1)
+Check: logs/phase25/proto_timing_55098247.err
+Partial results (if any):
+{
+    "hardware": "GPU:Tesla T4",
+    "jax_version": "0.4.31",
+    "timestamp": "2026-05-01T09:33:43.195633+00:00",
+    "shapes": [
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "cold",
+            "par_wall_seconds": 39.90338524899562,
+            "seq_wall_seconds": 4.442195352981798,
+            "par_first_call_median_seconds": 0.7702987364973524,
+            "seq_first_call_median_seconds": 0.08641039400390582,
+            "par_compile_overhead_median_seconds": 0.00044400298793334514,
+            "seq_compile_overhead_median_seconds": 0.0005593735040747561,
+            "speedup": 0.11132377178684633,
+            "K_observed": 21,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 9.965537167255789e-06,
+            "all_converged": true,
+            "rel_err": 4.7937790903866815e-08,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "linear",
+            "par_wall_seconds": 40.774794126016786,
+            "seq_wall_seconds": 4.617740619956749,
+            "par_first_call_median_seconds": 0.754187960003037,
+            "seq_first_call_median_seconds": 0.08666486799484119,
+            "par_compile_overhead_median_seconds": 0.00038718399446224794,
+            "seq_compile_overhead_median_seconds": 0.0,
+            "speedup": 0.11324988191688626,
+            "K_observed": 50,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 1,
+            "max_final_convergence_delta": 0.5460779717309838,
+            "all_converged": false,
+            "rel_err": 0.0006212902191407491,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "cached",
+            "par_wall_seconds": 7.257510746028856,
+            "seq_wall_seconds": 4.3329102110583335,
+            "par_first_call_median_seconds": 0.14486444700014545,
+            "seq_first_call_median_seconds": 0.08674352250091033,
+            "par_compile_overhead_median_seconds": 0.0002417030045762658,
+            "seq_compile_overhead_median_seconds": 0.0004281819929019548,
+            "speedup": 0.5970242914802714,
+            "K_observed": 1,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 4.440892098500626e-15,
+            "all_converged": true,
+            "rel_err": 1.4466052064374738e-16,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 100,
+            "P_actual": 100,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "cold",
+            "par_wall_seconds": 79.28093399801583,
+            "seq_wall_seconds": 9.00925657193875,
+            "par_first_call_median_seconds": 0.7675889014935819,
+            "seq_first_call_median_seconds": 0.08693974999914644,
+            "par_compile_overhead_median_seconds": 0.0014086779992794618,
+            "seq_compile_overhead_median_seconds": 0.0006232134910533205,
+            "speedup": 0.11363711446896205,
+            "K_observed": 24,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 9.936956694378551e-06,
+            "all_converged": true,
+            "rel_err": 3.143591719673931e-08,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 100,
+            "P_actual": 100,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "linear",
+            "par_wall_seconds": 76.24521696695592,
+            "seq_wall_seconds": 8.746680135911447,
+            "par_first_call_median_seconds": 0.7306516864991863,
+            "seq_first_call_median_seconds": 0.08605843850091333,
+            "par_compile_overhead_median_seconds": 0.0012262409945833497,
+            "seq_compile_overhead_median_seconds": 1.574301131768152e-05,
+            "speedup": 0.11471775520951287,
+            "K_observed": 24,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 9.823992505819668e-06,
+            "all_converged": true,
+            "rel_err": 3.364313531896601e-08,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 100,
+            "P_actual": 100,
+            "T": 420,
+            "T_actual": 420,
+            "init_strategy": "cached",
+            "par_wall_seconds": 14.23587091997615,
+            "seq_wall_seconds": 8.584032264989219,
+            "par_first_call_median_seconds": 0.14132890300243162,
+            "seq_first_call_median_seconds": 0.0858518559980439,
+            "par_compile_overhead_median_seconds": 9.912400128087029e-05,
+            "seq_compile_overhead_median_seconds": 0.0003855620016111061,
+            "speedup": 0.6029860985142734,
+            "K_observed": 1,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 4.440892098500626e-15,
+            "all_converged": true,
+            "rel_err": 2.200659853293318e-16,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 2000,
+            "T_actual": 2000,
+            "init_strategy": "cold",
+            "par_wall_seconds": 77.24676447795355,
+            "seq_wall_seconds": 18.861939258000348,
+            "par_first_call_median_seconds": 1.3926380795019213,
+            "seq_first_call_median_seconds": 0.35771284999646014,
+            "par_compile_overhead_median_seconds": 0.0,
+            "seq_compile_overhead_median_seconds": 0.0,
+            "speedup": 0.24417772557171116,
+            "K_observed": 50,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 1,
+            "max_final_convergence_delta": 9.922334694878465e-06,
+            "all_converged": true,
+            "rel_err": 3.406303862776872e-08,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 2000,
+            "T_actual": 2000,
+            "init_strategy": "linear",
+            "par_wall_seconds": 77.74048697104445,
+            "seq_wall_seconds": 19.10069588200713,
+            "par_first_call_median_seconds": 1.4101714049975271,
+            "seq_first_call_median_seconds": 0.36148070600029314,
+            "par_compile_overhead_median_seconds": 0.003953125000407454,
+            "seq_compile_overhead_median_seconds": 0.0,
+            "speedup": 0.24569817640995043,
+            "K_observed": 50,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 1,
+            "max_final_convergence_delta": 0.5948476450633978,
+            "all_converged": false,
+            "rel_err": 5.5721278506985185e-05,
+            "hardware": "GPU:Tesla T4"
+        },
+        {
+            "P": 50,
+            "P_actual": 50,
+            "T": 2000,
+            "T_actual": 2000,
+            "init_strategy": "cached",
+            "par_wall_seconds": 21.02911715193477,
+            "seq_wall_seconds": 17.964190057988162,
+            "par_first_call_median_seconds": 0.4170515530058765,
+            "seq_first_call_median_seconds": 0.3615227674963535,
+            "par_compile_overhead_median_seconds": 0.0,
+            "seq_compile_overhead_median_seconds": 0.002352372495806776,
+            "speedup": 0.8542531732643555,
+            "K_observed": 1,
+            "K_max_iter_cap": 50,
+            "n_participants_hit_cap": 0,
+            "max_final_convergence_delta": 4.884981308350689e-15,
+            "all_converged": true,
+            "rel_err": 3.2845672756911424e-16,
+            "hardware": "GPU:Tesla T4"
+        }
+    ]
+}
+
+End: Fri May  1 08:14:21 PM AEST 2026
+============================================================
+
+Pushing benchmark results to git...
