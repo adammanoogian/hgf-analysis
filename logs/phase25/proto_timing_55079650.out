@@ -27,3 +27,8 @@ End: Fri May  1 04:43:44 PM AEST 2026
 ============================================================
 
 Pushing benchmark results to git...
+[main c419689] bench phase25-04 gpu timing (job 55079650)
+ 2 files changed, 30 insertions(+)
+ create mode 100644 logs/phase25/proto_timing_55079650.err
+ create mode 100644 logs/phase25/proto_timing_55079650.out
+Pushed benchmark results to origin/main
