@@ -9,7 +9,7 @@
 #   cd $PROJECT_ROOT && pip install -e . --quiet
 # Verify: python -c "import prl_hgf; print('OK')"
 #
-# Results written to: results/diagnostics/hgf_pscan_proto.json
+# Results written to: logs/phase25/proto_timing.json
 # Incremental write: JSON is updated after each cell — partial results survive
 # SLURM timeout (important for the T=2000 cells).
 #
@@ -42,7 +42,6 @@ cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
 mkdir -p logs/phase25
-mkdir -p results/diagnostics
 export PYTHONUNBUFFERED=1
 
 # Activate ds_env
@@ -127,10 +126,10 @@ echo ""
 # Run timing benchmark
 # =============================================================================
 echo "Running 9-cell timing benchmark (3 shapes x 3 init strategies)..."
-echo "Results written incrementally to results/diagnostics/hgf_pscan_proto.json"
+echo "Results written incrementally to logs/phase25/proto_timing.json"
 echo ""
 
-python .planning/phases/25-parallel-scan-acceleration-research/scratch/proto_timing_benchmark.py
+python scripts/_maintenance/phase25_proto/proto_timing_benchmark.py
 
 EXIT_CODE=$?
 
@@ -139,16 +138,16 @@ echo "============================================================"
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "BENCHMARK COMPLETE"
     echo ""
-    if [[ -f results/diagnostics/hgf_pscan_proto.json ]]; then
+    if [[ -f logs/phase25/proto_timing.json ]]; then
         echo "Results summary:"
-        python -m json.tool results/diagnostics/hgf_pscan_proto.json 2>/dev/null || \
-            cat results/diagnostics/hgf_pscan_proto.json
+        python -m json.tool logs/phase25/proto_timing.json 2>/dev/null || \
+            cat logs/phase25/proto_timing.json
     fi
 else
     echo "BENCHMARK FAILED (exit code: $EXIT_CODE)"
     echo "Check: logs/phase25/proto_timing_${SLURM_JOB_ID}.err"
     echo "Partial results (if any):"
-    cat results/diagnostics/hgf_pscan_proto.json 2>/dev/null | python -m json.tool 2>/dev/null || true
+    cat logs/phase25/proto_timing.json 2>/dev/null | python -m json.tool 2>/dev/null || true
 fi
 
 echo ""
@@ -164,8 +163,7 @@ _LOG_OUT="logs/phase25/proto_timing_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/phase25/proto_timing_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add results/diagnostics/hgf_pscan_proto.json 2>/dev/null
-git add .planning/STATE.md 2>/dev/null
+git add logs/phase25/proto_timing.json 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then
     git commit -m "bench phase25-04 gpu timing (job ${SLURM_JOB_ID})"
     if git push origin main 2>/dev/null; then

@@ -8,8 +8,8 @@
 # RMSE/ESS/R-hat/divergence comparison is meaningful.
 #
 # Outputs (NetCDF chains):
-#   .../results/recovery_chains_sequential.nc
-#   .../results/recovery_chains_proto.nc
+#   logs/phase25/recovery_chains_sequential.nc
+#   logs/phase25/recovery_chains_proto.nc
 #
 # PREREQUISITE
 # ------------
@@ -128,12 +128,12 @@ echo ""
 # Pre-flight: differentiability gate (proto_grad_check.py must PASS)
 # =============================================================================
 echo "Pre-flight: running proto_grad_check.py to confirm differentiability..."
-python .planning/phases/25-parallel-scan-acceleration-research/scratch/proto_grad_check.py
+python scripts/_maintenance/phase25_proto/proto_grad_check.py
 GRAD_EXIT=$?
 if [[ $GRAD_EXIT -ne 0 ]]; then
     echo ""
     echo "ABORT: proto_grad_check.py failed (exit ${GRAD_EXIT})."
-    echo "  See .../results/proto_grad_check.log for the failure mode."
+    echo "  See logs/phase25/proto_grad_check.log for the failure mode."
     echo "  Recovery run will not produce meaningful results until the prototype"
     echo "  is refactored to thread JAX-traced theta (see hierarchical.py::"
     echo "  _single_logp_3level for the production shallow-copy pattern)."
@@ -150,7 +150,7 @@ SEQ_NC="${RESULTS_DIR}/recovery_chains_sequential.nc"
 PRO_NC="${RESULTS_DIR}/recovery_chains_proto.nc"
 
 echo "[1/2] Sequential baseline NUTS..."
-python .planning/phases/25-parallel-scan-acceleration-research/scratch/proto_recovery_run.py \
+python scripts/_maintenance/phase25_proto/proto_recovery_run.py \
     --backend sequential \
     --seed 2505 \
     --n-participants 20 \
@@ -164,7 +164,7 @@ SEQ_EXIT=$?
 
 echo ""
 echo "[2/2] Prototype parallel-scan NUTS..."
-python .planning/phases/25-parallel-scan-acceleration-research/scratch/proto_recovery_run.py \
+python scripts/_maintenance/phase25_proto/proto_recovery_run.py \
     --backend proto \
     --seed 2505 \
     --n-participants 20 \
@@ -202,7 +202,6 @@ _LOG_ERR="${RESULTS_DIR}/recovery_${SLURM_JOB_ID}.err"
 git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
 git add "${SEQ_NC}" "${PRO_NC}" 2>/dev/null
 git add "${RESULTS_DIR}/proto_grad_check.log" 2>/dev/null
-git add .planning/STATE.md 2>/dev/null
 if ! git diff --cached --quiet 2>/dev/null; then
     git commit -m "bench phase25-05 gpu nuts-recovery (job ${SLURM_JOB_ID})"
     if git push origin main 2>/dev/null; then

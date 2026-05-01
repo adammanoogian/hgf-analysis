@@ -127,7 +127,7 @@ echo ""
 echo "Running quasi-ELK coordinated-turn reproduction (T=500, D=4)..."
 echo ""
 
-python .planning/phases/25-parallel-scan-acceleration-research/scratch/reproduce_reference.py
+python scripts/_maintenance/phase25_proto/reproduce_reference.py
 
 EXIT_CODE=$?
 
