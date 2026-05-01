@@ -1,0 +1,29 @@
+Verifying prl_hgf editable install...
+prl_hgf import OK
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+============================================================
+Phase 25-04 HGF Prototype GPU Timing Benchmark
+============================================================
+Job ID:  55079650
+Node:    m3g114
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/shared_25proto_v2
+Start:   Fri May  1 04:42:30 PM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+Running 9-cell timing benchmark (3 shapes x 3 init strategies)...
+Results written incrementally to results/diagnostics/hgf_pscan_proto.json
+
+
+============================================================
+BENCHMARK FAILED (exit code: 2)
+Check: logs/phase25/proto_timing_55079650.err
+Partial results (if any):
+
+End: Fri May  1 04:43:44 PM AEST 2026
+============================================================
+
+Pushing benchmark results to git...
