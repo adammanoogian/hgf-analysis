@@ -1,17 +1,26 @@
 # Generated artifacts (transient logs ignored by default; phase25 cluster
-# outputs and .gitkeep markers are tracked)
+# outputs, SLURM-run logs auto-pushed by cluster/*.slurm, and .gitkeep
+# markers are tracked)
 logs/*
 !logs/.gitkeep
 !logs/phase25/
+!logs/patrl18smoke_*
+!logs/bench14_*
 
-# CCDS canonical (Phase 26 Wave 3): models/ is gitignored (heavy artifacts);
-# tracked via .gitkeep markers. reports/ is tracked (small CSV/MD outputs
-# are paper-ready and version-worthy).
-models/
-results/
+# CCDS canonical (Phase 26 Wave 3): models/ contents gitignored (heavy
+# artifacts); tracked via .gitkeep markers. reports/ is tracked (small
+# CSV/MD outputs are paper-ready and version-worthy). Cluster auto-push
+# subtrees (patrl_smoke/, power/) are whitelisted so SLURM auto-push
+# commits land. Uses models/* + !subdir pattern (NOT bare models/) so
+# subdirectory whitelists work — bare models/ with trailing slash blocks
+# any subdir re-include per git-ignore semantics.
+models/*
+results/*
 !models/.gitkeep
 !models/mle/.gitkeep
 !models/bayesian/.gitkeep
+!models/patrl_smoke/
+!models/power/
 
 # GSD planning audit trail — local-only, not pushed (per user policy)
 .planning/
