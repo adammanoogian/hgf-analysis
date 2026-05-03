@@ -1408,6 +1408,14 @@ def _run_blackjax_nuts(
             f"(num_steps={n_tune}, target_accept={target_accept})",
             flush=True,
         )
+        # Mitigation hook M1 (dense mass matrix): if docs/CAPABILITY_MAP.md
+        # cliff data shows window_adaptation can't precondition the
+        # ω₂/ω₃/κ correlations of the 3-level posterior, flip
+        # is_mass_matrix_diagonal=False. Mass matrix grows to O(D²);
+        # at D≈1500 (3-level × P=300 × 5 params) that's ~18 MB — trivial.
+        # Wire-up: thread an `is_mass_matrix_diagonal` kwarg through
+        # fit_batch_hierarchical → _run_blackjax_nuts → here. See M1 section
+        # of docs/CAPABILITY_MAP.md for the diagnosis.
         warmup = blackjax.window_adaptation(
             blackjax.nuts,
             logdensity_fn,

@@ -170,6 +170,11 @@ if [[ -n "${N_PER_GROUP_OVERRIDES}" ]]; then
     _NPG_OVERRIDE_FLAG="--n-per-group-overrides ${N_PER_GROUP_OVERRIDES}"
 fi
 
+# Capability-map: model selector for the --benchmark path.
+# BENCH_MODEL=hgf_2level fills the 2-level NUTS gap; default hgf_3level
+# preserves Phase 14/21 benchmark history.
+export BENCH_MODEL="${BENCH_MODEL:-hgf_3level}"
+
 # =============================================================================
 # Verify GPU
 # =============================================================================
@@ -186,6 +191,7 @@ echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Tight omega3:   ${TIGHT_OMEGA3}"
 echo "Laplace only:   ${LAPLACE_ONLY}"
 echo "N/group override: ${N_PER_GROUP_OVERRIDES:-(use config grid)}"
+echo "Bench model:    ${BENCH_MODEL}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -217,6 +223,7 @@ python scripts/03_pre_analysis/03_run_power_iteration.py \
     --fit-tune 500 \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
+    --benchmark-model "${BENCH_MODEL}" \
     ${_LAPLACE_FLAG} \
     ${_TIGHT_OMEGA3_FLAG} \
     ${_LAPLACE_ONLY_FLAG} \

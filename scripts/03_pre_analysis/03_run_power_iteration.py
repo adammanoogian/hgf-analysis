@@ -257,6 +257,18 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--benchmark-model",
+        type=str,
+        choices=["hgf_2level", "hgf_3level"],
+        default="hgf_3level",
+        help=(
+            "HGF model variant for the --benchmark path. Defaults to "
+            "hgf_3level for back-compat with Phase 14/21 benchmark history. "
+            "Use --benchmark-model hgf_2level to fill the 2-level NUTS gap "
+            "in docs/CAPABILITY_MAP.md. Has no effect outside --benchmark."
+        ),
+    )
+    parser.add_argument(
         "--enable-x64",
         action="store_true",
         default=False,
@@ -1214,7 +1226,7 @@ def _run_benchmark(
     # window adaptation and we get a real cold-vs-warm comparison).
     _cold_return = fit_batch_hierarchical(
         sim_warm,
-        "hgf_3level",
+        args.benchmark_model,
         n_chains=args.fit_chains,
         n_draws=args.fit_draws,
         n_tune=args.fit_tune,
@@ -1260,7 +1272,7 @@ def _run_benchmark(
     # and warm re-ran warmup, not because the XLA cache was missing).
     fit_batch_hierarchical(
         sim_warm,
-        "hgf_3level",
+        args.benchmark_model,
         n_chains=args.fit_chains,
         n_draws=args.fit_draws,
         n_tune=args.fit_tune,
