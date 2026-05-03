@@ -1,0 +1,39 @@
+
+============================================================
+Phase 18 PAT-RL Foundation Smoke Test (CPU)
+============================================================
+Job ID:    55139039
+Node:      m3s110
+Partition: comp (CPU only)
+MCMC:      tune=500 draws=500 N=40
+Level:     2
+Seed:      42
+JAX cache: /scratch/fc37/aman0087/.jax_cache_cpu/patrl/shared
+Start:     Sun May  3 05:54:48 PM AEST 2026
+============================================================
+
+JAX devices: [CpuDevice(id=0)]
+jax_enable_x64 (pre-run): False
+
+============================================================
+PAT-RL foundation smoke — Phase 18/19/20
+============================================================
+  level=2  n_per_phenotype=40
+  phenotypes=all (4)
+  total_agents=160
+  n_tune=500  n_draws=500  seed=42
+  fit_method=laplace
+  response_model=model_a
+
+WROTE 161 CSVs at models/patrl_smoke/55139039
+  fit_method:  laplace
+  Total size: 4344.2 KB
+  Wall time:  54.2 s
+
+============================================================
+PAT-RL SMOKE PASSED (level=2, tune=500, draws=500)
+End:       Sun May  3 05:57:59 PM AEST 2026
+============================================================
+
+Pushing PAT-RL smoke results to git...
+No new files to push
