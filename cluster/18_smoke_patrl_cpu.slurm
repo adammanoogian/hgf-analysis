@@ -139,6 +139,15 @@ echo "============================================================"
 
 # =============================================================================
 # Auto-push logs and results to git (mirrors 16_smoke_test_cpu.slurm)
+#
+# Robustness notes:
+# - Stage the entire output directory rather than fixed extensions, so new
+#   artifact types (json, png, etc.) are not silently dropped.
+# - `git pull --rebase --autostash` before push handles the non-fast-forward
+#   race when multiple jobs finish near-simultaneously.
+# - git stderr is NOT suppressed so real failures show up in the .out log.
+# - .gitignore must whitelist models/patrl_smoke/ and logs/patrl18smoke_*
+#   for staging to work — Phase 26 made models/ and logs/ ignored by default.
 # =============================================================================
 echo ""
 echo "Pushing PAT-RL smoke results to git..."
@@ -146,21 +155,22 @@ _LOG_OUT="logs/patrl18smoke_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/patrl18smoke_${SLURM_JOB_ID}.err"
 _OUT_DIR="models/patrl_smoke/${SLURM_JOB_ID}"
 
-# models/ is git-tracked via .gitkeep (unlike output/ which was gitignored).
-# Stage CSVs AND .nc InferenceData files so
-# tests/scientific/test_vbl06_laplace_vs_nuts.py can consume the outputs
-# locally via git pull (no scp required).
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add "${_OUT_DIR}"/*.csv "${_OUT_DIR}"/*.nc 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_LOG_OUT}" "${_LOG_ERR}"
+git add "${_OUT_DIR}/"
+if ! git diff --cached --quiet; then
     git commit -m "smoke patrl cpu level=${PRL_PATRL_SMOKE_LEVEL} tune=${PRL_PATRL_SMOKE_TUNE} draws=${PRL_PATRL_SMOKE_DRAWS} method=${PRL_PATRL_SMOKE_METHOD} (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        exit $EXIT_CODE
+    }
+    if git push origin main; then
         echo "Pushed PAT-RL smoke results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 exit $EXIT_CODE

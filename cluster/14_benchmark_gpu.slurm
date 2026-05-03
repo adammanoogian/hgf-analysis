@@ -235,24 +235,35 @@ echo "============================================================"
 # =============================================================================
 # Auto-push logs and results to git (mirrors 18_smoke_patrl_cpu.slurm)
 # Runs regardless of EXIT_CODE so failed bench still uploads its .err log.
+#
+# Robustness: pull --rebase before push to survive non-fast-forward races
+# when parallel cluster jobs auto-push near-simultaneously. git stderr is
+# NOT suppressed so real failures show up in the .out log. .planning/STATE.md
+# add is intentionally allowed to silently no-op (.planning/ is gitignored
+# by Phase 26 design — local-only audit trail).
 # =============================================================================
 echo ""
 echo "Pushing benchmark results to git..."
 _LOG_OUT="logs/bench14_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/bench14_${SLURM_JOB_ID}.err"
 
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add models/power/benchmark_batched.json 2>/dev/null
-git add .planning/STATE.md 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_LOG_OUT}" "${_LOG_ERR}"
+git add models/power/benchmark_batched.json
+git add .planning/STATE.md 2>/dev/null  # gitignored by design — silent skip OK
+if ! git diff --cached --quiet; then
     git commit -m "bench phase14 gpu sampler=${SAMPLER} (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        exit $EXIT_CODE
+    }
+    if git push origin main; then
         echo "Pushed benchmark results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 exit $EXIT_CODE
