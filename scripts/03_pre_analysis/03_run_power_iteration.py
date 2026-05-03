@@ -269,6 +269,19 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--benchmark-out-suffix",
+        type=str,
+        default="",
+        help=(
+            "Suffix appended to benchmark_batched.json (before extension), "
+            "so concurrent --benchmark jobs writing different (model, grid) "
+            "configurations don't clobber each other's results. Example: "
+            "--benchmark-out-suffix '_hgf_2level' produces "
+            "benchmark_batched_hgf_2level.json. Empty/omitted = use the "
+            "canonical filename (back-compat with downstream consumers)."
+        ),
+    )
+    parser.add_argument(
         "--enable-x64",
         action="store_true",
         default=False,
@@ -1382,14 +1395,17 @@ def _run_benchmark(
     # Variant 4: when chunked, encode chunk in the filename so SLURM-array
     # tasks don't clobber each other.  Un-chunked path keeps the original
     # filename for backwards compatibility with downstream consumers.
+    # Capability-map: --benchmark-out-suffix lets concurrent jobs writing
+    # different (model, grid) configurations differentiate without colliding.
+    _out_suffix = args.benchmark_out_suffix or ""
     if args.participant_chunk_count > 1:
         _chunk_tag = (
             f"_chunk_{args.participant_chunk_id:02d}"
             f"_of_{args.participant_chunk_count:02d}"
         )
-        bench_path = output_dir / f"benchmark_batched{_chunk_tag}.json"
+        bench_path = output_dir / f"benchmark_batched{_chunk_tag}{_out_suffix}.json"
     else:
-        bench_path = output_dir / "benchmark_batched.json"
+        bench_path = output_dir / f"benchmark_batched{_out_suffix}.json"
     with open(bench_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nBenchmark saved to: {bench_path}")

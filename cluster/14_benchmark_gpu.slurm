@@ -175,6 +175,12 @@ fi
 # preserves Phase 14/21 benchmark history.
 export BENCH_MODEL="${BENCH_MODEL:-hgf_3level}"
 
+# Capability-map: output-filename suffix so concurrent jobs writing
+# different (model, grid) configurations don't clobber each other on
+# models/power/benchmark_batched.json. Default empty = canonical filename
+# (back-compat). Example: BENCH_OUT_SUFFIX=_hgf_2level → benchmark_batched_hgf_2level.json.
+export BENCH_OUT_SUFFIX="${BENCH_OUT_SUFFIX:-}"
+
 # =============================================================================
 # Verify GPU
 # =============================================================================
@@ -192,6 +198,7 @@ echo "Tight omega3:   ${TIGHT_OMEGA3}"
 echo "Laplace only:   ${LAPLACE_ONLY}"
 echo "N/group override: ${N_PER_GROUP_OVERRIDES:-(use config grid)}"
 echo "Bench model:    ${BENCH_MODEL}"
+echo "Out suffix:     ${BENCH_OUT_SUFFIX:-(none)}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -224,6 +231,7 @@ python scripts/03_pre_analysis/03_run_power_iteration.py \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
     --benchmark-model "${BENCH_MODEL}" \
+    --benchmark-out-suffix "${BENCH_OUT_SUFFIX}" \
     ${_LAPLACE_FLAG} \
     ${_TIGHT_OMEGA3_FLAG} \
     ${_LAPLACE_ONLY_FLAG} \
@@ -267,7 +275,8 @@ _LOG_OUT="logs/bench14_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/bench14_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add models/power/benchmark_batched.json
+# Glob picks up suffixed and chunked variants too (capability-map BENCH_OUT_SUFFIX).
+git add models/power/benchmark_batched*.json
 git add .planning/STATE.md 2>/dev/null  # gitignored by design — silent skip OK
 if ! git diff --cached --quiet; then
     git commit -m "bench phase14 gpu sampler=${SAMPLER} (job ${SLURM_JOB_ID})"
