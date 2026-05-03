@@ -243,6 +243,20 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--n-per-group-overrides",
+        type=str,
+        default=None,
+        help=(
+            "Comma-separated cohort-size override that REPLACES "
+            "power.n_per_group_grid from the YAML config for both Phase 1 "
+            "warmup (uses max of override) and Phase 2 measurement loop. "
+            "Example: --n-per-group-overrides '5,10,17,25' produces a "
+            "P_total sweep at [n_groups*n_sessions]*[5,10,17,25]. Used "
+            "for cliff-edge characterization (capability-map work). Empty "
+            "or omitted = use config grid unchanged."
+        ),
+    )
+    parser.add_argument(
         "--enable-x64",
         action="store_true",
         default=False,
@@ -1890,6 +1904,28 @@ def main() -> None:
 
     base_config = load_config()
     power_config = load_power_config()
+
+    if args.n_per_group_overrides is not None:
+        from dataclasses import replace as _dc_replace  # noqa: PLC0415
+        _override_grid = [
+            int(v.strip()) for v in args.n_per_group_overrides.split(",") if v.strip()
+        ]
+        if not _override_grid:
+            raise ValueError(
+                f"--n-per-group-overrides parsed to empty list: "
+                f"{args.n_per_group_overrides!r}"
+            )
+        if any(v <= 0 for v in _override_grid):
+            raise ValueError(
+                f"--n-per-group-overrides must be positive integers, got "
+                f"{_override_grid}"
+            )
+        print(
+            f"[capability-map] Overriding power_config.n_per_group_grid: "
+            f"{list(power_config.n_per_group_grid)} -> {_override_grid}",
+            flush=True,
+        )
+        power_config = _dc_replace(power_config, n_per_group_grid=_override_grid)
 
     if args.p_scan is not None:
         output_dir = (

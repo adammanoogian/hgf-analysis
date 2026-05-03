@@ -160,6 +160,16 @@ if [[ "${LAPLACE_ONLY}" == "1" ]]; then
     _LAPLACE_ONLY_FLAG="--laplace-only"
 fi
 
+# Capability-map override: replace power.n_per_group_grid for cliff-edge sweep.
+# Comma-separated ints, e.g. N_PER_GROUP_OVERRIDES="8,12,17,25". Phase 1 warmup
+# uses MAX of override; Phase 2 measurement loop walks all values. Empty/unset
+# = use the YAML config grid unchanged. See memory project_end_goal_capability_map.md.
+export N_PER_GROUP_OVERRIDES="${N_PER_GROUP_OVERRIDES:-}"
+_NPG_OVERRIDE_FLAG=""
+if [[ -n "${N_PER_GROUP_OVERRIDES}" ]]; then
+    _NPG_OVERRIDE_FLAG="--n-per-group-overrides ${N_PER_GROUP_OVERRIDES}"
+fi
+
 # =============================================================================
 # Verify GPU
 # =============================================================================
@@ -175,6 +185,7 @@ echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Tight omega3:   ${TIGHT_OMEGA3}"
 echo "Laplace only:   ${LAPLACE_ONLY}"
+echo "N/group override: ${N_PER_GROUP_OVERRIDES:-(use config grid)}"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
@@ -208,7 +219,8 @@ python scripts/03_pre_analysis/03_run_power_iteration.py \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
     ${_LAPLACE_FLAG} \
     ${_TIGHT_OMEGA3_FLAG} \
-    ${_LAPLACE_ONLY_FLAG}
+    ${_LAPLACE_ONLY_FLAG} \
+    ${_NPG_OVERRIDE_FLAG}
 
 EXIT_CODE=$?
 
