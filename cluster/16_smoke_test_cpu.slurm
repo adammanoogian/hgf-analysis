@@ -195,17 +195,22 @@ echo "Pushing CPU smoke test results to git..."
 _SMOKE_LOG_OUT="logs/smoke16cpu_${SLURM_JOB_ID}.out"
 _SMOKE_LOG_ERR="logs/smoke16cpu_${SLURM_JOB_ID}.err"
 
-git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_ALL_RESULT_JSONS[@]}" 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_ALL_RESULT_JSONS[@]}"
+if ! git diff --cached --quiet; then
     _MODEL_LIST_COMMIT="${PRL_SMOKE_MODELS// /+}"
     git commit -m "smoke cpu ${PRECISION} ${_MODEL_LIST_COMMIT} ${MCMC_SUFFIX} κ-frozen (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        exit $EXIT_CODE
+    }
+    if git push origin main; then
         echo "Pushed CPU smoke test results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 exit $EXIT_CODE

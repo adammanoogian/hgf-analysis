@@ -83,11 +83,27 @@ def test_logs_dir_present_and_keepfile() -> None:
     assert (logs / ".gitkeep").is_file(), "logs/.gitkeep missing"
 
 
-def test_gitignore_has_logs_line() -> None:
-    """.gitignore must ignore logs/ so SLURM/dev logs don't leak upstream."""
-    text = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
-    assert any(line.strip() == "logs/" for line in text.splitlines()), (
-        ".gitignore missing exact line: logs/"
+def test_gitignore_logs_dir_default_ignored() -> None:
+    """Non-whitelisted files under logs/ must be gitignored by default.
+
+    Phase 21 (commit 21f9550) replaced the bare ``logs/`` rule with
+    ``logs/*`` plus narrow whitelists (``!logs/.gitkeep``, ``!logs/phase25/``,
+    SLURM-prefix exceptions like ``!logs/bench14_*``) so that SLURM-run
+    artefacts auto-push while ad-hoc dev logs stay untracked. This test
+    asserts the behaviour rather than a specific .gitignore line, so the
+    whitelist set can evolve without lockstep test edits.
+    """
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", "logs/ad_hoc_dev_scratch.log"],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+    )
+    assert result.returncode == 0, (
+        "logs/ad_hoc_dev_scratch.log was NOT gitignored.\n"
+        "logs/ contents must be ignored by default so SLURM/dev logs don't "
+        "leak upstream. Check that .gitignore has 'logs/*' (or equivalent)."
     )
 
 

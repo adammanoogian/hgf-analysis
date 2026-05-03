@@ -170,18 +170,23 @@ echo "Pushing benchmark results to git..."
 _LOG_OUT="logs/bench14cpu_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/bench14cpu_${SLURM_JOB_ID}.err"
 
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add models/power/benchmark_batched.json 2>/dev/null
-git add .planning/STATE.md 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_LOG_OUT}" "${_LOG_ERR}"
+git add models/power/benchmark_batched.json
+git add .planning/STATE.md 2>/dev/null  # gitignored by design — silent skip OK
+if ! git diff --cached --quiet; then
     git commit -m "bench phase14 cpu sampler=${SAMPLER} mtd=${MAX_TREE_DEPTH} (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        exit $EXIT_CODE
+    }
+    if git push origin main; then
         echo "Pushed benchmark results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 exit $EXIT_CODE

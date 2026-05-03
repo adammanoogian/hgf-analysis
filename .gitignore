@@ -6,6 +6,9 @@ logs/*
 !logs/phase25/
 !logs/patrl18smoke_*
 !logs/bench14_*
+!logs/bench14cpu_*
+!logs/smoke16_*
+!logs/smoke16cpu_*
 
 # CCDS canonical (Phase 26 Wave 3): models/ contents gitignored (heavy
 # artifacts); tracked via .gitkeep markers. reports/ is tracked (small

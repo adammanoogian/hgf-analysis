@@ -979,16 +979,27 @@ def main() -> int:
             output_dir=output_dir,
         )
 
-        # 7. Write secondary idata netcdf for 'both' mode.
-        if method == "both" and secondary is not None:
+        # 7. Write idata netcdf for whichever fit(s) actually ran. Required
+        # by tests/scientific/test_vbl06_laplace_vs_nuts.py and downstream
+        # BMS/PEB consumers — emit unconditionally per method, not only in
+        # 'both' mode.
+        laplace_idata = primary if method != "blackjax" else None
+        nuts_idata = (
+            primary if method == "blackjax"
+            else (secondary if method == "both" else None)
+        )
+        if laplace_idata is not None:
             lap_nc = output_dir / "idata_laplace.nc"
-            nuts_nc = output_dir / "idata_nuts.nc"
-            primary.to_netcdf(str(lap_nc))  # type: ignore[attr-defined]
-            secondary.to_netcdf(str(nuts_nc))  # type: ignore[attr-defined]
+            laplace_idata.to_netcdf(str(lap_nc))  # type: ignore[attr-defined]
             logger.info("Wrote idata_laplace.nc: %s", lap_nc)
+        if nuts_idata is not None:
+            nuts_nc = output_dir / "idata_nuts.nc"
+            nuts_idata.to_netcdf(str(nuts_nc))  # type: ignore[attr-defined]
             logger.info("Wrote idata_nuts.nc:    %s", nuts_nc)
 
-            # Optional VBL-06 comparison (lazy import so absence is non-fatal).
+        # Optional VBL-06 comparison: only meaningful when both posteriors
+        # are present (method == "both").
+        if method == "both" and laplace_idata is not None and nuts_idata is not None:
             try:
                 from validation.vbl06_laplace_vs_nuts import (  # noqa: PLC0415
                     _apply_hard_gates,
@@ -1000,7 +1011,7 @@ def main() -> int:
                     "skipping Laplace-vs-NUTS comparison."
                 )
             else:
-                diff = compare_posteriors(primary, secondary)
+                diff = compare_posteriors(laplace_idata, nuts_idata)
                 diff_path = output_dir / "laplace_vs_nuts_diff.csv"
                 diff.to_csv(diff_path, index=False)
                 logger.info("Wrote Laplace-vs-NUTS diff to %s", diff_path)

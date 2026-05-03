@@ -162,17 +162,22 @@ echo "Pushing reproduction results to git..."
 _LOG_OUT="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.err"
 
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add "$RESULTS_JSON" 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_LOG_OUT}" "${_LOG_ERR}"
+git add "$RESULTS_JSON" 2>/dev/null  # may be missing if reproduction failed early
+if ! git diff --cached --quiet; then
     git commit -m "bench phase25-03 gpu elk-coordinated-turn (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        exit $EXIT_CODE
+    }
+    if git push origin main; then
         echo "Pushed reproduction results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 exit $EXIT_CODE

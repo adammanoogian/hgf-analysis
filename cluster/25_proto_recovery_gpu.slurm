@@ -199,18 +199,24 @@ echo "Pushing recovery results to git..."
 _LOG_OUT="${RESULTS_DIR}/recovery_${SLURM_JOB_ID}.out"
 _LOG_ERR="${RESULTS_DIR}/recovery_${SLURM_JOB_ID}.err"
 
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add "${SEQ_NC}" "${PRO_NC}" 2>/dev/null
-git add "${RESULTS_DIR}/proto_grad_check.log" 2>/dev/null
-if ! git diff --cached --quiet 2>/dev/null; then
+git add "${_LOG_OUT}" "${_LOG_ERR}"
+git add "${SEQ_NC}" "${PRO_NC}" 2>/dev/null  # may be missing if backend failed
+git add "${RESULTS_DIR}/proto_grad_check.log" 2>/dev/null  # may be missing
+if ! git diff --cached --quiet; then
     git commit -m "bench phase25-05 gpu nuts-recovery (job ${SLURM_JOB_ID})"
-    if git push origin main 2>/dev/null; then
+    git pull --rebase --autostash origin main || {
+        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
+        git rebase --abort 2>/dev/null
+        if [[ $SEQ_EXIT -ne 0 ]]; then exit ${SEQ_EXIT}; fi
+        exit ${PRO_EXIT}
+    }
+    if git push origin main; then
         echo "Pushed recovery results to origin/main"
     else
-        echo "WARNING: git push failed — results committed locally only"
+        echo "WARNING: git push failed — results committed locally only on $(hostname)"
     fi
 else
-    echo "No new files to push"
+    echo "No new files to push (check .gitignore if outputs exist on disk)"
 fi
 
 # Overall exit: nonzero if either backend failed
