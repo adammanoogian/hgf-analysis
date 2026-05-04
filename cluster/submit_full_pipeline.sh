@@ -81,11 +81,12 @@ echo "============================================================"
 # Load miniforge3 for simulation step
 module load miniforge3
 
-# Activate ds_env (shared env across projects)
+# Activate ds_env (or override via CONDA_ENV=ds_env_v10 at sbatch --export time)
 _PROJECT="${PROJECT:-fc37}"
-conda activate ds_env 2>/dev/null || \
-conda activate /scratch/${_PROJECT}/${USER}/conda/envs/ds_env 2>/dev/null || {
-    echo "ERROR: Failed to activate ds_env conda environment"
+_CONDA_ENV="${CONDA_ENV:-ds_env}"
+conda activate "${_CONDA_ENV}" 2>/dev/null || \
+conda activate /scratch/${_PROJECT}/${USER}/conda/envs/"${_CONDA_ENV}" 2>/dev/null || {
+    echo "ERROR: Failed to activate ${_CONDA_ENV} conda environment"
     exit 1
 }
 

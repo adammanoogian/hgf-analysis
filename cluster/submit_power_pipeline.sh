@@ -106,9 +106,10 @@ if [[ "$SETUP" == true ]]; then
     echo "--- Activate ds_env + pip install ---"
     module load miniforge3
     _PROJECT="${PROJECT:-fc37}"
-    conda activate ds_env 2>/dev/null || \
-    conda activate /scratch/${_PROJECT}/${USER}/conda/envs/ds_env 2>/dev/null || {
-        echo "ERROR: ds_env not found. Create it from physics_dev/environment.yml first."
+    _CONDA_ENV="${CONDA_ENV:-ds_env}"
+    conda activate "${_CONDA_ENV}" 2>/dev/null || \
+    conda activate /scratch/${_PROJECT}/${USER}/conda/envs/"${_CONDA_ENV}" 2>/dev/null || {
+        echo "ERROR: Failed to activate ${_CONDA_ENV} conda environment"
         exit 1
     }
     pip install -e . --quiet
