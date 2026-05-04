@@ -171,7 +171,9 @@ _LOG_OUT="logs/bench14cpu_${SLURM_JOB_ID}.out"
 _LOG_ERR="logs/bench14cpu_${SLURM_JOB_ID}.err"
 
 git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add models/power/benchmark_batched.json
+# Silent no-op when sampling never produced output (e.g. crash mid-warmup) —
+# the .out / .err logs are still pushed below so the failure is visible.
+git add models/power/benchmark_batched.json 2>/dev/null || true
 git add .planning/STATE.md 2>/dev/null  # gitignored by design — silent skip OK
 if ! git diff --cached --quiet; then
     git commit -m "bench phase14 cpu sampler=${SAMPLER} mtd=${MAX_TREE_DEPTH} (job ${SLURM_JOB_ID})"

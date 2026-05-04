@@ -88,21 +88,32 @@ would close a meaningful question.
 
 ## Planned runs
 
-### A. Currently in flight (overnight 2026-05-04)
+> **Pre-flight note (post-`b737fe6`).** Every BlackJAX NUTS run since commit
+> `3995412` (Apr 2026) crashed at the post-warmup boundary on a duplicate
+> `max_num_doublings` kwarg. Fix landed in `b737fe6`. Job 55143670 actually
+> completed window_adaptation but never sampled. Job 55143456 timed out
+> mid-warmup. The next submit will be the first true measurement of the
+> 3-level / 2-level NUTS cliff in weeks — treat earlier "P_total>50 doesn't
+> finish" rows as pre-fix data points whose root cause was the kwarg bug,
+> not the cliff.
+
+### A. Re-submit — 3-level NUTS cliff sweep
 
 ```bash
-sbatch --time=08:00:00 \
+sbatch --time=24:00:00 \
   --export=ALL,N_PER_GROUP_OVERRIDES="5,10,17,25,33" \
   cluster/14_benchmark_gpu.slurm
 ```
 Walks `pick_best_cue` 3-level NUTS at P_total ∈ {30, 60, 102, 150, 198}.
-Expected to populate 5 PENDING rows above. Linear extrapolation from the
-P_total=50 anchor predicts ~15 min warmup + ~30 min total.
+Walltime bumped from 8h → 24h: empirically warmup at n/grp=5 took >8h on
+A100 (job 55143456 TIMEOUT) and >7.85h on L40S (job 55143670). The
+P_total=50 anchor's "~15 min warmup" was a pre-cliff regime that no longer
+extrapolates.
 
 ### B. Queued for after A — 2-level NUTS sweep at the same P grid
 
 ```bash
-sbatch --time=08:00:00 \
+sbatch --time=24:00:00 \
   --export=ALL,BENCH_MODEL=hgf_2level,N_PER_GROUP_OVERRIDES="5,10,17,25,33,50" \
   cluster/14_benchmark_gpu.slurm
 ```
