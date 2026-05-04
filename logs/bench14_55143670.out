@@ -1,0 +1,102 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 13.0
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 14 GPU Benchmark
+============================================================
+Job ID:  55143670
+Node:    m3g118
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/shared
+Sampler:  blackjax
+Max tree depth: 10
+Laplace warmup: 0
+Tight omega3:   0
+Laplace only:   0
+N/group override: 5
+Bench model:    hgf_2level
+Out suffix:     _hgf_2level
+Start:   Mon May  4 05:32:17 AM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+Running batched hierarchical benchmark...
+
+[capability-map] Overriding power_config.n_per_group_grid: [10, 15, 20, 25, 30, 40, 50] -> [5]
+============================================================
+BENCHMARK MODE (batched hierarchical path)
+============================================================
+
+JAX devices (1 total, 1 GPU):
+  cuda:0
+
+  GPU   Name                    VRAM Used/Total   Util   Temp
+  ----- -------------------- ------------------ ------ ------
+  0     NVIDIA L40S             439/46068  MB    0%   31C
+
+  ptxas: Cuda compilation tools, release 12.8, V12.8.93
+
+  XLA/JAX environment:
+    JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_gpu/shared
+    JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES = 0
+    JAX_LOG_COMPILES = (unset)
+    JAX_PLATFORMS = (unset)
+    XLA_FLAGS = --xla_gpu_dump_autotune_results_to=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb --xla_gpu_load_autotune_results_from=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb
+    XLA_PYTHON_CLIENT_PREALLOCATE = false
+    XLA_PYTHON_CLIENT_MEM_FRACTION = (unset)
+    CUDA_VISIBLE_DEVICES = 0
+    JAX_ENABLE_X64 = (unset)
+
+  JAX cache: 1708 files, 10.77 MB in /scratch/fc37/aman0087/.jax_cache_gpu/shared
+
+  GPUs available:  1
+  Fit chains:      4
+  Chain method:    vectorized (jit_model_args=True)
+
+Phase 1: JAX compilation cache test (BENCH-05)...
+  Building production-shape cohort for JIT warm-up (N=max(n_per_group_grid), args.fit_chains chains, args.fit_tune tune / args.fit_draws draws)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.1s. Running JAX vmap…
+JAX vmap completed in 2.5s.
+[fit_batch_hierarchical] entered: model=hgf_2level sampler=blackjax n_chains=4 n_tune=500 n_draws=500 target_accept=0.9 warmup_skipped=False sim_df_rows=12600
+[fit_batch_hierarchical t=1.0s] cohort assembled: P=30 n_trials=420 (BlackJAX path)
+[fit_batch_hierarchical t=1.0s] building closure-based logdensity (warmup-only, no JIT yet)
+[fit_batch_hierarchical t=1.0s] logdensity built in 0.0s
+[fit_batch_hierarchical t=1.0s] dispatching to _run_blackjax_nuts
+[hierarchical] _run_blackjax_nuts entered: model=hgf_2level P=30 n_chains=4 n_tune=500 n_draws=500 warmup_skipped=False
+[hierarchical t=0.0s] starting window_adaptation (num_steps=500, target_accept=0.9)
+[hierarchical t=28270.4s] window_adaptation complete in 28270.3s
+[diag warmup] n_steps=500 n_chains=4 P=30 elapsed=28270.3s
+[diag warmup] tree_depth: mean=9.91 median=10 p95=10 max=10 saturated_frac=0.984
+[diag warmup] leapfrog_per_step: mean=1007.9 median=1023 p95=1023 max=1023 total=503972
+[diag warmup] derived: 56.10ms per leapfrog (across all chains)
+[diag warmup] accept_rate: mean=0.859 final50=0.850
+[diag warmup] divergent: count=2 rate=0.0040
+[diag warmup] energy: mean=12682.00 std=73.97 |dE|_mean=9.645 |dE|_max=269.77
+[diag warmup window=init steps=0-75] depth_mean=9.37 depth_max=10 saturated=0.893 accept=0.751 div=2
+[diag warmup window=slow1 steps=75-100] depth_mean=10.00 depth_max=10 saturated=1.000 accept=0.856 div=0
+[diag warmup window=slow2 steps=100-150] depth_mean=10.00 depth_max=10 saturated=1.000 accept=0.917 div=0
+[diag warmup window=slow3 steps=150-250] depth_mean=10.00 depth_max=10 saturated=1.000 accept=0.885 div=0
+[diag warmup window=slow4 steps=250-450] depth_mean=10.00 depth_max=10 saturated=1.000 accept=0.873 div=0
+[diag warmup window=term steps=450-500] depth_mean=10.00 depth_max=10 saturated=1.000 accept=0.850 div=0
+[diag warmup] adapted step_size: 7.245e-10
+[diag warmup] inverse_mass_matrix: size=90 min=2.439e-05 max=2.439e-05 cond=1
+[hierarchical t=28270.6s] chain strategy: use_pmap=False (n_devices=1, n_chains=4)
+[hierarchical t=28270.6s] building sample loop (traced-arg path, log_every=0)
+[hierarchical t=28270.6s] sample loop built in 0.0s
+[hierarchical t=28270.6s] sample_loop dispatch (compile+sample begins)
+
+============================================================
+BENCHMARK FAILED (exit code: 1)
+Check: logs/bench14_55143670.err
+
+End: Mon May  4 01:25:00 PM AEST 2026
+============================================================
+
+Pushing benchmark results to git...
