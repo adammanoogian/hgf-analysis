@@ -39,7 +39,7 @@ reparam, prior tightening) get their own rows tagged `[mitigated]`.
 
 | Model | Sampler | P_total | Status | Walltime | Evidence | Diagnostics |
 |---|---|---|---|---|---|---|
-| 3-level | NUTS | 30 (n/grp=5) | 🔲 PENDING | — | overnight job 2026-05-04 (commit `136f6de`) | — |
+| 3-level | NUTS | 30 (n/grp=5) | ❌ TIMEOUT | >8h | job 55143456 (A100 80GB, commit `cc9ee03`) | window_adaptation never completed in 8h walltime — same conditioning failure as P=300 row, just slower to manifest |
 | 3-level | NUTS | 60 (n/grp=10) | 🔲 PENDING | — | overnight job 2026-05-04 | — |
 | 3-level | NUTS | 102 (n/grp=17) | 🔲 PENDING | — | overnight job 2026-05-04 | — |
 | 3-level | NUTS | 150 (n/grp=25) | 🔲 PENDING | — | overnight job 2026-05-04 | — |

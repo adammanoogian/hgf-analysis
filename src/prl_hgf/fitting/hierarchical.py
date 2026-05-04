@@ -1572,11 +1572,12 @@ def _run_blackjax_nuts(
 
         return positions_dict, stats_dict, n_chains, warmup_params
 
-    # Legacy fallback: closure-based chain runners
+    # Legacy fallback: closure-based chain runners.
+    # BlackJAX >=1.x returns ``max_num_doublings`` inside ``warmup_params``; merge
+    # so our explicit value wins instead of triggering a duplicate-kwarg TypeError.
     nuts = blackjax.nuts(
         logdensity_fn,
-        max_num_doublings=max_tree_depth,
-        **warmup_params,
+        **{**warmup_params, "max_num_doublings": max_tree_depth},
     )
 
     # Build warmup_state if it wasn't created by window_adaptation
@@ -1934,10 +1935,11 @@ def _build_sample_loop(
                     )
                 return prior_lp + likelihood_lp
 
+            # BlackJAX >=1.x duplicates ``max_num_doublings`` inside warmup_params;
+            # merge so our explicit value wins (see legacy-fallback site for context).
             nuts = blackjax.nuts(
                 logdensity_fn,
-                max_num_doublings=max_num_doublings,
-                **warmup_params,
+                **{**warmup_params, "max_num_doublings": max_num_doublings},
             )
             # Build initial state INSIDE JIT — value_and_grad uses traced data
             initial_state = nuts.init(init_position)
@@ -2020,10 +2022,11 @@ def _build_sample_loop(
                 )
             return prior_lp + likelihood_lp
 
+        # BlackJAX >=1.x duplicates ``max_num_doublings`` inside warmup_params;
+        # merge so our explicit value wins (see legacy-fallback site for context).
         nuts = blackjax.nuts(
             logdensity_fn,
-            max_num_doublings=max_num_doublings,
-            **warmup_params,
+            **{**warmup_params, "max_num_doublings": max_num_doublings},
         )
         # Build initial state INSIDE JIT — value_and_grad uses traced data
         initial_state = nuts.init(init_position)
