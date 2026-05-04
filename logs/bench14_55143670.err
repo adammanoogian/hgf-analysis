@@ -16,3 +16,6 @@ Traceback (most recent call last):
   File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/fitting/hierarchical.py", line 2023, in sample_loop_vmap
     nuts = blackjax.nuts(
 TypeError: GenerateSamplingAPI(differentiable=<function as_top_level_api at 0x7fb718ac3c70>, init=<function init at 0x7fb718a2f400>, build_kernel=<function build_kernel at 0x7fb718ac31c0>) got multiple values for keyword argument 'max_num_doublings'
+fatal: pathspec 'models/power/benchmark_batched*.json' did not match any files
+From github.com:adammanoogian/psilocybin-prl-analyses
+ * branch            main       -> FETCH_HEAD
