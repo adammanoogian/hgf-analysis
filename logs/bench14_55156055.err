@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2095, in <module>
+    main()
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2019, in main
+    _run_benchmark(base_config, power_config, output_dir, args)
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 1336, in _run_benchmark
+    run_sbf_iteration(
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/power/iteration.py", line 1037, in run_sbf_iteration
+    pids = idata_3.posterior.coords["participant"].values.tolist()
+AttributeError: 'tuple' object has no attribute 'posterior'

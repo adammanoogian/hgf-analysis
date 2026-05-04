@@ -1,0 +1,199 @@
+Added ptxas to PATH: /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/bin
+
+=== CUDA Environment Check ===
+Driver CUDA version: 13.0
+ptxas CUDA version:  12.8
+OK: ptxas version <= driver version (XLA parallel compilation enabled)
+
+============================================================
+Phase 14 GPU Benchmark
+============================================================
+Job ID:  55156055
+Node:    m3t100
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/shared
+Sampler:  blackjax
+Fit chains: 4
+Precision:  fp32  (JAX_X64=0)
+Max tree depth: 10
+Laplace warmup: 1
+Tight omega3:   0
+Laplace only:   0
+N/group override: 5
+Bench model:    hgf_2level
+Out suffix:     _hgf_2level
+Start:   Tue May  5 12:46:52 AM AEST 2026
+============================================================
+
+JAX devices: [CudaDevice(id=0)]
+GPU: cuda:0
+
+Running batched hierarchical benchmark...
+
+[capability-map] Overriding power_config.n_per_group_grid: [10, 15, 20, 25, 30, 40, 50] -> [5]
+============================================================
+BENCHMARK MODE (batched hierarchical path)
+============================================================
+
+JAX devices (1 total, 1 GPU):
+  cuda:0
+
+  GPU   Name                    VRAM Used/Total   Util   Temp
+  ----- -------------------- ------------------ ------ ------
+  0     Tesla T4                109/15360  MB    0%   27C
+
+  ptxas: Cuda compilation tools, release 12.8, V12.8.93
+
+  XLA/JAX environment:
+    JAX_COMPILATION_CACHE_DIR = /scratch/fc37/aman0087/.jax_cache_gpu/shared
+    JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES = 0
+    JAX_LOG_COMPILES = (unset)
+    JAX_PLATFORMS = (unset)
+    XLA_FLAGS = --xla_gpu_dump_autotune_results_to=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb --xla_gpu_load_autotune_results_from=/scratch/fc37/aman0087/.xla_autotune_cache/results.pb
+    XLA_PYTHON_CLIENT_PREALLOCATE = false
+    XLA_PYTHON_CLIENT_MEM_FRACTION = (unset)
+    CUDA_VISIBLE_DEVICES = 0
+    JAX_ENABLE_X64 = (unset)
+
+  JAX cache: 2384 files, 22.77 MB in /scratch/fc37/aman0087/.jax_cache_gpu/shared
+
+  GPUs available:  1
+  Fit chains:      4
+  Chain method:    vectorized (jit_model_args=True)
+
+Phase 1: JAX compilation cache test (BENCH-05)...
+  Building production-shape cohort for JIT warm-up (N=max(n_per_group_grid), args.fit_chains chains, args.fit_tune tune / args.fit_draws draws)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.1s. Running JAX vmap…
+JAX vmap completed in 1.7s.
+[fit_batch_hierarchical] entered: model=hgf_2level sampler=blackjax n_chains=4 n_tune=500 n_draws=500 target_accept=0.9 warmup_skipped=False sim_df_rows=12600
+[fit_batch_hierarchical t=1.0s] cohort assembled: P=30 n_trials=420 (BlackJAX path)
+[fit_batch_hierarchical t=1.0s] building closure-based logdensity (warmup-only, no JIT yet)
+[fit_batch_hierarchical t=1.0s] logdensity built in 0.0s
+[fit_batch_hierarchical t=1.0s] dispatching to _run_blackjax_nuts
+[hierarchical] _run_blackjax_nuts entered: model=hgf_2level P=30 n_chains=4 n_tune=500 n_draws=500 warmup_skipped=False
+[hierarchical t=0.1s] computing Laplace warmup_params (variant 2)...
+[laplace_warmup] running LBFGS (n_flat=90, max_iter=200, tol=1e-05)...
+[laplace_warmup] LBFGS done in 30.1s, final neg_logp=12882.52
+[laplace_warmup] computing Hessian diagonal (n=90 jvps)...
+[laplace_warmup] Hessian diag done in 4.1s, min=1.192e-01 max=1.042e+02 non-positive=0 non-finite=0
+[laplace_warmup] inverse_mass_matrix: size=90 min=9.594e-03 max=8.391e+00 cond=8.7e+02
+[laplace_warmup] step_size = sqrt(median(IMM)) = 0.1904
+[hierarchical t=34.5s] Laplace warmup_params computed in 34.5s — window_adaptation will be skipped
+[hierarchical t=34.5s] skipping window_adaptation (warmup_params provided)
+[hierarchical t=34.5s] chain strategy: use_pmap=False (n_devices=1, n_chains=4)
+[hierarchical t=34.5s] building sample loop (traced-arg path, log_every=0)
+[hierarchical t=34.5s] sample loop built in 0.0s
+[hierarchical t=34.5s] sample_loop dispatch (compile+sample begins)
+[hierarchical t=1402.1s] sample_loop complete in 1367.6s
+[diag sample] n_steps=500 n_chains=4 P=30 elapsed=1367.6s
+[diag sample] tree_depth: mean=4.39 median=5 p95=5 max=6 saturated_frac=0.000
+[diag sample] leapfrog_per_step: mean=20.4 median=18 p95=31 max=63 total=40819
+[diag sample] derived: 33.50ms per leapfrog (across all chains)
+[diag sample] accept_rate: mean=0.008 final50=0.002
+[diag sample] divergent: count=1028 rate=0.5140
+[diag sample] energy: mean=11956.98 std=264.64 |dE|_mean=253.787 |dE|_max=981.34
+[hierarchical t=1403.8s] post-process complete in 0.9s (traced-arg path returning)
+[fit_batch_hierarchical t=1407.0s] _run_blackjax_nuts returned in 1405.9s
+[fit_batch_hierarchical t=1407.4s] _samples_to_idata complete in 0.4s (BlackJAX path returning, total wall 1407.4s)
+  Cold JIT: 1407.36s
+  Cache delta (cold): +0 files, +0.0 MB
+[fit_batch_hierarchical] entered: model=hgf_2level sampler=blackjax n_chains=4 n_tune=500 n_draws=500 target_accept=0.9 warmup_skipped=True sim_df_rows=12600
+[fit_batch_hierarchical t=1.4s] cohort assembled: P=30 n_trials=420 (BlackJAX path)
+[fit_batch_hierarchical t=1.4s] building closure-based logdensity (warmup-only, no JIT yet)
+[fit_batch_hierarchical t=1.4s] logdensity built in 0.0s
+[fit_batch_hierarchical t=1.4s] dispatching to _run_blackjax_nuts
+[hierarchical] _run_blackjax_nuts entered: model=hgf_2level P=30 n_chains=4 n_tune=500 n_draws=500 warmup_skipped=True
+[hierarchical t=0.0s] skipping window_adaptation (warmup_params provided)
+[hierarchical t=0.0s] chain strategy: use_pmap=False (n_devices=1, n_chains=4)
+[hierarchical t=0.0s] building sample loop (traced-arg path, log_every=0)
+[hierarchical t=0.0s] sample loop built in 0.0s
+[hierarchical t=0.0s] sample_loop dispatch (compile+sample begins)
+[hierarchical t=1382.3s] sample_loop complete in 1382.3s
+[diag sample] n_steps=500 n_chains=4 P=30 elapsed=1382.3s
+[diag sample] tree_depth: mean=4.37 median=4 p95=5 max=6 saturated_frac=0.000
+[diag sample] leapfrog_per_step: mean=18.8 median=15 p95=31 max=63 total=37590
+[diag sample] derived: 36.77ms per leapfrog (across all chains)
+[diag sample] accept_rate: mean=0.009 final50=0.003
+[diag sample] divergent: count=1283 rate=0.6415
+[diag sample] energy: mean=11930.61 std=262.76 |dE|_mean=229.589 |dE|_max=952.83
+[hierarchical t=1382.7s] post-process complete in 0.0s (traced-arg path returning)
+[fit_batch_hierarchical t=1384.0s] _run_blackjax_nuts returned in 1382.7s
+[fit_batch_hierarchical t=1384.5s] _samples_to_idata complete in 0.5s (BlackJAX path returning, total wall 1384.5s)
+  Warm JIT: 1384.49s (warmup skipped via warmup_params)
+  Cache speedup: 1.0x
+  Cache delta (warm): +0 files, +0.0 MB
+
+Phase 2: Full batched iteration (BENCH-01) at max N=5 (30 participant-sessions × 2 models)...
+Collecting participant-session parameters and trial sequences…
+Collection done in 0.2s. Running JAX vmap…
+JAX vmap completed in 1.0s.
+[fit_batch_hierarchical] entered: model=hgf_3level sampler=blackjax n_chains=4 n_tune=500 n_draws=500 target_accept=0.9 warmup_skipped=False sim_df_rows=12600
+[fit_batch_hierarchical t=1.2s] cohort assembled: P=30 n_trials=420 (BlackJAX path)
+[fit_batch_hierarchical t=1.2s] building closure-based logdensity (warmup-only, no JIT yet)
+[fit_batch_hierarchical t=1.2s] logdensity built in 0.0s
+[fit_batch_hierarchical t=1.2s] dispatching to _run_blackjax_nuts
+[hierarchical] _run_blackjax_nuts entered: model=hgf_3level P=30 n_chains=4 n_tune=500 n_draws=500 warmup_skipped=False
+[hierarchical t=0.0s] computing Laplace warmup_params (variant 2)...
+[laplace_warmup] running LBFGS (n_flat=120, max_iter=200, tol=1e-05)...
+[laplace_warmup] LBFGS done in 56.0s, final neg_logp=12930.76
+[laplace_warmup] computing Hessian diagonal (n=120 jvps)...
+[laplace_warmup] Hessian diag done in 6.2s, min=1.249e-01 max=1.042e+02 non-positive=0 non-finite=0
+[laplace_warmup] inverse_mass_matrix: size=120 min=9.594e-03 max=8.006e+00 cond=8.3e+02
+[laplace_warmup] step_size = sqrt(median(IMM)) = 0.3822
+[hierarchical t=62.5s] Laplace warmup_params computed in 62.5s — window_adaptation will be skipped
+[hierarchical t=62.5s] skipping window_adaptation (warmup_params provided)
+[hierarchical t=62.5s] chain strategy: use_pmap=False (n_devices=1, n_chains=4)
+[hierarchical t=62.5s] building sample loop (traced-arg path, log_every=0)
+[hierarchical t=62.5s] sample loop built in 0.0s
+[hierarchical t=62.5s] sample_loop dispatch (compile+sample begins)
+[hierarchical t=1081.0s] sample_loop complete in 1018.5s
+[diag sample] n_steps=500 n_chains=4 P=30 elapsed=1018.5s
+[diag sample] tree_depth: mean=3.16 median=3 p95=4 max=5 saturated_frac=0.000
+[diag sample] leapfrog_per_step: mean=7.5 median=6 p95=15 max=31 total=15059
+[diag sample] derived: 67.63ms per leapfrog (across all chains)
+[diag sample] accept_rate: mean=0.006 final50=0.002
+[diag sample] divergent: count=1514 rate=0.7570
+[diag sample] energy: mean=12041.03 std=180.47 |dE|_mean=169.431 |dE|_max=1145.98
+[hierarchical t=1081.6s] post-process complete in 0.0s (traced-arg path returning)
+[fit_batch_hierarchical t=1082.8s] _run_blackjax_nuts returned in 1081.6s
+[fit_batch_hierarchical t=1083.2s] _samples_to_idata complete in 0.4s (BlackJAX path returning, total wall 1083.2s)
+[fit_batch_hierarchical] entered: model=hgf_2level sampler=blackjax n_chains=4 n_tune=500 n_draws=500 target_accept=0.9 warmup_skipped=False sim_df_rows=12600
+[fit_batch_hierarchical t=2.1s] cohort assembled: P=30 n_trials=420 (BlackJAX path)
+[fit_batch_hierarchical t=2.1s] building closure-based logdensity (warmup-only, no JIT yet)
+[fit_batch_hierarchical t=2.1s] logdensity built in 0.0s
+[fit_batch_hierarchical t=2.1s] dispatching to _run_blackjax_nuts
+[hierarchical] _run_blackjax_nuts entered: model=hgf_2level P=30 n_chains=4 n_tune=500 n_draws=500 warmup_skipped=False
+[hierarchical t=0.0s] computing Laplace warmup_params (variant 2)...
+[laplace_warmup] running LBFGS (n_flat=90, max_iter=200, tol=1e-05)...
+[laplace_warmup] LBFGS done in 54.2s, final neg_logp=12882.52
+[laplace_warmup] computing Hessian diagonal (n=90 jvps)...
+[laplace_warmup] Hessian diag done in 6.9s, min=1.192e-01 max=1.042e+02 non-positive=0 non-finite=0
+[laplace_warmup] inverse_mass_matrix: size=90 min=9.594e-03 max=8.391e+00 cond=8.7e+02
+[laplace_warmup] step_size = sqrt(median(IMM)) = 0.1904
+[hierarchical t=61.5s] Laplace warmup_params computed in 61.5s — window_adaptation will be skipped
+[hierarchical t=61.5s] skipping window_adaptation (warmup_params provided)
+[hierarchical t=61.5s] chain strategy: use_pmap=False (n_devices=1, n_chains=4)
+[hierarchical t=61.5s] building sample loop (traced-arg path, log_every=0)
+[hierarchical t=61.5s] sample loop built in 0.0s
+[hierarchical t=61.5s] sample_loop dispatch (compile+sample begins)
+[hierarchical t=1367.4s] sample_loop complete in 1306.0s
+[diag sample] n_steps=500 n_chains=4 P=30 elapsed=1306.0s
+[diag sample] tree_depth: mean=4.25 median=4 p95=5 max=6 saturated_frac=0.000
+[diag sample] leapfrog_per_step: mean=17.2 median=13 p95=31 max=63 total=34445
+[diag sample] derived: 37.91ms per leapfrog (across all chains)
+[diag sample] accept_rate: mean=0.008 final50=0.000
+[diag sample] divergent: count=1323 rate=0.6615
+[diag sample] energy: mean=11952.45 std=274.18 |dE|_mean=391.925 |dE|_max=677.89
+[hierarchical t=1368.1s] post-process complete in 0.0s (traced-arg path returning)
+[fit_batch_hierarchical t=1370.2s] _run_blackjax_nuts returned in 1368.1s
+[fit_batch_hierarchical t=1370.4s] _samples_to_idata complete in 0.2s (BlackJAX path returning, total wall 1370.4s)
+
+============================================================
+BENCHMARK FAILED (exit code: 1)
+Check: logs/bench14_55156055.err
+
+End: Tue May  5 02:16:39 AM AEST 2026
+============================================================
+
+Pushing benchmark results to git...
