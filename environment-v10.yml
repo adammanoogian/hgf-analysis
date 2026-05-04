@@ -1,0 +1,67 @@
+# environment-v10.yml
+# Conda environment for hgf-analysis v1.0 (Python 3.11, JAX >=0.9, BlackJAX 1.5)
+#
+# Build: mamba env create -f environment-v10.yml
+# Cluster: mamba env create -f environment-v10.yml -n ds_env_v10
+#
+# IMPORTANT — two-step pyhgf install (Strategy C — JAX 0.5+ fork required):
+#
+# 1. `mamba env create -f environment-v10.yml` installs everything except pyhgf.
+#    pyhgf 0.2.x hard-imports `jaxlib.xla_extension.PjitFunction` which was
+#    removed in JAX 0.5.x. The fork patches this single-line import.
+#    See .planning/phases/27-dependency-upgrade-chain/DEPS-02-decision.md.
+#
+# 2. Install the PyPI wheel WITHOUT dependency resolution (bypasses the stale
+#    jax<0.4.32 constraint in pyhgf 0.2.8 metadata):
+#
+#      conda run -n ds_env_v10 pip install --no-deps pyhgf==0.2.8
+#
+# 3. Apply the PjitFunction patch (one-line fix in pyhgf/typing.py):
+#
+#      conda run -n ds_env_v10 python scripts/ci/patch_pyhgf_typing.py
+#
+#    The patched Python source is also archived at vendor/pyhgf/pyhgf/typing.py.
+#
+# 4. Install cluster GPU requirements (M3/MASSIVE only):
+#
+#      conda run -n ds_env_v10 pip install -r cluster/requirements-gpu.txt
+#
+# 5. Install this repo as an editable dev package:
+#
+#      conda run -n ds_env_v10 pip install -e .
+#
+# Verification: run the probe after all steps:
+#      conda run -n ds_env_v10 python scripts/ci/probe_pyhgf_jax_compat.py
+#
+name: ds_env_v10
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - "jax>=0.9.0,<0.11"
+    - "jaxlib>=0.9.0,<0.11"
+    - "blackjax>=1.5,<2.0"
+    - "numpyro>=0.21.0,<0.22"
+    - "jaxopt>=0.8.5,<0.9"
+    - "numpy>=2.0.0,<3.0"
+    - "pymc>=5.25.1"
+    - "pandas>=2.0"
+    - "scipy>=1.10"
+    - "matplotlib>=3.4.0"
+    - "seaborn>=0.13.2"
+    - "arviz>=0.21.0"
+    - "ipywidgets>=8.0"
+    - "ipympl>=0.9.0"
+    - "pyyaml>=6.0"
+    - "jinja2>=3.1,<4"
+    - "groupBMC>=1.0"
+    - "bambi>=0.13.0"
+    - "pingouin>=0.5.5"
+    - "pyarrow>=14.0"
+    - "ptitprince>=0.3.1"
+    # pyhgf is intentionally excluded — install via two-step process above.
+    # Do NOT add pyhgf to this pip block; the stale jax<0.4.32 constraint
+    # in pyhgf 0.2.8 will cause a resolver conflict.

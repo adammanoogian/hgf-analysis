@@ -1,0 +1,13 @@
+# Ignore Rust build artifacts, docs, and test files in vendor/pyhgf
+# We only track the Python source (pyhgf/) and pyproject.toml for reference.
+pyhgf/.github/
+pyhgf/.gitignore
+pyhgf/.pre-commit-config.yaml
+pyhgf/Cargo.lock
+pyhgf/Cargo.toml
+pyhgf/docs/
+pyhgf/examples/
+pyhgf/src/
+pyhgf/tests/
+pyhgf/LICENSE
+pyhgf/Makefile

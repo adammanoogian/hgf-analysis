@@ -1,0 +1,101 @@
+# requirements-v10.txt — hgf-analysis v1.0 pinned dependency set
+#
+# Generated: 2026-05-04 via pip freeze in a fresh Python 3.11.15 venv
+# Host: Windows-10-10.0.22631-SP0 (local dev machine; regenerate on Linux for cluster)
+# Target: linux-x86_64 + cuda12 (M3/MASSIVE cluster — regenerate with pip freeze on M3)
+#
+# WARNING: This file is platform-specific. For the M3 cluster:
+#   1. Build ds_env_v10 on M3 following environment-v10.yml
+#   2. Run: pip freeze --exclude-editable > requirements-v10-linux.txt
+#   The GPU jaxlib wheel will differ from this Windows CPU-only snapshot.
+#
+# pyhgf install: NOT included here — see environment-v10.yml two-step process.
+#   pip install --no-deps pyhgf==0.2.8
+#   python scripts/ci/patch_pyhgf_typing.py
+#
+# Key pins (headline deps):
+#   jax==0.10.0, jaxlib==0.10.0
+#   blackjax==1.5
+#   numpyro==0.21.0
+#   numpy==2.4.4
+#   pymc==5.28.5
+#   scipy==1.17.1
+#
+absl-py==2.4.0
+arviz==0.23.4
+arviz-base==0.8.2
+arviz-plots==0.8.0
+arviz-stats==0.8.0
+bambi==0.17.2
+blackjax==1.5
+cachetools==6.2.6
+cloudpickle==3.1.2
+colorama==0.4.6
+cons==0.4.7
+contourpy==1.3.3
+cycler==0.12.1
+etuples==0.3.10
+filelock==3.29.0
+fonttools==4.62.1
+formulae==0.6.2
+graphviz==0.21
+groupBMC==1.0
+h5netcdf==1.8.1
+h5py==3.16.0
+jax==0.10.0
+jaxlib==0.10.0
+jaxopt==0.8.5
+Jinja2==3.1.6
+joblib==1.5.3
+jupyterlab_widgets==3.0.16
+kiwisolver==1.5.0
+llvmlite==0.47.0
+logical-unification==0.4.7
+markdown-it-py==4.0.0
+MarkupSafe==3.0.3
+matplotlib==3.10.9
+mdurl==0.1.2
+miniKanren==1.0.5
+ml_dtypes==0.5.4
+multipledispatch==1.0.0
+numba==0.65.1
+numpy==2.4.4
+numpyro==0.21.0
+opt_einsum==3.4.0
+optax==0.2.8
+pandas==3.0.2
+pandas-flavor==0.8.1
+parso==0.8.7
+patsy==1.0.2
+pillow==12.2.0
+pingouin==0.6.1
+platformdirs==4.9.6
+psutil==7.2.2
+ptitprince==0.3.1
+pure_eval==0.2.3
+pyarrow==24.0.0
+pygame==2.6.1
+Pygments==2.20.0
+pymc==5.28.5
+pyparsing==3.3.2
+pytensor==2.38.3
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+rich==15.0.0
+scikit-learn==1.8.0
+scipy==1.17.1
+seaborn==0.13.2
+six==1.17.0
+sparse==0.17.0
+statsmodels==0.14.6
+tabulate==0.10.0
+threadpoolctl==3.6.0
+toolz==1.1.0
+tqdm==4.67.3
+traitlets==5.14.3
+typing_extensions==4.15.0
+tzdata==2026.2
+wcwidth==0.7.0
+widgetsnbextension==4.0.15
+xarray==2026.4.0
+xarray-einstats==0.9.1
