@@ -56,15 +56,17 @@ def compute_phase_learning_metrics(
     Examples
     --------
     >>> import pandas as pd
-    >>> df = pd.DataFrame({
-    ...     "participant_id": ["P1"] * 4,
-    ...     "group": ["ctrl"] * 4,
-    ...     "session": ["s1"] * 4,
-    ...     "trial": [0, 1, 2, 3],
-    ...     "cue_chosen": [0, 0, 1, 0],
-    ...     "reward": [1, 1, 0, 1],
-    ...     "phase_label": ["stable"] * 4,
-    ... })
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "participant_id": ["P1"] * 4,
+    ...         "group": ["ctrl"] * 4,
+    ...         "session": ["s1"] * 4,
+    ...         "trial": [0, 1, 2, 3],
+    ...         "cue_chosen": [0, 0, 1, 0],
+    ...         "reward": [1, 1, 0, 1],
+    ...         "phase_label": ["stable"] * 4,
+    ...     }
+    ... )
     >>> compute_phase_learning_metrics(df)
     """
     working = sim_df.sort_values(["participant_id", "session", "trial"]).copy()
@@ -82,12 +84,12 @@ def compute_phase_learning_metrics(
     working["prev_reward"] = working["prev_reward"].astype(int)
 
     # Win-stay indicator: was rewarded last trial AND repeated same cue
-    working["_win_stay"] = (
-        (working["prev_reward"] == 1) & (working["cue_chosen"] == working["prev_choice"])
+    working["_win_stay"] = (working["prev_reward"] == 1) & (
+        working["cue_chosen"] == working["prev_choice"]
     )
     # Lose-shift indicator: was not rewarded last trial AND switched cue
-    working["_lose_shift"] = (
-        (working["prev_reward"] == 0) & (working["cue_chosen"] != working["prev_choice"])
+    working["_lose_shift"] = (working["prev_reward"] == 0) & (
+        working["cue_chosen"] != working["prev_choice"]
     )
 
     # Mask: only include trials preceded by a win (for win-stay denominator)
@@ -173,15 +175,17 @@ def build_phase_stratified_df(
     Examples
     --------
     >>> import pandas as pd
-    >>> df = pd.DataFrame({
-    ...     "participant_id": ["P1"] * 6,
-    ...     "group": ["ctrl"] * 6,
-    ...     "session": ["s1"] * 6,
-    ...     "trial": list(range(6)),
-    ...     "cue_chosen": [0, 0, 1, 0, 1, 0],
-    ...     "reward": [1, 1, 0, 1, 0, 1],
-    ...     "phase_label": ["stable"] * 3 + ["volatile"] * 3,
-    ... })
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "participant_id": ["P1"] * 6,
+    ...         "group": ["ctrl"] * 6,
+    ...         "session": ["s1"] * 6,
+    ...         "trial": list(range(6)),
+    ...         "cue_chosen": [0, 0, 1, 0, 1, 0],
+    ...         "reward": [1, 1, 0, 1, 0, 1],
+    ...         "phase_label": ["stable"] * 3 + ["volatile"] * 3,
+    ...     }
+    ... )
     >>> build_phase_stratified_df(df)
     """
     missing = [c for c in _REQUIRED_COLUMNS if c not in sim_df.columns]

@@ -13,19 +13,19 @@ from pathlib import Path
 import pandas as pd
 
 POWER_SCHEMA: dict[str, str] = {
-    "sweep_type":    "string",
-    "effect_size":   "float64",
-    "n_per_group":   "int64",
-    "trial_count":   "int64",
-    "iteration":     "int64",
-    "parameter":     "string",
-    "bf_value":      "float64",
-    "bf_exceeds":    "bool",
-    "bms_xp":        "float64",
-    "bms_correct":   "bool",
-    "recovery_r":    "float64",
+    "sweep_type": "string",
+    "effect_size": "float64",
+    "n_per_group": "int64",
+    "trial_count": "int64",
+    "iteration": "int64",
+    "parameter": "string",
+    "bf_value": "float64",
+    "bf_exceeds": "bool",
+    "bms_xp": "float64",
+    "bms_correct": "bool",
+    "recovery_r": "float64",
     "n_divergences": "int64",
-    "mean_rhat":     "float64",
+    "mean_rhat": "float64",
 }
 
 
@@ -57,10 +57,18 @@ def write_parquet_row(row: dict, output_path: Path) -> None:
     --------
     >>> from pathlib import Path
     >>> row = {
-    ...     "sweep_type": "omega_2", "effect_size": 0.5, "n_per_group": 20,
-    ...     "trial_count": 200, "iteration": 0, "parameter": "omega_2",
-    ...     "bf_value": 12.3, "bf_exceeds": True, "bms_xp": 0.9,
-    ...     "bms_correct": True, "recovery_r": 0.85, "n_divergences": 0,
+    ...     "sweep_type": "omega_2",
+    ...     "effect_size": 0.5,
+    ...     "n_per_group": 20,
+    ...     "trial_count": 200,
+    ...     "iteration": 0,
+    ...     "parameter": "omega_2",
+    ...     "bf_value": 12.3,
+    ...     "bf_exceeds": True,
+    ...     "bms_xp": 0.9,
+    ...     "bms_correct": True,
+    ...     "recovery_r": 0.85,
+    ...     "n_divergences": 0,
     ...     "mean_rhat": 1.01,
     ... }
     >>> write_parquet_row(row, Path("/tmp/test.parquet"))  # doctest: +SKIP
@@ -79,8 +87,7 @@ def write_parquet_row(row: dict, output_path: Path) -> None:
     extra = set(df.columns) - set(POWER_SCHEMA)
     if extra:
         raise ValueError(
-            f"Unexpected columns: {sorted(extra)}. "
-            f"Expected: {list(POWER_SCHEMA)}"
+            f"Unexpected columns: {sorted(extra)}. Expected: {list(POWER_SCHEMA)}"
         )
 
     for col, dtype in POWER_SCHEMA.items():
@@ -124,8 +131,7 @@ def write_parquet_batch(rows: list[dict], output_path: Path) -> None:
     extra = set(df.columns) - set(POWER_SCHEMA)
     if extra:
         raise ValueError(
-            f"Unexpected columns: {sorted(extra)}. "
-            f"Expected: {list(POWER_SCHEMA)}"
+            f"Unexpected columns: {sorted(extra)}. Expected: {list(POWER_SCHEMA)}"
         )
 
     for col, dtype in POWER_SCHEMA.items():

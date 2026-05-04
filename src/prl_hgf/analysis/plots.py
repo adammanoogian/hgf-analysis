@@ -83,7 +83,11 @@ def plot_recovery_scatter(
         p_val = float(row["p"])
 
         true_col = _TRUE_MAP.get(param)
-        if true_col is None or true_col not in recovery_df.columns or param not in recovery_df.columns:
+        if (
+            true_col is None
+            or true_col not in recovery_df.columns
+            or param not in recovery_df.columns
+        ):
             ax.set_title(param, color="grey")
             ax.text(0.5, 0.5, "Data not available", transform=ax.transAxes, ha="center")
             continue

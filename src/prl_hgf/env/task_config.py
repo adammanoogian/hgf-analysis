@@ -132,8 +132,7 @@ class TransferConfig:
         for i, p in enumerate(self.cue_probs):
             if not (0.0 <= p <= 1.0):
                 raise ValueError(
-                    f"TransferConfig: cue_probs[{i}] must be in "
-                    f"[0.0, 1.0], got {p}."
+                    f"TransferConfig: cue_probs[{i}] must be in [0.0, 1.0], got {p}."
                 )
 
 
@@ -175,18 +174,14 @@ class TaskConfig:
 
     def __post_init__(self) -> None:
         if self.n_cues < 2:
-            raise ValueError(
-                f"TaskConfig: n_cues must be >= 2, got {self.n_cues}."
-            )
+            raise ValueError(f"TaskConfig: n_cues must be >= 2, got {self.n_cues}.")
         if len(self.cue_labels) != self.n_cues:
             raise ValueError(
                 f"TaskConfig: cue_labels length must equal n_cues "
                 f"(expected {self.n_cues}, got {len(self.cue_labels)})."
             )
         if self.n_sets < 1:
-            raise ValueError(
-                f"TaskConfig: n_sets must be >= 1, got {self.n_sets}."
-            )
+            raise ValueError(f"TaskConfig: n_sets must be >= 1, got {self.n_sets}.")
         if not self.phases:
             raise ValueError("TaskConfig: phases must be non-empty.")
         for phase in self.phases:
@@ -248,9 +243,7 @@ class GroupParamDist:
 
     def __post_init__(self) -> None:
         if self.sd <= 0.0:
-            raise ValueError(
-                f"GroupParamDist: sd must be > 0, got {self.sd}."
-            )
+            raise ValueError(f"GroupParamDist: sd must be > 0, got {self.sd}.")
 
 
 @dataclass(frozen=True)
@@ -410,9 +403,7 @@ class FittingConfig:
                 f"FittingConfig: n_draws must be >= 1, got {self.n_draws}."
             )
         if self.n_tune < 1:
-            raise ValueError(
-                f"FittingConfig: n_tune must be >= 1, got {self.n_tune}."
-            )
+            raise ValueError(f"FittingConfig: n_tune must be >= 1, got {self.n_tune}.")
         if not (0.0 < self.target_accept < 1.0):
             raise ValueError(
                 f"FittingConfig: target_accept must be in (0, 1), "
@@ -461,9 +452,7 @@ def _parse_group_param_dist(raw: dict[str, Any], ctx: str) -> GroupParamDist:
         ) from exc
 
 
-def _parse_group_config(
-    raw: dict[str, Any], group_name: str
-) -> GroupConfig:
+def _parse_group_config(raw: dict[str, Any], group_name: str) -> GroupConfig:
     """Parse one group's parameter distributions into :class:`GroupConfig`."""
     ctx = f"simulation.groups.{group_name}"
     required = ("omega_2", "omega_3", "kappa", "beta", "zeta")
@@ -479,9 +468,7 @@ def _parse_group_config(
     )
 
 
-def _parse_session_config(
-    raw: dict[str, Any], group_name: str
-) -> SessionConfig:
+def _parse_session_config(raw: dict[str, Any], group_name: str) -> SessionConfig:
     """Parse one group's session delta mapping into :class:`SessionConfig`."""
     ctx = f"simulation.session_deltas.{group_name}"
     try:
@@ -530,9 +517,7 @@ def _parse_task_config(raw: dict[str, Any]) -> TaskConfig:
             task_seed=int(raw["task_seed"]),
         )
     except KeyError as exc:
-        raise ValueError(
-            f"{ctx}: missing required key {exc} in task config."
-        ) from exc
+        raise ValueError(f"{ctx}: missing required key {exc} in task config.") from exc
 
 
 def _parse_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
@@ -542,12 +527,10 @@ def _parse_simulation_config(raw: dict[str, Any]) -> SimulationConfig:
         raw_groups: dict[str, Any] = raw["groups"]
         raw_deltas: dict[str, Any] = raw["session_deltas"]
         groups = {
-            name: _parse_group_config(data, name)
-            for name, data in raw_groups.items()
+            name: _parse_group_config(data, name) for name, data in raw_groups.items()
         }
         session_deltas = {
-            name: _parse_session_config(data, name)
-            for name, data in raw_deltas.items()
+            name: _parse_session_config(data, name) for name, data in raw_deltas.items()
         }
         return SimulationConfig(
             n_participants_per_group=int(raw["n_participants_per_group"]),
@@ -619,8 +602,7 @@ def load_config(path: Path | None = None) -> AnalysisConfig:
     resolved = path if path is not None else _DEFAULT_CONFIG_PATH
     if not resolved.exists():
         raise FileNotFoundError(
-            f"Config file not found: {resolved}. "
-            f"Expected at {_DEFAULT_CONFIG_PATH}."
+            f"Config file not found: {resolved}. Expected at {_DEFAULT_CONFIG_PATH}."
         )
     with resolved.open("r", encoding="utf-8") as fh:
         raw: dict[str, Any] = yaml.safe_load(fh)

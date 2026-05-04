@@ -163,8 +163,8 @@ def simulate_patrl_cohort(
     Phase 20 SC5 SeedSequence spawn tree (Decision 20-05)::
 
         ss = SeedSequence(master_seed)
-        phenotype_seeds = ss.spawn(len(phenotypes))       # one SS per phenotype
-        child_seeds = phenotype_seeds[i].spawn(n_per)     # one SS per participant
+        phenotype_seeds = ss.spawn(len(phenotypes))  # one SS per phenotype
+        child_seeds = phenotype_seeds[i].spawn(n_per)  # one SS per participant
 
     The spawn order is determined by the *order of* ``phenotypes``.  When
     ``phenotypes=['healthy']`` is called, the first child SeedSequence from
@@ -362,7 +362,9 @@ def simulate_patrl_cohort(
             rng = np.random.default_rng(child_ss)
 
             # Sample true parameters from the phenotype distribution.
-            omega_2_true = float(rng.normal(phenotype.omega_2.mean, phenotype.omega_2.sd))
+            omega_2_true = float(
+                rng.normal(phenotype.omega_2.mean, phenotype.omega_2.sd)
+            )
             beta_true = float(
                 max(0.01, rng.normal(phenotype.beta.mean, phenotype.beta.sd))
             )
@@ -451,9 +453,7 @@ def simulate_patrl_cohort(
                         mu3_0=mu3_0_true,
                     )
                 else:
-                    mu2_traj = run_hgf_forward_patrl(
-                        trials, omega_eff_mean, level=2
-                    )
+                    mu2_traj = run_hgf_forward_patrl(trials, omega_eff_mean, level=2)
 
             # Sample choices: approach=1, avoid=0 via softmax over
             # [EV_avoid=0, EV_approach].

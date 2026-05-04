@@ -153,23 +153,20 @@ def _build_session_scanner_patrl(
         If ``model_name`` is not a recognised PAT-RL model.
     """
     if model_name not in _PATRL_MODEL_NAMES:
-        msg = (
-            f"model_name must be one of {_PATRL_MODEL_NAMES}, "
-            f"got {model_name!r}"
-        )
+        msg = f"model_name must be one of {_PATRL_MODEL_NAMES}, got {model_name!r}"
         raise ValueError(msg)
 
     if model_name == "hgf_2level_patrl":
         net = build_2level_network_patrl()
-        belief_idx = _BELIEF_NODE          # node 1
+        belief_idx = _BELIEF_NODE  # node 1
         dummy = np.zeros((1, 1), dtype=np.float64)
     elif model_name == "hgf_3level_patrl":
         net = build_3level_network_patrl()
-        belief_idx = _BELIEF_NODE          # node 1
+        belief_idx = _BELIEF_NODE  # node 1
         dummy = np.zeros((1, 1), dtype=np.float64)
     else:  # hgf_2level_multimodal_patrl
         net = build_2level_multimodal_network_patrl()
-        belief_idx = _BELIEF_NODE_MM       # node 2 (shared belief parent)
+        belief_idx = _BELIEF_NODE_MM  # node 2 (shared belief parent)
         dummy = np.zeros((1, 2), dtype=np.float64)
 
     # Prime scan_fn with one dummy observation so attributes are initialised.
@@ -307,9 +304,7 @@ def _make_single_logp_fn(
                     **attrs_i[belief_idx],
                     "tonic_volatility": omega_eff_i,
                 }
-                new_carry, _traj = scan_fn(
-                    attrs_i, ((val_i,), (obs_i,), ts_i, None)
-                )
+                new_carry, _traj = scan_fn(attrs_i, ((val_i,), (obs_i,), ts_i, None))
                 # Layer-2 clamp: revert if |mu2| >= _MU_2_BOUND or non-finite.
                 new_mean = new_carry[belief_idx]["mean"]
                 is_stable = jnp.all(jnp.isfinite(new_mean)) & (
@@ -605,7 +600,11 @@ def build_logp_fn_batched_patrl(
         _delta_hr = np.asarray(delta_hr_arr, dtype=np.float64)
 
     _single_logp = _make_single_logp_fn(
-        base_attrs, scan_fn, belief_idx, model_name, n_trials,
+        base_attrs,
+        scan_fn,
+        belief_idx,
+        model_name,
+        n_trials,
         response_model=response_model,
     )
 
@@ -646,6 +645,7 @@ def build_logp_fn_batched_patrl(
         # which closes over is_3level at factory-build time).
         if _is_model_d:
             if is_3level:
+
                 def _call_single_d3(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     omega_3_i: jnp.ndarray,
@@ -671,16 +671,31 @@ def build_logp_fn_batched_patrl(
                             "b": b_i,
                             "lam": lam_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single_d3)(
-                    params["omega_2"], params["omega_3"], params["kappa"],
-                    params["mu3_0"], params["beta"], params["b"], params["lam"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["omega_3"],
+                    params["kappa"],
+                    params["mu3_0"],
+                    params["beta"],
+                    params["b"],
+                    params["lam"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             else:
+
                 def _call_single_d2(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     beta_i: jnp.ndarray,
@@ -700,18 +715,31 @@ def build_logp_fn_batched_patrl(
                             "b": b_i,
                             "lam": lam_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single_d2)(
-                    params["omega_2"], params["beta"], params["b"], params["lam"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["beta"],
+                    params["b"],
+                    params["lam"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             return jnp.sum(per_participant)
 
         if is_3level:
             if _has_alpha:
+
                 def _call_single(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     omega_3_i: jnp.ndarray,
@@ -739,17 +767,32 @@ def build_logp_fn_batched_patrl(
                             "alpha": alpha_i,
                             "gamma": gamma_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single)(
-                    params["omega_2"], params["omega_3"], params["kappa"],
-                    params["mu3_0"], params["beta"],
-                    params["b"], params["alpha"], params["gamma"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["omega_3"],
+                    params["kappa"],
+                    params["mu3_0"],
+                    params["beta"],
+                    params["b"],
+                    params["alpha"],
+                    params["gamma"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             elif _has_gamma:
+
                 def _call_single_b3(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     omega_3_i: jnp.ndarray,
@@ -775,14 +818,27 @@ def build_logp_fn_batched_patrl(
                             "b": b_i,
                             "gamma": gamma_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single_b3)(
-                    params["omega_2"], params["omega_3"], params["kappa"],
-                    params["mu3_0"], params["beta"],
-                    params["b"], params["gamma"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["omega_3"],
+                    params["kappa"],
+                    params["mu3_0"],
+                    params["beta"],
+                    params["b"],
+                    params["gamma"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             else:
@@ -810,11 +866,18 @@ def build_logp_fn_batched_patrl(
                     if "b" in params:
                         p["b"] = params["b"][0]  # scalar broadcast — handled below
                     return _single_logp(  # type: ignore[return-value]
-                        p, state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        p,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 # For model_a 3-level with b in params dict:
                 if "b" in params:
+
                     def _call_single_a3b(  # type: ignore[misc]
                         omega_2_i: jnp.ndarray,
                         omega_3_i: jnp.ndarray,
@@ -838,16 +901,30 @@ def build_logp_fn_batched_patrl(
                                 "beta": beta_i,
                                 "b": b_i,
                             },
-                            state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                            state_i,
+                            choices_i,
+                            reward_i,
+                            shock_i,
+                            mask_i,
+                            dhr_i,
                         )
 
                     per_participant = jax.vmap(_call_single_a3b)(
-                        params["omega_2"], params["omega_3"], params["kappa"],
-                        params["mu3_0"], params["beta"], params["b"],
-                        state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                        params["omega_2"],
+                        params["omega_3"],
+                        params["kappa"],
+                        params["mu3_0"],
+                        params["beta"],
+                        params["b"],
+                        state_jnp,
+                        choices_jnp,
+                        reward_jnp,
+                        shock_jnp,
+                        mask_jnp,
                         delta_hr_jnp,
                     )
                 else:
+
                     def _call_single_a3_nb(  # type: ignore[misc]
                         omega_2_i: jnp.ndarray,
                         omega_3_i: jnp.ndarray,
@@ -869,18 +946,31 @@ def build_logp_fn_batched_patrl(
                                 "mu3_0": mu3_0_i,
                                 "beta": beta_i,
                             },
-                            state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                            state_i,
+                            choices_i,
+                            reward_i,
+                            shock_i,
+                            mask_i,
+                            dhr_i,
                         )
 
                     per_participant = jax.vmap(_call_single_a3_nb)(
-                        params["omega_2"], params["omega_3"], params["kappa"],
-                        params["mu3_0"], params["beta"],
-                        state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                        params["omega_2"],
+                        params["omega_3"],
+                        params["kappa"],
+                        params["mu3_0"],
+                        params["beta"],
+                        state_jnp,
+                        choices_jnp,
+                        reward_jnp,
+                        shock_jnp,
+                        mask_jnp,
                         delta_hr_jnp,
                     )
         else:
             # 2-level variants
             if _has_alpha:
+
                 def _call_single_c2(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     beta_i: jnp.ndarray,
@@ -902,16 +992,29 @@ def build_logp_fn_batched_patrl(
                             "alpha": alpha_i,
                             "gamma": gamma_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single_c2)(
-                    params["omega_2"], params["beta"],
-                    params["b"], params["alpha"], params["gamma"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["beta"],
+                    params["b"],
+                    params["alpha"],
+                    params["gamma"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             elif _has_gamma:
+
                 def _call_single_b2(  # type: ignore[misc]
                     omega_2_i: jnp.ndarray,
                     beta_i: jnp.ndarray,
@@ -931,18 +1034,30 @@ def build_logp_fn_batched_patrl(
                             "b": b_i,
                             "gamma": gamma_i,
                         },
-                        state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                        state_i,
+                        choices_i,
+                        reward_i,
+                        shock_i,
+                        mask_i,
+                        dhr_i,
                     )
 
                 per_participant = jax.vmap(_call_single_b2)(
-                    params["omega_2"], params["beta"],
-                    params["b"], params["gamma"],
-                    state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                    params["omega_2"],
+                    params["beta"],
+                    params["b"],
+                    params["gamma"],
+                    state_jnp,
+                    choices_jnp,
+                    reward_jnp,
+                    shock_jnp,
+                    mask_jnp,
                     delta_hr_jnp,
                 )
             else:
                 # model_a 2-level
                 if "b" in params:
+
                     def _call_single_a2b(  # type: ignore[misc]
                         omega_2_i: jnp.ndarray,
                         beta_i: jnp.ndarray,
@@ -956,15 +1071,27 @@ def build_logp_fn_batched_patrl(
                     ) -> Any:
                         return _single_logp(  # type: ignore[return-value]
                             {"omega_2": omega_2_i, "beta": beta_i, "b": b_i},
-                            state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                            state_i,
+                            choices_i,
+                            reward_i,
+                            shock_i,
+                            mask_i,
+                            dhr_i,
                         )
 
                     per_participant = jax.vmap(_call_single_a2b)(
-                        params["omega_2"], params["beta"], params["b"],
-                        state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                        params["omega_2"],
+                        params["beta"],
+                        params["b"],
+                        state_jnp,
+                        choices_jnp,
+                        reward_jnp,
+                        shock_jnp,
+                        mask_jnp,
                         delta_hr_jnp,
                     )
                 else:
+
                     def _call_single_a2(  # type: ignore[misc]
                         omega_2_i: jnp.ndarray,
                         beta_i: jnp.ndarray,
@@ -977,12 +1104,22 @@ def build_logp_fn_batched_patrl(
                     ) -> Any:
                         return _single_logp(  # type: ignore[return-value]
                             {"omega_2": omega_2_i, "beta": beta_i},
-                            state_i, choices_i, reward_i, shock_i, mask_i, dhr_i,
+                            state_i,
+                            choices_i,
+                            reward_i,
+                            shock_i,
+                            mask_i,
+                            dhr_i,
                         )
 
                     per_participant = jax.vmap(_call_single_a2)(
-                        params["omega_2"], params["beta"],
-                        state_jnp, choices_jnp, reward_jnp, shock_jnp, mask_jnp,
+                        params["omega_2"],
+                        params["beta"],
+                        state_jnp,
+                        choices_jnp,
+                        reward_jnp,
+                        shock_jnp,
+                        mask_jnp,
                         delta_hr_jnp,
                     )
 
@@ -1081,13 +1218,9 @@ def _build_arrays_single_patrl(
         )
         raise ValueError(msg)
 
-    stacked: dict[str, np.ndarray] = {
-        k: np.stack(v, axis=0) for k, v in rows.items()
-    }
+    stacked: dict[str, np.ndarray] = {k: np.stack(v, axis=0) for k, v in rows.items()}
     n_trials = n_trials_per_participant[0]
-    stacked["trial_mask"] = np.ones(
-        (len(participants), n_trials), dtype=np.bool_
-    )
+    stacked["trial_mask"] = np.ones((len(participants), n_trials), dtype=np.bool_)
     return stacked
 
 
@@ -1346,10 +1479,7 @@ def fit_batch_hierarchical_patrl(
         )
 
     if model_name not in _PATRL_MODEL_NAMES:
-        msg = (
-            f"model_name must be one of {_PATRL_MODEL_NAMES}, "
-            f"got {model_name!r}"
-        )
+        msg = f"model_name must be one of {_PATRL_MODEL_NAMES}, got {model_name!r}"
         raise ValueError(msg)
 
     if config is None:
@@ -1410,17 +1540,15 @@ def fit_batch_hierarchical_patrl(
         "b": jnp.full((n_participants,), priors.b.mean),
     }
     if is_3level:
-        initial_position["omega_3"] = jnp.full(
-            (n_participants,), priors.omega_3.mean
-        )
+        initial_position["omega_3"] = jnp.full((n_participants,), priors.omega_3.mean)
         # Clip kappa init into truncated-normal support.
         kappa_init = float(
-            np.clip(priors.kappa.mean, priors.kappa.lower + 1e-6, priors.kappa.upper - 1e-6)
+            np.clip(
+                priors.kappa.mean, priors.kappa.lower + 1e-6, priors.kappa.upper - 1e-6
+            )
         )
         initial_position["kappa"] = jnp.full((n_participants,), kappa_init)
-        initial_position["mu3_0"] = jnp.full(
-            (n_participants,), priors.mu3_0.mean
-        )
+        initial_position["mu3_0"] = jnp.full((n_participants,), priors.mu3_0.mean)
     if response_model in ("model_b", "model_c"):
         initial_position["gamma"] = jnp.full((n_participants,), priors.gamma.mean)
     if response_model == "model_c":

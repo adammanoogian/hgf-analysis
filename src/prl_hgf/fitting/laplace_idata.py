@@ -183,8 +183,7 @@ def build_idata_from_laplace(
     # ------------------------------------------------------------------
     if param_names not in _VALID_PARAM_ORDERS:
         raise ValueError(
-            f"param_names expected one of {_VALID_PARAM_ORDERS!r}; "
-            f"got {param_names!r}"
+            f"param_names expected one of {_VALID_PARAM_ORDERS!r}; got {param_names!r}"
         )
 
     # ------------------------------------------------------------------
@@ -192,9 +191,7 @@ def build_idata_from_laplace(
     # ------------------------------------------------------------------
     mode_keys = tuple(mode.keys())
     if mode_keys != param_names:
-        raise ValueError(
-            f"mode keys expected {param_names!r}; got {mode_keys!r}"
-        )
+        raise ValueError(f"mode keys expected {param_names!r}; got {mode_keys!r}")
 
     P = len(participant_ids)
     K = len(param_names)
@@ -205,18 +202,14 @@ def build_idata_from_laplace(
     for k, v in mode.items():
         v_arr = np.asarray(v)
         if v_arr.ndim != 1 or v_arr.shape[0] != P:
-            raise ValueError(
-                f"mode[{k!r}] must be shape ({P},); got {v_arr.shape}"
-            )
+            raise ValueError(f"mode[{k!r}] must be shape ({P},); got {v_arr.shape}")
 
     # ------------------------------------------------------------------
     # 4. Validate cov shape
     # ------------------------------------------------------------------
     expected_cov_shape = (P * K, P * K)
     if cov.shape != expected_cov_shape:
-        raise ValueError(
-            f"cov.shape expected {expected_cov_shape}, got {cov.shape}"
-        )
+        raise ValueError(f"cov.shape expected {expected_cov_shape}, got {cov.shape}")
 
     # ------------------------------------------------------------------
     # 5. Build flat mode vector
@@ -262,8 +255,7 @@ def build_idata_from_laplace(
     # ------------------------------------------------------------------
     if diagnostics is not None:
         sample_stats: dict[str, np.ndarray] = {
-            k: np.full((1, n_pseudo_draws), float(v))
-            for k, v in diagnostics.items()
+            k: np.full((1, n_pseudo_draws), float(v)) for k, v in diagnostics.items()
         }
     else:
         # Marker scalar so downstream code can check idata.sample_stats.laplace

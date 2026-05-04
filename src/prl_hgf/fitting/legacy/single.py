@@ -235,8 +235,16 @@ def fit_participant(
     >>> obs[:, 0] = 1
     >>> ch = np.zeros(50, dtype=int)
     >>> idata, rows, flagged = fit_participant(
-    ...     inp, obs, ch, "P001", "placebo", "baseline",
-    ...     model_name="hgf_2level", n_chains=1, n_draws=50, n_tune=50,
+    ...     inp,
+    ...     obs,
+    ...     ch,
+    ...     "P001",
+    ...     "placebo",
+    ...     "baseline",
+    ...     model_name="hgf_2level",
+    ...     n_chains=1,
+    ...     n_draws=50,
+    ...     n_tune=50,
     ... )
     >>> len(rows)
     3
@@ -251,8 +259,7 @@ def fit_participant(
         )
     else:
         raise ValueError(
-            f"Unknown model_name {model_name!r}. "
-            f"Expected 'hgf_2level' or 'hgf_3level'."
+            f"Unknown model_name {model_name!r}. Expected 'hgf_2level' or 'hgf_3level'."
         )
 
     with model:

@@ -88,20 +88,21 @@ _D_STATE: int = 8
 
 # Mapping: flat-state index -> (node_idx, attribute_key) in pyhgf attributes
 _STATE_NODE_PAIRS: tuple[tuple[int, str], ...] = (
-    (1, "mean"),        # 0: mu_1_c0
-    (1, "precision"),   # 1: pi_1_c0
-    (3, "mean"),        # 2: mu_1_c1
-    (3, "precision"),   # 3: pi_1_c1
-    (5, "mean"),        # 4: mu_1_c2
-    (5, "precision"),   # 5: pi_1_c2
-    (6, "mean"),        # 6: mu_2
-    (6, "precision"),   # 7: pi_2
+    (1, "mean"),  # 0: mu_1_c0
+    (1, "precision"),  # 1: pi_1_c0
+    (3, "mean"),  # 2: mu_1_c1
+    (3, "precision"),  # 3: pi_1_c1
+    (5, "mean"),  # 4: mu_1_c2
+    (5, "precision"),  # 5: pi_1_c2
+    (6, "mean"),  # 6: mu_2
+    (6, "precision"),  # 7: pi_2
 )
 
 
 # ---------------------------------------------------------------------------
 # Flat-state extraction helpers
 # ---------------------------------------------------------------------------
+
 
 def _attrs_to_flat(attrs: dict) -> jax.Array:
     """Extract 8-dim flat state vector from pyhgf attributes dict.
@@ -155,6 +156,7 @@ def _flat_to_attrs_update(base_attrs: dict, flat: jax.Array) -> dict:
 # Quasi-ELK associative operator (from reproduce_reference.py §2.3)
 # ---------------------------------------------------------------------------
 
+
 def _diagonal_binary_op(
     elem_i: tuple[jax.Array, jax.Array],
     elem_j: tuple[jax.Array, jax.Array],
@@ -206,8 +208,8 @@ def _diagonal_matmul_recursive(
     """
     D = y0.shape[0]
     ones = jnp.ones((1, D), dtype=jnp.float64)
-    first_A = jnp.concatenate([ones, A_diags], axis=0)   # (T+1, D)
-    first_b = jnp.concatenate([y0[None], bs], axis=0)    # (T+1, D)
+    first_A = jnp.concatenate([ones, A_diags], axis=0)  # (T+1, D)
+    first_b = jnp.concatenate([y0[None], bs], axis=0)  # (T+1, D)
     _, yt = jax.lax.associative_scan(_diagonal_binary_op, (first_A, first_b))
     return yt  # (T+1, D)
 
@@ -369,8 +371,12 @@ def _build_scan_inputs_jax(
         input_data[t, c] = float(r)
         observed[t, c] = 1.0
 
-    values = tuple(jnp.array(input_data[:, i:i+1], dtype=jnp.float64) for i in range(3))
-    observed_cols = tuple(jnp.array(observed[:, i], dtype=jnp.float64) for i in range(3))
+    values = tuple(
+        jnp.array(input_data[:, i : i + 1], dtype=jnp.float64) for i in range(3)
+    )
+    observed_cols = tuple(
+        jnp.array(observed[:, i], dtype=jnp.float64) for i in range(3)
+    )
     time_steps = jnp.ones(n_trials, dtype=jnp.float64)
 
     return (values, observed_cols, time_steps, None)
@@ -415,6 +421,7 @@ def _build_batched_inputs(
 # hgf_step: pure functional per-trial HGF update (public API)
 # ---------------------------------------------------------------------------
 
+
 def hgf_step(
     state: dict,
     input_t: tuple,
@@ -455,8 +462,7 @@ def hgf_step(
     These are TIME-INVARIANT for pick_best_cue.  Safe for jax.lax.scan.
     """
     raise RuntimeError(
-        "hgf_step requires scan_fn via closure. "
-        "Use make_hgf_step(scan_fn) instead."
+        "hgf_step requires scan_fn via closure. Use make_hgf_step(scan_fn) instead."
     )
 
 
@@ -474,6 +480,7 @@ def make_hgf_step(scan_fn: object) -> object:
         step(attrs, input_t) -> (new_attrs, state_t)
         where state_t = (mu_1_c0, pi_1_c0, mu_2, pi_2).
     """
+
     def step(
         attrs: dict,
         input_t: tuple,
@@ -493,6 +500,7 @@ def make_hgf_step(scan_fn: object) -> object:
 # ---------------------------------------------------------------------------
 # sequential_likelihood (public API)
 # ---------------------------------------------------------------------------
+
 
 def sequential_likelihood(
     theta: dict[str, jax.Array],
@@ -556,6 +564,7 @@ def sequential_likelihood(
 # ---------------------------------------------------------------------------
 # parallel_scan_likelihood (public API)
 # ---------------------------------------------------------------------------
+
 
 def parallel_scan_likelihood(
     theta: dict[str, jax.Array],
@@ -712,7 +721,7 @@ def parallel_scan_likelihood(
         v0 = driver_flat[0:1]  # shape (1,) — values[0][t]
         v1 = driver_flat[1:2]
         v2 = driver_flat[2:3]
-        o0 = driver_flat[3]    # scalar — observed[0][t]
+        o0 = driver_flat[3]  # scalar — observed[0][t]
         o1 = driver_flat[4]
         o2 = driver_flat[5]
         input_t = (

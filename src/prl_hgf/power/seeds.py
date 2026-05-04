@@ -51,9 +51,7 @@ def make_child_rng(
     True
     """
     if n_jobs < 1:
-        raise ValueError(
-            f"n_jobs must be >= 1, got {n_jobs}."
-        )
+        raise ValueError(f"n_jobs must be >= 1, got {n_jobs}.")
     if not (0 <= job_index < n_jobs):
         raise ValueError(
             f"job_index must be in [0, n_jobs), "
@@ -101,8 +99,6 @@ def make_chunk_rngs(
     rngs: list[np.random.Generator] = []
     for tid in task_ids:
         if tid < 0 or tid >= total_tasks:
-            raise IndexError(
-                f"task_id {tid} is out of range for {total_tasks} tasks."
-            )
+            raise IndexError(f"task_id {tid} is out of range for {total_tasks} tasks.")
         rngs.append(np.random.default_rng(children[tid]))
     return rngs

@@ -143,9 +143,7 @@ def build_pymc_model_3level(
         # Perceptual parameters
         omega_2 = pm.TruncatedNormal("omega_2", mu=-3.0, sigma=2.0, upper=0.0)
         omega_3 = pm.TruncatedNormal("omega_3", mu=-6.0, sigma=2.0, upper=0.0)
-        kappa = pm.TruncatedNormal(
-            "kappa", mu=1.0, sigma=0.5, lower=0.01, upper=2.0
-        )
+        kappa = pm.TruncatedNormal("kappa", mu=1.0, sigma=0.5, lower=0.01, upper=2.0)
 
         # Response parameters
         log_beta = pm.Normal("log_beta", mu=0.0, sigma=1.5)

@@ -65,8 +65,7 @@ class PowerConfig:
     def __post_init__(self) -> None:
         if self.n_iterations < 1:
             raise ValueError(
-                "PowerConfig: n_iterations must be >= 1, "
-                f"got {self.n_iterations}."
+                f"PowerConfig: n_iterations must be >= 1, got {self.n_iterations}."
             )
         if self.n_chunks < 1:
             raise ValueError(
@@ -74,8 +73,7 @@ class PowerConfig:
             )
         if self.bf_threshold <= 0.0:
             raise ValueError(
-                "PowerConfig: bf_threshold must be > 0, "
-                f"got {self.bf_threshold}."
+                f"PowerConfig: bf_threshold must be > 0, got {self.bf_threshold}."
             )
 
 
@@ -116,8 +114,7 @@ def load_power_config(path: Path | None = None) -> PowerConfig:
     resolved = path if path is not None else _DEFAULT_CONFIG_PATH
     if not resolved.exists():
         raise FileNotFoundError(
-            f"Config file not found: {resolved}. "
-            f"Expected at {_DEFAULT_CONFIG_PATH}."
+            f"Config file not found: {resolved}. Expected at {_DEFAULT_CONFIG_PATH}."
         )
     with resolved.open("r", encoding="utf-8") as fh:
         raw: dict[str, Any] = yaml.safe_load(fh)
@@ -192,8 +189,9 @@ def make_power_config(
     >>> from prl_hgf.env.task_config import load_config
     >>> from prl_hgf.power.config import make_power_config
     >>> base = load_config()
-    >>> variant = make_power_config(base, n_per_group=20, effect_size_delta=0.5,
-    ...                             master_seed=9999)
+    >>> variant = make_power_config(
+    ...     base, n_per_group=20, effect_size_delta=0.5, master_seed=9999
+    ... )
     >>> variant.simulation.n_participants_per_group
     20
     """
@@ -206,9 +204,7 @@ def make_power_config(
     new_deltas: dict[str, SessionConfig] = {}
     for group_name, sess in sim.session_deltas.items():
         if group_name == "psilocybin":
-            shifted_omega_2 = [
-                plc_d + effect_size_delta for plc_d in placebo_deltas
-            ]
+            shifted_omega_2 = [plc_d + effect_size_delta for plc_d in placebo_deltas]
             new_deltas[group_name] = dataclasses.replace(
                 sess, omega_2_deltas=shifted_omega_2
             )

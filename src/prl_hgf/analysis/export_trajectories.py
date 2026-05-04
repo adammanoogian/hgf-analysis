@@ -86,7 +86,9 @@ _TRAJECTORY_COLUMNS: list[str] = [
 # ---------------------------------------------------------------------------
 
 
-def _safe_temp(traj_node: dict[str, Any], key: str, shape: tuple[int, ...]) -> np.ndarray:
+def _safe_temp(
+    traj_node: dict[str, Any], key: str, shape: tuple[int, ...]
+) -> np.ndarray:
     """Extract a per-trial array from a pyhgf node temp sub-dict.
 
     Returns the array if the key exists; otherwise returns an array of
@@ -187,12 +189,7 @@ def export_subject_trajectories(
 
     # --- 1. Extract posterior means for this participant --------------------
     def _post_mean(var: str) -> float:
-        return float(
-            post[var]
-            .sel(participant_id=participant_id)
-            .mean()
-            .values
-        )
+        return float(post[var].sel(participant_id=participant_id).mean().values)
 
     omega_2 = _post_mean("omega_2")
     is_3level = model_name == "hgf_3level_patrl"
@@ -253,7 +250,9 @@ def export_subject_trajectories(
             "run_idx": np.array([t.run_idx for t in trials], dtype=np.int32),
             "trial_in_run": np.array([t.trial_in_run for t in trials], dtype=np.int32),
             "regime": [t.regime for t in trials],
-            "outcome_time_s": np.array([t.outcome_time_s for t in trials], dtype=np.float64),
+            "outcome_time_s": np.array(
+                [t.outcome_time_s for t in trials], dtype=np.float64
+            ),
             "state": np.array([t.state for t in trials], dtype=np.int32),
             "choice": choices_arr,
             "reward_mag": np.array([t.reward_mag for t in trials], dtype=np.float64),
@@ -369,7 +368,13 @@ def export_subject_parameters(
 
     summary_df = pd.DataFrame(
         rows,
-        columns=["participant_id", "parameter", "posterior_mean", "hdi_low", "hdi_high"],
+        columns=[
+            "participant_id",
+            "parameter",
+            "posterior_mean",
+            "hdi_low",
+            "hdi_high",
+        ],
     )
 
     output_dir = Path(output_dir)

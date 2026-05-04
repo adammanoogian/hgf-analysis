@@ -215,11 +215,13 @@ def _run_session(
 
         # Step 1: Read prior beliefs from carry BEFORE HGF update
         # INPUT_NODES = (0, 2, 4) — binary-state nodes, expected_mean in [0,1]
-        p_reward = jnp.array([
-            step_attrs[0]["expected_mean"],
-            step_attrs[2]["expected_mean"],
-            step_attrs[4]["expected_mean"],
-        ])
+        p_reward = jnp.array(
+            [
+                step_attrs[0]["expected_mean"],
+                step_attrs[2]["expected_mean"],
+                step_attrs[4]["expected_mean"],
+            ]
+        )
 
         # Step 2: Split PRNG key — step_key for this trial, next_key for carry
         step_key, next_key = jax.random.split(step_rng_key)
@@ -262,11 +264,13 @@ def _run_session(
         all_finite = jnp.all(
             jnp.array([jnp.all(jnp.isfinite(leaf)) for leaf in leaves])
         )
-        mu_2_vals = jnp.array([
-            new_attrs[1]["mean"],
-            new_attrs[3]["mean"],
-            new_attrs[5]["mean"],
-        ])
+        mu_2_vals = jnp.array(
+            [
+                new_attrs[1]["mean"],
+                new_attrs[3]["mean"],
+                new_attrs[5]["mean"],
+            ]
+        )
         mu_2_ok = jnp.all(jnp.abs(mu_2_vals) < _MU_2_BOUND)
         is_stable = all_finite & mu_2_ok
 

@@ -218,9 +218,7 @@ def extract_posterior_contrasts(
     # Reference session (group main effect only)
     ref_session = _infer_reference_session(data_vars)
     ref_contrast = group_main_samples
-    rows.append(
-        _contrast_row(ref_contrast, session=ref_session)
-    )
+    rows.append(_contrast_row(ref_contrast, session=ref_session))
 
     # Non-reference sessions
     for session_name, interaction_samples in interaction_vars.items():
@@ -332,11 +330,11 @@ def _parse_session_from_interaction(var_name: str, group_label: str) -> str | No
 
     Interaction terms look like::
 
-        C(group)[T.psilocybin]:C(session)[T.session2]
+        C(group)[T.psilocybin]: C(session)[T.session2]
 
     or (order-reversed)::
 
-        C(session)[T.session2]:C(group)[T.psilocybin]
+        C(session)[T.session2]: C(group)[T.psilocybin]
 
     Parameters
     ----------

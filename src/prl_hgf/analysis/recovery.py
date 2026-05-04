@@ -109,9 +109,7 @@ def build_recovery_df(
     """
     # Step 1 — reduce sim_df to one row per participant-session
     true_cols_present = [c for c in _TRUE_COLS if c in sim_df.columns]
-    true_params = (
-        sim_df.groupby(_ID_COLS)[true_cols_present].first().reset_index()
-    )
+    true_params = sim_df.groupby(_ID_COLS)[true_cols_present].first().reset_index()
 
     # Step 2 — optionally exclude flagged fits
     if exclude_flagged:
@@ -184,9 +182,9 @@ def compute_recovery_metrics(
             {
                 "omega_2": "true_omega_2",
                 "omega_3": "true_omega_3",
-                "kappa":   "true_kappa",
-                "beta":    "true_beta",
-                "zeta":    "true_zeta",
+                "kappa": "true_kappa",
+                "beta": "true_beta",
+                "zeta": "true_zeta",
             }
 
         Parameters absent from ``recovery_df`` are silently skipped.
@@ -245,7 +243,9 @@ def compute_recovery_metrics(
             }
         )
 
-    return pd.DataFrame(rows, columns=["parameter", "r", "p", "bias", "rmse", "n", "passes_threshold"])
+    return pd.DataFrame(
+        rows, columns=["parameter", "r", "p", "bias", "rmse", "n", "passes_threshold"]
+    )
 
 
 def compute_recovery_metrics_patrl(

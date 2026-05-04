@@ -217,9 +217,7 @@ class ParamExplorer:
         print("Warming up JAX (one-time ~5-10s)...")
         net_wu = build_3level_network(omega_2=-3.0, omega_3=-6.0, kappa=1.0)
         rng_wu = np.random.default_rng(GUI_SEED)
-        result_wu = simulate_agent(
-            net_wu, trials, beta=2.5, zeta=0.2, rng=rng_wu
-        )
+        result_wu = simulate_agent(net_wu, trials, beta=2.5, zeta=0.2, rng=rng_wu)
         self._warmup_choices_: list[int] = result_wu.choices
 
         # Build fixed observation mask from warm-up simulation
@@ -229,13 +227,9 @@ class ParamExplorer:
 
         # Also warm up the batch forward pass path for both model levels
         _net2 = build_2level_network(omega_2=-3.0)
-        _net2.input_data(
-            input_data=self._inp_data_, observed=self._obs_mask_
-        )
+        _net2.input_data(input_data=self._inp_data_, observed=self._obs_mask_)
         _net3 = build_3level_network(omega_2=-3.0, omega_3=-6.0, kappa=1.0)
-        _net3.input_data(
-            input_data=self._inp_data_, observed=self._obs_mask_
-        )
+        _net3.input_data(input_data=self._inp_data_, observed=self._obs_mask_)
         print("JAX warm-up complete.")
 
         # ------------------------------------------------------------------ #
@@ -339,9 +333,7 @@ class ParamExplorer:
         # ------------------------------------------------------------------ #
         # Use non-interactive Agg if no display backend is set yet, otherwise
         # allow the caller (notebook) to set %matplotlib widget beforehand.
-        fig, axes = plt.subplots(
-            4, 1, figsize=(12, 10), sharex=True
-        )
+        fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
         self._fig = fig
         self._axes: list[matplotlib.axes.Axes] = list(axes)
 
@@ -354,14 +346,20 @@ class ParamExplorer:
         ax0.set_ylim(0, 1)
         ax0.set_title("Belief trajectories P(reward)")
         self._belief_lines = [
-            ax0.plot(trial_x, np.full(n_trials, 0.5), color=cue_colors[i],
-                     label=f"Cue {i}")[0]
+            ax0.plot(
+                trial_x, np.full(n_trials, 0.5), color=cue_colors[i], label=f"Cue {i}"
+            )[0]
             for i in range(3)
         ]
         self._gt_lines = [
-            ax0.plot(trial_x, self._gt_probs[:, i], "--",
-                     color=cue_colors[i], alpha=0.4,
-                     label=f"GT cue {i}")[0]
+            ax0.plot(
+                trial_x,
+                self._gt_probs[:, i],
+                "--",
+                color=cue_colors[i],
+                alpha=0.4,
+                label=f"GT cue {i}",
+            )[0]
             for i in range(3)
         ]
         ax0.legend(loc="upper right", fontsize=7, ncol=2)
@@ -370,9 +368,7 @@ class ParamExplorer:
         ax1 = self._axes[1]
         ax1.set_ylabel("mu2 (volatility)")
         ax1.set_title("Shared volatility mu2")
-        self._mu2_line = ax1.plot(
-            trial_x, np.zeros(n_trials), color="tab:red"
-        )[0]
+        self._mu2_line = ax1.plot(trial_x, np.zeros(n_trials), color="tab:red")[0]
 
         # Panel 2: Choice probabilities
         ax2 = self._axes[2]
@@ -380,8 +376,12 @@ class ParamExplorer:
         ax2.set_ylim(0, 1)
         ax2.set_title("Choice probabilities P(choose cue)")
         self._prob_lines = [
-            ax2.plot(trial_x, np.full(n_trials, 1.0 / 3.0),
-                     color=cue_colors[i], label=f"Cue {i}")[0]
+            ax2.plot(
+                trial_x,
+                np.full(n_trials, 1.0 / 3.0),
+                color=cue_colors[i],
+                label=f"Cue {i}",
+            )[0]
             for i in range(3)
         ]
         ax2.legend(loc="upper right", fontsize=7)
@@ -393,8 +393,9 @@ class ParamExplorer:
         ax3.set_title("Effective learning rate per cue")
         ax3.set_xlabel("Trial")
         self._lr_lines = [
-            ax3.plot(trial_x, np.ones(n_trials),
-                     color=cue_colors[i], label=f"Cue {i}")[0]
+            ax3.plot(trial_x, np.ones(n_trials), color=cue_colors[i], label=f"Cue {i}")[
+                0
+            ]
             for i in range(3)
         ]
         ax3.legend(loc="upper right", fontsize=7)
@@ -453,9 +454,7 @@ class ParamExplorer:
         else:
             omega_3 = self._sliders["omega_3"].value
             kappa = self._sliders["kappa"].value
-            net = build_3level_network(
-                omega_2=omega_2, omega_3=omega_3, kappa=kappa
-            )
+            net = build_3level_network(omega_2=omega_2, omega_3=omega_3, kappa=kappa)
 
         # Set initial beliefs on binary INPUT nodes
         for idx in INPUT_NODES:
@@ -467,9 +466,7 @@ class ParamExplorer:
             net.attributes[VOLATILITY_NODE]["mean"] = float(mu_3_0)
 
         # Batch forward pass over all trials
-        net.input_data(
-            input_data=self._inp_data_, observed=self._obs_mask_
-        )
+        net.input_data(input_data=self._inp_data_, observed=self._obs_mask_)
 
         # Extract beliefs
         if model == "2-level":
@@ -551,9 +548,7 @@ class ParamExplorer:
         # Panel 2: choice probabilities
         if self._cached_choice_probs_ is not None:
             for i in range(3):
-                self._prob_lines[i].set_ydata(
-                    self._cached_choice_probs_[:, i]
-                )
+                self._prob_lines[i].set_ydata(self._cached_choice_probs_[:, i])
 
         # Panel 3: effective learning rates
         if self._cached_lr_ is not None:

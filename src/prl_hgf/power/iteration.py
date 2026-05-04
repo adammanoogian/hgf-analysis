@@ -220,9 +220,7 @@ def _compute_bms_power(
     """
     # Get unique participant-session keys
     keys = (
-        sim_df[["participant_id", "group", "session"]]
-        .drop_duplicates()
-        .values.tolist()
+        sim_df[["participant_id", "group", "session"]].drop_duplicates().values.tolist()
     )
 
     waic_rows: list[dict] = []
@@ -253,9 +251,7 @@ def _compute_bms_power(
                 }
             )
         except Exception:
-            log.exception(
-                "WAIC failed for %s (%s/%s) model=hgf_3level", pid, grp, sess
-            )
+            log.exception("WAIC failed for %s (%s/%s) model=hgf_3level", pid, grp, sess)
 
     # Free 3-level idata before Phase B
     del idata_3level
@@ -286,9 +282,7 @@ def _compute_bms_power(
                 }
             )
         except Exception:
-            log.exception(
-                "WAIC failed for %s (%s/%s) model=hgf_2level", pid, grp, sess
-            )
+            log.exception("WAIC failed for %s (%s/%s) model=hgf_2level", pid, grp, sess)
 
     if not waic_rows:
         return 0.5, False
@@ -296,17 +290,11 @@ def _compute_bms_power(
     waic_df = pd.DataFrame(waic_rows)
 
     # Average elpd_waic across sessions per (participant_id, model)
-    avg = (
-        waic_df.groupby(["participant_id", "model"])["elpd_waic"]
-        .mean()
-        .reset_index()
-    )
+    avg = waic_df.groupby(["participant_id", "model"])["elpd_waic"].mean().reset_index()
 
     # Pivot to (n_subjects, 2) matrix: columns [hgf_2level, hgf_3level]
     model_names = ["hgf_2level", "hgf_3level"]
-    pivot = avg.pivot(
-        index="participant_id", columns="model", values="elpd_waic"
-    )
+    pivot = avg.pivot(index="participant_id", columns="model", values="elpd_waic")
     missing_models = [m for m in model_names if m not in pivot.columns]
     if missing_models:
         log.warning("BMS: models %s missing from WAIC results", missing_models)
@@ -354,9 +342,7 @@ def _extract_diagnostics(
     # Recovery r for omega_2
     recovery_r = float("nan")
     try:
-        recovery_df = build_recovery_df(
-            sim_df, fit_df, exclude_flagged=True, min_n=0
-        )
+        recovery_df = build_recovery_df(sim_df, fit_df, exclude_flagged=True, min_n=0)
         if len(recovery_df) > 0:
             metrics_df = compute_recovery_metrics(recovery_df)
             omega_2_row = metrics_df[metrics_df["parameter"] == "omega_2"]
@@ -437,9 +423,7 @@ def run_power_iteration(
         ``did_followup``, ``linear_trend``.
     """
     # Step 1: Build frozen config
-    cfg = make_power_config(
-        base_config, n_per_group, effect_size_delta, child_seed
-    )
+    cfg = make_power_config(base_config, n_per_group, effect_size_delta, child_seed)
 
     # Step 2: Simulate
     sim_df = simulate_batch(cfg)
@@ -465,9 +449,7 @@ def run_power_iteration(
     )
 
     # Step 5: Extract diagnostics (uses fit_df_3 + sim_df)
-    recovery_r, n_divergences, mean_rhat = _extract_diagnostics(
-        sim_df, fit_df_3
-    )
+    recovery_r, n_divergences, mean_rhat = _extract_diagnostics(sim_df, fit_df_3)
 
     # Step 6: Fit 2-level model (for BMS path)
     fit_df_2, idata_2level = fit_batch(
@@ -547,9 +529,7 @@ def _compute_waic_table(
         averaged across sessions per (participant_id, model).
     """
     keys = (
-        sim_df[["participant_id", "group", "session"]]
-        .drop_duplicates()
-        .values.tolist()
+        sim_df[["participant_id", "group", "session"]].drop_duplicates().values.tolist()
     )
 
     waic_rows: list[dict] = []
@@ -585,22 +565,19 @@ def _compute_waic_table(
             except Exception:
                 log.exception(
                     "WAIC failed for %s (%s/%s) model=%s",
-                    pid, grp, sess, model_name,
+                    pid,
+                    grp,
+                    sess,
+                    model_name,
                 )
 
     if not waic_rows:
-        return pd.DataFrame(
-            columns=["participant_id", "model", "elpd_waic"]
-        )
+        return pd.DataFrame(columns=["participant_id", "model", "elpd_waic"])
 
     waic_df = pd.DataFrame(waic_rows)
 
     # Average across sessions per (participant_id, model)
-    avg = (
-        waic_df.groupby(["participant_id", "model"])["elpd_waic"]
-        .mean()
-        .reset_index()
-    )
+    avg = waic_df.groupby(["participant_id", "model"])["elpd_waic"].mean().reset_index()
     return avg
 
 
@@ -627,9 +604,7 @@ def _bms_from_waic_table(
     sub = waic_avg[waic_avg["participant_id"].isin(participant_ids)]
 
     model_names = ["hgf_2level", "hgf_3level"]
-    pivot = sub.pivot(
-        index="participant_id", columns="model", values="elpd_waic"
-    )
+    pivot = sub.pivot(index="participant_id", columns="model", values="elpd_waic")
     missing_models = [m for m in model_names if m not in pivot.columns]
     if missing_models:
         log.warning("BMS: models %s missing from WAIC results", missing_models)
@@ -692,10 +667,7 @@ def _idata_to_fit_df(
 
     # Parameter variables: all data_vars in the posterior
     coord_names = set(posterior.coords)
-    param_names = [
-        v for v in posterior.data_vars
-        if v not in coord_names
-    ]
+    param_names = [v for v in posterior.data_vars if v not in coord_names]
 
     rows: list[dict] = []
     for param in param_names:
@@ -950,9 +922,7 @@ def run_sbf_iteration(
     max_n = max(n_per_group_grid)
 
     # Step 1: Build frozen config at max N
-    cfg = make_power_config(
-        base_config, max_n, effect_size_delta, child_seed
-    )
+    cfg = make_power_config(base_config, max_n, effect_size_delta, child_seed)
 
     # Step 2: Simulate at max N (same for both paths — simulate_batch already
     # uses JAX vmap internally since Phase 13)
@@ -963,7 +933,9 @@ def run_sbf_iteration(
     # regardless of chunk_count (same RNG-seeded base cohort).
     if participant_chunk_count > 1:
         sim_df = subset_cohort_by_chunk(
-            sim_df, participant_chunk_id, participant_chunk_count,
+            sim_df,
+            participant_chunk_id,
+            participant_chunk_count,
         )
 
     if use_legacy:
@@ -1053,9 +1025,7 @@ def run_sbf_iteration(
     # Build sorted participant_id lists per group
     pid_by_group: dict[str, list] = {}
     for grp in sim_df["group"].unique():
-        pids = sorted(
-            sim_df.loc[sim_df["group"] == grp, "participant_id"].unique()
-        )
+        pids = sorted(sim_df.loc[sim_df["group"] == grp, "participant_id"].unique())
         pid_by_group[grp] = pids
 
     # Step 6: Subsample at each N level
@@ -1070,9 +1040,7 @@ def run_sbf_iteration(
         selected_set = set(selected_pids)
 
         # Filter fit_df and sim_df to selected participants
-        sub_fit_3 = fit_df_3[
-            fit_df_3["participant_id"].isin(selected_set)
-        ]
+        sub_fit_3 = fit_df_3[fit_df_3["participant_id"].isin(selected_set)]
         sub_sim = sim_df[sim_df["participant_id"].isin(selected_set)]
 
         # (a) BF contrasts on subsampled fit_df_3
@@ -1083,14 +1051,10 @@ def run_sbf_iteration(
         )
 
         # (b) BMS from pre-computed WAIC table
-        bms_xp, bms_correct = _bms_from_waic_table(
-            waic_table, list(selected_set)
-        )
+        bms_xp, bms_correct = _bms_from_waic_table(waic_table, list(selected_set))
 
         # (c) Diagnostics from subsampled data
-        recovery_r, n_divergences, mean_rhat = _extract_diagnostics(
-            sub_sim, sub_fit_3
-        )
+        recovery_r, n_divergences, mean_rhat = _extract_diagnostics(sub_sim, sub_fit_3)
 
         # (d) Build result rows
         for contrast in contrast_results:

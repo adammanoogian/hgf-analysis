@@ -313,9 +313,7 @@ def generate_session_patrl(
     initial_state: int = 0  # session always starts in safe state
     for run_idx in range(n_runs):
         regime = task.run_order[run_idx]
-        hazard = (
-            task.hazards.stable if regime == "stable" else task.hazards.volatile
-        )
+        hazard = task.hazards.stable if regime == "stable" else task.hazards.volatile
         state_run = generate_state_sequence(
             trials_per_run, hazard, initial_state, rng_state
         )
@@ -334,18 +332,12 @@ def generate_session_patrl(
     # --- Delta-HR ---
     lo, hi = task.delta_hr_stub.bounds
     if delta_hr_override is not None:
-        delta_hr_arr = np.clip(
-            np.asarray(delta_hr_override, dtype=np.float64), lo, hi
-        )
+        delta_hr_arr = np.clip(np.asarray(delta_hr_override, dtype=np.float64), lo, hi)
     else:
-        delta_hr_arr = generate_delta_hr_stub(
-            state_full, task.delta_hr_stub, rng_dhr
-        )
+        delta_hr_arr = generate_delta_hr_stub(state_full, task.delta_hr_stub, rng_dhr)
 
     # --- Outcome onset times ---
-    outcome_time_arr = compute_outcome_times_s(
-        n_runs, trials_per_run, task.timing
-    )
+    outcome_time_arr = compute_outcome_times_s(n_runs, trials_per_run, task.timing)
 
     # --- Assemble trial list ---
     trials: list[PATRLTrial] = []

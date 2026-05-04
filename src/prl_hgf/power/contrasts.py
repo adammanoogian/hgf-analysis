@@ -114,22 +114,15 @@ def compute_did_contrast(
         raise ValueError(msg)
 
     param_df = fit_df[fit_df["parameter"] == parameter]
-    wide = (
-        param_df.pivot_table(
-            index=["participant_id", "group"],
-            columns="session",
-            values="mean",
-        )
-        .reset_index()
-    )
+    wide = param_df.pivot_table(
+        index=["participant_id", "group"],
+        columns="session",
+        values="mean",
+    ).reset_index()
     wide["did"] = wide[session_a] - wide[session_b]
 
-    psi_did = (
-        wide.loc[wide["group"] == "psilocybin", "did"].dropna().to_numpy()
-    )
-    plc_did = (
-        wide.loc[wide["group"] == "placebo", "did"].dropna().to_numpy()
-    )
+    psi_did = wide.loc[wide["group"] == "psilocybin", "did"].dropna().to_numpy()
+    plc_did = wide.loc[wide["group"] == "placebo", "did"].dropna().to_numpy()
     return psi_did, plc_did
 
 
@@ -170,26 +163,17 @@ def compute_linear_trend_contrast(
         raise ValueError(msg)
 
     param_df = fit_df[fit_df["parameter"] == parameter]
-    wide = (
-        param_df.pivot_table(
-            index=["participant_id", "group"],
-            columns="session",
-            values="mean",
-        )
-        .reset_index()
-    )
+    wide = param_df.pivot_table(
+        index=["participant_id", "group"],
+        columns="session",
+        values="mean",
+    ).reset_index()
     wide["trend"] = (
-        -1.0 * wide["baseline"]
-        + 0.0 * wide["post_dose"]
-        + 1.0 * wide["followup"]
+        -1.0 * wide["baseline"] + 0.0 * wide["post_dose"] + 1.0 * wide["followup"]
     )
 
-    psi_trend = (
-        wide.loc[wide["group"] == "psilocybin", "trend"].dropna().to_numpy()
-    )
-    plc_trend = (
-        wide.loc[wide["group"] == "placebo", "trend"].dropna().to_numpy()
-    )
+    psi_trend = wide.loc[wide["group"] == "psilocybin", "trend"].dropna().to_numpy()
+    plc_trend = wide.loc[wide["group"] == "placebo", "trend"].dropna().to_numpy()
     return psi_trend, plc_trend
 
 

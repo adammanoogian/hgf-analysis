@@ -304,5 +304,8 @@ def simulate_agent(
         prev_choice = choice
 
     return SimulationResult(
-        choices=choices, rewards=rewards, beliefs=beliefs, diverged=diverged,
+        choices=choices,
+        rewards=rewards,
+        beliefs=beliefs,
+        diverged=diverged,
     )

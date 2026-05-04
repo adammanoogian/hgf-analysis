@@ -277,9 +277,7 @@ def build_logp_ops_3level(
 
         return jnp.where(jnp.isnan(result), -jnp.inf, result)
 
-    _jit_val_grad = jax.jit(
-        jax.value_and_grad(_jax_logp, argnums=(0, 1, 2, 3, 4))
-    )
+    _jit_val_grad = jax.jit(jax.value_and_grad(_jax_logp, argnums=(0, 1, 2, 3, 4)))
     _jit_logp = jax.jit(_jax_logp)
 
     class _GradOp(Op):

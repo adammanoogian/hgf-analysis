@@ -125,7 +125,9 @@ def simulate_batch(
     all_cue_probs: list[jnp.ndarray] = []
     all_rng_keys: list[jnp.ndarray] = []
     all_trials: list[list] = []
-    all_metadata: list[tuple] = []  # (group_name, participant_id, session_label, session_idx, params)
+    all_metadata: list[
+        tuple
+    ] = []  # (group_name, participant_id, session_label, session_idx, params)
 
     flat_idx: int = 0
 
@@ -179,8 +181,8 @@ def simulate_batch(
         "beta": jnp.array(all_beta),
         "zeta": jnp.array(all_zeta),
     }
-    cue_probs_batch = jnp.stack(all_cue_probs)   # shape (P_total, n_trials, 3)
-    rng_keys_batch = jnp.stack(all_rng_keys)      # shape (P_total, 2)
+    cue_probs_batch = jnp.stack(all_cue_probs)  # shape (P_total, n_trials, 3)
+    rng_keys_batch = jnp.stack(all_rng_keys)  # shape (P_total, 2)
 
     # --- Single vmapped call over entire cohort ---
     scan_fn, base_attrs = _build_session_scanner()

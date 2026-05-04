@@ -9,6 +9,7 @@ from PAT-RL changes.
 PAT-RL callers import directly from this module::
 
     from prl_hgf.env.pat_rl_config import load_pat_rl_config
+
     cfg = load_pat_rl_config()
 """
 
@@ -129,9 +130,7 @@ class OutcomeProbs:
             ("nothing", self.nothing),
         ):
             if not (0.0 <= val <= 1.0):
-                raise ValueError(
-                    f"OutcomeProbs: {name} must be in [0, 1], got {val}"
-                )
+                raise ValueError(f"OutcomeProbs: {name} must be in [0, 1], got {val}")
         total = self.reward + self.shock + self.nothing
         if abs(total - 1.0) > 1e-6:
             raise ValueError(
@@ -228,9 +227,7 @@ class TimingConfig:
             ("iti_s", self.iti_s),
         ):
             if val <= 0.0:
-                raise ValueError(
-                    f"TimingConfig: {name} must be > 0, got {val}"
-                )
+                raise ValueError(f"TimingConfig: {name} must be > 0, got {val}")
 
     @property
     def trial_duration_s(self) -> float:
@@ -260,9 +257,7 @@ class DeltaHRDistribution:
 
     def __post_init__(self) -> None:
         if self.sd <= 0.0:
-            raise ValueError(
-                f"DeltaHRDistribution: sd must be > 0, got {self.sd}"
-            )
+            raise ValueError(f"DeltaHRDistribution: sd must be > 0, got {self.sd}")
 
 
 @dataclass(frozen=True)
@@ -383,9 +378,7 @@ class PriorGaussian:
 
     def __post_init__(self) -> None:
         if self.sd < 0.0:
-            raise ValueError(
-                f"PriorGaussian: sd must be >= 0, got {self.sd}"
-            )
+            raise ValueError(f"PriorGaussian: sd must be >= 0, got {self.sd}")
 
 
 @dataclass(frozen=True)
@@ -421,9 +414,7 @@ class PriorTruncated:
                 f"got mean={self.mean}, lower={self.lower}, upper={self.upper}"
             )
         if self.sd <= 0.0:
-            raise ValueError(
-                f"PriorTruncated: sd must be > 0, got {self.sd}"
-            )
+            raise ValueError(f"PriorTruncated: sd must be > 0, got {self.sd}")
 
 
 @dataclass(frozen=True)
@@ -485,9 +476,7 @@ class PhenotypeParams:
 
     def __post_init__(self) -> None:
         if self.dhr_sd <= 0.0:
-            raise ValueError(
-                f"PhenotypeParams: dhr_sd must be > 0, got {self.dhr_sd}"
-            )
+            raise ValueError(f"PhenotypeParams: dhr_sd must be > 0, got {self.dhr_sd}")
         if self.epsilon2_coupling_coef < 0.0:
             raise ValueError(
                 "PhenotypeParams: epsilon2_coupling_coef must be >= 0, "
@@ -620,9 +609,7 @@ class PATRLFittingConfig:
             ("n_draws", self.n_draws),
         ):
             if val < 1:
-                raise ValueError(
-                    f"PATRLFittingConfig: {name} must be >= 1, got {val}"
-                )
+                raise ValueError(f"PATRLFittingConfig: {name} must be >= 1, got {val}")
         if not (0.0 < self.target_accept < 1.0):
             raise ValueError(
                 "PATRLFittingConfig: target_accept must be in (0, 1), "
@@ -852,9 +839,7 @@ def load_pat_rl_config(path: Path | None = None) -> PATRLConfig:
     """
     resolved: Path = path if path is not None else _DEFAULT_PATRL_CONFIG_PATH
     if not resolved.exists():
-        raise FileNotFoundError(
-            f"PAT-RL config not found at expected path: {resolved}"
-        )
+        raise FileNotFoundError(f"PAT-RL config not found at expected path: {resolved}")
     raw: dict[str, Any] = yaml.safe_load(resolved.read_text())
     return PATRLConfig(
         task=_parse_task(raw["task"]),

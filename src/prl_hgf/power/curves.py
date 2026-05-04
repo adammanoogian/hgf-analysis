@@ -143,12 +143,14 @@ def compute_power_a(
     --------
     >>> import pandas as pd
     >>> from prl_hgf.power.curves import compute_power_a
-    >>> df = pd.DataFrame({
-    ...     "sweep_type": ["did_postdose"] * 4,
-    ...     "n_per_group": [20, 20, 30, 30],
-    ...     "effect_size": [0.5, 0.5, 0.5, 0.5],
-    ...     "bf_exceeds": [True, False, True, True],
-    ... })
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "sweep_type": ["did_postdose"] * 4,
+    ...         "n_per_group": [20, 20, 30, 30],
+    ...         "effect_size": [0.5, 0.5, 0.5, 0.5],
+    ...         "bf_exceeds": [True, False, True, True],
+    ...     }
+    ... )
     >>> compute_power_a(df)  # doctest: +SKIP
     """
     subset = master_df[master_df["sweep_type"] == sweep_type].copy()
@@ -188,18 +190,18 @@ def compute_power_b(master_df: pd.DataFrame) -> pd.DataFrame:
     --------
     >>> import pandas as pd
     >>> from prl_hgf.power.curves import compute_power_b
-    >>> df = pd.DataFrame({
-    ...     "sweep_type": ["did_postdose", "kappa", "omega_3"] * 2,
-    ...     "n_per_group": [20] * 6,
-    ...     "iteration": [0, 0, 0, 1, 1, 1],
-    ...     "bms_correct": [True, True, True, False, False, False],
-    ... })
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "sweep_type": ["did_postdose", "kappa", "omega_3"] * 2,
+    ...         "n_per_group": [20] * 6,
+    ...         "iteration": [0, 0, 0, 1, 1, 1],
+    ...         "bms_correct": [True, True, True, False, False, False],
+    ...     }
+    ... )
     >>> compute_power_b(df)  # doctest: +SKIP
     """
     # Deduplicate: keep one row per (n_per_group, iteration)
-    deduped = master_df.drop_duplicates(
-        subset=["n_per_group", "iteration"]
-    ).copy()
+    deduped = master_df.drop_duplicates(subset=["n_per_group", "iteration"]).copy()
 
     grouped = (
         deduped.groupby("n_per_group")["bms_correct"]

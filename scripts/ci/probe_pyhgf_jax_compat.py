@@ -41,20 +41,25 @@ def main() -> int:
     """
     try:
         import jax
+        import numpy as np
         import pyhgf
         from pyhgf.model import HGF
 
         print(f"JAX: {jax.__version__}")
         print(f"pyhgf: {pyhgf.__version__}")
 
+        # pyhgf 0.2.8 input_data() expects ndarray with shape (n_trials,) —
+        # NOT a nested list or a 2d array with wrong axis orientation.
+        _inputs = np.array([1, 0, 1, 1, 0], dtype=float)
+
         # Minimal 2-level binary HGF construction + one update step.
         hgf2 = HGF(n_levels=2, model_type="binary")
-        hgf2.input_data(input_data=[[1, 0, 1, 1, 0]])
+        hgf2.input_data(input_data=_inputs)
         print("2-level binary HGF: OK")
 
         # Minimal 3-level binary HGF (production model used in Phase 3+).
         hgf3 = HGF(n_levels=3, model_type="binary")
-        hgf3.input_data(input_data=[[1, 0, 1, 1, 0]])
+        hgf3.input_data(input_data=_inputs)
         print("3-level binary HGF: OK")
 
         # Confirm jax.lax.scan works (used internally by pyhgf's belief update).

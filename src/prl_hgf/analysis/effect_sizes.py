@@ -207,9 +207,7 @@ def compute_effect_sizes_table(
     group_a = groups_in_data[0]
     group_b = groups_in_data[1]
 
-    logger.info(
-        "Computing effect sizes: group_a=%s vs group_b=%s", group_a, group_b
-    )
+    logger.info("Computing effect sizes: group_a=%s vs group_b=%s", group_a, group_b)
 
     rows = []
     for param in params:
@@ -217,12 +215,8 @@ def compute_effect_sizes_table(
             mask_session = estimates_wide["session"] == session
             df_sess = estimates_wide.loc[mask_session]
 
-            n_a = int(
-                df_sess.loc[df_sess["group"] == group_a, param].notna().sum()
-            )
-            n_b = int(
-                df_sess.loc[df_sess["group"] == group_b, param].notna().sum()
-            )
+            n_a = int(df_sess.loc[df_sess["group"] == group_a, param].notna().sum())
+            n_b = int(df_sess.loc[df_sess["group"] == group_b, param].notna().sum())
 
             try:
                 d = compute_cohens_d(

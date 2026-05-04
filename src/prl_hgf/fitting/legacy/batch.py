@@ -347,7 +347,9 @@ def fit_batch(
         results_df.to_csv(output_path, index=False)
         print(f"Saved batch results to: {output_path}")
 
-    n_flagged = int(results_df["flagged"].sum()) if "flagged" in results_df.columns else 0
+    n_flagged = (
+        int(results_df["flagged"].sum()) if "flagged" in results_df.columns else 0
+    )
     n_rows = len(results_df)
     print(
         f"Batch complete: {n_rows} result rows, "

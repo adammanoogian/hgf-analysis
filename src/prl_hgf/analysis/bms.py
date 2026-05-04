@@ -108,13 +108,9 @@ def compute_subject_waic(
     from prl_hgf.fitting.ops import build_logp_ops_2level, build_logp_ops_3level
 
     if model_name == _MODEL_2LEVEL:
-        logp_op, _ = build_logp_ops_2level(
-            input_data_arr, observed_arr, choices_arr
-        )
+        logp_op, _ = build_logp_ops_2level(input_data_arr, observed_arr, choices_arr)
     elif model_name == _MODEL_3LEVEL:
-        logp_op, _ = build_logp_ops_3level(
-            input_data_arr, observed_arr, choices_arr
-        )
+        logp_op, _ = build_logp_ops_3level(input_data_arr, observed_arr, choices_arr)
     else:
         raise ValueError(
             f"model_name must be {_MODEL_2LEVEL!r} or {_MODEL_3LEVEL!r},"
@@ -234,9 +230,9 @@ def compute_batch_waic(
         input_data_arr = sub[["reward_c0", "reward_c1", "reward_c2"]].to_numpy(
             dtype=float
         )
-        observed_arr = sub[
-            ["observed_c0", "observed_c1", "observed_c2"]
-        ].to_numpy(dtype=int)
+        observed_arr = sub[["observed_c0", "observed_c1", "observed_c2"]].to_numpy(
+            dtype=int
+        )
         choices_arr = sub["choice"].to_numpy(dtype=int)
 
         for model in model_names:
@@ -268,8 +264,7 @@ def compute_batch_waic(
                 )
             except Exception:
                 log.exception(
-                    "WAIC failed for participant=%s group=%s session=%s"
-                    " model=%s",
+                    "WAIC failed for participant=%s group=%s session=%s model=%s",
                     pid,
                     grp,
                     sess,
@@ -332,9 +327,7 @@ def run_group_bms(
     In practice, we extract ``bor`` by calling ``get_result`` and checking
     the ``bor`` attribute directly since the package computes it internally.
     """
-    assert (
-        elpd_matrix.ndim == 2 and elpd_matrix.shape[1] == len(model_names)
-    ), (
+    assert elpd_matrix.ndim == 2 and elpd_matrix.shape[1] == len(model_names), (
         f"elpd_matrix must be (n_subjects, n_models={len(model_names)}),"
         f" got {elpd_matrix.shape}"
     )
@@ -404,14 +397,8 @@ def run_stratified_bms(
 
     def _build_matrix(df: pd.DataFrame) -> np.ndarray | None:
         """Average across sessions then pivot to (subjects, models)."""
-        avg = (
-            df.groupby(["participant_id", "model"])["elpd_waic"]
-            .mean()
-            .reset_index()
-        )
-        pivot = avg.pivot(
-            index="participant_id", columns="model", values="elpd_waic"
-        )
+        avg = df.groupby(["participant_id", "model"])["elpd_waic"].mean().reset_index()
+        pivot = avg.pivot(index="participant_id", columns="model", values="elpd_waic")
         # Ensure column order matches model_names
         missing = [m for m in model_names if m not in pivot.columns]
         if missing:
@@ -636,7 +623,11 @@ def compute_subject_waic_patrl(
     import jax.numpy as jnp
 
     single_logp = _make_single_logp_fn(
-        base_attrs, scan_fn, belief_idx, model_name, n_trials,
+        base_attrs,
+        scan_fn,
+        belief_idx,
+        model_name,
+        n_trials,
         response_model="model_a",
         delta_hr_jnp=jnp.asarray(delta_hr_1d[0]),
     )
@@ -908,9 +899,7 @@ def compute_stratified_bms(
     if mat is not None:
         results["all"] = run_group_bms(mat, model_names, group_label="all")
     else:
-        log.warning(
-            "compute_stratified_bms: could not build pooled ELPD matrix"
-        )
+        log.warning("compute_stratified_bms: could not build pooled ELPD matrix")
 
     # Per-phenotype BMS.
     for phen in sorted(fit_df[phenotype_col].unique()):
@@ -918,8 +907,7 @@ def compute_stratified_bms(
         mat = _build_matrix(sub)
         if mat is None:
             log.warning(
-                "compute_stratified_bms: could not build ELPD matrix for "
-                "phenotype=%s",
+                "compute_stratified_bms: could not build ELPD matrix for phenotype=%s",
                 phen,
             )
             continue
@@ -1010,8 +998,7 @@ def export_peb_covariates(
         missing = required - set(df.columns)
         if missing:
             raise ValueError(
-                f"export_peb_covariates: {name} missing columns "
-                f"{sorted(missing)}"
+                f"export_peb_covariates: {name} missing columns {sorted(missing)}"
             )
 
     df2 = fit_df_2level[["participant_id", phenotype_col, evidence_col]].rename(

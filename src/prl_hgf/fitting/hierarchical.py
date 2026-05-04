@@ -1162,7 +1162,9 @@ def _laplace_warmup_params(
     t0 = time.perf_counter()
     try:
         solver = jaxopt.LBFGS(
-            fun=neg_logp_flat, maxiter=n_lbfgs_iter, tol=lbfgs_tol,
+            fun=neg_logp_flat,
+            maxiter=n_lbfgs_iter,
+            tol=lbfgs_tol,
         )
         res = solver.run(flat_init)
         flat_map = res.params
@@ -1190,8 +1192,7 @@ def _laplace_warmup_params(
     # pass on top of the existing reverse-mode grad.  vmap'd across the i
     # dimension produces the full diagonal in one compiled call.
     print(
-        f"[laplace_warmup] computing Hessian diagonal "
-        f"(n={n_flat} jvps)...",
+        f"[laplace_warmup] computing Hessian diagonal (n={n_flat} jvps)...",
         flush=True,
     )
     t0 = time.perf_counter()
@@ -1445,9 +1446,7 @@ def _run_blackjax_nuts(
                 p_axis=_p_axis,
                 elapsed_s=_warmup_elapsed,
                 adapted_step_size=warmup_params.get("step_size"),
-                adapted_inverse_mass_matrix=warmup_params.get(
-                    "inverse_mass_matrix"
-                ),
+                adapted_inverse_mass_matrix=warmup_params.get("inverse_mass_matrix"),
             )
         except Exception as exc:  # noqa: BLE001
             # Diagnostics must never break a fit — log and continue.
@@ -1509,8 +1508,7 @@ def _run_blackjax_nuts(
         # of the closure-free logdensity is compiled with traced data
         # and cached.
         init_pos = (
-            warmup_state.position if warmup_state is not None
-            else initial_position
+            warmup_state.position if warmup_state is not None else initial_position
         )
 
         _t_s0 = time.perf_counter()
@@ -2042,7 +2040,9 @@ def _build_sample_loop(
         # per phase anyway).  Host callback is async (ordered=False) so it
         # does not block the scan.
         progress_cb = _build_progress_callback(
-            log_every, n_chains, phase_label,
+            log_every,
+            n_chains,
+            phase_label,
         )
 
         def _one_step(states, scan_in):  # noqa: ANN001
@@ -2781,28 +2781,26 @@ def fit_batch_hierarchical(
             "dispatching to _run_blackjax_nuts",
             flush=True,
         )
-        positions, sample_stats, n_chains_actual, adapted_params = (
-            _run_blackjax_nuts(
-                logdensity_fn,
-                initial_position,
-                rng_key,
-                n_tune=n_tune,
-                n_draws=n_draws,
-                n_chains=n_chains,
-                target_accept=target_accept,
-                batched_logp_fn=logp_fn,
-                input_data=jax_input_data,
-                observed=jax_observed,
-                choices=jax_choices,
-                trial_mask=jax_trial_mask,
-                model_name=model_name,
-                warmup_params=warmup_params,
-                log_every=log_every,
-                phase_label=model_name.replace("hgf_", ""),
-                max_tree_depth=max_tree_depth,
-                use_laplace_warmup=use_laplace_warmup,
-                tight_omega3_prior=tight_omega3_prior,
-            )
+        positions, sample_stats, n_chains_actual, adapted_params = _run_blackjax_nuts(
+            logdensity_fn,
+            initial_position,
+            rng_key,
+            n_tune=n_tune,
+            n_draws=n_draws,
+            n_chains=n_chains,
+            target_accept=target_accept,
+            batched_logp_fn=logp_fn,
+            input_data=jax_input_data,
+            observed=jax_observed,
+            choices=jax_choices,
+            trial_mask=jax_trial_mask,
+            model_name=model_name,
+            warmup_params=warmup_params,
+            log_every=log_every,
+            phase_label=model_name.replace("hgf_", ""),
+            max_tree_depth=max_tree_depth,
+            use_laplace_warmup=use_laplace_warmup,
+            tight_omega3_prior=tight_omega3_prior,
         )
         print(
             f"[fit_batch_hierarchical t={time.perf_counter() - _t_fb0:.1f}s] "
