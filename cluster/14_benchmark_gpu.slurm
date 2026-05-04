@@ -22,6 +22,10 @@
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --cpus-per-task=4
+# Override gres at submit time for multi-GPU pmap chains:
+#   sbatch --gres=gpu:4 --export=ALL,FIT_CHAINS=4 cluster/14_benchmark_gpu.slurm
+# When n_devices >= n_chains the code dispatches pmap (one chain per GPU)
+# instead of vmap (all chains share one device).
 
 # =============================================================================
 # Environment Setup
@@ -138,6 +142,20 @@ export SAMPLER="${SAMPLER:-blackjax}"
 # =============================================================================
 export MAX_TREE_DEPTH="${MAX_TREE_DEPTH:-10}"
 
+# Chain count — should match number of GPUs allocated (--gres=gpu:N) so the
+# pmap path activates (one chain per device). Defaults to 4 to match the
+# historical vmap-on-1-GPU configuration.
+export FIT_CHAINS="${FIT_CHAINS:-4}"
+
+# Precision: JAX_X64=1 sets fp64 (numerically correct for HGF integrators;
+# may eliminate the step_size→1e-10 underflow seen in fp32 runs). Adds the
+# --enable-x64 CLI flag, which the script picks up *before* importing jax.
+export JAX_X64="${JAX_X64:-0}"
+_X64_FLAG=""
+if [[ "${JAX_X64}" == "1" ]]; then
+    _X64_FLAG="--enable-x64"
+fi
+
 # variant 2: when set to 1, replaces window_adaptation with Laplace-derived
 # (step_size, inverse_mass_matrix).
 export LAPLACE_WARMUP="${LAPLACE_WARMUP:-0}"
@@ -192,6 +210,8 @@ echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "Sampler:  ${SAMPLER}"
+echo "Fit chains: ${FIT_CHAINS}"
+echo "Precision:  $([[ "${JAX_X64}" == "1" ]] && echo fp64 || echo fp32)  (JAX_X64=${JAX_X64})"
 echo "Max tree depth: ${MAX_TREE_DEPTH}"
 echo "Laplace warmup: ${LAPLACE_WARMUP}"
 echo "Tight omega3:   ${TIGHT_OMEGA3}"
@@ -225,13 +245,14 @@ python scripts/03_pre_analysis/03_run_power_iteration.py \
     --benchmark \
     --chunk-id 0 \
     --job-id "${SLURM_JOB_ID:-bench14}" \
-    --fit-chains 4 \
+    --fit-chains "${FIT_CHAINS}" \
     --fit-draws 500 \
     --fit-tune 500 \
     --sampler "${SAMPLER}" \
     --max-tree-depth "${MAX_TREE_DEPTH}" \
     --benchmark-model "${BENCH_MODEL}" \
     --benchmark-out-suffix "${BENCH_OUT_SUFFIX}" \
+    ${_X64_FLAG} \
     ${_LAPLACE_FLAG} \
     ${_TIGHT_OMEGA3_FLAG} \
     ${_LAPLACE_ONLY_FLAG} \
