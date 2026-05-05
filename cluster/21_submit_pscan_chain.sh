@@ -36,6 +36,9 @@ if [[ ! -f cluster/21_diagnose_pscan.slurm ]]; then
     exit 1
 fi
 
+# Strip Windows CRLF before sbatch (idempotent; gotcha #1 from slurm-autopush skill).
+sed -i 's/\r$//' cluster/*.slurm cluster/*.sh 2>/dev/null || true
+
 declare -a P_VALUES=(5 20 50)
 
 declare -A COLD_JOBIDS

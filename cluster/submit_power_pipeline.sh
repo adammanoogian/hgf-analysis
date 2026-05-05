@@ -161,6 +161,14 @@ echo "Benchmark: $BENCHMARK"
 echo "Start:     $(date)"
 echo "============================================================"
 
+# ---------------------------------------------------------------------------
+# Strip Windows CRLF from sibling SLURM/sh files (sbatch rejects \r)
+# ---------------------------------------------------------------------------
+# Idempotent — safe to run every invocation. Required because the repo is
+# cloned on Windows; CRLF surfaces as "bad interpreter" / "invalid argument"
+# from sbatch. Gotcha #1 in the slurm-autopush skill.
+sed -i 's/\r$//' cluster/*.slurm cluster/*.sh 2>/dev/null || true
+
 # --- Wave 1: Power Sweep (GPU array job) ---
 echo ""
 echo "--- Wave 1: Power Sweep (GPU) ---"

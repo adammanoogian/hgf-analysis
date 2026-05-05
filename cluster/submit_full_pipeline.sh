@@ -68,6 +68,15 @@ PROJECT_ROOT="$(pwd)"
 
 mkdir -p cluster/logs
 
+# ---------------------------------------------------------------------------
+# Strip Windows CRLF from sibling SLURM/sh files (sbatch rejects \r)
+# ---------------------------------------------------------------------------
+# Idempotent — safe to run every invocation. Required because the repo is
+# cloned on Windows and `* text=auto eol=lf` in .gitattributes is not
+# always honoured by Windows git. sbatch fails with "bad interpreter" or
+# "invalid argument" on CRLF; this is gotcha #1 in the slurm-autopush skill.
+sed -i 's/\r$//' cluster/*.slurm cluster/*.sh 2>/dev/null || true
+
 echo "============================================================"
 echo "PRL HGF Pipeline Orchestrator"
 echo "============================================================"
@@ -185,11 +194,23 @@ if [[ "$SKIP_PUSH" == "false" ]]; then
     ALL_JOBIDS+=("$ANALYSIS_JOBID")
     PARENT_LIST=$(IFS=' '; echo "${ALL_JOBIDS[*]}")
 
+    # afterany on the FULL job set (not just the last one): we want the push
+    # to fire when every parent has finished (success or failure), so logs
+    # come back even if validation/analysis crashed mid-pipeline.
+    FULL_DEP=$(IFS=:; echo "${ALL_JOBIDS[*]}")
+
+    PUSH_MAIL_FLAGS=()
+    if [[ -n "${NOTIFY_EMAIL:-}" ]]; then
+        PUSH_MAIL_FLAGS=(--mail-type=END,FAIL --mail-user="$NOTIFY_EMAIL")
+    fi
+
     PUSH_JOBID=$(sbatch --parsable \
-        --dependency=afterany:${ANALYSIS_JOBID} \
-        --export="ALL,PARENT_JOBS=${PARENT_LIST}" \
+        --dependency=afterany:${FULL_DEP} \
+        "${PUSH_MAIL_FLAGS[@]}" \
+        --export="ALL,PARENT_JOBS=${PARENT_LIST},NOTIFY_EMAIL=${NOTIFY_EMAIL:-},GIT_REMOTE=${GIT_REMOTE:-origin}" \
         cluster/99_push_results.slurm)
-    echo "  Push -> Job $PUSH_JOBID (depends on analysis: ${ANALYSIS_JOBID})"
+    echo "  Push -> Job $PUSH_JOBID (afterany on ${#ALL_JOBIDS[@]} parents)"
+    [[ -n "${NOTIFY_EMAIL:-}" ]] && echo "  email notifications: $NOTIFY_EMAIL"
 else
     echo ""
     echo "Wave 5: Push SKIPPED (--skip-push)"
