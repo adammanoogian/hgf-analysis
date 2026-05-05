@@ -22,7 +22,17 @@
 #
 #    The patched Python source is also archived at vendor/pyhgf/pyhgf/typing.py.
 #
-# 4. Install cluster GPU requirements (M3/MASSIVE only):
+# 4. (M3/MASSIVE GPU clusters only) Install CUDA jaxlib wheels:
+#
+#      conda run -n ds_env_v10 pip install -U "jax[cuda12]==0.10.0"
+#
+#    The base `jax`/`jaxlib` from PyPI is CPU-only — `jax[cuda12]` adds the
+#    `jax-cuda12-pjrt` + `jax-cuda12-plugin` wheels and bundled cu12 libs.
+#    No `module load cuda` required (JAX brings its own runtime).
+#    Verify on a GPU node: `python -c "import jax; print(jax.devices())"`
+#    should print [CudaDevice(...)] (NOT [CpuDevice(...)]).
+#
+# 4b. Install cluster GPU requirements (optional, M3/MASSIVE only):
 #
 #      conda run -n ds_env_v10 pip install -r cluster/requirements-gpu.txt
 #
@@ -41,6 +51,10 @@ dependencies:
   - python=3.11
   - pip
   - pip:
+    # CPU baseline; on GPU clusters, override with `pip install -U "jax[cuda12]==0.10.0"`
+    # after env create (see step 4a in the runbook above). The base `jax`/`jaxlib`
+    # wheels from PyPI are CPU-only — `jax[cuda12]` pulls the pjrt+plugin wheels
+    # and bundled NVIDIA cu12 libs. No system CUDA module load required.
     - "jax>=0.9.0,<0.11"
     - "jaxlib>=0.9.0,<0.11"
     - "blackjax>=1.5,<2.0"
