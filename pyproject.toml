@@ -10,8 +10,12 @@ requires-python = ">=3.11"
 authors = [{name = "Adam Manoogian"}]
 dependencies = [
     "pyhgf>=0.2.8,<0.3",
-    "jax>=0.9.0,<0.11",
-    "jaxlib>=0.9.0,<0.11",
+    # Cap below 0.10 — JAX 0.10's bundled CUDA plugin requires
+    # nvidia-cusparse-cu12>=12.9 which is not yet on PyPI (cap is 12.5.10.65).
+    # Hit on M3 GPU node m3g107 during DEPS-05 validation 2026-05-05.
+    # Revisit when nvidia-cusparse-cu12 12.9.x lands on PyPI.
+    "jax>=0.9.0,<0.10",
+    "jaxlib>=0.9.0,<0.10",
     "blackjax>=1.5,<2.0",
     "numpyro>=0.21.0,<0.22",
     "jaxopt>=0.8.5,<0.9",

@@ -24,7 +24,7 @@
 #
 # 4. (M3/MASSIVE GPU clusters only) Install CUDA jaxlib wheels:
 #
-#      conda run -n ds_env_v10 pip install -U "jax[cuda12]==0.10.0"
+#      conda run -n ds_env_v10 pip install -U "jax[cuda12]>=0.9,<0.10"
 #
 #    The base `jax`/`jaxlib` from PyPI is CPU-only — `jax[cuda12]` adds the
 #    `jax-cuda12-pjrt` + `jax-cuda12-plugin` wheels and bundled cu12 libs.
@@ -51,12 +51,15 @@ dependencies:
   - python=3.11
   - pip
   - pip:
-    # CPU baseline; on GPU clusters, override with `pip install -U "jax[cuda12]==0.10.0"`
-    # after env create (see step 4a in the runbook above). The base `jax`/`jaxlib`
+    # CPU baseline; on GPU clusters, override with `pip install -U "jax[cuda12]>=0.9,<0.10"`
+    # after env create (see step 4 in the runbook above). The base `jax`/`jaxlib`
     # wheels from PyPI are CPU-only — `jax[cuda12]` pulls the pjrt+plugin wheels
     # and bundled NVIDIA cu12 libs. No system CUDA module load required.
-    - "jax>=0.9.0,<0.11"
-    - "jaxlib>=0.9.0,<0.11"
+    #
+    # IMPORTANT — capped below 0.10 because JAX 0.10's CUDA plugin requires
+    # nvidia-cusparse-cu12>=12.9 which is not yet on PyPI (latest is 12.5.10.65).
+    - "jax>=0.9.0,<0.10"
+    - "jaxlib>=0.9.0,<0.10"
     - "blackjax>=1.5,<2.0"
     - "numpyro>=0.21.0,<0.22"
     - "jaxopt>=0.8.5,<0.9"
