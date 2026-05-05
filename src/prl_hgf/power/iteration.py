@@ -975,8 +975,12 @@ def run_sbf_iteration(
             fit_batch_hierarchical,
         )
 
-        # Step 3 (batched): Fit 3-level model — single NUTS call
-        idata_3 = fit_batch_hierarchical(
+        # Step 3 (batched): Fit 3-level model — single NUTS call.
+        # BlackJAX path returns (idata, adapted_params) on first call (no
+        # warmup_params provided); NumPyro path returns bare idata. Unpack
+        # defensively. adapted_params will be consumed by Phase 30's warmup
+        # skip wiring.
+        _fit_3 = fit_batch_hierarchical(
             sim_df,
             "hgf_3level",
             n_chains=n_chains,
@@ -989,9 +993,10 @@ def run_sbf_iteration(
             use_laplace_warmup=use_laplace_warmup,
             tight_omega3_prior=tight_omega3_prior,
         )
+        idata_3 = _fit_3[0] if isinstance(_fit_3, tuple) else _fit_3
 
         # Step 4 (batched): Fit 2-level model — single NUTS call
-        idata_2 = fit_batch_hierarchical(
+        _fit_2 = fit_batch_hierarchical(
             sim_df,
             "hgf_2level",
             n_chains=n_chains,
@@ -1004,6 +1009,7 @@ def run_sbf_iteration(
             use_laplace_warmup=use_laplace_warmup,
             tight_omega3_prior=tight_omega3_prior,
         )
+        idata_2 = _fit_2[0] if isinstance(_fit_2, tuple) else _fit_2
 
         # Extract participant metadata from coords (ground truth ordering)
         pids = idata_3.posterior.coords["participant"].values.tolist()
