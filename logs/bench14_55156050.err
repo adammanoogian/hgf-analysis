@@ -1,0 +1,18 @@
+jax.errors.SimplifiedTraceback: For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2095, in <module>
+    main()
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2019, in main
+    _run_benchmark(base_config, power_config, output_dir, args)
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 1240, in _run_benchmark
+    _cold_return = fit_batch_hierarchical(
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/fitting/hierarchical.py", line 2785, in fit_batch_hierarchical
+    logdensity_fn,
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/fitting/hierarchical.py", line 1426, in _run_blackjax_nuts
+    )
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/blackjax/adaptation/window_adaptation.py", line 348, in run
+  File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/blackjax/adaptation/window_adaptation.py", line 238, in final
+jaxlib.xla_extension.XlaRuntimeError: INTERNAL: libdevice not found at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/nvvm/libdevice/libdevice.10.bc
