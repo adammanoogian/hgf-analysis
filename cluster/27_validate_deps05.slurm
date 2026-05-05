@@ -12,6 +12,9 @@
 #   sbatch cluster/27_validate_deps05.slurm
 #   # override env (e.g. for parallel ds_env_v11 build):
 #   sbatch --export=ALL,CONDA_ENV=ds_env_v10 cluster/27_validate_deps05.slurm
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=deps05_validate
@@ -33,7 +36,7 @@ PROJECT_ROOT="$(pwd)"
 
 # Run-commit provenance: pin every log to the commit it ran from
 echo "============================================================"
-echo "Run commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Run job:    ${SLURM_JOB_ID:-<no-slurm>} on $(hostname)"
 echo "============================================================"
 

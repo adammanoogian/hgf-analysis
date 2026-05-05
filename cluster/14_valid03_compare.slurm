@@ -37,6 +37,7 @@ conda activate /scratch/${_PROJECT}/${USER}/conda/envs/ds_env 2>/dev/null || {
 
 echo "============================================================"
 echo "VALID-03: Cross-Platform Comparison"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "============================================================"
 echo ""
 

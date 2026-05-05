@@ -19,6 +19,9 @@
 #   A100: 40GB VRAM, 32 nodes  -> --gres=gpu:A100:1
 #   A40:  48GB VRAM, 12 nodes  -> --gres=gpu:A40:1
 #   T4:   16GB VRAM, 8 nodes   -> --gres=gpu:T4:1 (small jobs only)
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_fit
@@ -55,6 +58,7 @@ echo "Node: ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s): ${CUDA_VISIBLE_DEVICES:-none}"
 echo "Model(s): $MODEL"
 echo "Input: ${INPUT:-default}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start: $(date)"
 echo "============================================================"
 

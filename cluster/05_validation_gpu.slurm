@@ -11,6 +11,9 @@
 #
 # WAIC is skipped by default (--skip-waic) since it requires InferenceData .nc
 # files which are not saved by default. Remove --skip-waic if .nc files exist.
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_valid
@@ -39,6 +42,7 @@ echo "============================================================"
 echo "Job ID: ${SLURM_JOB_ID:-local}"
 echo "Node: ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s): ${CUDA_VISIBLE_DEVICES:-none}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start: $(date)"
 echo "============================================================"
 

@@ -21,6 +21,9 @@
 #
 # Derived from: cluster/14_benchmark_gpu.slurm (Phase 14 GPU benchmark template)
 # Plan: 25-03, Phase 25 — Parallel-scan acceleration of HGF likelihood
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=25-reproduce-ref
@@ -89,6 +92,7 @@ echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "JAX_ENABLE_X64: ${JAX_ENABLE_X64}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""

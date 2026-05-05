@@ -20,6 +20,9 @@
 # Default fit method is 'both' (dual NUTS + Laplace) consistent with the
 # 18_smoke_patrl_cpu.slurm policy set in Plans 18-06/19-05.
 # Override via PRL_PATRL_SMOKE_METHOD at submission time.
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_patrl_smoke
@@ -101,6 +104,7 @@ echo "Level:         ${PRL_PATRL_SMOKE_LEVEL}"
 echo "Seed:          ${PRL_PATRL_SMOKE_SEED}"
 echo "Fit method:    ${PRL_PATRL_SMOKE_METHOD}"
 echo "JAX cache:     ${JAX_COMPILATION_CACHE_DIR:-disabled}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:         $(date)"
 echo "============================================================"
 echo ""

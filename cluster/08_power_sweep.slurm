@@ -31,6 +31,9 @@
 #
 #   # Multi-GPU pmap (4 chains across 4 GPUs):
 #   sbatch --gres=gpu:4 cluster/08_power_sweep.slurm
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_power
@@ -179,6 +182,7 @@ echo "Array task: ${SLURM_ARRAY_TASK_ID:-0}"
 echo "Array size: ${SLURM_ARRAY_TASK_COUNT:-unknown}"
 echo "Node:       ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):     ${CUDA_VISIBLE_DEVICES:-none}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:      $(date)"
 echo "============================================================"
 echo ""

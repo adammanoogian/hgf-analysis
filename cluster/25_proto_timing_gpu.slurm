@@ -22,6 +22,9 @@
 #   (P=300, T=420)  cold init: possibly higher (better GPU occupancy)
 #   (P=50,  T=2000) cold init: 5-20x  (firmly in win zone on GPU)
 #   cached init:    lower K (1-3) across all shapes
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=25-proto-timing
@@ -105,6 +108,7 @@ echo "Job ID:  ${SLURM_JOB_ID:-local}"
 echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache: ${JAX_COMPILATION_CACHE_DIR:-disabled}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""

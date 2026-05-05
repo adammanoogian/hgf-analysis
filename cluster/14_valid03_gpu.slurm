@@ -7,6 +7,9 @@
 #
 # Usage:
 #   sbatch cluster/14_valid03_gpu.slurm
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_v03gpu
@@ -45,6 +48,7 @@ echo "============================================================"
 echo "Job ID:   ${SLURM_JOB_ID:-local}"
 echo "Node:     ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):   ${CUDA_VISIBLE_DEVICES:-none}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:    $(date)"
 echo "============================================================"
 echo ""

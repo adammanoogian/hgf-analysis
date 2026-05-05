@@ -9,6 +9,15 @@ logs/*
 !logs/bench14cpu_*
 !logs/smoke16_*
 !logs/smoke16cpu_*
+# Whitelist all SLURM .err/.out at every depth so cluster autopush
+# surfaces job failures locally regardless of whether the SLURM template
+# writes flat (logs/<job>_%j.err) or nested (logs/phase25/recovery_%j.err).
+# Otherwise we work blind and have to hand-push error logs from M3.
+!logs/*.err
+!logs/*.out
+!logs/**/
+!logs/**/*.err
+!logs/**/*.out
 
 # CCDS canonical (Phase 26 Wave 3): models/ contents gitignored (heavy
 # artifacts); tracked via .gitkeep markers. reports/ is tracked (small

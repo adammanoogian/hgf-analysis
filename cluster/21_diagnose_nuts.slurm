@@ -39,6 +39,9 @@
 #
 # Usage:
 #   sbatch cluster/21_diagnose_nuts.slurm
+#
+# Debug solo run with auto-push (per-job result push on success/crash/timeout):
+#   bash cluster/submit_one.sh <this-script>
 # =============================================================================
 
 #SBATCH --job-name=prl_diag21_nuts
@@ -166,6 +169,7 @@ echo "Node:    ${SLURMD_NODENAME:-$(hostname)}"
 echo "GPU(s):  ${CUDA_VISIBLE_DEVICES:-none}"
 echo "JAX cache:          ${JAX_COMPILATION_CACHE_DIR:-disabled}"
 echo "JAX_LOG_COMPILES:   ${JAX_LOG_COMPILES}"
+echo "Commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
 echo "Start:   $(date)"
 echo "============================================================"
 echo ""
