@@ -43,6 +43,12 @@ module load miniforge3
 cd "${SLURM_SUBMIT_DIR:-$(dirname "$0")/..}"
 PROJECT_ROOT="$(pwd)"
 
+# Run-commit provenance: pin every log to the commit it ran from
+echo "============================================================"
+echo "Run commit: $(git rev-parse --short HEAD 2>/dev/null) [$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ') dirty] — $(git log -1 --format=%s 2>/dev/null)"
+echo "Run job:    ${SLURM_JOB_ID:-<no-slurm>} on $(hostname)"
+echo "============================================================"
+
 mkdir -p cluster/logs models/power
 export PYTHONUNBUFFERED=1
 
