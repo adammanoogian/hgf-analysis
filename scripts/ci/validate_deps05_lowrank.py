@@ -175,6 +175,7 @@ def _build_cohort_data(
     from pathlib import Path as _Path
 
     import prl_hgf
+    from prl_hgf.env.task_config import load_config
     from prl_hgf.power.config import make_power_config
     from prl_hgf.simulation.batch import simulate_batch
 
@@ -189,9 +190,10 @@ def _build_cohort_data(
     import yaml
 
     with open(base_yaml, encoding="utf-8") as fh:
-        base_config = yaml.safe_load(fh)
+        base_yaml_dict = yaml.safe_load(fh)
 
-    effect_size = base_config.get("power", {}).get("effect_size_grid", [0.5])[0]
+    effect_size = base_yaml_dict.get("power", {}).get("effect_size_grid", [0.5])[0]
+    base_config = load_config(base_yaml)
     cfg = make_power_config(base_config, n_per_group, effect_size, _SIM_SEED)
     sim_df = simulate_batch(cfg)
 
