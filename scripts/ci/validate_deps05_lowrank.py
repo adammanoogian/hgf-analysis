@@ -51,6 +51,10 @@ import sys
 import time
 from pathlib import Path
 
+# Ensure project root is on sys.path so `import config` (project-root config.py)
+# resolves when this script is launched directly via SLURM.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
 import jax
 import jax.numpy as jnp
 import numpy as np
