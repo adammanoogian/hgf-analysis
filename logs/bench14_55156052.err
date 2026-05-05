@@ -16,3 +16,5 @@ Traceback (most recent call last):
   File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/blackjax/adaptation/window_adaptation.py", line 348, in run
   File "/scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/blackjax/adaptation/window_adaptation.py", line 238, in final
 jaxlib.xla_extension.XlaRuntimeError: INTERNAL: libdevice not found at /scratch/fc37/aman0087/conda/envs/ds_env/lib/python3.10/site-packages/nvidia/cuda_nvcc/nvvm/libdevice/libdevice.10.bc
+From github.com:adammanoogian/psilocybin-prl-analyses
+ * branch            main       -> FETCH_HEAD

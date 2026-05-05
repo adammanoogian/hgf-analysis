@@ -1,0 +1,6 @@
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 50, in <module>
+    from prl_hgf.env.task_config import load_config
+ModuleNotFoundError: No module named 'prl_hgf'
+fatal: pathspec 'models/power/smoke_test.json' did not match any files

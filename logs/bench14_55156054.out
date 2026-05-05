@@ -197,3 +197,10 @@ End: Tue May  5 12:46:24 AM AEST 2026
 ============================================================
 
 Pushing benchmark results to git...
+[main 149ccce] bench phase14 gpu sampler=blackjax (job 55156054)
+ 4 files changed, 425 insertions(+)
+ create mode 100644 logs/bench14_55156051.err
+ create mode 100644 logs/bench14_55156051.out
+ create mode 100644 logs/bench14_55156054.err
+ create mode 100644 logs/bench14_55156054.out
+WARNING: git pull --rebase failed — aborting push to avoid lost work

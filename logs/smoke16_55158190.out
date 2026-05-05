@@ -1,0 +1,41 @@
+
+=== CUDA Environment Check ===
+FAIL: ptxas not found in PATH
+
+  XLA parallel compilation is DISABLED without ptxas.
+  This causes 3-5x slower JIT and is the #1 bottleneck.
+
+  FIX: pip install -r cluster/requirements-gpu.txt
+       (installs nvidia-cuda-nvcc-cu12==12.8.93)
+
+
+WARNING: CUDA compatibility issue detected.
+  The smoke test will run but is expected to FAIL the JIT gates.
+  Install the fix first: pip install -r cluster/requirements-gpu.txt
+
+XLA autotune: loading cached results from /scratch/fc37/aman0087/.xla_autotune_cache/results.pb
+
+============================================================
+Phase 16/17 GPU Smoke Test (BlackJAX NUTS)
+============================================================
+Job ID:  55158190
+Node:    m3g115
+GPU(s):  0
+JAX cache: /scratch/fc37/aman0087/.jax_cache_gpu/shared
+Start:   Tue May  5 05:59:13 AM AEST 2026
+============================================================
+
+JAX devices: [CpuDevice(id=0)]
+ERROR: No GPU detected — smoke test results will not be meaningful!
+
+
+============================================================
+SMOKE TEST FAILED (exit code: 1)
+  Check: logs/smoke16_55158190.err
+  Most likely fix: pip install -r cluster/requirements-gpu.txt
+
+End: Tue May  5 05:59:20 AM AEST 2026
+============================================================
+
+Pushing smoke test results to git...
+No new files to push (check .gitignore if outputs exist on disk)

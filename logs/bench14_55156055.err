@@ -8,3 +8,5 @@ Traceback (most recent call last):
   File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/power/iteration.py", line 1037, in run_sbf_iteration
     pids = idata_3.posterior.coords["participant"].values.tolist()
 AttributeError: 'tuple' object has no attribute 'posterior'
+From github.com:adammanoogian/psilocybin-prl-analyses
+ * branch            main       -> FETCH_HEAD

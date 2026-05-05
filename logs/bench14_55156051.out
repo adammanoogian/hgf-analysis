@@ -197,3 +197,4 @@ End: Tue May  5 12:46:23 AM AEST 2026
 ============================================================
 
 Pushing benchmark results to git...
+WARNING: git pull --rebase failed — aborting push to avoid lost work

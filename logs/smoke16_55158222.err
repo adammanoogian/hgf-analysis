@@ -1,0 +1,148 @@
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+Finished tracing convert_element_type for jit in 0.000626087 sec
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(int64[]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.149061441 sec
+Finished XLA compilation of jit(convert_element_type) in 0.116032839 sec
+Finished tracing _threefry_seed for jit in 0.001738071 sec
+Compiling jit(_threefry_seed) with global shapes and types (ShapedArray(int64[]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(_threefry_seed) in 0.010287285 sec
+Finished XLA compilation of jit(_threefry_seed) in 0.257466793 sec
+Finished tracing convert_element_type for jit in 0.000274420 sec
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(float32[420,3]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.002927303 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_convert_element_type' with key 'jit_convert_element_type-1a53e867b77837b24811cad8739a8d286a0d455be855e2efae8786a4f74cd031'
+Writing jit_convert_element_type to persistent compilation cache with key 'jit_convert_element_type-1a53e867b77837b24811cad8739a8d286a0d455be855e2efae8786a4f74cd031'
+Finished XLA compilation of jit(convert_element_type) in 0.005907536 sec
+Finished tracing convert_element_type for jit in 0.000148773 sec
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(int32[]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.002159357 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_convert_element_type' with key 'jit_convert_element_type-a5a1161b136650b8bed8a8e7e66b5b3fb502d1f9aab76bb24491cb93542798f3'
+Writing jit_convert_element_type to persistent compilation cache with key 'jit_convert_element_type-a5a1161b136650b8bed8a8e7e66b5b3fb502d1f9aab76bb24491cb93542798f3'
+Finished XLA compilation of jit(convert_element_type) in 0.005153894 sec
+Finished tracing _threefry_seed for jit in 0.001570225 sec
+Compiling jit(_threefry_seed) with global shapes and types (ShapedArray(int32[]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(_threefry_seed) in 0.003076553 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit__threefry_seed' with key 'jit__threefry_seed-644b6fd178e6cd6add9fb193801498bcd11bd228c6a79a4628d6c3bdb73cfc18'
+Writing jit__threefry_seed to persistent compilation cache with key 'jit__threefry_seed-644b6fd178e6cd6add9fb193801498bcd11bd228c6a79a4628d6c3bdb73cfc18'
+Finished XLA compilation of jit(_threefry_seed) in 0.016000509 sec
+Finished tracing convert_element_type for jit in 0.000252485 sec
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(float32[30]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.002563000 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_convert_element_type' with key 'jit_convert_element_type-e7fc337cae1fdeb6090340e3d694ca68f99812b158e18970044efa89d4483aa0'
+Writing jit_convert_element_type to persistent compilation cache with key 'jit_convert_element_type-e7fc337cae1fdeb6090340e3d694ca68f99812b158e18970044efa89d4483aa0'
+Finished XLA compilation of jit(convert_element_type) in 0.005676031 sec
+Finished tracing broadcast_in_dim for jit in 0.000196218 sec
+Compiling jit(broadcast_in_dim) with global shapes and types (ShapedArray(float32[420,3]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(broadcast_in_dim) in 0.002614498 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_broadcast_in_dim' with key 'jit_broadcast_in_dim-681b4847a068c1146f456c2a335004d6f2ec632b52acfe78bbb1744fbe814277'
+Writing jit_broadcast_in_dim to persistent compilation cache with key 'jit_broadcast_in_dim-681b4847a068c1146f456c2a335004d6f2ec632b52acfe78bbb1744fbe814277'
+Finished XLA compilation of jit(broadcast_in_dim) in 0.005208969 sec
+Finished tracing concatenate for jit in 0.000232220 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002811432 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-4ba0a41db0dcfcb5479303a4578cdaf447feddbaeebec373e6ce76a9f01d316b'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-4ba0a41db0dcfcb5479303a4578cdaf447feddbaeebec373e6ce76a9f01d316b'
+Finished XLA compilation of jit(concatenate) in 0.018528223 sec
+Finished tracing concatenate for jit in 0.000254869 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3]), ShapedArray(float32[1,420,3])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002756357 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-45c8ecd26ea2414070c6befa85deba3498ec2c6832dff6cbf28a9c1330034afc'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-45c8ecd26ea2414070c6befa85deba3498ec2c6832dff6cbf28a9c1330034afc'
+Finished XLA compilation of jit(concatenate) in 0.009665966 sec
+Finished tracing concatenate for jit in 0.000185966 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[16,420,3]), ShapedArray(float32[14,420,3])). Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002567291 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-43de91deac05ae8b1e303cbba9291b0ea216e8870af3b41961dc3ecec418ff8f'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-43de91deac05ae8b1e303cbba9291b0ea216e8870af3b41961dc3ecec418ff8f'
+Finished XLA compilation of jit(concatenate) in 0.007932425 sec
+Finished tracing broadcast_in_dim for jit in 0.000209570 sec
+Compiling jit(broadcast_in_dim) with global shapes and types (ShapedArray(uint32[2]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(broadcast_in_dim) in 0.002432346 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_broadcast_in_dim' with key 'jit_broadcast_in_dim-677e6ac861a1f73095de64dfe5e9678c51e8c97d0105c5b26f26c93ad72b779f'
+Writing jit_broadcast_in_dim to persistent compilation cache with key 'jit_broadcast_in_dim-677e6ac861a1f73095de64dfe5e9678c51e8c97d0105c5b26f26c93ad72b779f'
+Finished XLA compilation of jit(broadcast_in_dim) in 0.005054235 sec
+Finished tracing concatenate for jit in 0.000224590 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002681732 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-a7f78c0d317001fff19c871c0a9d892de2cf8a343a78032491612d1a330e9a0b'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-a7f78c0d317001fff19c871c0a9d892de2cf8a343a78032491612d1a330e9a0b'
+Finished XLA compilation of jit(concatenate) in 0.009451628 sec
+Finished tracing concatenate for jit in 0.000218630 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2]), ShapedArray(uint32[1,2])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002638578 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-a8994f0fbf4fbdda20a9a0158c59f9f737a2cd0c2acee8c5efb8df8e0faecb97'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-a8994f0fbf4fbdda20a9a0158c59f9f737a2cd0c2acee8c5efb8df8e0faecb97'
+Finished XLA compilation of jit(concatenate) in 0.009094000 sec
+Finished tracing concatenate for jit in 0.000178337 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(uint32[16,2]), ShapedArray(uint32[14,2])). Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002608538 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-7d32d82d489f762719a861294a13754d3b55c117d721f110727c27d260fb1bf9'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-7d32d82d489f762719a861294a13754d3b55c117d721f110727c27d260fb1bf9'
+Finished XLA compilation of jit(concatenate) in 0.014708281 sec
+Finished tracing convert_element_type for jit in 0.000179291 sec
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(float32[1]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.002355814 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_convert_element_type' with key 'jit_convert_element_type-a894f758985f67ca4a240f63e726efad75a16e46989128d72d9ce671f992e0b8'
+Writing jit_convert_element_type to persistent compilation cache with key 'jit_convert_element_type-a894f758985f67ca4a240f63e726efad75a16e46989128d72d9ce671f992e0b8'
+Finished XLA compilation of jit(convert_element_type) in 0.005079985 sec
+Finished tracing concatenate for jit in 0.000173807 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[1]), ShapedArray(float32[1])). Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002541542 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-4e54dc1ec4f4c8be882761095dfc05bda4992ab29413a673774bfc79c8b49307'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-4e54dc1ec4f4c8be882761095dfc05bda4992ab29413a673774bfc79c8b49307'
+Finished XLA compilation of jit(concatenate) in 0.010482550 sec
+Finished tracing concatenate for jit in 0.000181675 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[2]), ShapedArray(float32[1])). Argument mapping: (UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002567291 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-63346138d4b5b58cef0b36cb23f87ae4ae357413e92c891cfdb84b29a00f91e1'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-63346138d4b5b58cef0b36cb23f87ae4ae357413e92c891cfdb84b29a00f91e1'
+Finished XLA compilation of jit(concatenate) in 0.007784367 sec
+Finished tracing convert_element_type for jit in 0.000136852 sec
+Compiling jit(convert_element_type) with global shapes and types (ShapedArray(float32[]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(convert_element_type) in 0.002821207 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_convert_element_type' with key 'jit_convert_element_type-aaf694796ed546c6b4e9634f04ba9eb243347dae2ee852f7e6533e8dfe1f39a1'
+Writing jit_convert_element_type to persistent compilation cache with key 'jit_convert_element_type-aaf694796ed546c6b4e9634f04ba9eb243347dae2ee852f7e6533e8dfe1f39a1'
+Finished XLA compilation of jit(convert_element_type) in 0.006084681 sec
+Finished tracing scan for jit in 0.001315117 sec
+Compiling jit(scan) with global shapes and types (ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[]), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[]), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[]), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[1]), ShapedArray(float32[1]), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(int32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[], weak_type=True), ShapedArray(float32[3]), ShapedArray(float32[1,1]), ShapedArray(float32[1,1]), ShapedArray(float32[1,1]), ShapedArray(int32[1]), ShapedArray(int32[1]), ShapedArray(int32[1]), ShapedArray(float32[1])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(scan) in 0.229588509 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_scan' with key 'jit_scan-f5e18719fd883110c4946012b4c39ed93bdd5742f41b18c43e879f6f923764c0'
+Writing jit_scan to persistent compilation cache with key 'jit_scan-f5e18719fd883110c4946012b4c39ed93bdd5742f41b18c43e879f6f923764c0'
+Finished XLA compilation of jit(scan) in 0.258281469 sec
+Finished tracing broadcast_in_dim for jit in 0.000247002 sec
+Compiling jit(broadcast_in_dim) with global shapes and types (ShapedArray(float32[30]),). Argument mapping: (UnspecifiedValue,).
+Finished jaxpr to MLIR module conversion jit(broadcast_in_dim) in 0.002551794 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_broadcast_in_dim' with key 'jit_broadcast_in_dim-cf5d52432706fd71b140634801b8c814540d04972a2cc00e1516c0029340f71b'
+Writing jit_broadcast_in_dim to persistent compilation cache with key 'jit_broadcast_in_dim-cf5d52432706fd71b140634801b8c814540d04972a2cc00e1516c0029340f71b'
+Finished XLA compilation of jit(broadcast_in_dim) in 0.005953074 sec
+Finished tracing concatenate for jit in 0.000208378 sec
+Compiling jit(concatenate) with global shapes and types (ShapedArray(float32[30,1]), ShapedArray(float32[30,1]), ShapedArray(float32[30,1])). Argument mapping: (UnspecifiedValue, UnspecifiedValue, UnspecifiedValue).
+Finished jaxpr to MLIR module conversion jit(concatenate) in 0.002016306 sec
+PERSISTENT COMPILATION CACHE MISS for 'jit_concatenate' with key 'jit_concatenate-f6b35cd167acf7e92d748286e419160e47ecbec61099cf455c9f862fe5ab9a98'
+Writing jit_concatenate to persistent compilation cache with key 'jit_concatenate-f6b35cd167acf7e92d748286e419160e47ecbec61099cf455c9f862fe5ab9a98'
+Finished XLA compilation of jit(concatenate) in 0.018514395 sec
+TRACING CACHE MISS at /fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/simulation/jax_session.py:292:45 (_run_session):
+  never seen function:
+    _sim_step id=140648304286976 defined at /fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/simulation/jax_session.py:192
+Traceback (most recent call last):
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2095, in <module>
+    main()
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 2015, in main
+    _run_smoke_test(base_config, power_config, output_dir, args)
+  File "/fs04/fc37/adam/projects/hgf-analysis/scripts/03_pre_analysis/03_run_power_iteration.py", line 846, in _run_smoke_test
+    sim_smoke = simulate_batch(cfg_smoke)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/simulation/batch.py", line 196, in simulate_batch
+    all_choices_batch, all_rewards_batch, all_diverged_batch = _vmapped(
+                                                               ^^^^^^^^^
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/simulation/batch.py", line 190, in <lambda>
+    lambda o2, o3, k, b, z, cp, rk: _run_session(
+                                    ^^^^^^^^^^^^^
+  File "/fs04/fc37/adam/projects/hgf-analysis/src/prl_hgf/simulation/jax_session.py", line 292, in _run_session
+    _, (choices, rewards, stability_flags) = lax.scan(
+                                             ^^^^^^^^^
+ValueError: not enough values to unpack (expected at least 3, got 2)
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+fatal: pathspec 'models/power/smoke_test.json' did not match any files
