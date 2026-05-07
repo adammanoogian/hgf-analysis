@@ -193,35 +193,10 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push results to git (mirrors 14_benchmark_gpu.slurm pattern)
-# Runs regardless of EXIT_CODE so failed runs still upload error logs.
-# =============================================================================
-echo ""
-echo "Pushing recovery results to git..."
-
-_LOG_OUT="${RESULTS_DIR}/recovery_${SLURM_JOB_ID}.out"
-_LOG_ERR="${RESULTS_DIR}/recovery_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add "${SEQ_NC}" "${PRO_NC}" 2>/dev/null  # may be missing if backend failed
-git add "${RESULTS_DIR}/proto_grad_check.log" 2>/dev/null  # may be missing
-if ! git diff --cached --quiet; then
-    git commit -m "bench phase25-05 gpu nuts-recovery (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        if [[ $SEQ_EXIT -ne 0 ]]; then exit ${SEQ_EXIT}; fi
-        exit ${PRO_EXIT}
-    }
-    if git push origin main; then
-        echo "Pushed recovery results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 # Overall exit: nonzero if either backend failed
 if [[ $SEQ_EXIT -ne 0 ]]; then

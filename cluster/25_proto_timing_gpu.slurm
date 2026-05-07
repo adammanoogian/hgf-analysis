@@ -158,30 +158,9 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push results to git (so local machine can git pull)
-# =============================================================================
-echo ""
-echo "Pushing benchmark results to git..."
-_LOG_OUT="logs/phase25/proto_timing_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/phase25/proto_timing_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add logs/phase25/proto_timing.json 2>/dev/null  # may be missing if benchmark failed early
-if ! git diff --cached --quiet; then
-    git commit -m "bench phase25-04 gpu timing (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        exit $EXIT_CODE
-    }
-    if git push origin main; then
-        echo "Pushed benchmark results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

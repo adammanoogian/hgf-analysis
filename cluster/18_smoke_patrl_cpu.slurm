@@ -144,40 +144,9 @@ fi
 echo "End:       $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push logs and results to git (mirrors 16_smoke_test_cpu.slurm)
-#
-# Robustness notes:
-# - Stage the entire output directory rather than fixed extensions, so new
-#   artifact types (json, png, etc.) are not silently dropped.
-# - `git pull --rebase --autostash` before push handles the non-fast-forward
-#   race when multiple jobs finish near-simultaneously.
-# - git stderr is NOT suppressed so real failures show up in the .out log.
-# - .gitignore must whitelist models/patrl_smoke/ and logs/patrl18smoke_*
-#   for staging to work — Phase 26 made models/ and logs/ ignored by default.
-# =============================================================================
-echo ""
-echo "Pushing PAT-RL smoke results to git..."
-_LOG_OUT="logs/patrl18smoke_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/patrl18smoke_${SLURM_JOB_ID}.err"
-_OUT_DIR="models/patrl_smoke/${SLURM_JOB_ID}"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add "${_OUT_DIR}/"
-if ! git diff --cached --quiet; then
-    git commit -m "smoke patrl cpu level=${PRL_PATRL_SMOKE_LEVEL} tune=${PRL_PATRL_SMOKE_TUNE} draws=${PRL_PATRL_SMOKE_DRAWS} method=${PRL_PATRL_SMOKE_METHOD} (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        exit $EXIT_CODE
-    }
-    if git push origin main; then
-        echo "Pushed PAT-RL smoke results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

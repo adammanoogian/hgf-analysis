@@ -107,4 +107,4 @@ for P in 20 50; do
     echo "  scancel ${COLD_JOBIDS[${P}]} ${WARM_JOBIDS[${P}]}  # P=${P}"
 done
 echo ""
-echo "Resume locally after chain completes: git pull origin main"
+echo "Resume locally: git fetch && git merge origin/results/<branch>"

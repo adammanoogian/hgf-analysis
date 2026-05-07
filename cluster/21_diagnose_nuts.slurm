@@ -332,36 +332,10 @@ with json_path.open("w", encoding="utf-8") as f:
 print(f"Merged NUTS rows for P={sorted(data['nuts_per_p_scaling'].keys())}")
 PYEOF
 
-# =============================================================================
-# Git auto-push (mirrors cluster/21_diagnose_laplace.slurm auto-push pattern).
-# Commits the probe artifacts + SLURM logs so local can `git pull` them in
-# and feed 21-06 cache forensics + 21-07 VERDICT synthesis.
-# =============================================================================
-echo ""
-echo "========================================"
-echo "Phase 21 NUTS probe: git auto-push"
-echo "========================================"
-_LOG_OUT="logs/diag21_nuts_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/diag21_nuts_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/nuts_jax_compiles_P5.log 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/nuts_jax_compiles_P20.log 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P5/ 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/nuts_P20/ 2>/dev/null
-
-if ! git diff --cached --quiet 2>/dev/null; then
-    git commit -m "chore(21-04): NUTS GPU probe job ${SLURM_JOB_ID}"
-    if git push origin main 2>/dev/null; then
-        echo "Pushed Phase 21 NUTS probe artifacts to origin/main"
-    else
-        echo "WARNING: git push failed — artifacts committed locally only"
-    fi
-else
-    echo "No new files to push"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 # Exit 0 even if individual P iterations failed; any partial state is a data
 # point per 21-04-PLAN.md (walltime overrun or P=20 OOM is acceptable).

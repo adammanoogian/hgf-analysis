@@ -218,30 +218,9 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push logs and results to git
-# =============================================================================
-echo ""
-echo "Pushing smoke test results to git..."
-_SMOKE_LOG_OUT="logs/smoke16_${SLURM_JOB_ID}.out"
-_SMOKE_LOG_ERR="logs/smoke16_${SLURM_JOB_ID}.err"
-_SMOKE_JSON="models/power/smoke_test.json"
-
-git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_SMOKE_JSON}"
-if ! git diff --cached --quiet; then
-    git commit -m "smoke test blackjax run (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        exit $EXIT_CODE
-    }
-    if git push origin main; then
-        echo "Pushed smoke test results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

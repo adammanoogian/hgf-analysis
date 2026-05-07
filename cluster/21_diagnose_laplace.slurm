@@ -219,33 +219,10 @@ echo "All probes complete"
 echo "End: $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Git auto-push (mirrors 14_benchmark_gpu.slurm auto-push pattern).
-# Commits the probe artifacts + SLURM logs so local can `git pull` them in
-# and feed 21-06 cache forensics + 21-07 VERDICT synthesis.
-# =============================================================================
-echo ""
-echo "Pushing Phase 21 Laplace probe artifacts to git..."
-_LOG_OUT="logs/diag21_laplace_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/diag21_laplace_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_vs_nuts_jit.json 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_jax_compiles_P5.log 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/vb_laplace_jax_compiles_P20.log 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/laplace_P5/ 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/laplace_P20/ 2>/dev/null
-
-if ! git diff --cached --quiet 2>/dev/null; then
-    git commit -m "chore(21-03): VB-Laplace GPU probe job ${SLURM_JOB_ID}"
-    if git push origin main 2>/dev/null; then
-        echo "Pushed Phase 21 Laplace probe artifacts to origin/main"
-    else
-        echo "WARNING: git push failed — artifacts committed locally only"
-    fi
-else
-    echo "No new files to push"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 # Exit 0 even if individual P iterations failed; any partial state is a data
 # point per 21-03-PLAN.md (walltime overrun or P=20 OOM is acceptable).

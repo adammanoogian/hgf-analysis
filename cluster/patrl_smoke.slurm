@@ -142,46 +142,9 @@ fi
 echo "End:           $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push logs and results to git (mirrors 18_smoke_patrl_cpu.slurm)
-# =============================================================================
-echo ""
-echo "Pushing PAT-RL smoke results to git..."
-_LOG_OUT="logs/patrl_smoke_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/patrl_smoke_${SLURM_JOB_ID}.err"
-_OUT_DIR="results/patrl_smoke/${SLURM_JOB_ID}"
-
-# results/ is git-tracked; stage CSVs AND .nc InferenceData files.
-# Stage logs first (always present).
-git add "${_LOG_OUT}" "${_LOG_ERR}"
-
-# Results-dir staging — diagnose silent-failure mode by
-# (a) verifying the dir exists before add, (b) using whole-dir add
-# so we don't depend on glob expansion in bash, (c) surfacing errors.
-if [[ -d "${_OUT_DIR}" ]]; then
-    echo "Results dir exists: ${_OUT_DIR} ($(ls -1 "${_OUT_DIR}" 2>/dev/null | wc -l) files)"
-    git add "${_OUT_DIR}"
-    _ADD_STATUS=$?
-    echo "git add status: ${_ADD_STATUS}"
-    echo "Staged files under ${_OUT_DIR}:"
-    git diff --cached --name-only | grep "${_OUT_DIR}" || echo "  (none — git add did not stage anything in ${_OUT_DIR})"
-else
-    echo "WARNING: results dir NOT present at push time: ${_OUT_DIR}"
-fi
-
-if ! git diff --cached --quiet; then
-    git commit -m "smoke patrl sc5 N=${PRL_PATRL_SMOKE_N} phenotypes=${PRL_PATRL_SMOKE_PHENOTYPES} level=${PRL_PATRL_SMOKE_LEVEL} method=${PRL_PATRL_SMOKE_METHOD} (job ${SLURM_JOB_ID})"
-    # Pull-rebase-push loop to handle concurrent jobs racing on git.
-    for i in 1 2 3; do
-        git pull --rebase origin main && git push origin main && {
-            echo "Pushed PAT-RL smoke results to origin/main (attempt ${i})"
-            break
-        }
-        echo "Push attempt ${i} failed; retrying..."
-        sleep $((i * 5))
-    done
-else
-    echo "No staged changes to commit"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

@@ -156,32 +156,9 @@ echo ""
 echo "End: $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push results to git (mirrors 14_benchmark_gpu.slurm and 18_smoke_patrl_cpu.slurm)
-# Runs regardless of EXIT_CODE so failed run still uploads its error log.
-# =============================================================================
-echo ""
-echo "Pushing reproduction results to git..."
-
-_LOG_OUT="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/phase25/reproduction_gpu_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}"
-git add "$RESULTS_JSON" 2>/dev/null  # may be missing if reproduction failed early
-if ! git diff --cached --quiet; then
-    git commit -m "bench phase25-03 gpu elk-coordinated-turn (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        exit $EXIT_CODE
-    }
-    if git push origin main; then
-        echo "Pushed reproduction results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

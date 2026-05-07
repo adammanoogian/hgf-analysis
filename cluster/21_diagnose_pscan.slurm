@@ -341,33 +341,10 @@ print(f"Updated next_proc_warm_s={next_proc_warm_s:.2f} for P={target_P}")
 PYEOF
 fi
 
-# =============================================================================
-# Git auto-push (mirrors cluster/21_diagnose_nuts.slurm auto-push pattern).
-# Each job is SELF-CONTAINED: commits its own slice of the CSV + log + HLO
-# dumps. The submission wrapper does NOT aggregate pushes.
-# =============================================================================
-echo ""
-echo "========================================"
-echo "Phase 21 p-scan probe: git auto-push"
-echo "========================================"
-_LOG_OUT="logs/diag21_pscan_${SLURM_JOB_ID}.out"
-_LOG_ERR="logs/diag21_pscan_${SLURM_JOB_ID}.err"
-
-git add "${_LOG_OUT}" "${_LOG_ERR}" 2>/dev/null
-git add .planning/phases/21-benchmark-bottleneck-diagnosis/jit_scaling_sweep.csv 2>/dev/null
-git add ".planning/phases/21-benchmark-bottleneck-diagnosis/pscan_P${PROBE_P}_${PROBE_ROLE}.log" 2>/dev/null
-git add ".planning/phases/21-benchmark-bottleneck-diagnosis/hlo_dumps/pscan_P${PROBE_P}_${PROBE_ROLE}/" 2>/dev/null
-
-if ! git diff --cached --quiet 2>/dev/null; then
-    git commit -m "chore(21-05): p-scan probe P=${PROBE_P} role=${PROBE_ROLE} job=${SLURM_JOB_ID}"
-    if git push origin main 2>/dev/null; then
-        echo "Pushed Phase 21 p-scan probe artifacts (P=${PROBE_P} ${PROBE_ROLE}) to origin/main"
-    else
-        echo "WARNING: git push failed — artifacts committed locally only"
-    fi
-else
-    echo "No new files to push"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 # Exit with probe's exit code. A non-zero exit on the cold job will cause the
 # afterok dependency to fail and the warm job to be cancelled — this is the

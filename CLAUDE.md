@@ -101,9 +101,46 @@ effects on ω₃.
 
 ## Workflow
 
-- **Always push after committing** — this repo is worked on from both a local
-  machine and the M3 cluster. Every commit must be pushed so the other side
-  can `git pull` before running.
+- **Local is source of truth; Mutagen syncs to M3.** Edit files locally,
+  changes propagate to `m3:/home/aman0087/fc37/adam/projects/hgf-analysis`
+  in ~1s. Never edit files directly on M3 (no `ssh m3 vim ...`, no
+  `sed -i` over SSH on synced paths) — that corrupts the sync direction.
+- **Code does not need to be committed-and-pushed before running on M3.**
+  Mutagen has already synced. Just commit when you're at a logical
+  checkpoint, push when you want a backup or to share.
+- **Results return via `cluster/99_push_results.slurm`** (Pattern A from
+  the slurm-autopush skill). For solo debug runs use
+  `bash cluster/submit_one.sh cluster/<job>.slurm` — chains a single push
+  via `--dependency=afterany` so logs come back on success/crash/timeout.
+- **Line endings:** `.gitattributes` enforces LF for all text files +
+  per-repo `core.autocrlf=input`. Required for Mutagen Windows↔Linux sync.
+
+## M3 / MASSIVE settings
+
+- **Slurm account:** `fc37`
+- **Default GPU partition:** `gpu` (request `--gres=gpu:T4:1` for quick
+  probes, `--gres=gpu:A40:1` for 48GB-memory runs, `--partition=m3g
+  --gres=gpu:V100:1` for V100)
+- **Default CPU partition:** `comp`
+- **Default walltime:** 02:00:00 (sbatch); 00:15:00 (srun debug)
+- **Local path:** `C:/Users/aman0087/Documents/Github/hgf-analysis/`
+- **M3 path:** `/home/aman0087/fc37/adam/projects/hgf-analysis/`
+  (symlinks via `~/fc37/adam/projects/hgf-analysis`)
+- **Logs:** `<project>/logs/<jobname>_<jobid>.{out,err}` (project-internal,
+  on `/fs04` Lustre — `/home` has 15G quota, too small)
+- **Conda env:** `ds_env` (Phase 27 target: `ds_env_v10` with Python 3.11 +
+  JAX 0.9 + BlackJAX 1.5; build per `environment-v10.yml`)
+- **Mutagen session name:** `hgf-analysis`
+  (`mutagen sync list` to verify; create per setup section below)
+
+## SSH / Mutagen control
+
+- `m3-unlock <hours>` — unlock SSH access (passphrase-prompted, time-limited)
+- `m3-lock` — kill switch; revoke SSH and ssh-agent key
+- `mutagen sync list` — verify sync status; should be "Watching for changes"
+  with no conflicts
+- On `Permission denied (publickey)`: tell user to run `m3-unlock`. Do NOT
+  retry, regenerate keys, or modify `~/.ssh/config`.
 
 ## Development Phases
 

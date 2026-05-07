@@ -194,30 +194,9 @@ fi
 echo "End:       $(date)"
 echo "============================================================"
 
-# =============================================================================
-# Auto-push logs and results to git (mirrors the GPU smoke test)
-# =============================================================================
-echo ""
-echo "Pushing CPU smoke test results to git..."
-_SMOKE_LOG_OUT="logs/smoke16cpu_${SLURM_JOB_ID}.out"
-_SMOKE_LOG_ERR="logs/smoke16cpu_${SLURM_JOB_ID}.err"
-
-git add "${_SMOKE_LOG_OUT}" "${_SMOKE_LOG_ERR}" "${_ALL_RESULT_JSONS[@]}"
-if ! git diff --cached --quiet; then
-    _MODEL_LIST_COMMIT="${PRL_SMOKE_MODELS// /+}"
-    git commit -m "smoke cpu ${PRECISION} ${_MODEL_LIST_COMMIT} ${MCMC_SUFFIX} κ-frozen (job ${SLURM_JOB_ID})"
-    git pull --rebase --autostash origin main || {
-        echo "WARNING: git pull --rebase failed — aborting push to avoid lost work"
-        git rebase --abort 2>/dev/null
-        exit $EXIT_CODE
-    }
-    if git push origin main; then
-        echo "Pushed CPU smoke test results to origin/main"
-    else
-        echo "WARNING: git push failed — results committed locally only on $(hostname)"
-    fi
-else
-    echo "No new files to push (check .gitignore if outputs exist on disk)"
-fi
+# Results return via cluster/99_push_results.slurm (Pattern A) when this job
+# is submitted via submit_one.sh / orchestrator. Inline per-job push removed
+# 2026-05-06: Mutagen syncs code, autopush handles results, and parallel
+# jobs racing on the working tree silently dropped files (rlwm 1c37d3f).
 
 exit $EXIT_CODE

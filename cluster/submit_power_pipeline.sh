@@ -87,18 +87,15 @@ cd "$(dirname "$0")/.."
 PROJECT_ROOT="$(pwd)"
 
 # =============================================================================
-# Setup: git pull + conda env
+# Setup: conda env
 # =============================================================================
 if [[ "$SETUP" == true ]]; then
     echo "============================================================"
-    echo "Setup: Git Pull + Package Install"
+    echo "Setup: Package Install"
     echo "============================================================"
 
-    # Git pull
+    # Mutagen handles code sync; no git pull needed.
     echo ""
-    echo "--- Git pull ---"
-    git fetch origin
-    git pull --ff-only origin main
     echo "HEAD: $(git log --oneline -1)"
 
     # Activate ds_env and install project
