@@ -542,8 +542,8 @@ def test_no_flat_numbered_scripts() -> None:
         if p.is_file() and flat_re.match(p.name):
             flat_hits.append(p.name)
     assert not flat_hits, (
-        f"Flat numbered scripts at scripts/ root (forbidden — see "
-        f"canonical §2 + Plan 26-04 mapping table):\n"
+        "Flat numbered scripts at scripts/ root (forbidden — see "
+        "canonical §2 + Plan 26-04 mapping table):\n"
         + "\n".join(flat_hits)
     )
 

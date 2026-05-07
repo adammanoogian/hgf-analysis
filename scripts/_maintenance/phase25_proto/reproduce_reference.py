@@ -490,7 +490,7 @@ def main() -> None:
     print(f"  Sequential done in {seq_wall:.4f}s (post-JIT)")
     print(f"  Trajectory shape: {seq_traj.shape}")
     print(
-        f"  First 3 states: "
+        "  First 3 states: "
         + ", ".join(
             f"[{seq_traj[i,0]:.4f}, {seq_traj[i,1]:.4f}, "
             f"{seq_traj[i,2]:.4f}, {seq_traj[i,3]:.4f}]"
@@ -520,7 +520,7 @@ def main() -> None:
     par_wall = time.perf_counter() - par_t0
 
     print(f"  K_observed = {K_observed}  (target: <= {MAX_ITER})")
-    print(f"  Convergence trace:")
+    print("  Convergence trace:")
     for i, e in enumerate(err_trace):
         print(f"    iter {i+1:2d}: max|delta| = {e:.3e}")
     print(f"  quasi-ELK wall: {par_wall:.4f}s (post-compile, Python loop)")

@@ -481,7 +481,6 @@ def test_model_d_mu2_varies_with_delta_hr() -> None:
     that per-trial omega_eff(t) = omega_2 + lam * dHR(t) modifies the HGF
     belief trajectory relative to a zero-ΔHR baseline.
     """
-    import jax
     import jax.numpy as jnp
 
     from prl_hgf.fitting.hierarchical_patrl import (
@@ -585,7 +584,6 @@ def test_model_d_fp64_dtype_preserved() -> None:
     Exercises the scan body with JAX_ENABLE_X64 (set via CONDA env); asserts
     that the trajectory array dtype matches jnp.float64.
     """
-    import os
 
     import jax
 
@@ -657,7 +655,6 @@ def test_model_d_lam_zero_equals_model_a() -> None:
     identical to the fixed-omega scan used in Models A/B/C with the same
     omega_2.  Therefore Model D logp must equal Model A logp element-wise.
     """
-    import jax
     import jax.numpy as jnp
 
     from prl_hgf.fitting.hierarchical_patrl import (

@@ -72,7 +72,6 @@ import numpy as np
 
 from prl_hgf.fitting.parallel_scan_proto import (
     _attrs_to_flat,
-    _build_batched_inputs,
     _build_hgf_closures,
     _build_scan_inputs_jax,
     parallel_scan_likelihood,
@@ -137,7 +136,7 @@ print("=" * 72)
 print(f"Hardware: {_hardware}")
 print(f"JAX version: {jax.__version__}")
 print(f"Shapes: {SHAPES}")
-print(f"Init strategies: cold, linear, cached")
+print("Init strategies: cold, linear, cached")
 print(f"N timed runs per cell: {N_TIMED_RUNS}")
 _cpu_mode_note = (
     f"T_cpu={CPU_FAST_T}, P_cpu={CPU_FAST_P} (avoids XLA OOM on Windows)"
@@ -436,7 +435,7 @@ os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 results: dict = {
     "hardware": _hardware,
     "jax_version": jax.__version__,
-    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
     "shapes": [],
 }
 

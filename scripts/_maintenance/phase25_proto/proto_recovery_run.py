@@ -58,7 +58,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-
 _PARAM_NAMES: tuple[str, ...] = ("omega_2", "omega_3", "kappa", "beta", "zeta")
 
 

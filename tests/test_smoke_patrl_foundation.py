@@ -439,7 +439,9 @@ class TestPhase20SmokeModelDispatch:
 
         from prl_hgf.env.pat_rl_config import load_pat_rl_config  # noqa: PLC0415
         from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort  # noqa: PLC0415
-        from prl_hgf.fitting.fit_vb_laplace_patrl import fit_vb_laplace_patrl  # noqa: PLC0415
+        from prl_hgf.fitting.fit_vb_laplace_patrl import (
+            fit_vb_laplace_patrl,  # noqa: PLC0415
+        )
 
         config = load_pat_rl_config()
         sim_df, _, _ = simulate_patrl_cohort(

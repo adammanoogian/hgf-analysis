@@ -13,6 +13,7 @@ on first run.  Exclude with ``pytest -m "not slow"`` for fast CI loops.
 from __future__ import annotations
 
 import matplotlib
+
 matplotlib.use("Agg")  # must precede any matplotlib.pyplot import
 
 import numpy as np
@@ -21,7 +22,6 @@ import pytest
 pytest.importorskip("ipywidgets")
 
 from prl_hgf.gui.explorer import PROFILES, ParamExplorer
-
 
 # ---------------------------------------------------------------------------
 # Module-scoped fixture (shared across all tests to avoid re-warming JAX)
