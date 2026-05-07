@@ -20,7 +20,7 @@
 #SBATCH --job-name=deps05_validate
 #SBATCH --output=logs/deps05_%j.out
 #SBATCH --error=logs/deps05_%j.err
-#SBATCH --time=02:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
