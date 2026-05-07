@@ -712,8 +712,14 @@ def _run_smoke_test(
     from prl_hgf.power.config import make_power_config
     from prl_hgf.simulation.batch import simulate_batch
 
-    # Enable cache miss diagnostics (logs why tracing cache misses)
-    jax.config.update("jax_explain_cache_misses", True)
+    # Enable cache miss diagnostics (logs why tracing cache misses).
+    # Gated behind PRL_EXPLAIN_CACHE_MISSES because JAX 0.9.2 has an
+    # upstream bug in partial_eval.diff_tracing_cache_keys that triggers
+    # a misleading 3-vs-2 unpack ValueError inside lax.scan bodies that
+    # contain a nested JIT'd function (e.g. pyhgf's scan_fn).  Worked
+    # under JAX 0.4.x; opt-in only under ds_env_v10 (jax 0.9.2).
+    if os.environ.get("PRL_EXPLAIN_CACHE_MISSES", "0") == "1":
+        jax.config.update("jax_explain_cache_misses", True)
 
     # PyTensor's jax link silently flips jax_enable_x64 to True when it's
     # imported (via prl_hgf.fitting.hierarchical → jax_funcify).  If the
@@ -1128,7 +1134,10 @@ def _run_benchmark(
         or os.environ.get("JAX_LOG_COMPILES") == "1"
     ):
         os.environ.setdefault("JAX_LOG_COMPILES", "1")
-        jax.config.update("jax_explain_cache_misses", True)
+        # See note above: gated behind PRL_EXPLAIN_CACHE_MISSES to avoid
+        # JAX 0.9.2 partial_eval.diff_tracing_cache_keys bug.
+        if os.environ.get("PRL_EXPLAIN_CACHE_MISSES", "0") == "1":
+            jax.config.update("jax_explain_cache_misses", True)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     results: dict = {}
@@ -1499,7 +1508,9 @@ def _run_p_scan_probe(
       from gaining a row).
     """
     os.environ.setdefault("JAX_LOG_COMPILES", "1")
-    jax.config.update("jax_explain_cache_misses", True)
+    # Gated behind PRL_EXPLAIN_CACHE_MISSES — JAX 0.9.2 partial_eval bug.
+    if os.environ.get("PRL_EXPLAIN_CACHE_MISSES", "0") == "1":
+        jax.config.update("jax_explain_cache_misses", True)
 
     from prl_hgf.env.pat_rl_config import load_pat_rl_config
     from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort
@@ -1617,7 +1628,9 @@ def _run_vb_laplace_subproc_one_shot(P: int) -> None:
         parent call so the XLA persistent cache can land a hit).
     """
     os.environ.setdefault("JAX_LOG_COMPILES", "1")
-    jax.config.update("jax_explain_cache_misses", True)
+    # Gated behind PRL_EXPLAIN_CACHE_MISSES — JAX 0.9.2 partial_eval bug.
+    if os.environ.get("PRL_EXPLAIN_CACHE_MISSES", "0") == "1":
+        jax.config.update("jax_explain_cache_misses", True)
 
     from prl_hgf.env.pat_rl_config import load_pat_rl_config
     from prl_hgf.env.pat_rl_simulator import simulate_patrl_cohort
@@ -1694,7 +1707,9 @@ def _run_vb_laplace_probe(
     from io import StringIO
 
     os.environ.setdefault("JAX_LOG_COMPILES", "1")
-    jax.config.update("jax_explain_cache_misses", True)
+    # Gated behind PRL_EXPLAIN_CACHE_MISSES — JAX 0.9.2 partial_eval bug.
+    if os.environ.get("PRL_EXPLAIN_CACHE_MISSES", "0") == "1":
+        jax.config.update("jax_explain_cache_misses", True)
 
     # Capture JAX logger output for the in-process calls.
     log_buffer = StringIO()

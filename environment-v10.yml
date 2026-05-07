@@ -38,7 +38,15 @@
 #
 # 5. Install this repo as an editable dev package:
 #
-#      conda run -n ds_env_v10 pip install -e .
+#      conda run -n ds_env_v10 pip install -e . --no-deps
+#
+#    --no-deps is REQUIRED — the same pyhgf<0.4.32 jax metadata that
+#    blocks step 2 also blocks this step. pyproject.toml declares
+#    pyhgf>=0.2.8; pip's resolver pulls pyhgf metadata, sees its
+#    jax<0.4.32 constraint, conflicts with our jax>=0.9, and fails.
+#    All deps are already installed by mamba (step 1) + explicit pyhgf
+#    (step 2) + jax[cuda12] override (step 4) + GPU pins (step 4b),
+#    so --no-deps just builds the editable wheel without re-resolving.
 #
 # Verification: run the probe after all steps:
 #      conda run -n ds_env_v10 python scripts/ci/probe_pyhgf_jax_compat.py

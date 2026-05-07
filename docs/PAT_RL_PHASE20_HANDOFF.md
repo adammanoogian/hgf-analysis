@@ -7,6 +7,53 @@
 
 ---
 
+## Dependency upgrade — v1.0 (Phase 27)
+
+As of 2026-05-06, `hgf-analysis` ships an opt-in upgraded dependency chain
+(`BlackJAX 1.5`, `NumPyro 0.21`, `Python 3.11`, `JAX >=0.9,<0.10`). The
+legacy `ds_env` (BlackJAX 1.2.x, Python 3.10, JAX 0.4.x) remains the SLURM
+default for backward compatibility; the new chain is opt-in via:
+
+```bash
+sbatch --export=ALL,CONDA_ENV=ds_env_v10 cluster/<script>.slurm
+```
+
+**Sister-repo migration recipe** (mirror the new chain in your own env):
+
+```bash
+mamba env create -f environment-v10.yml -n <your_env_name>
+conda run -n <your_env_name> pip install --no-deps pyhgf==0.2.8
+conda run -n <your_env_name> python scripts/ci/patch_pyhgf_typing.py
+conda run -n <your_env_name> pip install -U "jax[cuda12]>=0.9,<0.10"      # GPU only
+conda run -n <your_env_name> pip install -r cluster/requirements-gpu.txt   # GPU only
+conda run -n <your_env_name> pip install -e ../hgf-analysis --no-deps
+```
+
+The `--no-deps` on both `pyhgf` and the editable install bypasses pyhgf
+0.2.x's stale `jax<0.4.32` metadata constraint (declared, not enforced at
+runtime). See `.planning/phases/27-dependency-upgrade-chain/DEPS-02-decision.md`
+for the empirical compatibility matrix.
+
+The pyhgf `typing.py` patch is required for JAX 0.5+ — it fixes a removed-
+symbol import (`jaxlib.xla_extension.PjitFunction`).
+
+DEPS-05 evidence (BlackJAX 1.5 dense/low-rank mass matrix at P=30) lives
+at `.planning/phases/27-dependency-upgrade-chain/DEPS-05-evidence.json`
+and as a row in `docs/CAPABILITY_MAP.md` once the run completes.
+
+**Known caveats for `ds_env_v10`** (post-Phase-27 follow-ups):
+
+- GPU loading is fragile on M3 nodes with CUDA 13.0 driver — JAX falls
+  back to CPU due to a `cuSPARSE 12.5` / driver-13 binary mismatch. Some
+  GPU nodes (e.g. `m3g108`) work; others (e.g. `m3g112`) fall back.
+- The diagnostic flag `jax_explain_cache_misses` triggers an upstream
+  JAX 0.9.2 unpack bug at `jax/_src/interpreters/partial_eval.py:2364`
+  when used with a scan body that contains a nested JIT'd function
+  (such as pyhgf's `scan_fn`). Now gated behind
+  `PRL_EXPLAIN_CACHE_MISSES=1` in `scripts/03_pre_analysis/03_run_power_iteration.py`.
+
+---
+
 ## 1. TL;DR — what you can build with now
 
 | Capability | Was (pre-Phase-20) | Is now (post-Phase-20) |
